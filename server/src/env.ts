@@ -21,8 +21,20 @@ export const env = {
     tenantId: process.env.MICROSOFT_TENANT_ID ?? "common",
     redirectUri: process.env.MICROSOFT_REDIRECT_URI ?? "",
   },
+  // Object storage for documents and recipe attachments. Cloudflare R2 is
+  // S3-compatible: endpoint https://<account-id>.r2.cloudflarestorage.com,
+  // region "auto". Leave empty to disable uploads (routes answer 503).
+  storage: {
+    endpoint: process.env.S3_ENDPOINT ?? "",
+    region: process.env.S3_REGION ?? "auto",
+    bucket: process.env.S3_BUCKET ?? "",
+    accessKeyId: process.env.S3_ACCESS_KEY_ID ?? "",
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? "",
+  },
   appDeepLink: process.env.APP_DEEP_LINK ?? "passerelle://calendar-connected",
 };
 
 export const isGoogleConfigured = () => !!(env.google.clientId && env.google.clientSecret && env.google.redirectUri);
 export const isMicrosoftConfigured = () => !!(env.microsoft.clientId && env.microsoft.clientSecret && env.microsoft.redirectUri);
+export const isStorageConfigured = () =>
+  !!(env.storage.bucket && env.storage.accessKeyId && env.storage.secretAccessKey);

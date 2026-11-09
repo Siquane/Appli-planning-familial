@@ -42,6 +42,26 @@ Créer un compte, un projet, copier la connection string Postgres fournie (garde
 
 Ne pas laisser `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` vides : `src/env.ts` retombe sinon sur des valeurs de dev codées en dur.
 
+**Stockage des documents — [Cloudflare R2](https://dash.cloudflare.com) (optionnel)**
+
+Les pièces jointes des recettes et la bibliothèque de documents stockent les fichiers dans R2 ; la base ne garde que la clé du fichier. Sans ces variables, l'appli fonctionne mais l'envoi de documents répond « stockage non configuré » (503).
+
+1. R2 → *Create bucket* (ex. `passerelle-documents`). Laisser le bucket **privé** : l'API génère des liens signés temporaires (10 min pour envoyer, 1 h pour consulter).
+2. R2 → *Manage R2 API Tokens* → *Create API token*, permission *Object Read & Write* limitée à ce bucket. Noter l'Access Key ID et le Secret.
+3. Ajouter dans Render :
+
+| Variable | Valeur |
+|---|---|
+| `S3_ENDPOINT` | `https://<account-id>.r2.cloudflarestorage.com` (l'account ID est affiché sur la page R2) |
+| `S3_REGION` | `auto` |
+| `S3_BUCKET` | `passerelle-documents` |
+| `S3_ACCESS_KEY_ID` | l'Access Key ID du jeton |
+| `S3_SECRET_ACCESS_KEY` | le Secret du jeton |
+
+Pour Amazon S3 à la place : laisser `S3_ENDPOINT` vide et mettre la vraie région (ex. `eu-west-3`).
+
+Limites appliquées par l'API : photos (JPEG, PNG, WebP, HEIC) et PDF, 5 Mo maximum par fichier. Supprimer une recette ou un document efface aussi le fichier dans le bucket.
+
 **3. Vérifier**
 
 ```bash

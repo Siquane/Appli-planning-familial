@@ -142,3 +142,90 @@ export interface CalendarStatus {
   googleConfigured: boolean;
   microsoftConfigured: boolean;
 }
+
+export type DocumentCategory = "santé" | "assurance" | "école" | "administratif" | "maison" | "autre";
+
+// Named FamilyDocument to avoid clashing with the DOM's global `Document`.
+// recipeId null = family library entry, otherwise a recipe attachment.
+// url is a signed link to the file, valid about one hour.
+export interface FamilyDocument {
+  id: string;
+  title: string;
+  category: DocumentCategory;
+  memberId: string | null;
+  recipeId: string | null;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  url: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DocumentInput = {
+  title?: string;
+  category?: DocumentCategory;
+  memberId?: string | null;
+  recipeId?: string | null;
+};
+
+export interface DocumentUploadTicket {
+  document: FamilyDocument;
+  upload: { url: string; method: "PUT"; headers: Record<string, string> };
+}
+
+export type FixedExpenseCategory = "courses" | "logement" | "transport" | "santé" | "enfants" | "loisirs" | "factures" | "autre";
+// A fixed key, or the id of one of the family's CustomExpenseCategory.
+export type ExpenseCategory = string;
+
+export interface CustomExpenseCategory {
+  id: string;
+  name: string;
+}
+
+// amountCents: integer cents (12,50 € = 1250). date: "YYYY-MM-DD".
+// recurringId: set when this is a month's copy of a RecurringExpense.
+export interface Expense {
+  id: string;
+  label: string;
+  amountCents: number;
+  category: ExpenseCategory;
+  memberId: string | null;
+  recurringId: string | null;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ExpenseInput = {
+  label: string;
+  amountCents: number;
+  category: ExpenseCategory;
+  memberId: string | null;
+  date: string;
+};
+
+export interface MonthlyBudget {
+  month: string; // "YYYY-MM"
+  totalCents: number;
+  // limitCents: the category's monthly cap, null if none.
+  byCategory: { category: ExpenseCategory; totalCents: number; limitCents: number | null }[];
+  expenses: Expense[];
+}
+
+export interface CategoryBudget {
+  category: ExpenseCategory;
+  limitCents: number;
+}
+
+export interface RecurringExpense {
+  id: string;
+  label: string;
+  amountCents: number;
+  category: ExpenseCategory;
+  memberId: string | null;
+  dayOfMonth: number;
+  startMonth: string;
+}
+
+export type RecurringExpenseInput = Omit<RecurringExpense, "id" | "startMonth">;

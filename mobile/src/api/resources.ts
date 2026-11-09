@@ -2,13 +2,23 @@ import { api } from "./client";
 import type {
   AutoSlotResult,
   CalendarStatus,
+  CategoryBudget,
   Constraints,
+  CustomExpenseCategory,
+  DocumentInput,
+  DocumentUploadTicket,
+  ExpenseInput,
+  Expense,
+  FamilyDocument,
   Meal,
   MealInput,
   Member,
+  MonthlyBudget,
   Notification,
   Priority,
   Recipe,
+  RecurringExpense,
+  RecurringExpenseInput,
   RecipeInput,
   ReplanProposal,
   SharedPerson,
@@ -48,6 +58,44 @@ export const mealsApi = {
   list: () => api.get<{ meals: Meal[] }>("/meals"),
   set: (data: MealInput) => api.post<{ meal: Meal }>("/meals", data),
   remove: (id: string) => api.delete<void>(`/meals/${id}`),
+};
+
+export const documentsApi = {
+  /** Without recipeId: the family library. With it: that recipe's attachments. */
+  list: (recipeId?: string) =>
+    api.get<{ documents: FamilyDocument[] }>(recipeId ? `/documents?recipeId=${encodeURIComponent(recipeId)}` : "/documents"),
+  create: (data: DocumentInput & { fileName: string; mimeType: string; size: number }) => api.post<DocumentUploadTicket>("/documents", data),
+  confirm: (id: string) => api.post<{ document: FamilyDocument }>(`/documents/${id}/confirm`),
+  update: (id: string, data: Partial<Pick<DocumentInput, "title" | "category" | "memberId">>) =>
+    api.patch<{ document: FamilyDocument }>(`/documents/${id}`, data),
+  remove: (id: string) => api.delete<void>(`/documents/${id}`),
+};
+
+export const expensesApi = {
+  month: (month: string) => api.get<MonthlyBudget>(`/expenses?month=${month}`),
+  create: (data: ExpenseInput) => api.post<{ expense: Expense }>("/expenses", data),
+  update: (id: string, data: Partial<ExpenseInput>) => api.patch<{ expense: Expense }>(`/expenses/${id}`, data),
+  remove: (id: string) => api.delete<void>(`/expenses/${id}`),
+};
+
+export const expenseCategoriesApi = {
+  list: () => api.get<{ categories: CustomExpenseCategory[] }>("/expense-categories"),
+  create: (name: string) => api.post<{ category: CustomExpenseCategory }>("/expense-categories", { name }),
+  rename: (id: string, name: string) => api.patch<{ category: CustomExpenseCategory }>(`/expense-categories/${id}`, { name }),
+  remove: (id: string) => api.delete<void>(`/expense-categories/${id}`),
+};
+
+export const categoryBudgetsApi = {
+  list: () => api.get<{ budgets: CategoryBudget[] }>("/category-budgets"),
+  /** limitCents null removes the cap. */
+  set: (category: string, limitCents: number | null) => api.put<unknown>("/category-budgets", { category, limitCents }),
+};
+
+export const recurringExpensesApi = {
+  list: () => api.get<{ recurring: RecurringExpense[] }>("/recurring-expenses"),
+  create: (data: RecurringExpenseInput) => api.post<{ recurring: RecurringExpense }>("/recurring-expenses", data),
+  update: (id: string, data: Partial<RecurringExpenseInput>) => api.patch<{ recurring: RecurringExpense }>(`/recurring-expenses/${id}`, data),
+  remove: (id: string) => api.delete<void>(`/recurring-expenses/${id}`),
 };
 
 export const constraintsApi = {

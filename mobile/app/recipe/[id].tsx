@@ -1,11 +1,16 @@
-import { Alert, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
+import * as WebBrowser from "expo-web-browser";
 import { router, useLocalSearchParams } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
 import { TopBar } from "../../src/components/TopBar";
 import { Avatar } from "../../src/components/Avatar";
-import { useDeleteRecipe, useMembers, useRecipes } from "../../src/hooks/useApi";
+import { DocumentRow } from "../../src/components/DocumentRow";
+import { FileSourceButtons } from "../../src/components/FileSourceButtons";
+import { useDeleteDocument, useDeleteRecipe, useDocuments, useMembers, useRecipes, useUploadDocument } from "../../src/hooks/useApi";
+import { formatSize, type PickedFile } from "../../src/lib/documentUpload";
+import type { FamilyDocument } from "../../src/api/types";
 import { useToastStore } from "../../src/state/toastStore";
 import { color, space } from "../../src/theme/tokens";
 
@@ -14,6 +19,9 @@ export default function RecipeDetailScreen() {
   const { data: recipes = [] } = useRecipes();
   const { data: members = [] } = useMembers();
   const deleteRecipe = useDeleteRecipe();
+  const { data: attachments = [] } = useDocuments(id);
+  const uploadAttachment = useUploadDocument();
+  const deleteAttachment = useDeleteDocument();
   const recipe = recipes.find((r) => r.id === id);
 
   if (!recipe) {
@@ -47,10 +55,26 @@ export default function RecipeDetailScreen() {
     ]);
   }
 
+  async function onAttach(file: PickedFile) {
+    try {
+      await uploadAttachment.mutateAsync({ file, data: { recipeId: recipe!.id } });
+      useToastStore.getState().show("Pièce jointe ajoutée.");
+    } catch (e) {
+      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+    }
+  }
+
+  function onRemoveAttachment(doc: FamilyDocument) {
+    Alert.alert("Retirer la pièce jointe", `Supprimer « ${doc.title} » ?`, [
+      { text: "Annuler", style: "cancel" },
+      { text: "Supprimer", style: "destructive", onPress: () => deleteAttachment.mutate(doc.id) },
+    ]);
+  }
+
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={recipe.title} onBack={() => router.back()} onEdit={() => router.push(`/recipe/new?edit=${recipe.id}`)} onDelete={onDelete} />
-      <View style={{ padding: 18, gap: space[4] }}>
+      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         {fans.length > 0 && (
           <View style={{ gap: space[2] }}>
             <Text weight="medium" size={13} tone="muted">
@@ -107,7 +131,29 @@ export default function RecipeDetailScreen() {
             <Text size={14}>{recipe.notes}</Text>
           </View>
         ) : null}
-      </View>
+
+        <View style={{ gap: space[2] }}>
+          <Text weight="medium" size={13} tone="muted">
+            Pièces jointes
+          </Text>
+          {attachments.map((doc) => (
+            <DocumentRow
+              key={doc.id}
+              doc={doc}
+              subtitle={`${formatSize(doc.size)} · appui long pour supprimer`}
+              onPress={() => doc.url && WebBrowser.openBrowserAsync(doc.url)}
+              onLongPress={() => onRemoveAttachment(doc)}
+            />
+          ))}
+          {uploadAttachment.isPending ? (
+            <Text size={12} tone="muted">
+              Envoi en cours…
+            </Text>
+          ) : (
+            <FileSourceButtons onPicked={onAttach} />
+          )}
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
