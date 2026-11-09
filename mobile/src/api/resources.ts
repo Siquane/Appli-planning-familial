@@ -5,10 +5,13 @@ import type {
   Constraints,
   DocumentInput,
   DocumentUploadTicket,
+  ExpenseInput,
+  Expense,
   FamilyDocument,
   Meal,
   MealInput,
   Member,
+  MonthlyBudget,
   Notification,
   Priority,
   Recipe,
@@ -62,6 +65,13 @@ export const documentsApi = {
   update: (id: string, data: Partial<Pick<DocumentInput, "title" | "category" | "memberId">>) =>
     api.patch<{ document: FamilyDocument }>(`/documents/${id}`, data),
   remove: (id: string) => api.delete<void>(`/documents/${id}`),
+};
+
+export const expensesApi = {
+  month: (month: string) => api.get<MonthlyBudget>(`/expenses?month=${month}`),
+  create: (data: ExpenseInput) => api.post<{ expense: Expense }>("/expenses", data),
+  update: (id: string, data: Partial<ExpenseInput>) => api.patch<{ expense: Expense }>(`/expenses/${id}`, data),
+  remove: (id: string) => api.delete<void>(`/expenses/${id}`),
 };
 
 export const constraintsApi = {

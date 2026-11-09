@@ -6,7 +6,7 @@ import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
 import { Button } from "../../src/components/Button";
 import { Avatar } from "../../src/components/Avatar";
-import { BookIcon, CalendarIcon, ChevronRightIcon, DocumentIcon, GiftIcon, MealIcon, RecurringIcon } from "../../src/components/icons";
+import { BookIcon, CalendarIcon, ChevronRightIcon, DocumentIcon, GiftIcon, MealIcon, RecurringIcon, WalletIcon } from "../../src/components/icons";
 import { useCalendarStatus, useDisconnectCalendar, useMembers } from "../../src/hooks/useApi";
 import { useAuthStore } from "../../src/state/authStore";
 import { useToastStore } from "../../src/state/toastStore";
@@ -154,6 +154,16 @@ export default function ProfileScreen() {
           <DocumentIcon size={16} color={color.neutral400} />
           <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
             Documents
+          </Text>
+          <ChevronRightIcon size={14} color={color.neutral500} />
+        </Card>
+      </Pressable>
+
+      <Pressable onPress={() => router.push("/budget")}>
+        <Card row style={{ alignItems: "center" }}>
+          <WalletIcon size={16} color={color.neutral400} />
+          <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
+            Budget
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />
         </Card>

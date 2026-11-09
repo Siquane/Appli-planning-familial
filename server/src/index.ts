@@ -11,6 +11,7 @@ import { calendarRouter } from "./routes/calendar";
 import { recipesRouter } from "./routes/recipes";
 import { mealsRouter } from "./routes/meals";
 import { documentsRouter } from "./routes/documents";
+import { expensesRouter } from "./routes/expenses";
 
 export const app = express();
 app.use(cors());
@@ -28,6 +29,7 @@ app.use("/calendar", calendarRouter);
 app.use("/recipes", recipesRouter);
 app.use("/meals", mealsRouter);
 app.use("/documents", documentsRouter);
+app.use("/expenses", expensesRouter);
 
 app.use((req, res) => res.status(404).json({ error: `No route for ${req.method} ${req.path}` }));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

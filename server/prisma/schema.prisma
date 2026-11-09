@@ -22,6 +22,7 @@ model User {
   recipes             Recipe[]
   meals               Meal[]
   documents           Document[]
+  expenses            Expense[]
   notifications       Notification[]
   constraints         Constraints?
   shareLink           ShareLink?
@@ -161,6 +162,23 @@ model Document {
   updatedAt DateTime      @updatedAt
 
   @@index([userId, recipeId])
+}
+
+// Manually entered household expense. amountCents avoids float rounding;
+// date is a calendar day (no time, no timezone).
+// category: 'courses' | 'logement' | 'transport' | 'santé' | 'enfants' | 'loisirs' | 'factures' | 'autre'
+model Expense {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label       String
+  amountCents Int
+  category    String   @default("autre")
+  date        DateTime @db.Date
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, date])
 }
 
 model Constraints {

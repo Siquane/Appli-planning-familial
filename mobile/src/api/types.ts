@@ -173,3 +173,30 @@ export interface DocumentUploadTicket {
   document: FamilyDocument;
   upload: { url: string; method: "PUT"; headers: Record<string, string> };
 }
+
+export type ExpenseCategory = "courses" | "logement" | "transport" | "santé" | "enfants" | "loisirs" | "factures" | "autre";
+
+// amountCents: integer cents (12,50 € = 1250). date: "YYYY-MM-DD".
+export interface Expense {
+  id: string;
+  label: string;
+  amountCents: number;
+  category: ExpenseCategory;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ExpenseInput = {
+  label: string;
+  amountCents: number;
+  category: ExpenseCategory;
+  date: string;
+};
+
+export interface MonthlyBudget {
+  month: string; // "YYYY-MM"
+  totalCents: number;
+  byCategory: { category: ExpenseCategory; totalCents: number }[];
+  expenses: Expense[];
+}

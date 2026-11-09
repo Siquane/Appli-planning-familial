@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { calendarApi, constraintsApi, documentsApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
-import type { DocumentInput, MealInput, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
+import { calendarApi, constraintsApi, documentsApi, expensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
+import type { DocumentInput, ExpenseInput, MealInput, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
 import { useAuthStore } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
 
@@ -123,6 +123,35 @@ export function useDeleteDocument() {
   return useMutation({
     mutationFn: (id: string) => documentsApi.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["documents"] }),
+  });
+}
+
+export function useMonthlyBudget(month: string) {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["expenses", month], queryFn: () => expensesApi.month(month), enabled });
+}
+
+export function useCreateExpense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ExpenseInput) => expensesApi.create(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["expenses"] }),
+  });
+}
+
+export function useUpdateExpense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<ExpenseInput> }) => expensesApi.update(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["expenses"] }),
+  });
+}
+
+export function useDeleteExpense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => expensesApi.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["expenses"] }),
   });
 }
 
