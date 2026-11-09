@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { calendarApi, constraintsApi, documentsApi, expensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
-import type { DocumentInput, ExpenseInput, MealInput, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
+import { calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
+import type { DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
 import { useAuthStore } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
+import { buildCategoryOptions } from "../lib/money";
 
 function useEnabled() {
   return !!useAuthStore((s) => s.accessToken);
@@ -153,6 +154,80 @@ export function useDeleteExpense() {
     mutationFn: (id: string) => expensesApi.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["expenses"] }),
   });
+}
+
+/** Fixed + family categories, ready for chips and labels. */
+export function useExpenseCategories() {
+  const enabled = useEnabled();
+  const query = useQuery({ queryKey: ["expense-categories"], queryFn: () => expenseCategoriesApi.list().then((r) => r.categories), enabled });
+  const custom = query.data ?? [];
+  return { ...query, custom, options: buildCategoryOptions(custom) };
+}
+
+// Categories, caps and recurring expenses all change what a month shows.
+function useInvalidateBudget() {
+  const qc = useQueryClient();
+  return (...keys: string[]) => {
+    for (const key of keys) qc.invalidateQueries({ queryKey: [key] });
+    qc.invalidateQueries({ queryKey: ["expenses"] });
+  };
+}
+
+export function useCreateExpenseCategory() {
+  const invalidate = useInvalidateBudget();
+  return useMutation({ mutationFn: (name: string) => expenseCategoriesApi.create(name), onSuccess: () => invalidate("expense-categories") });
+}
+
+export function useRenameExpenseCategory() {
+  const invalidate = useInvalidateBudget();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => expenseCategoriesApi.rename(id, name),
+    onSuccess: () => invalidate("expense-categories"),
+  });
+}
+
+export function useDeleteExpenseCategory() {
+  const invalidate = useInvalidateBudget();
+  return useMutation({
+    mutationFn: (id: string) => expenseCategoriesApi.remove(id),
+    onSuccess: () => invalidate("expense-categories", "category-budgets", "recurring-expenses"),
+  });
+}
+
+export function useCategoryBudgets() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["category-budgets"], queryFn: () => categoryBudgetsApi.list().then((r) => r.budgets), enabled });
+}
+
+export function useSetCategoryBudget() {
+  const invalidate = useInvalidateBudget();
+  return useMutation({
+    mutationFn: ({ category, limitCents }: { category: string; limitCents: number | null }) => categoryBudgetsApi.set(category, limitCents),
+    onSuccess: () => invalidate("category-budgets"),
+  });
+}
+
+export function useRecurringExpenses() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["recurring-expenses"], queryFn: () => recurringExpensesApi.list().then((r) => r.recurring), enabled });
+}
+
+export function useCreateRecurringExpense() {
+  const invalidate = useInvalidateBudget();
+  return useMutation({ mutationFn: (data: RecurringExpenseInput) => recurringExpensesApi.create(data), onSuccess: () => invalidate("recurring-expenses") });
+}
+
+export function useUpdateRecurringExpense() {
+  const invalidate = useInvalidateBudget();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<RecurringExpenseInput> }) => recurringExpensesApi.update(id, data),
+    onSuccess: () => invalidate("recurring-expenses"),
+  });
+}
+
+export function useDeleteRecurringExpense() {
+  const invalidate = useInvalidateBudget();
+  return useMutation({ mutationFn: (id: string) => recurringExpensesApi.remove(id), onSuccess: () => invalidate("recurring-expenses") });
 }
 
 export function useTasks() {

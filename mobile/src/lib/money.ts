@@ -1,6 +1,12 @@
-import type { ExpenseCategory } from "../api/types";
+import type { CustomExpenseCategory, ExpenseCategory, FixedExpenseCategory } from "../api/types";
 
-export const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
+export interface CategoryOption {
+  value: ExpenseCategory;
+  label: string;
+  custom: boolean;
+}
+
+export const EXPENSE_CATEGORIES: { value: FixedExpenseCategory; label: string }[] = [
   { value: "courses", label: "Courses" },
   { value: "logement", label: "Logement" },
   { value: "transport", label: "Transport" },
@@ -11,8 +17,16 @@ export const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
   { value: "autre", label: "Autre" },
 ];
 
-export function expenseCategoryLabel(category: ExpenseCategory) {
-  return EXPENSE_CATEGORIES.find((c) => c.value === category)?.label ?? category;
+/** Fixed categories, then the family's own, with "Autre" kept last. */
+export function buildCategoryOptions(custom: CustomExpenseCategory[]): CategoryOption[] {
+  const fixed = EXPENSE_CATEGORIES.map((c) => ({ ...c, custom: false }));
+  const other = fixed.filter((c) => c.value === "autre");
+  return [...fixed.filter((c) => c.value !== "autre"), ...custom.map((c) => ({ value: c.id, label: c.name, custom: true })), ...other];
+}
+
+/** Label for a category key or custom id; an unknown id (just deleted) reads as "Autre". */
+export function categoryLabel(options: CategoryOption[], category: ExpenseCategory) {
+  return options.find((c) => c.value === category)?.label ?? "Autre";
 }
 
 /** "12,50" / "12.5" / "1 200" -> cents, or null when it isn't a positive amount. */

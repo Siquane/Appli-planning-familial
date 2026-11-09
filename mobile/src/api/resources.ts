@@ -2,7 +2,9 @@ import { api } from "./client";
 import type {
   AutoSlotResult,
   CalendarStatus,
+  CategoryBudget,
   Constraints,
+  CustomExpenseCategory,
   DocumentInput,
   DocumentUploadTicket,
   ExpenseInput,
@@ -15,6 +17,8 @@ import type {
   Notification,
   Priority,
   Recipe,
+  RecurringExpense,
+  RecurringExpenseInput,
   RecipeInput,
   ReplanProposal,
   SharedPerson,
@@ -72,6 +76,26 @@ export const expensesApi = {
   create: (data: ExpenseInput) => api.post<{ expense: Expense }>("/expenses", data),
   update: (id: string, data: Partial<ExpenseInput>) => api.patch<{ expense: Expense }>(`/expenses/${id}`, data),
   remove: (id: string) => api.delete<void>(`/expenses/${id}`),
+};
+
+export const expenseCategoriesApi = {
+  list: () => api.get<{ categories: CustomExpenseCategory[] }>("/expense-categories"),
+  create: (name: string) => api.post<{ category: CustomExpenseCategory }>("/expense-categories", { name }),
+  rename: (id: string, name: string) => api.patch<{ category: CustomExpenseCategory }>(`/expense-categories/${id}`, { name }),
+  remove: (id: string) => api.delete<void>(`/expense-categories/${id}`),
+};
+
+export const categoryBudgetsApi = {
+  list: () => api.get<{ budgets: CategoryBudget[] }>("/category-budgets"),
+  /** limitCents null removes the cap. */
+  set: (category: string, limitCents: number | null) => api.put<unknown>("/category-budgets", { category, limitCents }),
+};
+
+export const recurringExpensesApi = {
+  list: () => api.get<{ recurring: RecurringExpense[] }>("/recurring-expenses"),
+  create: (data: RecurringExpenseInput) => api.post<{ recurring: RecurringExpense }>("/recurring-expenses", data),
+  update: (id: string, data: Partial<RecurringExpenseInput>) => api.patch<{ recurring: RecurringExpense }>(`/recurring-expenses/${id}`, data),
+  remove: (id: string) => api.delete<void>(`/recurring-expenses/${id}`),
 };
 
 export const constraintsApi = {

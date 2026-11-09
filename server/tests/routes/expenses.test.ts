@@ -40,8 +40,8 @@ describe("expenses", () => {
     expect(res.body.expenses).toHaveLength(3);
     expect(res.body.totalCents).toBe(97550);
     expect(res.body.byCategory).toEqual([
-      { category: "logement", totalCents: 90000 },
-      { category: "courses", totalCents: 7550 },
+      { category: "logement", totalCents: 90000, limitCents: null },
+      { category: "courses", totalCents: 7550, limitCents: null },
     ]);
     // Most recent first.
     expect(res.body.expenses.map((e: { date: string }) => e.date)).toEqual(["2026-11-30", "2026-11-05", "2026-11-01"]);

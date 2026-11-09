@@ -49,3 +49,15 @@ describe("months and days", () => {
     expect(toDayString(fromDayString("2026-03-29"))).toBe("2026-03-29");
   });
 });
+
+describe("category options", () => {
+  const { buildCategoryOptions, categoryLabel } = jest.requireActual("../money") as typeof import("../money");
+
+  it("puts custom categories before 'Autre' and labels unknown ids as 'Autre'", () => {
+    const options = buildCategoryOptions([{ id: "c1", name: "Animaux" }]);
+    expect(options.map((o) => o.label).slice(-3)).toEqual(["Factures", "Animaux", "Autre"]);
+    expect(categoryLabel(options, "c1")).toBe("Animaux");
+    expect(categoryLabel(options, "santé")).toBe("Santé");
+    expect(categoryLabel(options, "deleted-id")).toBe("Autre");
+  });
+});

@@ -23,6 +23,9 @@ model User {
   meals               Meal[]
   documents           Document[]
   expenses            Expense[]
+  expenseCategories   ExpenseCategory[]
+  categoryBudgets     CategoryBudget[]
+  recurringExpenses   RecurringExpense[]
   notifications       Notification[]
   constraints         Constraints?
   shareLink           ShareLink?
@@ -52,9 +55,11 @@ model FamilyMember {
   birthday DateTime?
   order    Int       @default(0)
 
-  tasks     TaskMember[]
-  recipes   RecipeMember[]
-  documents Document[]
+  tasks             TaskMember[]
+  recipes           RecipeMember[]
+  documents         Document[]
+  expenses          Expense[]
+  recurringExpenses RecurringExpense[]
 }
 
 // priority: 'high' | 'medium' | 'low'
@@ -166,19 +171,77 @@ model Document {
 
 // Manually entered household expense. amountCents avoids float rounding;
 // date is a calendar day (no time, no timezone).
-// category: 'courses' | 'logement' | 'transport' | 'santé' | 'enfants' | 'loisirs' | 'factures' | 'autre'
+// category: one of the fixed keys 'courses' | 'logement' | 'transport' |
+// 'santé' | 'enfants' | 'loisirs' | 'factures' | 'autre', or the id of one of
+// the family's ExpenseCategory rows (see lib/expenseCategories.ts).
+// recurringId: set when the row was generated from a RecurringExpense.
 model Expense {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   label       String
   amountCents Int
-  category    String   @default("autre")
-  date        DateTime @db.Date
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  category    String            @default("autre")
+  date        DateTime          @db.Date
+  memberId    String?
+  member      FamilyMember?     @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  recurringId String?
+  recurring   RecurringExpense? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
   @@index([userId, date])
+}
+
+// Category created by the family, on top of the fixed list. Deleting one moves
+// its expenses, budgets and recurring expenses to 'autre'.
+model ExpenseCategory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+}
+
+// Monthly spending cap for one category, the same every month.
+model CategoryBudget {
+  id         String @id @default(cuid())
+  userId     String
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   String
+  limitCents Int
+
+  @@unique([userId, category])
+}
+
+// Template copied into an Expense once per month, on dayOfMonth (clamped to
+// the month's last day), from startMonth on, when that month's budget is read.
+model RecurringExpense {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label       String
+  amountCents Int
+  category    String        @default("autre")
+  memberId    String?
+  member      FamilyMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  dayOfMonth  Int
+  startMonth  String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  expenses Expense[]
+  runs     RecurringRun[]
+}
+
+// Marks a month as already generated for a RecurringExpense, so deleting that
+// month's copy doesn't bring it back on the next read.
+model RecurringRun {
+  recurringId String
+  recurring   RecurringExpense @relation(fields: [recurringId], references: [id], onDelete: Cascade)
+  month       String
+
+  @@id([recurringId, month])
 }
 
 model Constraints {

@@ -174,14 +174,24 @@ export interface DocumentUploadTicket {
   upload: { url: string; method: "PUT"; headers: Record<string, string> };
 }
 
-export type ExpenseCategory = "courses" | "logement" | "transport" | "santé" | "enfants" | "loisirs" | "factures" | "autre";
+export type FixedExpenseCategory = "courses" | "logement" | "transport" | "santé" | "enfants" | "loisirs" | "factures" | "autre";
+// A fixed key, or the id of one of the family's CustomExpenseCategory.
+export type ExpenseCategory = string;
+
+export interface CustomExpenseCategory {
+  id: string;
+  name: string;
+}
 
 // amountCents: integer cents (12,50 € = 1250). date: "YYYY-MM-DD".
+// recurringId: set when this is a month's copy of a RecurringExpense.
 export interface Expense {
   id: string;
   label: string;
   amountCents: number;
   category: ExpenseCategory;
+  memberId: string | null;
+  recurringId: string | null;
   date: string;
   createdAt: string;
   updatedAt: string;
@@ -191,12 +201,31 @@ export type ExpenseInput = {
   label: string;
   amountCents: number;
   category: ExpenseCategory;
+  memberId: string | null;
   date: string;
 };
 
 export interface MonthlyBudget {
   month: string; // "YYYY-MM"
   totalCents: number;
-  byCategory: { category: ExpenseCategory; totalCents: number }[];
+  // limitCents: the category's monthly cap, null if none.
+  byCategory: { category: ExpenseCategory; totalCents: number; limitCents: number | null }[];
   expenses: Expense[];
 }
+
+export interface CategoryBudget {
+  category: ExpenseCategory;
+  limitCents: number;
+}
+
+export interface RecurringExpense {
+  id: string;
+  label: string;
+  amountCents: number;
+  category: ExpenseCategory;
+  memberId: string | null;
+  dayOfMonth: number;
+  startMonth: string;
+}
+
+export type RecurringExpenseInput = Omit<RecurringExpense, "id" | "startMonth">;
