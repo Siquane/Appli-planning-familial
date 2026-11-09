@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { calendarApi, constraintsApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
-import type { MealInput, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
+import { calendarApi, constraintsApi, documentsApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
+import type { DocumentInput, MealInput, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
 import { useAuthStore } from "../state/authStore";
+import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
 
 function useEnabled() {
   return !!useAuthStore((s) => s.accessToken);
@@ -62,7 +63,10 @@ export function useDeleteRecipe() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => recipesApi.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["recipes"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["recipes"] });
+      qc.invalidateQueries({ queryKey: ["documents"] });
+    },
   });
 }
 
@@ -84,6 +88,41 @@ export function useDeleteMeal() {
   return useMutation({
     mutationFn: (id: string) => mealsApi.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["meals"] }),
+  });
+}
+
+// Library and recipe attachments share the ["documents"] prefix so one
+// invalidation refreshes both.
+export function useDocuments(recipeId?: string) {
+  const enabled = useEnabled();
+  return useQuery({
+    queryKey: ["documents", recipeId ?? "library"],
+    queryFn: () => documentsApi.list(recipeId).then((r) => r.documents),
+    enabled,
+  });
+}
+
+export function useUploadDocument() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ file, data }: { file: PickedFile; data: DocumentInput }) => uploadPickedFile(file, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["documents"] }),
+  });
+}
+
+export function useUpdateDocument() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Pick<DocumentInput, "title" | "category" | "memberId">> }) => documentsApi.update(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["documents"] }),
+  });
+}
+
+export function useDeleteDocument() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => documentsApi.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["documents"] }),
   });
 }
 

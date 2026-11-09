@@ -142,3 +142,34 @@ export interface CalendarStatus {
   googleConfigured: boolean;
   microsoftConfigured: boolean;
 }
+
+export type DocumentCategory = "santé" | "assurance" | "école" | "administratif" | "maison" | "autre";
+
+// Named FamilyDocument to avoid clashing with the DOM's global `Document`.
+// recipeId null = family library entry, otherwise a recipe attachment.
+// url is a signed link to the file, valid about one hour.
+export interface FamilyDocument {
+  id: string;
+  title: string;
+  category: DocumentCategory;
+  memberId: string | null;
+  recipeId: string | null;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  url: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DocumentInput = {
+  title?: string;
+  category?: DocumentCategory;
+  memberId?: string | null;
+  recipeId?: string | null;
+};
+
+export interface DocumentUploadTicket {
+  document: FamilyDocument;
+  upload: { url: string; method: "PUT"; headers: Record<string, string> };
+}

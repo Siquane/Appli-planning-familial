@@ -3,6 +3,9 @@ import type {
   AutoSlotResult,
   CalendarStatus,
   Constraints,
+  DocumentInput,
+  DocumentUploadTicket,
+  FamilyDocument,
   Meal,
   MealInput,
   Member,
@@ -48,6 +51,17 @@ export const mealsApi = {
   list: () => api.get<{ meals: Meal[] }>("/meals"),
   set: (data: MealInput) => api.post<{ meal: Meal }>("/meals", data),
   remove: (id: string) => api.delete<void>(`/meals/${id}`),
+};
+
+export const documentsApi = {
+  /** Without recipeId: the family library. With it: that recipe's attachments. */
+  list: (recipeId?: string) =>
+    api.get<{ documents: FamilyDocument[] }>(recipeId ? `/documents?recipeId=${encodeURIComponent(recipeId)}` : "/documents"),
+  create: (data: DocumentInput & { fileName: string; mimeType: string; size: number }) => api.post<DocumentUploadTicket>("/documents", data),
+  confirm: (id: string) => api.post<{ document: FamilyDocument }>(`/documents/${id}/confirm`),
+  update: (id: string, data: Partial<Pick<DocumentInput, "title" | "category" | "memberId">>) =>
+    api.patch<{ document: FamilyDocument }>(`/documents/${id}`, data),
+  remove: (id: string) => api.delete<void>(`/documents/${id}`),
 };
 
 export const constraintsApi = {
