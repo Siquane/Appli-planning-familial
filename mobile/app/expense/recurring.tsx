@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, ScrollView } from "react-native";
+import { Alert } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
@@ -103,7 +104,7 @@ export default function RecurringExpenseFormScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Dépense récurrente" : "Nouvelle dépense récurrente"} onBack={() => router.back()} onDelete={existing ? onDelete : undefined} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Card>
           <Text size={12} tone="muted">
             Ajoutée automatiquement chaque mois, à partir de ce mois-ci. Un jour 29, 30 ou 31 passe au dernier jour des mois plus courts.
@@ -130,7 +131,7 @@ export default function RecurringExpenseFormScreen() {
         )}
 
         <Button label={existing ? "Enregistrer" : "Ajouter"} variant="primary" block onPress={onSave} disabled={!isValid} loading={saving} />
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 }

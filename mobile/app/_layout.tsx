@@ -12,7 +12,7 @@ import {
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
 import { queryClient } from "../src/lib/queryClient";
-import { useAuthStore } from "../src/state/authStore";
+import { useAuthStore, wakeServer } from "../src/state/authStore";
 import { useOnboardingStore } from "../src/state/onboardingStore";
 import { Toast } from "../src/components/Toast";
 import { color } from "../src/theme/tokens";
@@ -28,6 +28,8 @@ export default function RootLayout() {
   const hydrateOnboarding = useOnboardingStore((s) => s.hydrate);
 
   useEffect(() => {
+    // Wake the free-tier API server early so signup/login doesn't wait on a cold start.
+    wakeServer();
     hydrate();
     hydrateOnboarding();
   }, [hydrate, hydrateOnboarding]);

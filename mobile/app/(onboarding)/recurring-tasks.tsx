@@ -94,7 +94,7 @@ export default function RecurringTasksOnboardingScreen() {
   }
 
   return (
-    <Screen style={{ justifyContent: "space-between", flexGrow: 1 }}>
+    <Screen keyboard style={{ justifyContent: "space-between", flexGrow: 1 }}>
       <View style={{ gap: space[6] }}>
         <View style={{ gap: 4 }}>
           <Text heading weight="semibold" size={22}>

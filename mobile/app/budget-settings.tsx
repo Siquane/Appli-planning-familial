@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, TextInput, View } from "react-native";
+import { Alert, Pressable, TextInput, View } from "react-native";
 import { router } from "expo-router";
+import { KeyboardScrollView } from "../src/components/KeyboardScrollView";
 import { Screen } from "../src/components/Screen";
 import { Text } from "../src/components/Text";
 import { Card } from "../src/components/Card";
@@ -43,7 +44,7 @@ export default function BudgetSettingsScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Réglages du budget" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[6] }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[6] }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Section title="Dépenses récurrentes" hint="Loyer, abonnements… ajoutés chaque mois au jour choisi.">
           {recurring.map((r) => (
             <Pressable key={r.id} onPress={() => router.push(`/expense/recurring?edit=${r.id}`)}>
@@ -86,7 +87,7 @@ export default function BudgetSettingsScreen() {
           )}
           <AddCategory />
         </Section>
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 }

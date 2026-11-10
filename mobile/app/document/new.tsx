@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
@@ -64,7 +65,7 @@ export default function DocumentFormScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier le document" : "Nouveau document"} onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         {!existing && (
           <View style={{ gap: space[2] }}>
             <Text size={13} tone="muted">
@@ -120,7 +121,7 @@ export default function DocumentFormScreen() {
         )}
 
         <Button label={existing ? "Enregistrer" : "Ajouter le document"} variant="primary" block onPress={onSave} disabled={!isValid} loading={saving} />
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 }

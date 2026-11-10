@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Pressable, ScrollView, Share as RNShare, View } from "react-native";
+import { Pressable, Share as RNShare, View } from "react-native";
 import { router } from "expo-router";
+import { KeyboardScrollView } from "../src/components/KeyboardScrollView";
 import { Screen } from "../src/components/Screen";
 import { Text } from "../src/components/Text";
 import { Card } from "../src/components/Card";
@@ -51,7 +52,7 @@ export default function ShareScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Partager mon planning" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <Text tone="muted" size={13}>
           Les personnes invitées voient les tâches synchronisées de votre planning, sans avoir besoin d'un compte.
         </Text>
@@ -95,7 +96,7 @@ export default function ShareScreen() {
             </Card>
           ))}
         </View>
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 }

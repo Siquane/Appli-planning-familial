@@ -34,6 +34,8 @@ interface AuthState {
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  resetPassword: (email: string, code: string, password: string) => Promise<void>;
   refresh: () => Promise<boolean>;
 }
 
@@ -45,23 +47,81 @@ async function persist(user: User, accessToken: string, refreshToken: string) {
   ]);
 }
 
-async function authRequest(path: string, body: unknown) {
-  let res: Response;
+// The API runs on Render's free plan, which puts the server to sleep when idle.
+// The first request after a pause can take 30-50s while it boots, and during
+// that window Render answers 502/503/504 or the connection fails. We retry
+// those transient failures until a global deadline instead of surfacing an
+// error on the first attempt.
+export const AUTH_DEADLINE_MS = 60_000;
+const RETRY_DELAY_MS = 2_000;
+const RETRYABLE_STATUSES = new Set([502, 503, 504]);
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    res = await fetch(`${API_URL}${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-  } catch {
-    throw new Error("Impossible de contacter le serveur. Vérifie ta connexion et réessaie.");
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
   }
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error ?? "Une erreur est survenue");
+}
+
+async function postWithRetry(path: string, body: unknown): Promise<Record<string, unknown>> {
+  const deadline = Date.now() + AUTH_DEADLINE_MS;
+  const init: RequestInit = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  };
+
+  for (;;) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) {
+      throw new Error("Le serveur ne répond pas. Vérifie ta connexion et réessaie dans un instant.");
+    }
+
+    let res: Response;
+    try {
+      res = await fetchWithTimeout(`${API_URL}${path}`, init, remaining);
+    } catch {
+      await wait(Math.min(RETRY_DELAY_MS, Math.max(0, deadline - Date.now())));
+      continue;
+    }
+
+    if (RETRYABLE_STATUSES.has(res.status)) {
+      await wait(Math.min(RETRY_DELAY_MS, Math.max(0, deadline - Date.now())));
+      continue;
+    }
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof data.error === "string" ? data.error : "Une erreur est survenue");
+    return data;
+  }
+}
+
+async function authRequest(path: string, body: unknown) {
+  const data = await postWithRetry(path, body);
   if (typeof data.accessToken !== "string" || typeof data.refreshToken !== "string" || !data.user) {
     throw new Error("Le serveur met parfois quelques secondes à se réveiller. Réessaie dans un instant.");
   }
-  return data as { user: User; accessToken: string; refreshToken: string };
+  return data as unknown as { user: User; accessToken: string; refreshToken: string };
+}
+
+let wakePromise: Promise<void> | null = null;
+
+/**
+ * Fire-and-forget ping so the sleeping Render server starts booting while the
+ * user is still typing. Called once at app start.
+ */
+export function wakeServer(): Promise<void> {
+  if (!wakePromise) {
+    wakePromise = fetchWithTimeout(`${API_URL}/health`, { method: "GET" }, AUTH_DEADLINE_MS)
+      .then(() => undefined)
+      .catch(() => undefined);
+  }
+  return wakePromise;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -92,6 +152,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signIn: async (email, password) => {
     const data = await authRequest("/auth/login", { email, password });
+    await persist(data.user, data.accessToken, data.refreshToken);
+    set({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
+  },
+
+  requestPasswordReset: async (email) => {
+    await postWithRetry("/auth/forgot-password", { email });
+  },
+
+  resetPassword: async (email, code, password) => {
+    const data = await authRequest("/auth/reset-password", { email, code, password });
     await persist(data.user, data.accessToken, data.refreshToken);
     set({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
   },

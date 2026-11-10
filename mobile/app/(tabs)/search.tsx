@@ -28,7 +28,7 @@ export default function SearchScreen() {
   }, [tasks, query, category]);
 
   return (
-    <Screen>
+    <Screen keyboard>
       <Text heading weight="semibold" size={20}>
         Recherche
       </Text>

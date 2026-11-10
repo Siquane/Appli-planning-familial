@@ -6,6 +6,7 @@ import { Text } from "../../src/components/Text";
 import { TextField } from "../../src/components/TextField";
 import { Button } from "../../src/components/Button";
 import { useAuthStore } from "../../src/state/authStore";
+import { useSlowHint } from "../../src/hooks/useSlowHint";
 import { color, space } from "../../src/theme/tokens";
 
 export default function LoginScreen() {
@@ -14,6 +15,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const slow = useSlowHint(loading);
 
   async function onSubmit() {
     setError(null);
@@ -29,7 +31,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen scroll={false} style={{ justifyContent: "center", gap: space[6] }}>
+    <Screen keyboard style={{ justifyContent: "center", gap: space[6] }}>
       <View style={{ gap: 4 }}>
         <Text heading weight="semibold" size={26}>
           Passerelle
@@ -42,12 +44,24 @@ export default function LoginScreen() {
       <View style={{ gap: space[3] }}>
         <TextField label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="vous@exemple.fr" />
         <TextField label="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
+        <View style={{ alignItems: "flex-end" }}>
+          <Link href={{ pathname: "/(auth)/forgot-password", params: email.trim() ? { email: email.trim() } : {} }}>
+            <Text tone="accent" size={13} weight="medium">
+              Mot de passe oublié ?
+            </Text>
+          </Link>
+        </View>
         {error && (
           <Text tone="danger" size={13}>
             {error}
           </Text>
         )}
         <Button label="Se connecter" variant="primary" block onPress={onSubmit} loading={loading} disabled={!email || !password} />
+        {slow && (
+          <Text tone="muted" size={13} center>
+            Le serveur démarre, ça peut prendre jusqu'à une minute…
+          </Text>
+        )}
       </View>
 
       <View style={{ flexDirection: "row", justifyContent: "center", gap: 6 }}>

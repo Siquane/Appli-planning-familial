@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
 import { TextField } from "../../src/components/TextField";
@@ -63,7 +64,7 @@ export default function RecipeFormScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier la recette" : "Nouvelle recette"} onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Gratin de courgettes" />
 
         <ListEditor label="Ingrédients" placeholder="Ex. 2 courgettes" items={ingredients} onChange={setIngredients} />
@@ -92,7 +93,7 @@ export default function RecipeFormScreen() {
         )}
 
         <Button label={existing ? "Enregistrer" : "Créer la recette"} variant="primary" block onPress={onSave} disabled={!isValid} loading={saving} />
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 }

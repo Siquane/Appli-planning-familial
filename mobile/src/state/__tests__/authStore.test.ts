@@ -66,3 +66,84 @@ describe("authStore", () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 });
+
+describe("authStore cold-start retries", () => {
+  const initialState = useAuthStore.getState();
+
+  beforeEach(() => {
+    useAuthStore.setState(initialState, true);
+    global.fetch = jest.fn();
+    jest.clearAllMocks();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("signUp retries while the server answers 503 or the connection fails, then succeeds", async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce(jsonResponse(false, 503, {}))
+      .mockRejectedValueOnce(new TypeError("Network request failed"))
+      .mockResolvedValueOnce(jsonResponse(true, 201, { user, accessToken: "access-1", refreshToken: "refresh-1" }));
+
+    const promise = useAuthStore.getState().signUp("claire@passerelle.test", "password123", "Claire Dubois");
+    await jest.advanceTimersByTimeAsync(5_000);
+    await promise;
+
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+    expect(useAuthStore.getState().user).toEqual(user);
+  });
+
+  it("signUp gives up with a clear message once the deadline is reached", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue(jsonResponse(false, 502, {}));
+
+    const promise = useAuthStore.getState().signUp("claire@passerelle.test", "password123", "Claire Dubois");
+    const assertion = expect(promise).rejects.toThrow("Le serveur ne répond pas");
+    await jest.advanceTimersByTimeAsync(65_000);
+    await assertion;
+    expect(useAuthStore.getState().user).toBeNull();
+  });
+
+  it("does not retry a real client error such as an existing account", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(false, 409, { error: "Un compte existe déjà avec cet email" }));
+
+    await expect(useAuthStore.getState().signUp("claire@passerelle.test", "password123", "Claire Dubois")).rejects.toThrow("Un compte existe déjà");
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("authStore password reset", () => {
+  const initialState = useAuthStore.getState();
+
+  beforeEach(() => {
+    useAuthStore.setState(initialState, true);
+    global.fetch = jest.fn();
+    jest.clearAllMocks();
+  });
+
+  it("requestPasswordReset posts the email and resolves without tokens", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(true, 200, { ok: true }));
+
+    await useAuthStore.getState().requestPasswordReset("claire@passerelle.test");
+
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("/auth/forgot-password"), expect.objectContaining({ method: "POST" }));
+    expect(useAuthStore.getState().user).toBeNull();
+  });
+
+  it("resetPassword signs the user in with the returned tokens", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(true, 200, { user, accessToken: "access-2", refreshToken: "refresh-2" }));
+
+    await useAuthStore.getState().resetPassword("claire@passerelle.test", "123456", "new-password");
+
+    expect(useAuthStore.getState().user).toEqual(user);
+    expect(useAuthStore.getState().accessToken).toBe("access-2");
+  });
+
+  it("resetPassword surfaces the server error for a bad code", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(false, 400, { error: "Code invalide ou expiré" }));
+
+    await expect(useAuthStore.getState().resetPassword("claire@passerelle.test", "000000", "new-password")).rejects.toThrow("Code invalide ou expiré");
+    expect(useAuthStore.getState().user).toBeNull();
+  });
+});
