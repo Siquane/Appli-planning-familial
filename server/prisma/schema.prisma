@@ -30,8 +30,21 @@ model User {
   constraints         Constraints?
   shareLink           ShareLink?
   sharedWith          SharedPerson[]
+  passwordResetCodes  PasswordResetCode[]
   calendarConnections CalendarConnection[]
   refreshTokens       RefreshToken[]
+}
+
+model PasswordResetCode {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model RefreshToken {

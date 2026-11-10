@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { KeyboardScrollView } from "../src/components/KeyboardScrollView";
 import { Screen } from "../src/components/Screen";
 import { Text } from "../src/components/Text";
 import { Card } from "../src/components/Card";
@@ -64,7 +65,7 @@ export default function SuggestionsScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Suggestions selon l'âge" onBack={fromOnboarding ? goHome : () => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <Text tone="muted" size={13}>
           Des tâches récurrentes courantes pour l'âge de chaque membre — appuie sur une suggestion pour la créer, tu choisiras ensuite le jour et l'heure.
         </Text>
@@ -147,7 +148,7 @@ export default function SuggestionsScreen() {
         {fromOnboarding && (
           <Button label="Continuer vers l'accueil" variant="primary" block onPress={goHome} style={{ marginTop: space[2] }} />
         )}
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 }

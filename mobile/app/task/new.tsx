@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
 import { TextField } from "../../src/components/TextField";
@@ -141,7 +142,7 @@ export default function TaskFormScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier la tâche" : source ? "Dupliquer la tâche" : "Nouvelle tâche"} onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Devoirs de Léo" />
 
         <View style={{ gap: space[2] }}>
@@ -256,7 +257,7 @@ export default function TaskFormScreen() {
         )}
 
         <Button label={existing ? "Enregistrer" : "Créer la tâche"} variant="primary" block onPress={onSave} disabled={!isValid} loading={saving} />
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 }

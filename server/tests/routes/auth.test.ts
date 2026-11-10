@@ -1,5 +1,6 @@
 import request from "supertest";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { setMailTransport, type Mail } from "../../src/services/mailer";
 import { app } from "../../src/index";
 import { authHeader, signup } from "../helpers";
 
@@ -89,5 +90,80 @@ describe("GET /auth/me", () => {
     const res = await request(app).get("/auth/me").set(authHeader(accessToken));
     expect(res.status).toBe(200);
     expect(res.body.user.id).toBe(user.id);
+  });
+});
+
+describe("password reset", () => {
+  const sent: Mail[] = [];
+  beforeEach(() => {
+    sent.length = 0;
+    setMailTransport(async (mail) => {
+      sent.push(mail);
+    });
+  });
+  afterEach(() => setMailTransport(null));
+
+  const codeFrom = (mail: Mail) => mail.text.match(/\b(\d{6})\b/)![1];
+
+  it("sends a 6-digit code and lets the user set a new password with it", async () => {
+    await signup(app, { email: "Reset@Passerelle.test", password: "old-password" });
+
+    const forgot = await request(app).post("/auth/forgot-password").send({ email: "reset@passerelle.test" });
+    expect(forgot.status).toBe(200);
+    expect(sent).toHaveLength(1);
+    expect(sent[0].to.email).toBe("Reset@Passerelle.test");
+
+    const reset = await request(app)
+      .post("/auth/reset-password")
+      .send({ email: "reset@passerelle.test", code: codeFrom(sent[0]), password: "new-password" });
+    expect(reset.status).toBe(200);
+    expect(typeof reset.body.accessToken).toBe("string");
+
+    const oldLogin = await request(app).post("/auth/login").send({ email: "Reset@Passerelle.test", password: "old-password" });
+    expect(oldLogin.status).toBe(401);
+    const newLogin = await request(app).post("/auth/login").send({ email: "Reset@Passerelle.test", password: "new-password" });
+    expect(newLogin.status).toBe(200);
+
+    // The code is single-use.
+    const reuse = await request(app)
+      .post("/auth/reset-password")
+      .send({ email: "reset@passerelle.test", code: codeFrom(sent[0]), password: "another-password" });
+    expect(reuse.status).toBe(400);
+  });
+
+  it("answers the same way for an unknown email and sends nothing", async () => {
+    const res = await request(app).post("/auth/forgot-password").send({ email: "nobody@passerelle.test" });
+    expect(res.status).toBe(200);
+    expect(sent).toHaveLength(0);
+  });
+
+  it("signs out other devices after a reset", async () => {
+    const { refreshToken } = await signup(app, { email: "devices@passerelle.test" });
+    await request(app).post("/auth/forgot-password").send({ email: "devices@passerelle.test" });
+    await request(app).post("/auth/reset-password").send({ email: "devices@passerelle.test", code: codeFrom(sent[0]), password: "new-password" });
+
+    const refresh = await request(app).post("/auth/refresh").send({ refreshToken });
+    expect(refresh.status).toBe(401);
+  });
+
+  it("locks the code after too many wrong attempts", async () => {
+    await signup(app, { email: "brute@passerelle.test" });
+    await request(app).post("/auth/forgot-password").send({ email: "brute@passerelle.test" });
+    const good = codeFrom(sent[0]);
+    const wrong = good === "000000" ? "111111" : "000000";
+
+    for (let i = 0; i < 5; i++) {
+      const res = await request(app).post("/auth/reset-password").send({ email: "brute@passerelle.test", code: wrong, password: "new-password" });
+      expect(res.status).toBe(400);
+    }
+    const res = await request(app).post("/auth/reset-password").send({ email: "brute@passerelle.test", code: good, password: "new-password" });
+    expect(res.status).toBe(400);
+  });
+
+  it("does not send a second code within the cooldown", async () => {
+    await signup(app, { email: "cooldown@passerelle.test" });
+    await request(app).post("/auth/forgot-password").send({ email: "cooldown@passerelle.test" });
+    await request(app).post("/auth/forgot-password").send({ email: "cooldown@passerelle.test" });
+    expect(sent).toHaveLength(1);
   });
 });

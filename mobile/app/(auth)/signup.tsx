@@ -6,6 +6,7 @@ import { Text } from "../../src/components/Text";
 import { TextField } from "../../src/components/TextField";
 import { Button } from "../../src/components/Button";
 import { useAuthStore } from "../../src/state/authStore";
+import { useSlowHint } from "../../src/hooks/useSlowHint";
 import { space } from "../../src/theme/tokens";
 
 export default function SignupScreen() {
@@ -15,6 +16,7 @@ export default function SignupScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const slow = useSlowHint(loading);
 
   async function onSubmit() {
     setError(null);
@@ -30,7 +32,7 @@ export default function SignupScreen() {
   }
 
   return (
-    <Screen scroll={false} style={{ justifyContent: "center", gap: space[6] }}>
+    <Screen keyboard style={{ justifyContent: "center", gap: space[6] }}>
       <View style={{ gap: 4 }}>
         <Text heading weight="semibold" size={26}>
           Créer un compte
@@ -50,6 +52,11 @@ export default function SignupScreen() {
           </Text>
         )}
         <Button label="Créer mon compte" variant="primary" block onPress={onSubmit} loading={loading} disabled={!email || !password || !name} />
+        {slow && (
+          <Text tone="muted" size={13} center>
+            Le serveur démarre, ça peut prendre jusqu'à une minute…
+          </Text>
+        )}
       </View>
 
       <View style={{ flexDirection: "row", justifyContent: "center", gap: 6 }}>

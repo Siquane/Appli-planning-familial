@@ -1,9 +1,11 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
 import { z } from "zod";
 import { prisma } from "../db";
 import { generateRefreshToken, hashRefreshToken, signAccessToken, verifyAccessToken } from "../lib/jwt";
 import { requireAuth } from "../middleware/auth";
+import { sendPasswordResetCode } from "../services/mailer";
 
 export const authRouter = Router();
 
@@ -46,6 +48,88 @@ authRouter.post("/login", async (req, res) => {
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
     return res.status(401).json({ error: "Email ou mot de passe incorrect" });
   }
+  const tokens = await issueTokens(user.id, user.email);
+  res.json({ user: publicUser(user), ...tokens });
+});
+
+// --- Password reset by 6-digit e-mail code ---------------------------------
+
+const RESET_CODE_TTL_MINUTES = 15;
+const RESET_MAX_ATTEMPTS = 5;
+const RESET_RESEND_COOLDOWN_MS = 60_000;
+
+const hashResetCode = (code: string) => crypto.createHash("sha256").update(code).digest("hex");
+
+// Emails were stored as typed at signup, so match case-insensitively.
+function findUserByEmail(email: string) {
+  return prisma.user.findFirst({ where: { email: { equals: email.trim(), mode: "insensitive" } } });
+}
+
+const forgotSchema = z.object({ email: z.string().trim().email("Adresse e-mail invalide") });
+
+authRouter.post("/forgot-password", async (req, res) => {
+  const parsed = forgotSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" });
+
+  // Always answer the same way so the endpoint can't reveal which emails have an account.
+  const user = await findUserByEmail(parsed.data.email);
+  if (!user) return res.json({ ok: true });
+
+  const recent = await prisma.passwordResetCode.findFirst({
+    where: { userId: user.id, createdAt: { gt: new Date(Date.now() - RESET_RESEND_COOLDOWN_MS) } },
+  });
+  if (recent) return res.json({ ok: true });
+
+  const code = crypto.randomInt(0, 1_000_000).toString().padStart(6, "0");
+  await prisma.passwordResetCode.deleteMany({ where: { userId: user.id } });
+  await prisma.passwordResetCode.create({
+    data: { userId: user.id, codeHash: hashResetCode(code), expiresAt: new Date(Date.now() + RESET_CODE_TTL_MINUTES * 60_000) },
+  });
+
+  try {
+    await sendPasswordResetCode({ email: user.email, name: user.name }, code, RESET_CODE_TTL_MINUTES);
+  } catch (err) {
+    console.error("[auth] password reset mail failed", err);
+    await prisma.passwordResetCode.deleteMany({ where: { userId: user.id } });
+    // 500, not 502: the app retries 502/503/504 as a sleeping-server symptom.
+    return res.status(500).json({ error: "L'e-mail n'a pas pu être envoyé. Réessaie dans un instant." });
+  }
+  res.json({ ok: true });
+});
+
+const resetSchema = z.object({
+  email: z.string().trim().email("Adresse e-mail invalide"),
+  code: z.string().trim().regex(/^\d{6}$/, "Le code contient 6 chiffres"),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+});
+
+authRouter.post("/reset-password", async (req, res) => {
+  const parsed = resetSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" });
+  const { email, code, password } = parsed.data;
+
+  const invalid = () => res.status(400).json({ error: "Code invalide ou expiré" });
+
+  const user = await findUserByEmail(email);
+  if (!user) return invalid();
+
+  const stored = await prisma.passwordResetCode.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" } });
+  if (!stored || stored.expiresAt < new Date() || stored.attempts >= RESET_MAX_ATTEMPTS) return invalid();
+
+  const matches = crypto.timingSafeEqual(Buffer.from(hashResetCode(code)), Buffer.from(stored.codeHash));
+  if (!matches) {
+    await prisma.passwordResetCode.update({ where: { id: stored.id }, data: { attempts: { increment: 1 } } });
+    return invalid();
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    prisma.passwordResetCode.deleteMany({ where: { userId: user.id } }),
+    // Sign out every other device that knew the old password.
+    prisma.refreshToken.deleteMany({ where: { userId: user.id } }),
+  ]);
+
   const tokens = await issueTokens(user.id, user.email);
   res.json({ user: publicUser(user), ...tokens });
 });

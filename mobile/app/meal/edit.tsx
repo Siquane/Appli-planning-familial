@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
 import { TextField } from "../../src/components/TextField";
@@ -60,7 +61,7 @@ export default function MealEditScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={`${type} · ${WEEKDAYS_FULL[weekday]}`} onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Pâtes bolognaise" />
 
         {recipes.length > 0 && (
@@ -81,7 +82,7 @@ export default function MealEditScreen() {
 
         <Button label="Enregistrer" variant="primary" block onPress={onSave} loading={saving} />
         {existing && <Button label="Supprimer ce repas" variant="secondary" block onPress={onClear} loading={saving} />}
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 }

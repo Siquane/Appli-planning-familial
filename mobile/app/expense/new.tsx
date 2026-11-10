@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, ScrollView } from "react-native";
+import { Alert } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
@@ -88,7 +89,7 @@ export default function ExpenseFormScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier la dépense" : "Nouvelle dépense"} onBack={() => router.back()} onDelete={existing ? onDelete : undefined} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {existing?.recurringId && (
           <Card>
             <Text size={12} tone="muted">
@@ -116,7 +117,7 @@ export default function ExpenseFormScreen() {
         )}
 
         <Button label={existing ? "Enregistrer" : "Ajouter la dépense"} variant="primary" block onPress={onSave} disabled={!isValid} loading={saving} />
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 }

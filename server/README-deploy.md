@@ -39,6 +39,9 @@ Créer un compte, un projet, copier la connection string Postgres fournie (garde
 | `APP_DEEP_LINK` | `passerelle://calendar-connected` |
 | `GOOGLE_REDIRECT_URI` | `https://<ton-service>.onrender.com/calendar/google/callback` (optionnel — laisser vide désactive proprement la sync Google, voir `src/routes/calendar.ts`) |
 | `MICROSOFT_REDIRECT_URI` | `https://<ton-service>.onrender.com/calendar/microsoft/callback` (optionnel, idem pour Outlook) |
+| `BREVO_API_KEY` | clé API Brevo (brevo.com → SMTP & API → Clés API) — sert à envoyer les codes « Mot de passe oublié » |
+| `MAIL_FROM_EMAIL` | l'adresse expéditeur, **validée dans Brevo** (Expéditeurs) |
+| `MAIL_FROM_NAME` | optionnel, nom affiché de l'expéditeur (défaut : `Passerelle`) |
 
 Ne pas laisser `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` vides : `src/env.ts` retombe sinon sur des valeurs de dev codées en dur.
 

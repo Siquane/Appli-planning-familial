@@ -31,6 +31,12 @@ export const env = {
     accessKeyId: process.env.S3_ACCESS_KEY_ID ?? "",
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? "",
   },
+  // Transactional e-mail (password reset codes) via Brevo's HTTP API.
+  brevo: {
+    apiKey: process.env.BREVO_API_KEY ?? "",
+    senderEmail: process.env.MAIL_FROM_EMAIL ?? "",
+    senderName: process.env.MAIL_FROM_NAME ?? "Passerelle",
+  },
   appDeepLink: process.env.APP_DEEP_LINK ?? "passerelle://calendar-connected",
 };
 
@@ -38,3 +44,4 @@ export const isGoogleConfigured = () => !!(env.google.clientId && env.google.cli
 export const isMicrosoftConfigured = () => !!(env.microsoft.clientId && env.microsoft.clientSecret && env.microsoft.redirectUri);
 export const isStorageConfigured = () =>
   !!(env.storage.bucket && env.storage.accessKeyId && env.storage.secretAccessKey);
+export const isMailConfigured = () => !!(env.brevo.apiKey && env.brevo.senderEmail);
