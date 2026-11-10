@@ -52,7 +52,7 @@ export default function TaskDetailScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title={task.title} onBack={() => router.back()} onEdit={() => router.push(`/task/new?edit=${task.id}`)} onDelete={onDelete} />
+      <TopBar title={task.title} onBack={() => router.back()} onDuplicate={() => router.push(`/task/new?duplicate=${task.id}`)} onEdit={() => router.push(`/task/new?edit=${task.id}`)} onDelete={onDelete} />
       <View style={{ padding: 18, gap: space[4] }}>
         <View style={{ flexDirection: "row", gap: space[2] }}>
           <Tag label={task.category} variant={categoryTagVariant(task.category)} />

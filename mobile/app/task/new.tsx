@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Screen } from "../../src/components/Screen";
@@ -26,8 +26,8 @@ const PRIORITIES: { key: Priority; label: string }[] = [
 ];
 
 export default function TaskFormScreen() {
-  const { edit, title: prefillTitle, category: prefillCategory, recurring: prefillRecurring, duration: prefillDuration, member: prefillMember } =
-    useLocalSearchParams<{ edit?: string; title?: string; category?: string; recurring?: string; duration?: string; member?: string }>();
+  const { edit, duplicate, title: prefillTitle, category: prefillCategory, recurring: prefillRecurring, duration: prefillDuration, member: prefillMember } =
+    useLocalSearchParams<{ edit?: string; duplicate?: string; title?: string; category?: string; recurring?: string; duration?: string; member?: string }>();
   const { data: tasks = [] } = useTasks();
   const { data: members = [] } = useMembers();
   const createTask = useCreateTask();
@@ -66,6 +66,28 @@ export default function TaskFormScreen() {
     setMemberIds(existing.memberIds);
     setNotes(existing.notes);
   }, [existing]);
+
+  // « Dupliquer » : on recopie la tâche source dans un formulaire de
+  // création (une seule fois, pour ne pas écraser ce que l'utilisateur
+  // modifie si la liste des tâches se rafraîchit).
+  const source: Task | undefined = useMemo(() => (duplicate ? tasks.find((t) => t.id === duplicate) : undefined), [tasks, duplicate]);
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (!source || prefilled.current) return;
+    prefilled.current = true;
+    setTitle(source.title);
+    setCategory(source.category);
+    setWeekdays([source.weekday]);
+    setTime(source.time);
+    setDuration(source.duration);
+    setPriority(source.priority);
+    setDeadlineWeekday(source.deadlineWeekday);
+    setRecurring(source.recurring);
+    setReminder(source.reminder);
+    setFlexible(source.flexible);
+    setMemberIds(source.memberIds);
+    setNotes(source.notes);
+  }, [source]);
 
   function toggleMember(id: string) {
     setMemberIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -118,7 +140,7 @@ export default function TaskFormScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title={existing ? "Modifier la tâche" : "Nouvelle tâche"} onBack={() => router.back()} />
+      <TopBar title={existing ? "Modifier la tâche" : source ? "Dupliquer la tâche" : "Nouvelle tâche"} onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Devoirs de Léo" />
 
