@@ -1,0 +1,313 @@
+// Rythmo API data model. Postgres (see DATABASE_URL) — a managed instance
+// like Neon works well for a free-tier deploy (see app/server/README-deploy.md).
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  initials     String
+  createdAt    DateTime @default(now())
+
+  members             FamilyMember[]
+  tasks               Task[]
+  recipes             Recipe[]
+  meals               Meal[]
+  documents           Document[]
+  expenses            Expense[]
+  expenseCategories   ExpenseCategory[]
+  categoryBudgets     CategoryBudget[]
+  recurringExpenses   RecurringExpense[]
+  notifications       Notification[]
+  constraints         Constraints?
+  shareLink           ShareLink?
+  sharedWith          SharedPerson[]
+  passwordResetCodes  PasswordResetCode[]
+  calendarConnections CalendarConnection[]
+  refreshTokens       RefreshToken[]
+}
+
+model PasswordResetCode {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// tint: 'accent' | 'neutral' | 'accent2' — matches the Nocturne avatar tint roles
+model FamilyMember {
+  id       String    @id @default(cuid())
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name     String
+  initials String
+  tint     String    @default("neutral")
+  age      Int?
+  birthday DateTime?
+  order    Int       @default(0)
+
+  tasks             TaskMember[]
+  recipes           RecipeMember[]
+  documents         Document[]
+  expenses          Expense[]
+  recurringExpenses RecurringExpense[]
+}
+
+// priority: 'high' | 'medium' | 'low'
+model Task {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  category         String
+  date             DateTime
+  weekday          Int
+  time             String
+  duration         Int      @default(30)
+  priority         String   @default("medium")
+  deadlineWeekday  Int?
+  recurring        Boolean  @default(false)
+  reminder         Boolean  @default(false)
+  flexible         Boolean  @default(false)
+  synced           Boolean  @default(false)
+  notes            String   @default("")
+  externalEventId  String?
+  externalProvider String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  members TaskMember[]
+}
+
+model TaskMember {
+  taskId   String
+  task     Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, memberId])
+}
+
+// ingredients/steps: ordered lists, one entry per item/step
+model Recipe {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  ingredients String[]
+  steps       String[]
+  notes       String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members   RecipeMember[]
+  meals     Meal[]
+  documents Document[]
+}
+
+model RecipeMember {
+  recipeId String
+  recipe   Recipe       @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@id([recipeId, memberId])
+}
+
+// type: 'petit-déjeuner' | 'déjeuner' | 'goûter' | 'dîner'
+// One slot per weekday+type (upserted), same weekly-template model as Task
+// (weekday, not an absolute date — see lib/dates.ts).
+model Meal {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekday   Int
+  type      String
+  title     String   @default("")
+  recipeId  String?
+  recipe    Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, weekday, type])
+}
+
+// A file kept in object storage (Cloudflare R2 or S3 — see lib/storage.ts).
+// The database only holds the object key, never the file itself.
+// recipeId set   -> attachment of that recipe (photo or PDF)
+// recipeId null  -> entry of the family document library
+// category: 'santé' | 'assurance' | 'école' | 'administratif' | 'maison' | 'autre'
+// status: 'pending' until the app confirms the upload, then 'ready'
+model Document {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  category  String        @default("autre")
+  memberId  String?
+  member    FamilyMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  recipeId  String?
+  recipe    Recipe?       @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  fileKey   String        @unique
+  fileName  String
+  mimeType  String
+  size      Int
+  status    String        @default("pending")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([userId, recipeId])
+}
+
+// Manually entered household expense. amountCents avoids float rounding;
+// date is a calendar day (no time, no timezone).
+// category: one of the fixed keys 'courses' | 'logement' | 'transport' |
+// 'santé' | 'enfants' | 'loisirs' | 'factures' | 'autre', or the id of one of
+// the family's ExpenseCategory rows (see lib/expenseCategories.ts).
+// recurringId: set when the row was generated from a RecurringExpense.
+model Expense {
+  id          String            @id @default(cuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label       String
+  amountCents Int
+  category    String            @default("autre")
+  date        DateTime          @db.Date
+  memberId    String?
+  member      FamilyMember?     @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  recurringId String?
+  recurring   RecurringExpense? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([userId, date])
+}
+
+// Category created by the family, on top of the fixed list. Deleting one moves
+// its expenses, budgets and recurring expenses to 'autre'.
+model ExpenseCategory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+}
+
+// Monthly spending cap for one category, the same every month.
+model CategoryBudget {
+  id         String @id @default(cuid())
+  userId     String
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   String
+  limitCents Int
+
+  @@unique([userId, category])
+}
+
+// Template copied into an Expense once per month, on dayOfMonth (clamped to
+// the month's last day), from startMonth on, when that month's budget is read.
+model RecurringExpense {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label       String
+  amountCents Int
+  category    String        @default("autre")
+  memberId    String?
+  member      FamilyMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  dayOfMonth  Int
+  startMonth  String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  expenses Expense[]
+  runs     RecurringRun[]
+}
+
+// Marks a month as already generated for a RecurringExpense, so deleting that
+// month's copy doesn't bring it back on the next read.
+model RecurringRun {
+  recurringId String
+  recurring   RecurringExpense @relation(fields: [recurringId], references: [id], onDelete: Cascade)
+  month       String
+
+  @@id([recurringId, month])
+}
+
+model Constraints {
+  id         String @id @default(cuid())
+  userId     String @unique
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sleepStart String @default("20:00")
+  sleepEnd   String @default("07:00")
+  lunchStart String @default("12:00")
+  lunchEnd   String @default("13:30")
+  dndStart   String @default("20:00")
+  dndEnd     String @default("22:00")
+}
+
+// group derived from createdAt at read time ('today' | 'week')
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  unread    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model ShareLink {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token  String @unique
+}
+
+model SharedPerson {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name   String
+  role   String @default("Invité")
+}
+
+// provider: 'google' | 'outlook' | 'apple'
+// Apple has no server-held tokens (device EventKit sync is client-side) — a
+// connection row is still written with provider='apple' so /calendar/status
+// reports it consistently, but accessToken/refreshToken stay null for it.
+model CalendarConnection {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider     String
+  email        String?
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@unique([userId, provider])
+}
