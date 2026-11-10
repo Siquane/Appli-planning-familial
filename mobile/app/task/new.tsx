@@ -6,6 +6,7 @@ import { Text } from "../../src/components/Text";
 import { TextField } from "../../src/components/TextField";
 import { TimeField } from "../../src/components/TimeField";
 import { Chip } from "../../src/components/Chip";
+import { ReminderToggle } from "../../src/components/ReminderToggle";
 import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
 import { useAutoSlotTask, useCreateTask, useMembers, useTasks, useUpdateTask } from "../../src/hooks/useApi";
@@ -120,9 +121,9 @@ export default function TaskFormScreen() {
           <Text size={13} tone="muted">
             Catégorie
           </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+          <View style={{ flexDirection: "row", gap: space[1] }}>
             {CATEGORIES.map((c) => (
-              <Chip key={c} label={c} selected={category === c} onPress={() => setCategory(c)} size="sm" />
+              <Chip key={c} label={c} selected={category === c} onPress={() => setCategory(c)} size="sm" fill />
             ))}
           </View>
         </View>
@@ -131,9 +132,9 @@ export default function TaskFormScreen() {
           <Text size={13} tone="muted">
             Jour{!existing ? " (plusieurs possibles, ou aucun)" : ""}
           </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+          <View style={{ flexDirection: "row", gap: space[1] }}>
             {WEEKDAYS_SHORT.map((label, i) => (
-              <Chip key={label} label={label} selected={weekdays.includes(i as Weekday)} onPress={() => toggleWeekday(i as Weekday)} size="sm" />
+              <Chip key={label} label={label} selected={weekdays.includes(i as Weekday)} onPress={() => toggleWeekday(i as Weekday)} size="sm" fill />
             ))}
           </View>
           {autoPlacement && (
@@ -151,9 +152,9 @@ export default function TaskFormScreen() {
           <Text size={13} tone="muted">
             Durée
           </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+          <View style={{ flexDirection: "row", gap: space[1] }}>
             {DURATIONS.map((d) => (
-              <Chip key={d} label={d < 60 ? `${d} min` : `${d / 60}h`} selected={duration === d} onPress={() => setDuration(d)} size="sm" mono />
+              <Chip key={d} label={d < 60 ? `${d} min` : d % 60 ? `${Math.floor(d / 60)}h${d % 60}` : `${d / 60}h`} selected={duration === d} onPress={() => setDuration(d)} size="sm" fill mono />
             ))}
           </View>
         </View>
@@ -162,9 +163,9 @@ export default function TaskFormScreen() {
           <Text size={13} tone="muted">
             Priorité
           </Text>
-          <View style={{ flexDirection: "row", gap: space[2] }}>
+          <View style={{ flexDirection: "row", gap: space[1] }}>
             {PRIORITIES.map((p) => (
-              <Chip key={p.key} label={p.label} selected={priority === p.key} onPress={() => setPriority(p.key)} size="sm" />
+              <Chip key={p.key} label={p.label} selected={priority === p.key} onPress={() => setPriority(p.key)} size="sm" fill />
             ))}
           </View>
         </View>
@@ -173,10 +174,10 @@ export default function TaskFormScreen() {
           <Text size={13} tone="muted">
             Échéance (optionnel)
           </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
-            <Chip label="Aucune" selected={deadlineWeekday === null} onPress={() => setDeadlineWeekday(null)} size="sm" />
+          <View style={{ flexDirection: "row", gap: space[1] }}>
+            <Chip label="Aucune" selected={deadlineWeekday === null} onPress={() => setDeadlineWeekday(null)} size="sm" fill />
             {WEEKDAYS_SHORT.map((label, i) => (
-              <Chip key={label} label={label} selected={deadlineWeekday === i} onPress={() => setDeadlineWeekday(i as Weekday)} size="sm" />
+              <Chip key={label} label={label} selected={deadlineWeekday === i} onPress={() => setDeadlineWeekday(i as Weekday)} size="sm" fill />
             ))}
           </View>
         </View>
@@ -196,22 +197,20 @@ export default function TaskFormScreen() {
 
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
           <Chip label="Récurrente" selected={recurring} onPress={() => setRecurring((v) => !v)} size="sm" />
-          {recurring && (
-            <Chip
-              label="Rappel"
-              selected={reminder}
-              onPress={() => {
-                const next = !reminder;
-                setReminder(next);
-                if (next) confirmReminderPermission();
-              }}
-              size="sm"
-            />
-          )}
           {!autoPlacement && (
             <Chip label="Flexible (replanifiable)" selected={flexible} onPress={() => setFlexible((v) => !v)} size="sm" />
           )}
         </View>
+
+        {recurring && (
+          <ReminderToggle
+            value={reminder}
+            onChange={(next) => {
+              setReminder(next);
+              if (next) confirmReminderPermission();
+            }}
+          />
+        )}
 
         <TextField label="Notes" value={notes} onChangeText={setNotes} multiline placeholder="Détails, lieu, contexte..." />
 

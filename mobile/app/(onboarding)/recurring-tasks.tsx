@@ -6,6 +6,7 @@ import { Text } from "../../src/components/Text";
 import { TextField } from "../../src/components/TextField";
 import { TimeField } from "../../src/components/TimeField";
 import { Chip } from "../../src/components/Chip";
+import { ReminderToggle } from "../../src/components/ReminderToggle";
 import { Card } from "../../src/components/Card";
 import { Button } from "../../src/components/Button";
 import { StepDots } from "../../src/components/StepDots";
@@ -134,9 +135,9 @@ export default function RecurringTasksOnboardingScreen() {
             <Text size={13} tone="muted">
               Jours
             </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+            <View style={{ flexDirection: "row", gap: space[1] }}>
               {WEEKDAYS_SHORT.map((label, i) => (
-                <Chip key={label} label={label} selected={weekdays.includes(i as Weekday)} onPress={() => toggleWeekday(i as Weekday)} size="sm" />
+                <Chip key={label} label={label} selected={weekdays.includes(i as Weekday)} onPress={() => toggleWeekday(i as Weekday)} size="sm" fill />
               ))}
             </View>
           </View>
@@ -147,23 +148,19 @@ export default function RecurringTasksOnboardingScreen() {
             <Text size={13} tone="muted">
               Catégorie
             </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+            <View style={{ flexDirection: "row", gap: space[1] }}>
               {CATEGORIES.map((c) => (
-                <Chip key={c} label={c} selected={category === c} onPress={() => setCategory(c)} size="sm" />
+                <Chip key={c} label={c} selected={category === c} onPress={() => setCategory(c)} size="sm" fill />
               ))}
             </View>
           </View>
 
-          <Chip
-            label="Rappel"
-            selected={reminder}
-            onPress={() => {
-              const next = !reminder;
+          <ReminderToggle
+            value={reminder}
+            onChange={(next) => {
               setReminder(next);
               if (next) confirmReminderPermission();
             }}
-            size="sm"
-            style={{ alignSelf: "flex-start" }}
           />
 
           <Button label="+ Ajouter une tâche récurrente" variant="secondary" block onPress={addDraft} disabled={!canAdd} />
