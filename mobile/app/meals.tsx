@@ -7,6 +7,7 @@ import { Card } from "../src/components/Card";
 import { TopBar } from "../src/components/TopBar";
 import { WeekStrip } from "../src/components/WeekStrip";
 import { ChevronRightIcon } from "../src/components/icons";
+import { Button } from "../src/components/Button";
 import { useMeals, useRecipes } from "../src/hooks/useApi";
 import { todayWeekday } from "../src/lib/weekdays";
 import { color, space } from "../src/theme/tokens";
@@ -24,6 +25,7 @@ export default function MealsScreen() {
     <Screen scroll={false} padded={false}>
       <TopBar title="Menu de la semaine" onBack={() => router.back()} />
       <View style={{ padding: 18, gap: space[4] }}>
+        <Button label="✨ Générer mes menus" variant="primary" block onPress={() => router.push("/meal/plan")} />
         <WeekStrip selected={selected} onSelect={setSelected} today={today} />
 
         <View style={{ gap: space[2] }}>

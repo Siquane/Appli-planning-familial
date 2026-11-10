@@ -37,6 +37,9 @@ export const env = {
     senderEmail: process.env.MAIL_FROM_EMAIL ?? "",
     senderName: process.env.MAIL_FROM_NAME ?? "Passerelle",
   },
+  // Weekly menu suggestions (POST /meals/generate) call the Claude API.
+  // Leave empty to disable the feature (route answers 503).
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
   appDeepLink: process.env.APP_DEEP_LINK ?? "passerelle://calendar-connected",
 };
 
@@ -45,3 +48,4 @@ export const isMicrosoftConfigured = () => !!(env.microsoft.clientId && env.micr
 export const isStorageConfigured = () =>
   !!(env.storage.bucket && env.storage.accessKeyId && env.storage.secretAccessKey);
 export const isMailConfigured = () => !!(env.brevo.apiKey && env.brevo.senderEmail);
+export const isMealAiConfigured = () => !!env.anthropicApiKey;
