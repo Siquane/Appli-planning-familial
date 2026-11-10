@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
-import { FALLBACK_CATEGORY, FIXED_EXPENSE_CATEGORIES } from "../lib/expenseCategories";
+import { FALLBACK_CATEGORY, FIXED_EXPENSE_CATEGORIES, isFixedCategoryName } from "../lib/expenseCategories";
 
 // The family's own expense categories, on top of the fixed list.
 
@@ -16,7 +16,7 @@ function serialize(c: { id: string; name: string }) {
 }
 
 async function nameTaken(userId: string, name: string, exceptId?: string) {
-  if ((FIXED_EXPENSE_CATEGORIES as readonly string[]).includes(name.toLocaleLowerCase("fr"))) return true;
+  if (isFixedCategoryName(name)) return true;
   const same = await prisma.expenseCategory.findFirst({
     where: { userId, name: { equals: name, mode: "insensitive" }, ...(exceptId ? { id: { not: exceptId } } : {}) },
     select: { id: true },
@@ -47,7 +47,7 @@ expenseCategoriesRouter.patch("/:id", async (req, res) => {
   res.json({ category: serialize(category) });
 });
 
-// Expenses and recurring expenses move to "Autre"; the category's cap goes away.
+// Expenses and recurring expenses move to "Divers"; the category's cap goes away.
 expenseCategoriesRouter.delete("/:id", async (req, res) => {
   const userId = req.userId!;
   const existing = await prisma.expenseCategory.findFirst({ where: { id: req.params.id, userId } });

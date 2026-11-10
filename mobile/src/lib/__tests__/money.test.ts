@@ -53,11 +53,11 @@ describe("months and days", () => {
 describe("category options", () => {
   const { buildCategoryOptions, categoryLabel } = jest.requireActual("../money") as typeof import("../money");
 
-  it("puts custom categories before 'Autre' and labels unknown ids as 'Autre'", () => {
-    const options = buildCategoryOptions([{ id: "c1", name: "Animaux" }]);
-    expect(options.map((o) => o.label).slice(-3)).toEqual(["Factures", "Animaux", "Autre"]);
-    expect(categoryLabel(options, "c1")).toBe("Animaux");
-    expect(categoryLabel(options, "santé")).toBe("Santé");
-    expect(categoryLabel(options, "deleted-id")).toBe("Autre");
+  it("puts custom categories before 'Divers' and labels unknown ids as 'Divers'", () => {
+    const options = buildCategoryOptions([{ id: "c1", name: "Jardin" }]);
+    expect(options.map((o) => o.label).slice(-3)).toEqual(["Cadeaux", "Jardin", "Divers"]);
+    expect(categoryLabel(options, "c1")).toBe("Jardin");
+    expect(categoryLabel(options, "assurances")).toBe("Assurances");
+    expect(categoryLabel(options, "deleted-id")).toBe("Divers");
   });
 });

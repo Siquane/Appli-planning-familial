@@ -77,7 +77,7 @@ export default function BudgetSettingsScreen() {
           </Card>
         </Section>
 
-        <Section title="Mes catégories" hint="En plus des catégories de base. En supprimer une range ses dépenses dans « Autre ».">
+        <Section title="Mes catégories" hint="En plus des catégories de base. En supprimer une range ses dépenses dans « Divers ».">
           {custom.length > 0 && (
             <Card style={{ gap: space[3] }}>
               {custom.map((c) => (
@@ -165,7 +165,7 @@ function CustomCategoryRow({ id, name }: { id: string; name: string }) {
   }
 
   function onDelete() {
-    Alert.alert("Supprimer la catégorie", `Supprimer « ${name} » ? Ses dépenses passeront dans « Autre » et son plafond sera retiré.`, [
+    Alert.alert("Supprimer la catégorie", `Supprimer « ${name} » ? Ses dépenses passeront dans « Divers » et son plafond sera retiré.`, [
       { text: "Annuler", style: "cancel" },
       { text: "Supprimer", style: "destructive", onPress: () => remove.mutate(id, { onSuccess: () => toast("Catégorie supprimée."), onError: (e) => toast(errorMessage(e)) }) },
     ]);
@@ -202,7 +202,7 @@ function AddCategory() {
         value={name}
         onChangeText={setName}
         onSubmitEditing={add}
-        placeholder="Ex. Animaux, Cadeaux…"
+        placeholder="Ex. Jardin, Bricolage…"
         placeholderTextColor={color.neutral600}
         style={[inputStyle, { flex: 1, paddingVertical: 9 }]}
       />
