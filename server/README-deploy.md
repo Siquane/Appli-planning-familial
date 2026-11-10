@@ -43,6 +43,14 @@ Créer un compte, un projet, copier la connection string Postgres fournie (garde
 | `MAIL_FROM_EMAIL` | l'adresse expéditeur, **validée dans Brevo** (Expéditeurs) |
 | `MAIL_FROM_NAME` | optionnel, nom affiché de l'expéditeur (défaut : `Passerelle`) |
 
+**Menus de la semaine générés par IA — [Claude](https://console.anthropic.com) (optionnel)**
+
+Le bouton « Générer mes menus » de l'écran Repas pose quelques questions puis demande des propositions à Claude. Sans clé, l'appli fonctionne mais ce bouton répond « génération non configurée » (503).
+
+| Variable | Valeur |
+|---|---|
+| `ANTHROPIC_API_KEY` | clé API créée sur console.anthropic.com → *API Keys* (chaque génération est facturée à l'usage, quelques centimes) |
+
 Ne pas laisser `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` vides : `src/env.ts` retombe sinon sur des valeurs de dev codées en dur.
 
 **Stockage des documents — [Cloudflare R2](https://dash.cloudflare.com) (optionnel)**

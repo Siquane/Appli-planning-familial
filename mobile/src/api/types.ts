@@ -137,6 +137,35 @@ export type MealInput = {
   notes?: string;
 };
 
+export type MealDiet = "végétarien" | "pescetarien" | "sans-porc" | "halal" | "sans-gluten" | "sans-lactose";
+export type CookTime = "express" | "normal" | "élaboré";
+export type RecipeUsage = "souvent" | "parfois" | "jamais";
+
+/** Answers to the "Générer mes menus" questionnaire. */
+export interface MealPlanPreferences {
+  diets: MealDiet[];
+  allergies: string;
+  weekdayTime: CookTime;
+  weekendTime: CookTime;
+  fishPerWeek: number | null;
+  veggiePerWeek: number | null;
+  useMyRecipes: RecipeUsage;
+  wishes: string;
+  avoid: string;
+}
+
+export interface MealSlot {
+  weekday: Weekday;
+  type: MealType;
+}
+
+/** A suggested meal, not saved yet. */
+export interface ProposedMeal extends MealSlot {
+  title: string;
+  recipeId: string | null;
+  notes: string;
+}
+
 export interface CalendarStatus {
   connections: CalendarConnection[];
   googleConfigured: boolean;
