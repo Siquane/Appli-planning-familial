@@ -54,7 +54,7 @@ describe("expenses", () => {
 
     expect((await request(app).post("/expenses").set(auth).send({ ...base, amountCents: 0 })).status).toBe(400);
     expect((await request(app).post("/expenses").set(auth).send({ ...base, amountCents: 12.5 })).status).toBe(400);
-    expect((await request(app).post("/expenses").set(auth).send({ ...base, category: "vacances" })).status).toBe(400);
+    expect((await request(app).post("/expenses").set(auth).send({ ...base, category: "factures" })).status).toBe(400);
     expect((await request(app).post("/expenses").set(auth).send({ ...base, date: "2026-02-30" })).status).toBe(400);
     expect((await request(app).post("/expenses").set(auth).send({ ...base, label: "  " })).status).toBe(400);
     expect((await request(app).get("/expenses?month=2026-13").set(auth)).status).toBe(400);
