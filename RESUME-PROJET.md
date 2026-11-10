@@ -1,7 +1,7 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 9 novembre 2026.
+Dernière mise à jour : 10 novembre 2026.
 
 ## Contexte
 
@@ -28,19 +28,28 @@ Dernière mise à jour : 9 novembre 2026.
 ## Mise en ligne (faite)
 
 - **Base de données** : Neon (Europe, Frankfurt), adresse directe sans `-pooler`.
-- **Serveur** : Render, service `appli-planning-familial`, dossier racine `server`, offre gratuite (mise en veille, premier appel lent). `https://appli-planning-familial.onrender.com/health` répond `{"ok":true}`.
+- **Serveur** : Render, dossier racine `server`, offre gratuite (mise en veille, premier appel lent). Adresse : `https://appli-planning-familial-0lyd.onrender.com` (`/health` répond `{"ok":true}`). C'est cette adresse qui est dans `mobile/eas.json`.
 - **R2** : configuré (5 variables `S3_*` dans Render).
-- **Appli mobile** : Android uniquement. Compilation via GitHub Actions « EAS Build (Android preview) » (bouton Run workflow), secret `EXPO_TOKEN` ajouté. L'APK pointe vers l'URL Render (voir `mobile/eas.json`).
+- **E-mails** : mot de passe oublié par code à 6 chiffres, envoyé via Brevo (ajouté par une autre session, voir `server/src/services/mailer.ts`).
+- **Appli mobile** : Android uniquement. Compilation via GitHub Actions « EAS Build (Android preview) » (bouton Run workflow, Node 22), secret `EXPO_TOKEN` ajouté. L'APK s'installe depuis le lien expo.dev affiché à la fin du workflow.
+
+## Synchronisation d'agenda Google / Outlook : pas activée
+
+- Le serveur sait synchroniser les tâches avec Google Agenda et Outlook, mais **aucun identifiant OAuth n'est configuré dans Render** (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_REDIRECT_URI`).
+- Conséquence : dans Profil → Synchronisation calendrier, Google et Outlook affichent « Pas encore activé sur le serveur » et un bouton « Bientôt » (avant, « Connecter » ouvrait une page d'erreur brute). Apple Calendar fonctionne (passe par le téléphone).
+- Décision du 10/11/2026 : ne pas les activer pour l'instant. Pour le faire plus tard : créer une application dans le portail Azure (Outlook) ou Google Cloud (Google Agenda), avec l'adresse de retour `https://appli-planning-familial-0lyd.onrender.com/calendar/microsoft/callback` (ou `/calendar/google/callback`), puis ajouter les 3 variables correspondantes dans Render. Environ 15 min chacun.
+
+## Ajouts récents (branche, PR #4)
+
+- Rappel : une ligne dédiée (cloche + interrupteur) au lieu d'une puce confondue avec les catégories.
+- Catégorie, jours, durée, priorité, échéance : toutes les puces sur une seule ligne (`Chip` avec `fill`). « 1.5h » → « 1h30 ».
+- Plusieurs jours cochés : interrupteur « Heure différente selon le jour » (`ScheduleTimes`, `lib/dayTimes.ts`), une tâche par jour avec sa propre heure.
+- Fiche d'une tâche : icône « Dupliquer » en haut, qui ouvre le formulaire de création prérempli.
 
 ## En cours au moment de ce résumé
 
-- Branche `claude/appli-planning-familial-setup-1cljht`, **pas encore fusionnée dans `main`** :
-  - workflow EAS passé à Node 22 (eas-cli refuse Node 20) ;
-  - guide de déploiement corrigé (`server` au lieu de `app/server`) ;
-  - dépendances mises à jour (versions compatibles uniquement) ;
-  - ce fichier.
-  → Ouvrir une pull request vers `main` et la fusionner, sinon « Run workflow » depuis `main` échoue encore.
-- Premier APK en cours de fabrication chez Expo (lancé depuis cette branche). Ensuite : installer sur les téléphones et tester (compte, budget, documents, pièces jointes de recette).
+- PR #4 (`claude/appli-planning-familial-setup-1cljht` → `main`) ouverte : correction Node 22, dépendances, ce fichier et les ajouts ci-dessus. `main` y a été fusionné (pas de conflit restant). À fusionner.
+- Les APK compilés avant cette fusion (n°6, n°7) pointaient vers l'ancienne adresse du serveur : ne pas les installer. Relancer une compilation depuis la branche (ou `main` après fusion de la PR).
 
 ## Mises à jour majeures à prévoir plus tard (non faites, demandent du code)
 
