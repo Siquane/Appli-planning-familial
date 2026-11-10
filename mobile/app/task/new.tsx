@@ -4,7 +4,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
 import { TextField } from "../../src/components/TextField";
-import { TimeField } from "../../src/components/TimeField";
+import { ScheduleTimes } from "../../src/components/ScheduleTimes";
+import { allTimesValid, resolveTimes, type DayTimes } from "../../src/lib/dayTimes";
 import { Chip } from "../../src/components/Chip";
 import { ReminderToggle } from "../../src/components/ReminderToggle";
 import { Button } from "../../src/components/Button";
@@ -39,6 +40,8 @@ export default function TaskFormScreen() {
   const [category, setCategory] = useState<Category>((prefillCategory as Category) ?? "Maison");
   const [weekdays, setWeekdays] = useState<Weekday[]>([]);
   const [time, setTime] = useState("08:00");
+  const [perDayTimes, setPerDayTimes] = useState(false);
+  const [dayTimes, setDayTimes] = useState<DayTimes>({});
   const [duration, setDuration] = useState(prefillDuration ? Number(prefillDuration) : 30);
   const [priority, setPriority] = useState<Priority>("medium");
   const [deadlineWeekday, setDeadlineWeekday] = useState<Weekday | null>(null);
@@ -85,7 +88,9 @@ export default function TaskFormScreen() {
 
   const missing: string[] = [];
   if (!title.trim()) missing.push("un titre");
-  if (!autoPlacement && !/^\d{2}:\d{2}$/.test(time)) missing.push("une heure valide (HH:MM)");
+  // Création sur plusieurs jours : une heure par jour si l'interrupteur est activé.
+  const times = resolveTimes(weekdays, time, perDayTimes && !existing, dayTimes);
+  if (!autoPlacement && !allTimesValid(existing ? { 0: time } : times)) missing.push("une heure valide (HH:MM)");
   const isValid = missing.length === 0;
   const saving = createTask.isPending || updateTask.isPending || autoSlotTask.isPending;
 
@@ -101,7 +106,7 @@ export default function TaskFormScreen() {
         useToastStore.getState().show(`Tâche créée automatiquement — ${WEEKDAYS_SHORT[slot.weekday]} à ${slot.time}.`);
       } else {
         for (const weekday of weekdays) {
-          await createTask.mutateAsync({ ...base, time, weekday, flexible });
+          await createTask.mutateAsync({ ...base, time: times[weekday] ?? time, weekday, flexible });
         }
         useToastStore.getState().show(weekdays.length > 1 ? "Tâches créées." : "Tâche créée.");
       }
@@ -145,7 +150,15 @@ export default function TaskFormScreen() {
         </View>
 
         {!autoPlacement && (
-          <TimeField label="Heure" value={time} onChange={setTime} />
+          <ScheduleTimes
+            weekdays={existing ? [] : weekdays}
+            time={time}
+            onTimeChange={setTime}
+            perDay={perDayTimes}
+            onPerDayChange={setPerDayTimes}
+            dayTimes={dayTimes}
+            onDayTimesChange={setDayTimes}
+          />
         )}
 
         <View style={{ gap: space[2] }}>
