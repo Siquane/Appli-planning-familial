@@ -6,6 +6,7 @@ import { dateForWeekday } from "../lib/dates";
 import { getProposals, SchedulableTask, Weekday } from "../lib/scheduling";
 import { syncTaskToCalendar, unsyncTaskFromCalendar } from "../services/calendarSync";
 import type { Task } from "@prisma/client";
+import { patchSchema } from "../lib/validation";
 
 export const tasksRouter = Router();
 tasksRouter.use(requireAuth);
@@ -109,7 +110,7 @@ tasksRouter.post("/", async (req, res) => {
 });
 
 tasksRouter.patch("/:id", async (req, res) => {
-  const parsed = taskSchema.partial().safeParse(req.body);
+  const parsed = patchSchema(taskSchema).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await loadOwnedTask(req.userId!, req.params.id);
   if (!existing) return res.status(404).json({ error: "Not found" });

@@ -5,6 +5,7 @@ import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { checkCategoryAndMember } from "../lib/expenseCategories";
 import { amountCents, currentMonth } from "./expenses";
+import { patchSchema } from "../lib/validation";
 
 // Recurring expenses (rent, subscriptions…): copied into the month's expenses
 // on dayOfMonth, starting with the month they're created in. See lib/recurring.ts.
@@ -52,7 +53,7 @@ recurringExpensesRouter.post("/", async (req, res) => {
 });
 
 recurringExpensesRouter.patch("/:id", async (req, res) => {
-  const parsed = schema.partial().safeParse(req.body);
+  const parsed = patchSchema(schema).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await prisma.recurringExpense.findFirst({ where: { id: req.params.id, userId: req.userId } });
   if (!existing) return res.status(404).json({ error: "Not found" });
