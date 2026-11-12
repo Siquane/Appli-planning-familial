@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { View, Pressable } from "react-native";
-import { router } from "expo-router";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HomeIcon, SearchIcon, BellIcon, ProfileIcon, PlusIcon } from "./icons";
 import { useNotifications } from "../hooks/useApi";
+import { QuickAddSheet } from "./QuickAddSheet";
 import { color, space } from "../theme/tokens";
 
 const ICONS: Record<string, (props: { size: number; color: string }) => React.JSX.Element> = {
@@ -19,6 +20,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { data: notifications = [] } = useNotifications();
   const hasUnread = notifications.some((n) => n.unread);
+  const [quickAdd, setQuickAdd] = useState(false);
 
   const routes = state.routes.filter((r: RouteItem) => ICONS[r.name]);
   const left = routes.slice(0, 2);
@@ -54,8 +56,8 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       })}
 
       <Pressable
-        onPress={() => router.push("/task/new")}
-        accessibilityLabel="Nouvelle tâche"
+        onPress={() => setQuickAdd(true)}
+        accessibilityLabel="Ajouter"
         style={{
           width: 50,
           height: 50,
@@ -93,6 +95,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           </Pressable>
         );
       })}
+      <QuickAddSheet visible={quickAdd} onClose={() => setQuickAdd(false)} />
     </View>
   );
 }
