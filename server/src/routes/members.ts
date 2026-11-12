@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
+import { patchSchema } from "../lib/validation";
 
 export const membersRouter = Router();
 membersRouter.use(requireAuth);
@@ -38,7 +39,7 @@ membersRouter.post("/", async (req, res) => {
 });
 
 membersRouter.patch("/:id", async (req, res) => {
-  const parsed = memberSchema.partial().safeParse(req.body);
+  const parsed = patchSchema(memberSchema).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await prisma.familyMember.findFirst({ where: { id: req.params.id, userId: req.userId } });
   if (!existing) return res.status(404).json({ error: "Not found" });

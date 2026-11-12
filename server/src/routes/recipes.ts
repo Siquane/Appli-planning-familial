@@ -4,6 +4,7 @@ import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { removeObjects } from "../lib/storage";
 import type { Recipe } from "@prisma/client";
+import { patchSchema } from "../lib/validation";
 
 export const recipesRouter = Router();
 recipesRouter.use(requireAuth);
@@ -61,7 +62,7 @@ recipesRouter.post("/", async (req, res) => {
 });
 
 recipesRouter.patch("/:id", async (req, res) => {
-  const parsed = recipeSchema.partial().safeParse(req.body);
+  const parsed = patchSchema(recipeSchema).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await loadOwnedRecipe(req.userId!, req.params.id);
   if (!existing) return res.status(404).json({ error: "Not found" });

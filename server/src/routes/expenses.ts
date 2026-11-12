@@ -5,6 +5,7 @@ import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { checkCategoryAndMember } from "../lib/expenseCategories";
 import { materializeRecurring } from "../lib/recurring";
+import { patchSchema } from "../lib/validation";
 
 // Household budget: expenses entered by hand (or copied each month from a
 // recurring expense), one category each, summed per month and compared to
@@ -112,7 +113,7 @@ async function loadOwnedExpense(userId: string, id: string) {
 
 // Editing a copy of a recurring expense only changes that month.
 expensesRouter.patch("/:id", async (req, res) => {
-  const parsed = expenseSchema.partial().safeParse(req.body);
+  const parsed = patchSchema(expenseSchema).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await loadOwnedExpense(req.userId!, req.params.id);
   if (!existing) return res.status(404).json({ error: "Not found" });
