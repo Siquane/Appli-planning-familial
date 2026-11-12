@@ -92,3 +92,23 @@ export function shortDay(day: string): string {
   const d = fromDayString(day);
   return `${d.getDate()} ${SHORT_MONTHS[d.getMonth()]}`;
 }
+
+/**
+ * Whether saving an expense pushes its category over its monthly cap (it
+ * wasn't over before). `budget` is the month the expense lands in; `previous`
+ * is the expense being edited, if any. Returns the new total and the cap, or
+ * null when no alert is due.
+ */
+export function capCrossed(
+  budget: { month: string; byCategory: { category: string; totalCents: number; limitCents: number | null }[] } | undefined,
+  next: { category: string; amountCents: number; date: string },
+  previous?: { category: string; amountCents: number; date: string },
+): { totalCents: number; limitCents: number } | null {
+  if (!budget || next.date.slice(0, 7) !== budget.month) return null;
+  const row = budget.byCategory.find((c) => c.category === next.category);
+  if (!row || row.limitCents === null) return null;
+  const before = row.totalCents;
+  const counted = previous && previous.category === next.category && previous.date.slice(0, 7) === budget.month ? previous.amountCents : 0;
+  const after = before - counted + next.amountCents;
+  return before <= row.limitCents && after > row.limitCents ? { totalCents: after, limitCents: row.limitCents } : null;
+}

@@ -11,7 +11,7 @@ import { ChipPicker } from "../../src/components/ChipPicker";
 import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
 import { useCreateExpense, useDeleteExpense, useExpenseCategories, useMembers, useMonthlyBudget, useUpdateExpense } from "../../src/hooks/useApi";
-import { centsToInput, currentMonth, fromDayString, parseAmount, toDayString } from "../../src/lib/money";
+import { capCrossed, categoryLabel, centsToInput, currentMonth, formatEuros, fromDayString, parseAmount, toDayString } from "../../src/lib/money";
 import { useToastStore } from "../../src/state/toastStore";
 import { space } from "../../src/theme/tokens";
 
@@ -51,6 +51,8 @@ export default function ExpenseFormScreen() {
   async function onSave() {
     if (amountCents === null) return;
     const payload = { label: label.trim(), amountCents, category, memberId, date: toDayString(date) };
+    // Computed before saving, from the month's totals as they were.
+    const crossed = capCrossed(data, payload, existing);
     try {
       if (existing) {
         await updateExpense.mutateAsync({ id: existing.id, data: payload });
@@ -58,6 +60,11 @@ export default function ExpenseFormScreen() {
       } else {
         await createExpense.mutateAsync(payload);
         useToastStore.getState().show("Dépense ajoutée.");
+      }
+      if (crossed) {
+        useToastStore
+          .getState()
+          .show(`⚠️ Plafond « ${categoryLabel(options, category)} » dépassé : ${formatEuros(crossed.totalCents)} / ${formatEuros(crossed.limitCents)}.`);
       }
       router.back();
     } catch (e) {

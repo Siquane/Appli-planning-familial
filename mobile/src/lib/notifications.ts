@@ -101,7 +101,9 @@ export async function syncTaskReminders(tasks: Task[]): Promise<void> {
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
   await Promise.all(
     scheduled
-      .filter((req) => req.identifier && !desiredIds.has(req.identifier))
+      // Only task reminders (bare task ids): birthday and digest ids carry a
+      // "prefix:" and are owned by their own sync functions.
+      .filter((req) => req.identifier && !req.identifier.includes(":") && !desiredIds.has(req.identifier))
       .map((req) => Notifications.cancelScheduledNotificationAsync(req.identifier))
   );
 
@@ -144,6 +146,50 @@ export async function syncBirthdayReminders(members: Member[]): Promise<void> {
         identifier,
         content: { title: "🎂 Anniversaire", body: `C'est l'anniversaire de ${member.name} aujourd'hui !` },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
+      });
+    })
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Evening digest: every evening at DIGEST_HOUR, a summary of tomorrow's tasks.
+// Tasks are a weekly template, so one WEEKLY notification per weekday is
+// enough; it's rebuilt whenever the task list (or the setting) changes.
+
+export const DIGEST_HOUR = 20;
+const DIGEST_ID_PREFIX = "digest:";
+const DIGEST_MAX_LISTED = 3;
+
+/** Text announcing `weekday`'s tasks, or null when nothing is planned that day. */
+export function digestBody(tasks: Task[], weekday: Weekday): string | null {
+  const day = tasks.filter((t) => t.weekday === weekday).sort((a, b) => a.time.localeCompare(b.time));
+  if (day.length === 0) return null;
+  const listed = day.slice(0, DIGEST_MAX_LISTED).map((t) => `${t.time} ${t.title}`);
+  const more = day.length - listed.length;
+  return `${day.length} tâche${day.length > 1 ? "s" : ""} : ${listed.join(", ")}${more > 0 ? ` et ${more} autre${more > 1 ? "s" : ""}` : ""}.`;
+}
+
+export async function syncEveningDigest(tasks: Task[], enabled: boolean): Promise<void> {
+  if (Platform.OS === "web") return;
+  if (!(await hasNotificationPermission())) return;
+
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    scheduled
+      .filter((req) => req.identifier?.startsWith(DIGEST_ID_PREFIX))
+      .map((req) => Notifications.cancelScheduledNotificationAsync(req.identifier))
+  );
+  if (!enabled) return;
+
+  await Promise.all(
+    ([0, 1, 2, 3, 4, 5, 6] as Weekday[]).map(async (evening) => {
+      const tomorrow = ((evening + 1) % 7) as Weekday;
+      const body = digestBody(tasks, tomorrow);
+      if (!body) return;
+      await Notifications.scheduleNotificationAsync({
+        identifier: `${DIGEST_ID_PREFIX}${evening}`,
+        content: { title: "Demain", body },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.WEEKLY, weekday: toExpoWeekday(evening), hour: DIGEST_HOUR, minute: 0 },
       });
     })
   );

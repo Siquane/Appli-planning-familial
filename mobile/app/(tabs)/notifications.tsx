@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import { Pressable, Switch, View } from "react-native";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
@@ -6,6 +6,8 @@ import { Button } from "../../src/components/Button";
 import { BellIcon } from "../../src/components/icons";
 import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from "../../src/hooks/useApi";
 import { color, space } from "../../src/theme/tokens";
+import { useSettingsStore } from "../../src/state/settingsStore";
+import { confirmReminderPermission, DIGEST_HOUR } from "../../src/lib/notifications";
 
 export default function NotificationsScreen() {
   const { data: notifications = [] } = useNotifications();
@@ -15,6 +17,13 @@ export default function NotificationsScreen() {
   const today = notifications.filter((n) => n.group === "today");
   const week = notifications.filter((n) => n.group === "week");
   const hasUnread = notifications.some((n) => n.unread);
+  const eveningDigest = useSettingsStore((st) => st.eveningDigest);
+  const setEveningDigest = useSettingsStore((st) => st.setEveningDigest);
+
+  async function toggleDigest(on: boolean) {
+    await setEveningDigest(on);
+    if (on) await confirmReminderPermission();
+  }
 
   return (
     <Screen>
@@ -24,6 +33,25 @@ export default function NotificationsScreen() {
         </Text>
         {hasUnread && <Button label="Tout marquer lu" variant="ghost" onPress={() => markAllRead.mutate()} />}
       </View>
+
+      <Pressable onPress={() => toggleDigest(!eveningDigest)} accessibilityRole="switch" accessibilityState={{ checked: eveningDigest }}>
+        <Card row style={{ alignItems: "center" }}>
+          <View style={{ flex: 1 }}>
+            <Text size={14} weight="medium">
+              Récap du soir
+            </Text>
+            <Text size={11.5} tone="faint">
+              Chaque soir à {DIGEST_HOUR} h, les tâches du lendemain.
+            </Text>
+          </View>
+          <Switch
+            value={eveningDigest}
+            onValueChange={toggleDigest}
+            trackColor={{ false: color.neutral700, true: color.accent700 }}
+            thumbColor={eveningDigest ? color.accent300 : color.neutral300}
+          />
+        </Card>
+      </Pressable>
 
       {notifications.length === 0 ? (
         <Card style={{ alignItems: "center", paddingVertical: space[8] }}>

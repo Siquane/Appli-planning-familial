@@ -61,3 +61,32 @@ describe("category options", () => {
     expect(categoryLabel(options, "deleted-id")).toBe("Autre");
   });
 });
+
+describe("capCrossed", () => {
+  const { capCrossed } = jest.requireActual("../money") as typeof import("../money");
+  const budget = {
+    month: "2026-11",
+    byCategory: [
+      { category: "courses", totalCents: 55000, limitCents: 60000 },
+      { category: "loisirs", totalCents: 70000, limitCents: 50000 },
+      { category: "autre", totalCents: 1000, limitCents: null },
+    ],
+  };
+
+  it("alerts when an expense pushes the category over its cap", () => {
+    expect(capCrossed(budget, { category: "courses", amountCents: 8000, date: "2026-11-12" })).toEqual({ totalCents: 63000, limitCents: 60000 });
+  });
+
+  it("stays quiet under the cap, without a cap, if already over, or for another month", () => {
+    expect(capCrossed(budget, { category: "courses", amountCents: 1000, date: "2026-11-12" })).toBeNull();
+    expect(capCrossed(budget, { category: "autre", amountCents: 99999, date: "2026-11-12" })).toBeNull();
+    expect(capCrossed(budget, { category: "loisirs", amountCents: 100, date: "2026-11-12" })).toBeNull();
+    expect(capCrossed(budget, { category: "courses", amountCents: 8000, date: "2026-12-01" })).toBeNull();
+  });
+
+  it("counts an edited expense only once", () => {
+    const previous = { category: "courses", amountCents: 5000, date: "2026-11-03" };
+    expect(capCrossed(budget, { category: "courses", amountCents: 9000, date: "2026-11-03" }, previous)).toBeNull();
+    expect(capCrossed(budget, { category: "courses", amountCents: 11000, date: "2026-11-03" }, previous)).toEqual({ totalCents: 61000, limitCents: 60000 });
+  });
+});
