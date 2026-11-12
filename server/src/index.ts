@@ -17,6 +17,9 @@ import { categoryBudgetsRouter } from "./routes/categoryBudgets";
 import { recurringExpensesRouter } from "./routes/recurringExpenses";
 
 export const app = express();
+// Render terminates HTTPS in front of the app: trust that one hop so
+// req.ip (used by the auth rate limits) is the real client address.
+app.set("trust proxy", 1);
 app.use(cors());
 app.use(express.json());
 
