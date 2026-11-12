@@ -2,7 +2,7 @@ import { useEffect, useCallback } from "react";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import * as SplashScreen from "expo-splash-screen";
 import * as SystemUI from "expo-system-ui";
 import {
@@ -11,7 +11,7 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
-import { queryClient } from "../src/lib/queryClient";
+import { persistOptions, queryClient } from "../src/lib/queryClient";
 import { useAuthStore, wakeServer } from "../src/state/authStore";
 import { useOnboardingStore } from "../src/state/onboardingStore";
 import { Toast } from "../src/components/Toast";
@@ -49,10 +49,10 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: color.bg }}>
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bg } }} />
           <Toast />
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

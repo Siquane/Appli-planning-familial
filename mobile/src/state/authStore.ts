@@ -3,6 +3,7 @@ import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 import { API_URL } from "../api/client";
 import type { User } from "../api/types";
+import { clearQueryCache } from "../lib/queryClient";
 
 const ACCESS_KEY = "passerelle.accessToken";
 const REFRESH_KEY = "passerelle.refreshToken";
@@ -170,6 +171,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { refreshToken } = get();
     await Promise.all([storage.del(ACCESS_KEY), storage.del(REFRESH_KEY), storage.del(USER_KEY)]);
     set({ user: null, accessToken: null, refreshToken: null });
+    // Never show one account's cached data to the next one.
+    await clearQueryCache();
     if (refreshToken) {
       fetch(`${API_URL}/auth/logout`, {
         method: "POST",
