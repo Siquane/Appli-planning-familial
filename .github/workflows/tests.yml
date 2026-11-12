@@ -1,0 +1,66 @@
+name: Tests
+
+# Runs the server and mobile checks on every pull request (and on main after
+# a merge). Free for this private repo within GitHub's 2 000 minutes/month;
+# a run takes about 3–4 minutes.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: passerelle
+          POSTGRES_PASSWORD: passerelle
+          POSTGRES_DB: passerelle_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U passerelle"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: server
+    env:
+      TEST_DATABASE_URL: postgresql://passerelle:passerelle@localhost:5432/passerelle_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Migrations match the schema
+        run: npx prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url "postgresql://passerelle:passerelle@localhost:5432/postgres" --exit-code
+      - run: npm run typecheck
+      - run: npm test
+
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx jest --ci
