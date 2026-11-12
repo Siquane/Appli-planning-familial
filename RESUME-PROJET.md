@@ -1,0 +1,72 @@
+# Résumé de projet — Appli planning familial (Passerelle)
+
+À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
+Dernière mise à jour : 10 novembre 2026.
+
+## Contexte
+
+- Application famille : planning, tâches récurrentes, livre de recettes, anniversaires, menu de la semaine, documents, budget.
+- Stack : serveur Express + Prisma (Postgres) dans `server/`, application mobile Expo SDK 57 / React Native dans `mobile/`.
+- Dépôt : `Siquane/Appli-planning-familial` (privé). Branche principale : `main`.
+- Une session = une branche de travail `claude/...`, fusionnée dans `main` par pull request.
+
+## Ce qui est fait (sur `main`, PR #1 fusionnée)
+
+1. **Menu de la semaine** : terminé et testé. Ne pas le réécrire.
+2. **Documents et pièces jointes**
+   - Bibliothèque familiale (Profil → Documents) : catégories fixes (santé, assurance, école, administratif, maison, autre) + membre concerné, filtres.
+   - Pièces jointes aux recettes (photo ou PDF). Pas de pièces jointes aux tâches.
+   - Fichiers dans Cloudflare R2 (bucket privé `passerelle-documents`), la base ne garde que la clé. Liens signés : 10 min pour l'envoi, 1 h pour la lecture.
+   - Envoi direct téléphone → R2 en 3 étapes (demande de lien, envoi, confirmation avec vérification de taille). Photos et PDF uniquement, 5 Mo max.
+   - Supprimer une recette ou un document efface aussi le fichier.
+3. **Budget** (Profil → Budget, réglages dans Budget → Réglages)
+   - Dépenses saisies à la main : montant (en centimes), libellé, catégorie, date (jour calendaire), membre optionnel.
+   - Catégories fixes (courses, logement, transport, santé, enfants, loisirs, factures, autre) + catégories personnalisées. Supprimer une catégorie range ses dépenses dans « Autre ».
+   - Plafond mensuel par catégorie, défini une fois pour tous les mois, dépassement en rouge.
+   - Dépenses récurrentes ajoutées au jour choisi (ramené au dernier jour des mois courts), générées à l'ouverture du mois, jamais en avance. Modifier/supprimer la copie d'un mois ne touche pas les autres mois.
+
+## Mise en ligne (faite)
+
+- **Base de données** : Neon (Europe, Frankfurt), adresse directe sans `-pooler`.
+- **Serveur** : Render, dossier racine `server`, offre gratuite (mise en veille, premier appel lent). Adresse : `https://appli-planning-familial-0lyd.onrender.com` (`/health` répond `{"ok":true}`). C'est cette adresse qui est dans `mobile/eas.json`.
+- **R2** : configuré (5 variables `S3_*` dans Render).
+- **E-mails** : mot de passe oublié par code à 6 chiffres, envoyé via Brevo (ajouté par une autre session, voir `server/src/services/mailer.ts`).
+- **Appli mobile** : Android uniquement. Compilation via GitHub Actions « EAS Build (Android preview) » (bouton Run workflow, Node 22), secret `EXPO_TOKEN` ajouté. L'APK s'installe depuis le lien expo.dev affiché à la fin du workflow.
+
+## Synchronisation d'agenda Google / Outlook : pas activée
+
+- Le serveur sait synchroniser les tâches avec Google Agenda et Outlook, mais **aucun identifiant OAuth n'est configuré dans Render** (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_REDIRECT_URI`).
+- Conséquence : dans Profil → Synchronisation calendrier, Google et Outlook affichent « Pas encore activé sur le serveur » et un bouton « Bientôt » (avant, « Connecter » ouvrait une page d'erreur brute). Apple Calendar fonctionne (passe par le téléphone).
+- Décision du 10/11/2026 : ne pas les activer pour l'instant. Pour le faire plus tard : créer une application dans le portail Azure (Outlook) ou Google Cloud (Google Agenda), avec l'adresse de retour `https://appli-planning-familial-0lyd.onrender.com/calendar/microsoft/callback` (ou `/calendar/google/callback`), puis ajouter les 3 variables correspondantes dans Render. Environ 15 min chacun.
+
+## Ajouts récents (branche, PR #4)
+
+- Rappel : une ligne dédiée (cloche + interrupteur) au lieu d'une puce confondue avec les catégories.
+- Catégorie, jours, durée, priorité, échéance : toutes les puces sur une seule ligne (`Chip` avec `fill`). « 1.5h » → « 1h30 ».
+- Plusieurs jours cochés : interrupteur « Heure différente selon le jour » (`ScheduleTimes`, `lib/dayTimes.ts`), une tâche par jour avec sa propre heure.
+- Fiche d'une tâche : icône « Dupliquer » en haut, qui ouvre le formulaire de création prérempli.
+
+## En cours au moment de ce résumé
+
+- PR #4 (`claude/appli-planning-familial-setup-1cljht` → `main`) ouverte : correction Node 22, dépendances, ce fichier et les ajouts ci-dessus. `main` y a été fusionné (pas de conflit restant). À fusionner.
+- Les APK compilés avant cette fusion (n°6, n°7) pointaient vers l'ancienne adresse du serveur : ne pas les installer. Relancer une compilation depuis la branche (ou `main` après fusion de la PR).
+
+## Mises à jour majeures à prévoir plus tard (non faites, demandent du code)
+
+- Serveur : Prisma 5 → 7, Express 4 → 5, zod 3 → 4, vitest 2 → 5, TypeScript 5 → 7, googleapis, msal-node.
+- Mobile : Expo SDK 57 → 58 (entraîne react-native, expo-* et outils de test).
+- À noter : plusieurs bibliothèques natives mobiles sont déjà plus récentes que la liste officielle d'Expo SDK 57 (async-storage 3, gesture-handler 3, reanimated 4.5.3, screens 4.27, safe-area-context 5.8, svg 15.15.5, worklets 0.11). Si la compilation Android échoue sur l'une d'elles, c'est la première piste.
+
+## Préférences de l'utilisateur
+
+- Travaille en français.
+- Poser des questions de clarification avant les réponses détaillées, avec des choix cliquables.
+- Ne pas multiplier les étapes manuelles : préférer un commit unique, une PR prête à fusionner.
+- Ne pas uploader de fichiers directement sur `main` pendant qu'une PR est ouverte (cela a créé un conflit une fois).
+
+## Conventions du dépôt
+
+- Routes : `server/src/routes/`, migrations Prisma : `server/prisma/migrations/` (générées et vérifiées avec `prisma migrate diff`).
+- Mobile : hooks dans `mobile/src/hooks/useApi.ts`, API dans `mobile/src/api/resources.ts`, types dans `mobile/src/api/types.ts`.
+- Avant de livrer : `npm run typecheck` et `npm test` dans `server/` (Postgres local requis, base `passerelle_test`) et dans `mobile/` (`npx jest`), plus `npx expo export --platform android` pour vérifier que l'appli se compile.
+- Expo : lire la doc versionnée v57 (voir `mobile/AGENTS.md`).

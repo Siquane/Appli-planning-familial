@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
 import { TextField } from "../../src/components/TextField";
-import { TimeField } from "../../src/components/TimeField";
+import { ScheduleTimes } from "../../src/components/ScheduleTimes";
+import { allTimesValid, resolveTimes, type DayTimes } from "../../src/lib/dayTimes";
 import { Chip } from "../../src/components/Chip";
+import { ReminderToggle } from "../../src/components/ReminderToggle";
 import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
 import { useAutoSlotTask, useCreateTask, useMembers, useTasks, useUpdateTask } from "../../src/hooks/useApi";
@@ -25,8 +27,8 @@ const PRIORITIES: { key: Priority; label: string }[] = [
 ];
 
 export default function TaskFormScreen() {
-  const { edit, title: prefillTitle, category: prefillCategory, recurring: prefillRecurring, duration: prefillDuration, member: prefillMember } =
-    useLocalSearchParams<{ edit?: string; title?: string; category?: string; recurring?: string; duration?: string; member?: string }>();
+  const { edit, duplicate, title: prefillTitle, category: prefillCategory, recurring: prefillRecurring, duration: prefillDuration, member: prefillMember } =
+    useLocalSearchParams<{ edit?: string; duplicate?: string; title?: string; category?: string; recurring?: string; duration?: string; member?: string }>();
   const { data: tasks = [] } = useTasks();
   const { data: members = [] } = useMembers();
   const createTask = useCreateTask();
@@ -39,6 +41,8 @@ export default function TaskFormScreen() {
   const [category, setCategory] = useState<Category>((prefillCategory as Category) ?? "Maison");
   const [weekdays, setWeekdays] = useState<Weekday[]>([]);
   const [time, setTime] = useState("08:00");
+  const [perDayTimes, setPerDayTimes] = useState(false);
+  const [dayTimes, setDayTimes] = useState<DayTimes>({});
   const [duration, setDuration] = useState(prefillDuration ? Number(prefillDuration) : 30);
   const [priority, setPriority] = useState<Priority>("medium");
   const [deadlineWeekday, setDeadlineWeekday] = useState<Weekday | null>(null);
@@ -64,6 +68,28 @@ export default function TaskFormScreen() {
     setNotes(existing.notes);
   }, [existing]);
 
+  // « Dupliquer » : on recopie la tâche source dans un formulaire de
+  // création (une seule fois, pour ne pas écraser ce que l'utilisateur
+  // modifie si la liste des tâches se rafraîchit).
+  const source: Task | undefined = useMemo(() => (duplicate ? tasks.find((t) => t.id === duplicate) : undefined), [tasks, duplicate]);
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (!source || prefilled.current) return;
+    prefilled.current = true;
+    setTitle(source.title);
+    setCategory(source.category);
+    setWeekdays([source.weekday]);
+    setTime(source.time);
+    setDuration(source.duration);
+    setPriority(source.priority);
+    setDeadlineWeekday(source.deadlineWeekday);
+    setRecurring(source.recurring);
+    setReminder(source.reminder);
+    setFlexible(source.flexible);
+    setMemberIds(source.memberIds);
+    setNotes(source.notes);
+  }, [source]);
+
   function toggleMember(id: string) {
     setMemberIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
@@ -85,7 +111,9 @@ export default function TaskFormScreen() {
 
   const missing: string[] = [];
   if (!title.trim()) missing.push("un titre");
-  if (!autoPlacement && !/^\d{2}:\d{2}$/.test(time)) missing.push("une heure valide (HH:MM)");
+  // Création sur plusieurs jours : une heure par jour si l'interrupteur est activé.
+  const times = resolveTimes(weekdays, time, perDayTimes && !existing, dayTimes);
+  if (!autoPlacement && !allTimesValid(existing ? { 0: time } : times)) missing.push("une heure valide (HH:MM)");
   const isValid = missing.length === 0;
   const saving = createTask.isPending || updateTask.isPending || autoSlotTask.isPending;
 
@@ -101,7 +129,7 @@ export default function TaskFormScreen() {
         useToastStore.getState().show(`Tâche créée automatiquement — ${WEEKDAYS_SHORT[slot.weekday]} à ${slot.time}.`);
       } else {
         for (const weekday of weekdays) {
-          await createTask.mutateAsync({ ...base, time, weekday, flexible });
+          await createTask.mutateAsync({ ...base, time: times[weekday] ?? time, weekday, flexible });
         }
         useToastStore.getState().show(weekdays.length > 1 ? "Tâches créées." : "Tâche créée.");
       }
@@ -113,7 +141,7 @@ export default function TaskFormScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title={existing ? "Modifier la tâche" : "Nouvelle tâche"} onBack={() => router.back()} />
+      <TopBar title={existing ? "Modifier la tâche" : source ? "Dupliquer la tâche" : "Nouvelle tâche"} onBack={() => router.back()} />
       <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Devoirs de Léo" />
 
@@ -121,9 +149,9 @@ export default function TaskFormScreen() {
           <Text size={13} tone="muted">
             Catégorie
           </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+          <View style={{ flexDirection: "row", gap: space[1] }}>
             {CATEGORIES.map((c) => (
-              <Chip key={c} label={c} selected={category === c} onPress={() => setCategory(c)} size="sm" />
+              <Chip key={c} label={c} selected={category === c} onPress={() => setCategory(c)} size="sm" fill />
             ))}
           </View>
         </View>
@@ -132,9 +160,9 @@ export default function TaskFormScreen() {
           <Text size={13} tone="muted">
             Jour{!existing ? " (plusieurs possibles, ou aucun)" : ""}
           </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+          <View style={{ flexDirection: "row", gap: space[1] }}>
             {WEEKDAYS_SHORT.map((label, i) => (
-              <Chip key={label} label={label} selected={weekdays.includes(i as Weekday)} onPress={() => toggleWeekday(i as Weekday)} size="sm" />
+              <Chip key={label} label={label} selected={weekdays.includes(i as Weekday)} onPress={() => toggleWeekday(i as Weekday)} size="sm" fill />
             ))}
           </View>
           {autoPlacement && (
@@ -145,16 +173,24 @@ export default function TaskFormScreen() {
         </View>
 
         {!autoPlacement && (
-          <TimeField label="Heure" value={time} onChange={setTime} />
+          <ScheduleTimes
+            weekdays={existing ? [] : weekdays}
+            time={time}
+            onTimeChange={setTime}
+            perDay={perDayTimes}
+            onPerDayChange={setPerDayTimes}
+            dayTimes={dayTimes}
+            onDayTimesChange={setDayTimes}
+          />
         )}
 
         <View style={{ gap: space[2] }}>
           <Text size={13} tone="muted">
             Durée
           </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+          <View style={{ flexDirection: "row", gap: space[1] }}>
             {DURATIONS.map((d) => (
-              <Chip key={d} label={d < 60 ? `${d} min` : `${d / 60}h`} selected={duration === d} onPress={() => setDuration(d)} size="sm" mono />
+              <Chip key={d} label={d < 60 ? `${d} min` : d % 60 ? `${Math.floor(d / 60)}h${d % 60}` : `${d / 60}h`} selected={duration === d} onPress={() => setDuration(d)} size="sm" fill mono />
             ))}
           </View>
         </View>
@@ -163,9 +199,9 @@ export default function TaskFormScreen() {
           <Text size={13} tone="muted">
             Priorité
           </Text>
-          <View style={{ flexDirection: "row", gap: space[2] }}>
+          <View style={{ flexDirection: "row", gap: space[1] }}>
             {PRIORITIES.map((p) => (
-              <Chip key={p.key} label={p.label} selected={priority === p.key} onPress={() => setPriority(p.key)} size="sm" />
+              <Chip key={p.key} label={p.label} selected={priority === p.key} onPress={() => setPriority(p.key)} size="sm" fill />
             ))}
           </View>
         </View>
@@ -174,10 +210,10 @@ export default function TaskFormScreen() {
           <Text size={13} tone="muted">
             Échéance (optionnel)
           </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
-            <Chip label="Aucune" selected={deadlineWeekday === null} onPress={() => setDeadlineWeekday(null)} size="sm" />
+          <View style={{ flexDirection: "row", gap: space[1] }}>
+            <Chip label="Aucune" selected={deadlineWeekday === null} onPress={() => setDeadlineWeekday(null)} size="sm" fill />
             {WEEKDAYS_SHORT.map((label, i) => (
-              <Chip key={label} label={label} selected={deadlineWeekday === i} onPress={() => setDeadlineWeekday(i as Weekday)} size="sm" />
+              <Chip key={label} label={label} selected={deadlineWeekday === i} onPress={() => setDeadlineWeekday(i as Weekday)} size="sm" fill />
             ))}
           </View>
         </View>
@@ -197,22 +233,20 @@ export default function TaskFormScreen() {
 
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
           <Chip label="Récurrente" selected={recurring} onPress={() => setRecurring((v) => !v)} size="sm" />
-          {recurring && (
-            <Chip
-              label="Rappel"
-              selected={reminder}
-              onPress={() => {
-                const next = !reminder;
-                setReminder(next);
-                if (next) confirmReminderPermission();
-              }}
-              size="sm"
-            />
-          )}
           {!autoPlacement && (
             <Chip label="Flexible (replanifiable)" selected={flexible} onPress={() => setFlexible((v) => !v)} size="sm" />
           )}
         </View>
+
+        {recurring && (
+          <ReminderToggle
+            value={reminder}
+            onChange={(next) => {
+              setReminder(next);
+              if (next) confirmReminderPermission();
+            }}
+          />
+        )}
 
         <TextField label="Notes" value={notes} onChangeText={setNotes} multiline placeholder="Détails, lieu, contexte..." />
 

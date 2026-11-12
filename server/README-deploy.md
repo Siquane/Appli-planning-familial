@@ -26,7 +26,7 @@ Les tests (`npm test`) utilisent une base séparée `passerelle_test` (voir `tes
 Créer un compte, un projet, copier la connection string Postgres fournie (garder le `?sslmode=require` si présent).
 
 **2. API — [render.com](https://render.com)**
-- New → Web Service → connecter le repo, root directory `app/server`.
+- New → Web Service → connecter le repo, root directory `server`.
 - Build command : `npm install && npm run build`
 - Start command : `npm start` (lance `prisma migrate deploy` puis le serveur — les migrations en attente sont appliquées à chaque déploiement, voir `package.json`)
 - Variables d'environnement à définir dans le dashboard Render :
@@ -75,4 +75,4 @@ Le plan gratuit Render met le service en veille après une période d'inactivit�
 
 ## Côté app mobile
 
-Voir `app/mobile/.env.local` (à créer, ignoré par git) : `EXPO_PUBLIC_API_URL=https://<ton-service>.onrender.com`.
+Voir `mobile/.env.local` (à créer, ignoré par git) : `EXPO_PUBLIC_API_URL=https://<ton-service>.onrender.com`.

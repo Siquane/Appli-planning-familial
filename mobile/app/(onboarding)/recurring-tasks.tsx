@@ -4,8 +4,10 @@ import { router } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
 import { TextField } from "../../src/components/TextField";
-import { TimeField } from "../../src/components/TimeField";
+import { ScheduleTimes } from "../../src/components/ScheduleTimes";
+import { allTimesValid, describeSchedule, resolveTimes, type DayTimes } from "../../src/lib/dayTimes";
 import { Chip } from "../../src/components/Chip";
+import { ReminderToggle } from "../../src/components/ReminderToggle";
 import { Card } from "../../src/components/Card";
 import { Button } from "../../src/components/Button";
 import { StepDots } from "../../src/components/StepDots";
@@ -23,7 +25,8 @@ interface Draft {
   key: string;
   title: string;
   weekdays: Weekday[];
-  time: string;
+  /** Time for each selected day (the same everywhere unless set per day). */
+  times: DayTimes;
   category: Category;
   reminder: boolean;
 }
@@ -36,6 +39,8 @@ export default function RecurringTasksOnboardingScreen() {
   const [title, setTitle] = useState("");
   const [weekdays, setWeekdays] = useState<Weekday[]>([]);
   const [time, setTime] = useState("17:00");
+  const [perDayTimes, setPerDayTimes] = useState(false);
+  const [dayTimes, setDayTimes] = useState<DayTimes>({});
   const [category, setCategory] = useState<Category>("Maison");
   const [reminder, setReminder] = useState(false);
 
@@ -43,14 +48,17 @@ export default function RecurringTasksOnboardingScreen() {
     setWeekdays((prev) => (prev.includes(w) ? prev.filter((x) => x !== w) : [...prev, w]));
   }
 
-  const canAdd = title.trim().length > 0 && weekdays.length > 0 && /^\d{2}:\d{2}$/.test(time);
+  const times = resolveTimes(weekdays, time, perDayTimes, dayTimes);
+  const canAdd = title.trim().length > 0 && weekdays.length > 0 && allTimesValid(times);
 
   function addDraft() {
     if (!canAdd) return;
-    setDrafts((prev) => [...prev, { key: `${Date.now()}-${prev.length}`, title: title.trim(), weekdays, time, category, reminder }]);
+    setDrafts((prev) => [...prev, { key: `${Date.now()}-${prev.length}`, title: title.trim(), weekdays, times, category, reminder }]);
     setTitle("");
     setWeekdays([]);
     setTime("17:00");
+    setPerDayTimes(false);
+    setDayTimes({});
     setCategory("Maison");
     setReminder(false);
   }
@@ -72,7 +80,7 @@ export default function RecurringTasksOnboardingScreen() {
             title: draft.title,
             category: draft.category,
             weekday,
-            time: draft.time,
+            time: draft.times[weekday] ?? "17:00",
             duration: 30,
             priority: "medium",
             deadlineWeekday: null,
@@ -115,7 +123,7 @@ export default function RecurringTasksOnboardingScreen() {
                     {d.title}
                   </Text>
                   <Text size={11.5} tone="faint">
-                    {d.weekdays.map((w) => WEEKDAYS_SHORT[w]).join(" · ")} — {d.time} · {d.category}
+                    {describeSchedule(d.times)} · {d.category}
                     {d.reminder ? " · Rappel" : ""}
                   </Text>
                 </View>
@@ -134,36 +142,40 @@ export default function RecurringTasksOnboardingScreen() {
             <Text size={13} tone="muted">
               Jours
             </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+            <View style={{ flexDirection: "row", gap: space[1] }}>
               {WEEKDAYS_SHORT.map((label, i) => (
-                <Chip key={label} label={label} selected={weekdays.includes(i as Weekday)} onPress={() => toggleWeekday(i as Weekday)} size="sm" />
+                <Chip key={label} label={label} selected={weekdays.includes(i as Weekday)} onPress={() => toggleWeekday(i as Weekday)} size="sm" fill />
               ))}
             </View>
           </View>
 
-          <TimeField label="Heure" value={time} onChange={setTime} />
+          <ScheduleTimes
+            weekdays={weekdays}
+            time={time}
+            onTimeChange={setTime}
+            perDay={perDayTimes}
+            onPerDayChange={setPerDayTimes}
+            dayTimes={dayTimes}
+            onDayTimesChange={setDayTimes}
+          />
 
           <View style={{ gap: space[2] }}>
             <Text size={13} tone="muted">
               Catégorie
             </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+            <View style={{ flexDirection: "row", gap: space[1] }}>
               {CATEGORIES.map((c) => (
-                <Chip key={c} label={c} selected={category === c} onPress={() => setCategory(c)} size="sm" />
+                <Chip key={c} label={c} selected={category === c} onPress={() => setCategory(c)} size="sm" fill />
               ))}
             </View>
           </View>
 
-          <Chip
-            label="Rappel"
-            selected={reminder}
-            onPress={() => {
-              const next = !reminder;
+          <ReminderToggle
+            value={reminder}
+            onChange={(next) => {
               setReminder(next);
               if (next) confirmReminderPermission();
             }}
-            size="sm"
-            style={{ alignSelf: "flex-start" }}
           />
 
           <Button label="+ Ajouter une tâche récurrente" variant="secondary" block onPress={addDraft} disabled={!canAdd} />

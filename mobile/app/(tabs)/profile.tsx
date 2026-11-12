@@ -28,7 +28,19 @@ export default function ProfileScreen() {
   const disconnect = useDisconnectCalendar();
   const [connecting, setConnecting] = useState<string | null>(null);
 
+  // Google/Outlook need OAuth credentials on the server (see /calendar/status).
+  // Without them, connecting would only open a raw error page in the browser.
+  function isUnavailable(provider: "google" | "outlook" | "apple") {
+    if (!status || provider === "apple") return false;
+    return provider === "google" ? !status.googleConfigured : !status.microsoftConfigured;
+  }
+
   async function onConnect(provider: "google" | "outlook" | "apple") {
+    if (isUnavailable(provider)) {
+      const name = provider === "google" ? "Google Calendar" : "Outlook";
+      useToastStore.getState().show(`La synchronisation ${name} n'est pas encore activée sur le serveur.`);
+      return;
+    }
     setConnecting(provider);
     try {
       if (provider === "apple") {
@@ -93,6 +105,7 @@ export default function ProfileScreen() {
         <Card>
           {PROVIDERS.map((p, i) => {
             const connection = status?.connections.find((c) => c.provider === p.key);
+            const unavailable = !connection && isUnavailable(p.key);
             return (
               <View
                 key={p.key}
@@ -106,9 +119,14 @@ export default function ProfileScreen() {
                       {connection.email}
                     </Text>
                   )}
+                  {unavailable && (
+                    <Text size={11} tone="faint">
+                      Pas encore activé sur le serveur
+                    </Text>
+                  )}
                 </View>
                 <Button
-                  label={connection ? "Déconnecter" : "Connecter"}
+                  label={connection ? "Déconnecter" : unavailable ? "Bientôt" : "Connecter"}
                   variant={connection ? "secondary" : "ghost"}
                   loading={connecting === p.key}
                   onPress={() => (connection ? disconnect.mutate(p.key) : onConnect(p.key))}

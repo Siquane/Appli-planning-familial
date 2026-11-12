@@ -17,7 +17,8 @@ function formatTime(d: Date): string {
 }
 
 interface Props {
-  label: string;
+  /** Omit to render the field alone (e.g. inside a row that already names it). */
+  label?: string;
   value: string;
   onChange: (value: string) => void;
 }
@@ -50,11 +51,15 @@ export function TimeField({ label, value, onChange }: Props) {
 
   return (
     <View style={{ gap: space[2] }}>
-      <Text size={13} tone="muted">
-        {label}
-      </Text>
+      {label ? (
+        <Text size={13} tone="muted">
+          {label}
+        </Text>
+      ) : null}
       <Pressable
         onPress={openPicker}
+        accessibilityRole="button"
+        accessibilityLabel={label ? `${label} : ${value}` : value}
         style={{
           paddingVertical: 12,
           paddingHorizontal: 14,

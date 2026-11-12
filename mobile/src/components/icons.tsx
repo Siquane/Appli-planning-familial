@@ -33,6 +33,15 @@ export function EditIcon({ size = 16, color = "currentColor" }: IconProps) {
   );
 }
 
+export function CopyIcon({ size = 16, color = "currentColor" }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x={9} y={9} width={11} height={11} rx={2} stroke={color} strokeWidth={1.8} />
+      <Path d="M15 9V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7a2 2 0 002 2h3" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
 export function TrashIcon({ size = 16, color = "currentColor" }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
