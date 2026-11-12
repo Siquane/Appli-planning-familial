@@ -34,6 +34,13 @@ export const color = {
   neutral900: "#292b31",
 
   danger: "#ef4444",
+
+  // The 4 rings of the Passerelle logo, left to right (cyan → violet):
+  // one per tab — Planning, Repas, Budget, Famille.
+  pillar1: "#22d3ee",
+  pillar2: "#4cb8ff",
+  pillar3: "#7b9cff",
+  pillar4: "#a35cff",
 } as const;
 
 export const radius = { sm: 4, md: 8, lg: 14 } as const;

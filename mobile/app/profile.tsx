@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
-import { Screen } from "../../src/components/Screen";
-import { Text } from "../../src/components/Text";
-import { Card } from "../../src/components/Card";
-import { Button } from "../../src/components/Button";
-import { Avatar } from "../../src/components/Avatar";
-import { BookIcon, CalendarIcon, ChevronRightIcon, DocumentIcon, GiftIcon, MealIcon, RecurringIcon, WalletIcon } from "../../src/components/icons";
-import { useCalendarStatus, useDisconnectCalendar, useMembers } from "../../src/hooks/useApi";
-import { useAuthStore } from "../../src/state/authStore";
-import { useToastStore } from "../../src/state/toastStore";
-import { connectAppleCalendar, startOAuthConnect } from "../../src/lib/calendarConnect";
-import { color, space } from "../../src/theme/tokens";
+import { Screen } from "../src/components/Screen";
+import { BackHeader } from "../src/components/PageHeader";
+import { Text } from "../src/components/Text";
+import { Card } from "../src/components/Card";
+import { Button } from "../src/components/Button";
+import { Avatar } from "../src/components/Avatar";
+import { CalendarIcon, ChevronRightIcon, RecurringIcon } from "../src/components/icons";
+import { useCalendarStatus, useDisconnectCalendar } from "../src/hooks/useApi";
+import { useAuthStore } from "../src/state/authStore";
+import { useToastStore } from "../src/state/toastStore";
+import { connectAppleCalendar, startOAuthConnect } from "../src/lib/calendarConnect";
+import { color, space } from "../src/theme/tokens";
 import { Platform, Pressable } from "react-native";
 
 const PROVIDERS: { key: "google" | "outlook" | "apple"; label: string }[] = [
@@ -23,7 +24,7 @@ const PROVIDERS: { key: "google" | "outlook" | "apple"; label: string }[] = [
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
-  const { data: members = [] } = useMembers();
+
   const { data: status, refetch } = useCalendarStatus();
   const disconnect = useDisconnectCalendar();
   const [connecting, setConnecting] = useState<string | null>(null);
@@ -65,6 +66,7 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
+      <BackHeader title="Mon profil" />
       <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
         <Avatar initials={user?.initials ?? ""} bg={color.accent800} fg={color.accent100} size={56} />
         <View>
@@ -75,27 +77,6 @@ export default function ProfileScreen() {
             {user?.email}
           </Text>
         </View>
-      </View>
-
-      <View style={{ gap: space[2] }}>
-        <Text weight="medium" size={13} tone="muted">
-          Famille ({members.length})
-        </Text>
-        <Card>
-          {members.map((m, i) => (
-            <View key={m.id} style={{ flexDirection: "row", alignItems: "center", gap: space[2], paddingVertical: 6, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: color.divider }}>
-              <Avatar initials={m.initials} bg={m.tint === "neutral" ? color.neutral700 : color.accent800} fg={m.tint === "neutral" ? color.neutral100 : color.accent100} size={30} />
-              <Text size={14} style={{ flex: 1 }}>
-                {m.name}
-              </Text>
-              {m.age != null && (
-                <Text size={12} tone="faint" mono>
-                  {m.age} ans
-                </Text>
-              )}
-            </View>
-          ))}
-        </Card>
       </View>
 
       <View style={{ gap: space[2] }}>
@@ -147,69 +128,10 @@ export default function ProfileScreen() {
         </Card>
       </Pressable>
 
-      <Pressable onPress={() => router.push("/recipes")}>
-        <Card row style={{ alignItems: "center" }}>
-          <BookIcon size={16} color={color.neutral400} />
-          <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
-            Livre de recettes
-          </Text>
-          <ChevronRightIcon size={14} color={color.neutral500} />
-        </Card>
-      </Pressable>
-
-      <Pressable onPress={() => router.push("/meals")}>
-        <Card row style={{ alignItems: "center" }}>
-          <MealIcon size={16} color={color.neutral400} />
-          <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
-            Menu de la semaine
-          </Text>
-          <ChevronRightIcon size={14} color={color.neutral500} />
-        </Card>
-      </Pressable>
-
-      <Pressable onPress={() => router.push("/documents")}>
-        <Card row style={{ alignItems: "center" }}>
-          <DocumentIcon size={16} color={color.neutral400} />
-          <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
-            Documents
-          </Text>
-          <ChevronRightIcon size={14} color={color.neutral500} />
-        </Card>
-      </Pressable>
-
-      <Pressable onPress={() => router.push("/budget")}>
-        <Card row style={{ alignItems: "center" }}>
-          <WalletIcon size={16} color={color.neutral400} />
-          <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
-            Budget
-          </Text>
-          <ChevronRightIcon size={14} color={color.neutral500} />
-        </Card>
-      </Pressable>
-
-      <Pressable onPress={() => router.push("/birthdays")}>
-        <Card row style={{ alignItems: "center" }}>
-          <GiftIcon size={16} color={color.neutral400} />
-          <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
-            Anniversaires
-          </Text>
-          <ChevronRightIcon size={14} color={color.neutral500} />
-        </Card>
-      </Pressable>
-
       <Pressable onPress={() => router.push("/suggestions")}>
         <Card row style={{ alignItems: "center" }}>
           <Text size={14} style={{ flex: 1 }}>
             Suggestions de tâches selon l'âge
-          </Text>
-          <ChevronRightIcon size={14} color={color.neutral500} />
-        </Card>
-      </Pressable>
-
-      <Pressable onPress={() => router.push("/share")}>
-        <Card row style={{ alignItems: "center" }}>
-          <Text size={14} style={{ flex: 1 }}>
-            Partager mon planning
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />
         </Card>

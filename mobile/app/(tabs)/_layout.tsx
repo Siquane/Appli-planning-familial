@@ -29,10 +29,10 @@ export default function TabsLayout() {
 
   return (
     <Tabs tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
-      <Tabs.Screen name="home" options={{ title: "Accueil" }} />
-      <Tabs.Screen name="search" options={{ title: "Recherche" }} />
-      <Tabs.Screen name="notifications" options={{ title: "Notifications" }} />
-      <Tabs.Screen name="profile" options={{ title: "Profil" }} />
+      <Tabs.Screen name="home" options={{ title: "Planning" }} />
+      <Tabs.Screen name="repas" options={{ title: "Repas" }} />
+      <Tabs.Screen name="budget" options={{ title: "Budget" }} />
+      <Tabs.Screen name="famille" options={{ title: "Famille" }} />
     </Tabs>
   );
 }

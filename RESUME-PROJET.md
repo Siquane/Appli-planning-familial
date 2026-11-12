@@ -55,6 +55,13 @@ Dernière mise à jour : 12 novembre 2026.
 - **Bouton « + »** : menu d'ajout rapide (tâche, dépense, document, recette, repas).
 - **Notifications** : récap du soir à 20 h (tâches du lendemain, interrupteur dans l'onglet Notifications) ; message quand une dépense fait dépasser un plafond ; la synchro des rappels de tâches n'annule plus les rappels d'anniversaire.
 
+## Navigation : les 4 piliers (12/11/2026)
+
+- Barre du bas = les 4 anneaux du logo Passerelle, de gauche à droite : **Planning** (cyan), **Repas** (bleu clair), **Budget** (lavande), **Famille** (violet), avec le « + » d'ajout rapide au milieu. Couleurs dans `theme/tokens.ts` (`pillar1`…`pillar4`).
+- Repas = menu de la semaine + recettes (sélecteur en haut ; contenus dans `src/screens/MealsBody.tsx` et `RecipesBody.tsx`, réutilisés par `/meals` et `/recipes`).
+- Famille = membres, documents, anniversaires, partage.
+- Recherche (`/search`), notifications (`/inbox`, pour ne pas entrer en conflit avec l'écran d'accueil `(onboarding)/notifications`) et profil (`/profile`) ne sont plus des onglets : icônes en haut de chaque onglet (`TabHeader` dans `components/PageHeader.tsx`).
+
 ## Idées notées pour plus tard
 
 Comptes séparés pour chaque membre de la famille, sauvegarde hebdomadaire de la base vers R2, liste de courses générée depuis le menu, synchronisation Google Agenda, widget Android, export CSV du budget.

@@ -12,7 +12,7 @@ export const QUICK_ADD_ITEMS: Item[] = [
   { label: "Dépense", hint: "Budget du mois", href: "/expense/new", Icon: WalletIcon },
   { label: "Document", hint: "Ordonnance, assurance…", href: "/document/new", Icon: DocumentIcon },
   { label: "Recette", hint: "Livre de recettes", href: "/recipe/new", Icon: BookIcon },
-  { label: "Repas", hint: "Menu de la semaine", href: "/meals", Icon: MealIcon },
+  { label: "Repas", hint: "Menu de la semaine", href: "/repas", Icon: MealIcon },
 ];
 
 // Opened by the central « + » of the tab bar: one tap to reach any "add" form.

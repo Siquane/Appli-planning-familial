@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { router } from "expo-router";
-import { Screen } from "../src/components/Screen";
-import { Text } from "../src/components/Text";
-import { Card } from "../src/components/Card";
-import { Button } from "../src/components/Button";
-import { TopBar } from "../src/components/TopBar";
-import { ChevronLeftIcon, ChevronRightIcon, RecurringIcon, WalletIcon } from "../src/components/icons";
-import { useExpenseCategories, useMembers, useMonthlyBudget } from "../src/hooks/useApi";
-import { categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../src/lib/money";
-import { color, radius, space } from "../src/theme/tokens";
+import { Screen } from "../../src/components/Screen";
+import { Text } from "../../src/components/Text";
+import { Card } from "../../src/components/Card";
+import { Button } from "../../src/components/Button";
+import { TabHeader } from "../../src/components/PageHeader";
+import { ChevronLeftIcon, ChevronRightIcon, RecurringIcon, WalletIcon } from "../../src/components/icons";
+import { useExpenseCategories, useMembers, useMonthlyBudget } from "../../src/hooks/useApi";
+import { categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../../src/lib/money";
+import { color, radius, space } from "../../src/theme/tokens";
 
 export default function BudgetScreen() {
   const [month, setMonth] = useState(currentMonth());
@@ -23,9 +23,9 @@ export default function BudgetScreen() {
   const overCount = byCategory.filter((c) => c.limitCents !== null && c.totalCents > c.limitCents).length;
 
   return (
-    <Screen scroll={false} padded={false}>
-      <TopBar title="Budget" onBack={() => router.back()} />
+    <Screen scroll={false} padded={false} edges={["top"]}>
       <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+        <TabHeader title="Budget" pillar={color.pillar3} />
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <MonthArrow onPress={() => setMonth(shiftMonth(month, -1))} label="Mois précédent">
             <ChevronLeftIcon size={16} color={color.text} />

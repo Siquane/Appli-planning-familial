@@ -1,13 +1,14 @@
 import { Pressable, Switch, View } from "react-native";
-import { Screen } from "../../src/components/Screen";
-import { Text } from "../../src/components/Text";
-import { Card } from "../../src/components/Card";
-import { Button } from "../../src/components/Button";
-import { BellIcon } from "../../src/components/icons";
-import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from "../../src/hooks/useApi";
-import { color, space } from "../../src/theme/tokens";
-import { useSettingsStore } from "../../src/state/settingsStore";
-import { confirmReminderPermission, DIGEST_HOUR } from "../../src/lib/notifications";
+import { Screen } from "../src/components/Screen";
+import { BackHeader } from "../src/components/PageHeader";
+import { Text } from "../src/components/Text";
+import { Card } from "../src/components/Card";
+import { Button } from "../src/components/Button";
+import { BellIcon } from "../src/components/icons";
+import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from "../src/hooks/useApi";
+import { color, space } from "../src/theme/tokens";
+import { useSettingsStore } from "../src/state/settingsStore";
+import { confirmReminderPermission, DIGEST_HOUR } from "../src/lib/notifications";
 
 export default function NotificationsScreen() {
   const { data: notifications = [] } = useNotifications();
@@ -27,12 +28,7 @@ export default function NotificationsScreen() {
 
   return (
     <Screen>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text heading weight="semibold" size={20}>
-          Notifications
-        </Text>
-        {hasUnread && <Button label="Tout marquer lu" variant="ghost" onPress={() => markAllRead.mutate()} />}
-      </View>
+      <BackHeader title="Notifications" right={hasUnread ? <Button label="Tout marquer lu" variant="ghost" onPress={() => markAllRead.mutate()} /> : undefined} />
 
       <Pressable onPress={() => toggleDigest(!eveningDigest)} accessibilityRole="switch" accessibilityState={{ checked: eveningDigest }}>
         <Card row style={{ alignItems: "center" }}>
