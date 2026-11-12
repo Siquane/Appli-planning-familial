@@ -5,6 +5,7 @@ import type { Document } from "@prisma/client";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { getStorage, MAX_FILE_SIZE, removeObjects, type Storage } from "../lib/storage";
+import { patchSchema } from "../lib/validation";
 
 // Family document library + recipe attachments (see model Document).
 // Upload is done in three steps so the file never goes through this API:
@@ -177,7 +178,7 @@ const updateSchema = z.object({
 });
 
 documentsRouter.patch("/:id", async (req, res) => {
-  const parsed = updateSchema.partial().safeParse(req.body);
+  const parsed = patchSchema(updateSchema).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await loadOwnedDocument(req.userId!, req.params.id);
   if (!existing) return res.status(404).json({ error: "Not found" });

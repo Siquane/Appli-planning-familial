@@ -22,6 +22,8 @@ describe("members", () => {
     const updated = await request(app).patch(`/members/${created1.body.member.id}`).set(auth).send({ name: "Léo D." });
     expect(updated.status).toBe(200);
     expect(updated.body.member.name).toBe("Léo D.");
+    // A PATCH that omits `tint` must keep it, not reset it to the schema default.
+    expect(updated.body.member.tint).toBe("accent");
 
     const deleted = await request(app).delete(`/members/${created2.body.member.id}`).set(auth);
     expect(deleted.status).toBe(204);

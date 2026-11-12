@@ -1,4 +1,5 @@
 import renderer, { act } from "react-test-renderer";
+import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { CustomTabBar } from "../CustomTabBar";
 import { color } from "../../theme/tokens";
 
@@ -16,7 +17,8 @@ function render(index: number) {
   const navigation = { navigate: jest.fn() };
   let tree!: renderer.ReactTestRenderer;
   act(() => {
-    tree = renderer.create(<CustomTabBar {...({ state: { routes, index }, navigation } as never)} />);
+    const props = { state: { routes, index }, navigation } as unknown as BottomTabBarProps;
+    tree = renderer.create(<CustomTabBar {...props} />);
   });
   return { tree, navigation };
 }
