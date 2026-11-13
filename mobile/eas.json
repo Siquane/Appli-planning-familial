@@ -12,6 +12,15 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://appli-planning-familial-0lyd.onrender.com"
       }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://appli-planning-familial-0lyd.onrender.com"
+      }
     }
   }
 }

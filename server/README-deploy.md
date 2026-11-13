@@ -67,6 +67,15 @@ Pack Budget : objectifs d'épargne, alertes de plafond, bilan, prévision de fin
 Pack Menus : 12 semaines et 60 « autre idée » par mois.
 Les deux packs donnent les documents illimités. Ces valeurs sont dans `src/lib/plan.ts`.
 
+**Abonnements Android (RevenueCat, optionnel)**
+
+Toute la mise en place (Play Console, RevenueCat, clés, test) est décrite dans [`docs/achats-android.md`](../docs/achats-android.md). Côté Render :
+
+| Variable | Valeur |
+|---|---|
+| `REVENUECAT_SECRET_KEY` | clé secrète RevenueCat (`sk_…`) |
+| `REVENUECAT_WEBHOOK_AUTH` | la valeur exacte mise en « Authorization header » du webhook RevenueCat (ex. `Bearer 3f9…`) |
+
 Ne pas laisser `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` vides : `src/env.ts` retombe sinon sur des valeurs de dev codées en dur.
 
 **Stockage des documents — [Cloudflare R2](https://dash.cloudflare.com) (optionnel)**

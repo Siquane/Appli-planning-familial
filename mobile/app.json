@@ -21,7 +21,8 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "app.passerelle.mobile"
+      "package": "app.passerelle.mobile",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"

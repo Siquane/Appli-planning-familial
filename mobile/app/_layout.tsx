@@ -15,6 +15,7 @@ import { queryClient } from "../src/lib/queryClient";
 import { useAuthStore, wakeServer } from "../src/state/authStore";
 import { useOnboardingStore } from "../src/state/onboardingStore";
 import { Toast } from "../src/components/Toast";
+import { resetBilling } from "../src/lib/billing";
 import { color } from "../src/theme/tokens";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -47,6 +48,7 @@ export default function RootLayout() {
     } else if (hadUser.current) {
       hadUser.current = false;
       queryClient.clear();
+      resetBilling();
       router.replace("/(auth)/login");
     }
   }, [ready, user]);
