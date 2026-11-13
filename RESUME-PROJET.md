@@ -1,7 +1,22 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 13 novembre 2026.
+Dernière mise à jour : 13 novembre 2026 (fin d'après-midi, PR #11 ouverte).
+
+## ⚠️ Point de reprise (13/11/2026, fin de session) — à lire d'abord
+
+- **PR #11 ouverte, pas encore fusionnée** (branche `claude/appli-planning-familial-setup-1cljht`) : Expo SDK 58, 4 widgets Android, Sentry, aperçus/exemples de widgets, liens widget → bon écran, Planning aéré, nom modifiable dans le profil (`PATCH /auth/me`), dépendances à jour. `main` (PR #12, #13, #14) y est déjà fusionné ; tests verts (serveur 103, appli 96).
+- **`runtimeVersion` "3"** dans la PR #11 (main est en "2"). Tant que la #11 n'est pas fusionnée, les mises à jour publiées depuis main ne visent que les APK "2".
+- **APK de test de la PR #11** (runtime "3", compilé depuis la branche, sans les tout derniers changements JS qui arriveront par mise à jour après fusion) : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/541514d0-0b8f-4289-b02a-c78da8d7119e
+- **À faire, dans l'ordre** :
+  1. L'utilisatrice teste cet APK (widgets : aperçu, exemple quand vide, appui → bon écran ; Planning ; Profil → nom). Si « Application non installée » : désinstaller l'ancienne appli d'abord (voir « APK actuel et installation »).
+  2. Corriger ce qu'elle signale, puis **fusionner la #11 seulement sur sa demande**.
+  3. Après fusion : lancer « EAS Build (Android preview) » **depuis main** pour l'APK définitif runtime "3" ; vérifier que « EAS Update » a publié ; Render redéploie le serveur (route `PATCH /auth/me`).
+  4. Ensuite (PR séparée) : mises à jour majeures du serveur (Prisma 7, Express 5…), voir « État des dépendances ».
+- **Attention aux sessions parallèles** : plusieurs sessions ont fusionné dans main pendant que la #11 était ouverte (conflits sur `package-lock.json`, `app.json`/`runtimeVersion`, `CustomTabBar`). Avant de pousser : `git fetch origin main` et fusionner main ; ne jamais redescendre `runtimeVersion`.
+- Sentry actif (DSN dans `mobile/src/lib/sentry.ts`, organisation `siquanelab`, serveurs UE).
+- Sauvegarde hebdomadaire : workflow prêt, **5 secrets GitHub encore à ajouter** par l'utilisatrice (voir « Améliorations sans nouvel APK »).
+- cron-job.org (garder Render éveillé, `/health` toutes les 10 min) : à faire par l'utilisatrice si ce n'est pas déjà fait.
 
 ## Contexte
 
@@ -99,7 +114,17 @@ Ensuite, à part : mises à jour majeures du serveur (Prisma 7, Express 5).
 - Onglets : l'icône dans l'anneau de sa couleur, halo autour de l'onglet actif (fond intérieur très léger pour garder le contraste). Le « + » est un rond à bord dégradé.
 - Boutons principaux remplis du dégradé, texte foncé. Catégories de tâches aux couleurs des anneaux (`categoryColor` dans `lib/weekdays.ts`, Santé en vert).
 - Icône, icône Android et écran de lancement refaits depuis le logo (`mobile/assets/`). Logo source : `assets/brand/logo-passerelle.png`.
-- `runtimeVersion` passé de "1" à "2" (icône et écran de lancement sont natifs) : il faut compiler un nouvel APK après la fusion.
+- `runtimeVersion` passé de "1" à "2" (icône et écran de lancement sont natifs).
+- Icône de l'onglet Repas : bol fumant (`MealIcon` dans `components/icons.tsx`, PR #12), au lieu de fourchette + couteau. Icônes en couleur unie (pas de dégradé vertical, choix de l'utilisateur).
+- Profil de marque pour les documents produits par Claude : `CLAUDE.md` à la racine (couleurs, logo, format « pages visuelles »).
+
+## APK actuel et installation (13/11/2026)
+
+- **APK à installer** (compilé après les PR #10, runtime "2") : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/c5add826-3f5f-42bf-a1a3-a121c6947ff7
+- L'ancien lien (build `5a8ba245…`, runtime "1") est périmé : ne plus l'utiliser.
+- Problème rencontré : « Application non installée » en installant par-dessus l'ancienne version (signature différente probable). Solution : **désinstaller l'ancienne appli d'abord**, puis installer. Les données sont sur le serveur ; il faut se reconnecter et réactiver les notifications.
+- Le bol de l'onglet Repas (PR #12) arrive par EAS Update : fermer puis rouvrir l'appli une fois après l'installation.
+- À confirmer à la prochaine session : l'installation a-t-elle réussi ? Le halo des onglets rend-il bien sur le téléphone (jamais vu sur un vrai appareil) ?
 
 ## Idées notées pour plus tard
 
