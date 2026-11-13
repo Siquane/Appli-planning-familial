@@ -5,6 +5,7 @@ import { requireAuth } from "../middleware/auth";
 import type { Meal } from "@prisma/client";
 import { isMealAiConfigured } from "../env";
 import { COOK_TIMES, DIETS, MealPlannerError, RECIPE_USAGE, proposeMeals } from "../services/mealPlanner";
+import { getMealQuota, quotaProblem } from "../lib/plan";
 
 export const mealsRouter = Router();
 mealsRouter.use(requireAuth);
@@ -79,6 +80,13 @@ const generateSchema = z.object({
   }),
   // Dish titles to steer away from (used when re-rolling a single slot).
   exclude: z.array(z.string().max(120)).max(40).default([]),
+  // "week": a whole proposal (counts as one generation). "reroll": « autre
+  // idée » for exactly one slot.
+  kind: z.enum(["week", "reroll"]).default("week"),
+});
+
+mealsRouter.get("/quota", async (req, res) => {
+  res.json({ quota: await getMealQuota(req.userId!) });
 });
 
 // Asks Claude for a proposal. Nothing is written: the app previews it and
@@ -87,7 +95,12 @@ mealsRouter.post("/generate", async (req, res) => {
   if (!isMealAiConfigured()) return res.status(503).json({ error: "La génération de menus n'est pas configurée sur le serveur." });
   const parsed = generateSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
-  const { slots, preferences, exclude } = parsed.data;
+  const { slots, preferences, exclude, kind } = parsed.data;
+  if (kind === "reroll" && slots.length !== 1) return res.status(400).json({ error: "« Autre idée » porte sur un seul repas" });
+
+  const quota = await getMealQuota(req.userId!);
+  const problem = quotaProblem(quota, kind);
+  if (problem) return res.status(403).json({ error: problem, code: "quota_exceeded", quota });
 
   const [recipes, members, meals] = await Promise.all([
     prisma.recipe.findMany({ where: { userId: req.userId }, select: { id: true, title: true }, orderBy: { title: "asc" } }),
@@ -102,7 +115,9 @@ mealsRouter.post("/generate", async (req, res) => {
 
   try {
     const proposal = await proposeMeals({ slots, preferences, recipes, members, keptMeals, exclude });
-    res.json({ meals: proposal });
+    // Only successful generations count against the quota.
+    await prisma.mealGeneration.create({ data: { userId: req.userId!, kind } });
+    res.json({ meals: proposal, quota: await getMealQuota(req.userId!) });
   } catch (e) {
     if (e instanceof MealPlannerError) return res.status(502).json({ error: e.message });
     throw e;

@@ -25,7 +25,7 @@ export const FIXED_EXPENSE_CATEGORIES = [
 /** Where expenses of a deleted custom category go. */
 export const FALLBACK_CATEGORY = "divers";
 
-const FIXED_LABELS: Record<(typeof FIXED_EXPENSE_CATEGORIES)[number], string> = {
+export const FIXED_LABELS: Record<(typeof FIXED_EXPENSE_CATEGORIES)[number], string> = {
   courses: "Courses",
   logement: "Logement",
   énergie: "Énergie & eau",
@@ -65,4 +65,11 @@ export async function checkCategoryAndMember(userId: string, data: { category?: 
   if (data.category !== undefined && !(await isValidCategory(userId, data.category))) return "Catégorie inconnue";
   if (data.memberId && !(await ownsMember(userId, data.memberId))) return "Membre inconnu";
   return null;
+}
+
+/** Display name of a fixed key or of one of the family's categories. */
+export async function categoryName(userId: string, category: string) {
+  if (category in FIXED_LABELS) return FIXED_LABELS[category as keyof typeof FIXED_LABELS];
+  const custom = await prisma.expenseCategory.findFirst({ where: { id: category, userId }, select: { name: true } });
+  return custom?.name ?? FIXED_LABELS.divers;
 }

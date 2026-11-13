@@ -6,6 +6,8 @@ import { requireAuth } from "../middleware/auth";
 import { checkCategoryAndMember } from "../lib/expenseCategories";
 import { materializeRecurring } from "../lib/recurring";
 import { patchSchema } from "../lib/validation";
+import { checkCapAlert } from "../lib/capAlerts";
+import { requirePremium } from "../lib/plan";
 
 // Household budget: expenses entered by hand (or copied each month from a
 // recurring expense), one category each, summed per month and compared to
@@ -38,6 +40,7 @@ function serializeExpense(e: Expense) {
     category: e.category,
     memberId: e.memberId,
     recurringId: e.recurringId,
+    goalId: e.goalId,
     date: e.date.toISOString().slice(0, 10),
     createdAt: e.createdAt.toISOString(),
     updatedAt: e.updatedAt.toISOString(),
@@ -86,6 +89,42 @@ expensesRouter.get("/", async (req, res) => {
   });
 });
 
+// Premium: GET /expenses/report?months=6 -> the last N months (oldest
+// first), each with its total and per-category totals, for the charts.
+expensesRouter.get("/report", async (req, res) => {
+  const parsed = z.object({ months: z.coerce.number().int().min(2).max(12).default(6) }).safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
+  const userId = req.userId!;
+  if (!(await requirePremium(userId, res, "Le bilan"))) return;
+
+  const now = currentMonth();
+  const months = Array.from({ length: parsed.data.months }, (_, i) => shiftMonth(now, i - parsed.data.months + 1));
+  for (const m of months) await materializeRecurring(userId, m, now);
+
+  const expenses = await prisma.expense.findMany({
+    where: { userId, date: { gte: monthRange(months[0]).gte, lt: monthRange(now).lt } },
+    select: { amountCents: true, category: true, date: true },
+  });
+  const report = months.map((month) => {
+    const inMonth = expenses.filter((e) => e.date.toISOString().startsWith(month));
+    const byCat = new Map<string, number>();
+    for (const e of inMonth) byCat.set(e.category, (byCat.get(e.category) ?? 0) + e.amountCents);
+    return {
+      month,
+      totalCents: inMonth.reduce((sum, e) => sum + e.amountCents, 0),
+      byCategory: [...byCat.entries()].map(([category, totalCents]) => ({ category, totalCents })).sort((a, b) => b.totalCents - a.totalCents),
+    };
+  });
+  res.json({ months: report });
+});
+
+/** "2026-11" shifted by n months. */
+export function shiftMonth(month: string, n: number) {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + n, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
 const expenseSchema = z.object({
   label: z.string().trim().min(1, "Un libellé est nécessaire").max(200),
   amountCents,
@@ -104,7 +143,8 @@ expensesRouter.post("/", async (req, res) => {
   const expense = await prisma.expense.create({
     data: { ...rest, memberId: memberId ?? null, date: new Date(`${date}T00:00:00Z`), userId: req.userId! },
   });
-  res.status(201).json({ expense: serializeExpense(expense) });
+  const alert = await checkCapAlert(req.userId!, expense.category, date.slice(0, 7));
+  res.status(201).json({ expense: serializeExpense(expense), alert });
 });
 
 async function loadOwnedExpense(userId: string, id: string) {
@@ -125,7 +165,8 @@ expensesRouter.patch("/:id", async (req, res) => {
     where: { id: existing.id },
     data: { ...rest, ...(date ? { date: new Date(`${date}T00:00:00Z`) } : {}) },
   });
-  res.json({ expense: serializeExpense(expense) });
+  const alert = await checkCapAlert(req.userId!, expense.category, expense.date.toISOString().slice(0, 7));
+  res.json({ expense: serializeExpense(expense), alert });
 });
 
 // Deleting a copy of a recurring expense skips that month only (the

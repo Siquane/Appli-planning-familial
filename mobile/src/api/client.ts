@@ -9,10 +9,18 @@ export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_URL;
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  /** Machine-readable reason when the server gives one ("premium_required", "quota_exceeded"…). */
+  code?: string;
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
+}
+
+/** True when the request was refused because it needs Premium (feature or quota). */
+export function needsPremium(e: unknown) {
+  return e instanceof ApiError && (e.code === "premium_required" || e.code === "quota_exceeded");
 }
 
 async function request<T>(path: string, options: RequestInit = {}, retry = true): Promise<T> {
@@ -41,7 +49,7 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
   if (res.status === 204) return undefined as T;
 
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, body.error ?? "Une erreur est survenue");
+  if (!res.ok) throw new ApiError(res.status, body.error ?? "Une erreur est survenue", typeof body.code === "string" ? body.code : undefined);
   return body as T;
 }
 
