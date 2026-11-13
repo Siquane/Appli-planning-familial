@@ -7,7 +7,7 @@ import { Card } from "../../src/components/Card";
 import { Button } from "../../src/components/Button";
 import { WeekStrip } from "../../src/components/WeekStrip";
 import { TaskCard } from "../../src/components/TaskCard";
-import { Avatar } from "../../src/components/Avatar";
+import { TabHeader } from "../../src/components/PageHeader";
 import { ReshuffleIcon, CalendarIcon, GiftIcon } from "../../src/components/icons";
 import { useMembers, useTasks } from "../../src/hooks/useApi";
 import { useAuthStore } from "../../src/state/authStore";
@@ -42,14 +42,7 @@ export default function HomeScreen() {
 
   return (
     <Screen techGrid refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={color.accent} />}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <View>
-          <Text heading weight="semibold" size={20}>
-            Salut, {user?.name?.split(" ")[0] ?? ""} 👋
-          </Text>
-        </View>
-        <Avatar initials={user?.initials ?? ""} bg={color.accent800} fg={color.accent100} size={38} />
-      </View>
+      <TabHeader title="Planning" pillar={color.pillar1} subtitle={`Salut, ${user?.name?.split(" ")[0] ?? ""} 👋`} />
 
       <WeekStrip selected={selected} onSelect={setSelected} today={today} />
 

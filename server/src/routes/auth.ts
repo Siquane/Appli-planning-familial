@@ -6,6 +6,7 @@ import { prisma } from "../db";
 import { generateRefreshToken, hashRefreshToken, signAccessToken, verifyAccessToken } from "../lib/jwt";
 import { requireAuth } from "../middleware/auth";
 import { sendPasswordResetCode } from "../services/mailer";
+import { accountLimiter, loginLimiter } from "../middleware/rateLimits";
 
 export const authRouter = Router();
 
@@ -20,7 +21,7 @@ const signupSchema = z.object({
   name: z.string().min(1),
 });
 
-authRouter.post("/signup", async (req, res) => {
+authRouter.post("/signup", accountLimiter, async (req, res) => {
   const parsed = signupSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" });
   const { email, password, name } = parsed.data;
@@ -39,7 +40,7 @@ authRouter.post("/signup", async (req, res) => {
 
 const loginSchema = z.object({ email: z.string().email(), password: z.string() });
 
-authRouter.post("/login", async (req, res) => {
+authRouter.post("/login", loginLimiter, async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Requête invalide" });
   const { email, password } = parsed.data;
@@ -67,7 +68,7 @@ function findUserByEmail(email: string) {
 
 const forgotSchema = z.object({ email: z.string().trim().email("Adresse e-mail invalide") });
 
-authRouter.post("/forgot-password", async (req, res) => {
+authRouter.post("/forgot-password", accountLimiter, async (req, res) => {
   const parsed = forgotSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" });
 
@@ -103,7 +104,7 @@ const resetSchema = z.object({
   password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
 });
 
-authRouter.post("/reset-password", async (req, res) => {
+authRouter.post("/reset-password", loginLimiter, async (req, res) => {
   const parsed = resetSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" });
   const { email, code, password } = parsed.data;

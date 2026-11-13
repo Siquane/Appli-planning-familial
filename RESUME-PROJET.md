@@ -1,7 +1,7 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 10 novembre 2026.
+Dernière mise à jour : 12 novembre 2026.
 
 ## Contexte
 
@@ -46,10 +46,25 @@ Dernière mise à jour : 10 novembre 2026.
 - Plusieurs jours cochés : interrupteur « Heure différente selon le jour » (`ScheduleTimes`, `lib/dayTimes.ts`), une tâche par jour avec sa propre heure.
 - Fiche d'une tâche : icône « Dupliquer » en haut, qui ouvre le formulaire de création prérempli.
 
-## En cours au moment de ce résumé
+## Optimisations (12/11/2026)
 
-- PR #4 (`claude/appli-planning-familial-setup-1cljht` → `main`) ouverte : correction Node 22, dépendances, ce fichier et les ajouts ci-dessus. `main` y a été fusionné (pas de conflit restant). À fusionner.
-- Les APK compilés avant cette fusion (n°6, n°7) pointaient vers l'ancienne adresse du serveur : ne pas les installer. Relancer une compilation depuis la branche (ou `main` après fusion de la PR).
+- **Cache sur le téléphone** : les données (sauf documents) sont gardées 7 jours dans AsyncStorage et s'affichent tout de suite au lancement ; effacées à la déconnexion (`mobile/src/lib/queryClient.ts`).
+- **Serveur éveillé** : pas via GitHub Actions (dépôt privé = 2 000 min/mois, un ping toutes les 10 min en consommerait plus de 4 000). À faire avec un service externe gratuit (cron-job.org) qui appelle `/health` toutes les 10 minutes.
+- **Tests automatiques** : workflow `.github/workflows/tests.yml` sur chaque pull request et sur `main` (serveur avec Postgres, vérification des migrations, mobile).
+- **Limites de tentatives** : connexion et code de réinitialisation 10 / 15 min par e-mail et IP ; inscription et demande de code 10 / heure par IP (`server/src/middleware/rateLimits.ts`). Les tests les désactivent via `DISABLE_RATE_LIMIT=1`.
+- **Bouton « + »** : menu d'ajout rapide (tâche, dépense, document, recette, repas).
+- **Notifications** : récap du soir à 20 h (tâches du lendemain, interrupteur dans l'onglet Notifications) ; message quand une dépense fait dépasser un plafond ; la synchro des rappels de tâches n'annule plus les rappels d'anniversaire.
+
+## Navigation : les 4 piliers (12/11/2026)
+
+- Barre du bas = les 4 anneaux du logo Passerelle, de gauche à droite : **Planning** (cyan), **Repas** (bleu clair), **Budget** (lavande), **Famille** (violet), avec le « + » d'ajout rapide au milieu. Couleurs dans `theme/tokens.ts` (`pillar1`…`pillar4`).
+- Repas = menu de la semaine + recettes (sélecteur en haut ; contenus dans `src/screens/MealsBody.tsx` et `RecipesBody.tsx`, réutilisés par `/meals` et `/recipes`).
+- Famille = membres, documents, anniversaires, partage.
+- Recherche (`/search`), notifications (`/inbox`, pour ne pas entrer en conflit avec l'écran d'accueil `(onboarding)/notifications`) et profil (`/profile`) ne sont plus des onglets : icônes en haut de chaque onglet (`TabHeader` dans `components/PageHeader.tsx`).
+
+## Idées notées pour plus tard
+
+Comptes séparés pour chaque membre de la famille, sauvegarde hebdomadaire de la base vers R2, liste de courses générée depuis le menu, synchronisation Google Agenda, widget Android, export CSV du budget.
 
 ## Mises à jour majeures à prévoir plus tard (non faites, demandent du code)
 

@@ -1,15 +1,16 @@
 import { useMemo, useState } from "react";
 import { View } from "react-native";
-import { Screen } from "../../src/components/Screen";
-import { Text } from "../../src/components/Text";
-import { TextField } from "../../src/components/TextField";
-import { Card } from "../../src/components/Card";
-import { Chip } from "../../src/components/Chip";
-import { TaskCard } from "../../src/components/TaskCard";
-import { SearchEmptyIcon } from "../../src/components/icons";
-import { useMembers, useTasks } from "../../src/hooks/useApi";
-import { color, space } from "../../src/theme/tokens";
-import type { Category } from "../../src/api/types";
+import { Screen } from "../src/components/Screen";
+import { BackHeader } from "../src/components/PageHeader";
+import { Text } from "../src/components/Text";
+import { TextField } from "../src/components/TextField";
+import { Card } from "../src/components/Card";
+import { Chip } from "../src/components/Chip";
+import { TaskCard } from "../src/components/TaskCard";
+import { SearchEmptyIcon } from "../src/components/icons";
+import { useMembers, useTasks } from "../src/hooks/useApi";
+import { color, space } from "../src/theme/tokens";
+import type { Category } from "../src/api/types";
 
 const CATEGORIES: Category[] = ["École", "Travail", "Maison", "Santé", "Loisirs"];
 
@@ -29,9 +30,7 @@ export default function SearchScreen() {
 
   return (
     <Screen keyboard>
-      <Text heading weight="semibold" size={20}>
-        Recherche
-      </Text>
+      <BackHeader title="Recherche" />
       <TextField value={query} onChangeText={setQuery} placeholder="Rechercher une tâche..." autoCapitalize="none" />
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
