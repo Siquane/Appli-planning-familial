@@ -239,7 +239,7 @@ export function PiggyBankIcon({ size = 16, color = "currentColor" }: IconProps) 
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M4.8 13.2c0-3.3 3.2-5.6 7-5.6 2.5 0 4.6.9 5.8 2.3h1.6c.5 0 .8.3.8.8v2.6c0 .5-.3.8-.8.8h-1.1c-.5 1.3-1.4 2.3-2.6 3v2.3c0 .4-.3.7-.7.7h-1.1c-.4 0-.7-.3-.7-.7V18c-.5.1-1 .2-1.4.2-.7 0-1.4-.1-2-.2v1.4c0 .4-.3.7-.7.7H8c-.4 0-.7-.3-.7-.7v-2.5c-1.5-.9-2.5-2.2-2.5-3.7z"
+        d="M4.8 13.2c0-3.3 3.2-5.6 7-5.6 2.5 0 4.6.9 5.8 2.3l.3.7h.9c.4 0 .6.2.6.6v1.6c0 .4-.2.6-.6.6h-.8c-.5 1.5-1.2 2.8-2.3 3.7v2.3c0 .4-.3.7-.7.7h-1.1c-.4 0-.7-.3-.7-.7V18c-.5.1-1 .2-1.4.2-.7 0-1.4-.1-2-.2v1.4c0 .4-.3.7-.7.7H8c-.4 0-.7-.3-.7-.7v-2.5c-1.5-.9-2.5-2.2-2.5-3.7z"
         fill={color}
         fillOpacity={0.2}
         stroke={color}
@@ -255,7 +255,7 @@ export function PiggyBankIcon({ size = 16, color = "currentColor" }: IconProps) 
         strokeLinejoin="round"
       />
       <Circle cx={11.5} cy={4.4} r={1.7} stroke={color} strokeWidth={0.6} />
-      <Circle cx={16.9} cy={11.4} r={0.65} fill={color} />
+      <Circle cx={16.4} cy={11.3} r={0.6} fill={color} />
     </Svg>
   );
 }
