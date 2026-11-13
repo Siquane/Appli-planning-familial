@@ -225,11 +225,11 @@ export function ToqueIcon({ size = 16, color = "currentColor" }: IconProps) {
         fill={color}
         fillOpacity={0.2}
         stroke={color}
-        strokeWidth={1.1}
+        strokeWidth={0.8}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <Path d="M7.4 14.6v4.4c0 .6.4 1 1 1h7.2c.6 0 1-.4 1-1v-4.4" stroke={color} strokeWidth={1.1} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M7.4 14.6v4.4c0 .6.4 1 1 1h7.2c.6 0 1-.4 1-1v-4.4" stroke={color} strokeWidth={0.8} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -243,18 +243,18 @@ export function PiggyBankIcon({ size = 16, color = "currentColor" }: IconProps) 
         fill={color}
         fillOpacity={0.2}
         stroke={color}
-        strokeWidth={1.1}
+        strokeWidth={0.8}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <Path
         d="M14.5 8.1c.2-1 .7-1.8 1.4-2.2.4.7.6 1.6.6 2.7M10 9.8h3M4.8 12.6c-.9 0-1.4-.6-1.2-1.3"
         stroke={color}
-        strokeWidth={1.1}
+        strokeWidth={0.8}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <Circle cx={11.5} cy={4.4} r={1.7} stroke={color} strokeWidth={1.1} />
+      <Circle cx={11.5} cy={4.4} r={1.7} stroke={color} strokeWidth={0.8} />
       <Circle cx={16.9} cy={11.4} r={0.65} fill={color} />
     </Svg>
   );
