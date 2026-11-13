@@ -1,5 +1,5 @@
-import { useEffect, useCallback } from "react";
-import { Stack } from "expo-router";
+import { useEffect, useCallback, useRef } from "react";
+import { Stack, router } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
@@ -44,6 +44,21 @@ function RootLayout() {
   }, []);
 
   const ready = fontsLoaded && hydrated && onboardingHydrated;
+
+  // Session lost while a screen is open (refresh token rejected): go back to
+  // the login screen instead of leaving every action failing with a 401.
+  const user = useAuthStore((s) => s.user);
+  const hadUser = useRef(false);
+  useEffect(() => {
+    if (!ready) return;
+    if (user) {
+      hadUser.current = true;
+    } else if (hadUser.current) {
+      hadUser.current = false;
+      queryClient.clear();
+      router.replace("/(auth)/login");
+    }
+  }, [ready, user]);
 
   const onLayout = useCallback(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});

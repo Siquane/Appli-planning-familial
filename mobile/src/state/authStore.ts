@@ -114,6 +114,7 @@ async function authRequest(path: string, body: unknown) {
 }
 
 let wakePromise: Promise<void> | null = null;
+let refreshInFlight: Promise<boolean> | null = null;
 
 /**
  * Fire-and-forget ping so the sleeping Render server starts booting while the
@@ -140,10 +141,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       storage.get(REFRESH_KEY),
       storage.get(USER_KEY),
     ]);
+    // A stored user without any token is a dead session (e.g. cleared by an
+    // older build's refresh race): start from the login screen.
+    const hasSession = !!(accessToken || refreshToken);
     set({
       accessToken: accessToken ?? null,
       refreshToken: refreshToken ?? null,
-      user: userRaw ? (JSON.parse(userRaw) as User) : null,
+      user: userRaw && hasSession ? (JSON.parse(userRaw) as User) : null,
       hydrated: true,
     });
   },
@@ -187,17 +191,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  refresh: async () => {
+  // Refresh tokens are single-use on the server. When the access token expires,
+  // a screen typically fires several requests at once and they all get a 401:
+  // they must share ONE refresh call — otherwise the second call sends an
+  // already-consumed refresh token, fails, and signs the user out mid-screen
+  // (the next save then fails with "Missing bearer token").
+  refresh: () => {
+    if (refreshInFlight) return refreshInFlight;
     const { refreshToken } = get();
-    if (!refreshToken) return false;
-    try {
-      const data = await authRequest("/auth/refresh", { refreshToken });
-      await persist(data.user, data.accessToken, data.refreshToken);
-      set({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
-      return true;
-    } catch {
-      return false;
-    }
+    if (!refreshToken) return Promise.resolve(false);
+    refreshInFlight = (async () => {
+      try {
+        const data = await authRequest("/auth/refresh", { refreshToken });
+        await persist(data.user, data.accessToken, data.refreshToken);
+        set({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
+        return true;
+      } catch {
+        return false;
+      } finally {
+        refreshInFlight = null;
+      }
+    })();
+    return refreshInFlight;
   },
 
   setUser: async (user) => {

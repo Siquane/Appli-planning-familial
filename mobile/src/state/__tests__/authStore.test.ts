@@ -60,6 +60,17 @@ describe("authStore", () => {
     await expect(useAuthStore.getState().refresh()).resolves.toBe(false);
   });
 
+  it("concurrent refreshes share one call, so the single-use refresh token is sent only once", async () => {
+    useAuthStore.setState({ user, accessToken: "expired", refreshToken: "refresh-1" });
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(true, 200, { user, accessToken: "access-2", refreshToken: "refresh-2" }));
+
+    const results = await Promise.all([useAuthStore.getState().refresh(), useAuthStore.getState().refresh()]);
+
+    expect(results).toEqual([true, true]);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(useAuthStore.getState().accessToken).toBe("access-2");
+  });
+
   it("refresh returns false immediately when there is no refresh token to send", async () => {
     useAuthStore.setState({ refreshToken: null });
     await expect(useAuthStore.getState().refresh()).resolves.toBe(false);

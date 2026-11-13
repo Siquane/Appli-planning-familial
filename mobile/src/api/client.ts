@@ -25,6 +25,12 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
 
   const res = await fetch(`${API_URL}${path}`, { ...options, headers });
 
+  if (res.status === 401 && !accessToken && !useAuthStore.getState().refreshToken) {
+    // No session at all: sign out so the app returns to the login screen.
+    if (useAuthStore.getState().user) useAuthStore.getState().signOut();
+    throw new ApiError(401, "Session expirée, reconnecte-toi.");
+  }
+
   if (res.status === 401 && retry && useAuthStore.getState().refreshToken) {
     const refreshed = await useAuthStore.getState().refresh();
     if (refreshed) return request<T>(path, options, false);

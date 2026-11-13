@@ -84,4 +84,13 @@ describe("api client request()", () => {
     await expect(api.get("/tasks")).rejects.toMatchObject({ status: 401 });
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
+
+  it("signs out with a readable message when there is no session at all", async () => {
+    const signOut = jest.fn();
+    useAuthStore.setState({ user: { id: "u", email: "a@a", name: "A", initials: "A" }, accessToken: null, refreshToken: null, signOut });
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(401, { error: "Missing bearer token" }));
+
+    await expect(api.get("/tasks")).rejects.toMatchObject({ status: 401, message: "Session expirée, reconnecte-toi." });
+    expect(signOut).toHaveBeenCalledTimes(1);
+  });
 });
