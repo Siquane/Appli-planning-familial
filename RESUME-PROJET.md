@@ -1,7 +1,7 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 12 novembre 2026.
+Dernière mise à jour : 13 novembre 2026.
 
 ## Contexte
 
@@ -61,6 +61,14 @@ Dernière mise à jour : 12 novembre 2026.
 - Repas = menu de la semaine + recettes (sélecteur en haut ; contenus dans `src/screens/MealsBody.tsx` et `RecipesBody.tsx`, réutilisés par `/meals` et `/recipes`).
 - Famille = membres, documents, anniversaires, partage.
 - Recherche (`/search`), notifications (`/inbox`, pour ne pas entrer en conflit avec l'écran d'accueil `(onboarding)/notifications`) et profil (`/profile`) ne sont plus des onglets : icônes en haut de chaque onglet (`TabHeader` dans `components/PageHeader.tsx`).
+
+## Mises à jour de l'appli sans nouvel APK (EAS Update, 13/11/2026)
+
+- `expo-updates` installé, canal `preview`, `runtimeVersion: "1"` dans `mobile/app.json`.
+- Workflow `.github/workflows/eas-update.yml` : à chaque fusion dans `main` qui touche `mobile/`, publie une mise à jour ; l'appli la télécharge et l'applique au démarrage (`src/lib/updates.ts`). Aussi lançable à la main (« Run workflow »).
+- **Règle à respecter** : si un changement ajoute ou modifie un module natif, une permission ou `app.json` côté natif, augmenter `runtimeVersion` ("1" → "2") et compiler un nouvel APK. Garde-fou : si `package.json` ou `app.json` changent sans nouveau `runtimeVersion`, le workflow ne publie rien (avertissement).
+- L'URL de mise à jour (`https://u.expo.dev/<projectId>`) est ajoutée en CI par `mobile/scripts/configure-updates.js`, après `eas init` (build et update).
+- Il faut **un dernier APK** compilé après la fusion de cette fonctionnalité pour l'activer sur les téléphones.
 
 ## Idées notées pour plus tard
 

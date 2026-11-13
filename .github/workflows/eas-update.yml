@@ -1,0 +1,78 @@
+name: EAS Update (Android preview)
+
+# Sends JavaScript changes to the installed APKs, without a new build: the
+# app downloads the update when it starts. Runs on every merge to main that
+# touches the mobile app, or by hand (« Run workflow »).
+#
+# Guard: an update can only reach APKs built with the same runtimeVersion
+# (mobile/app.json). If package.json or app.json changed without a new
+# runtimeVersion, the change may need native code, so nothing is published —
+# bump runtimeVersion and build a new APK instead.
+on:
+  push:
+    branches: [main]
+    paths: ["mobile/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: eas-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Native changes without a new runtimeVersion?
+        id: guard
+        if: github.event_name == 'push'
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          changed=$(git diff --name-only "$BEFORE" "$AFTER" -- package.json app.json)
+          old_rt=$(git show "$BEFORE:mobile/app.json" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).expo.runtimeVersion ?? ""))')
+          new_rt=$(node -p 'require("./app.json").expo.runtimeVersion')
+          if [ -n "$changed" ] && [ "$old_rt" = "$new_rt" ]; then
+            echo "::warning::$changed a changé sans nouveau runtimeVersion ($new_rt) : mise à jour non publiée. Augmentez runtimeVersion et compilez un nouvel APK."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          node-version: 22
+      - uses: expo/expo-github-action@v8
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Install dependencies
+        if: steps.guard.outputs.skip != 'true'
+        run: npm install --legacy-peer-deps
+      - name: Link EAS project
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          eas init --non-interactive --force
+          node scripts/configure-updates.js
+      - name: Publish the update
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          # Same server address as the APK build profile.
+          export EXPO_PUBLIC_API_URL=$(node -p 'require("./eas.json").build.preview.env.EXPO_PUBLIC_API_URL')
+          message=$(printf '%s' "${COMMIT_MESSAGE:-Mise à jour manuelle}" | head -n1)
+          eas update --channel preview --platform android --non-interactive --message "$message"
