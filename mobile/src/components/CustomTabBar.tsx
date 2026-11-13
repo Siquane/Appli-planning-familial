@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Pressable } from "react-native";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CalendarIcon, MealIcon, WalletIcon, ProfileIcon, PlusIcon } from "./icons";
 import { Text } from "./Text";
@@ -18,7 +18,7 @@ const TABS: Record<string, { label: string; tint: string; Icon: (props: { size: 
 
 type RouteItem = BottomTabBarProps["state"]["routes"][number];
 
-export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const [quickAdd, setQuickAdd] = useState(false);
 
@@ -33,7 +33,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     return (
       <Pressable
         key={route.key}
-        onPress={() => navigation.navigate(route.name)}
+        onPress={() => navigateToTab(route.key)}
         style={{ flex: 1, alignItems: "center", gap: 3 }}
         accessibilityRole="tab"
         accessibilityLabel={label}

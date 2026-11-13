@@ -1,3 +1,6 @@
+// Only the pure date helpers are tested here; the native module is stubbed.
+jest.mock("expo-notifications", () => ({ setNotificationHandler: jest.fn() }));
+
 import { daysUntilBirthday, nextBirthdayOccurrence, reminderMoment, toExpoWeekday } from "../notifications";
 
 describe("toExpoWeekday", () => {

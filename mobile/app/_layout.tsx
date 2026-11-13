@@ -16,12 +16,14 @@ import { useAuthStore, wakeServer } from "../src/state/authStore";
 import { useOnboardingStore } from "../src/state/onboardingStore";
 import { Toast } from "../src/components/Toast";
 import { applyPendingUpdate } from "../src/lib/updates";
+import { initSentry, Sentry, sentryEnabled } from "../src/lib/sentry";
 import { color } from "../src/theme/tokens";
 
+initSentry();
 SplashScreen.preventAutoHideAsync().catch(() => {});
 SystemUI.setBackgroundColorAsync(color.bg).catch(() => {});
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold });
   const hydrated = useAuthStore((s) => s.hydrated);
   const hydrate = useAuthStore((s) => s.hydrate);
@@ -63,3 +65,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+export default sentryEnabled ? Sentry.wrap(RootLayout) : RootLayout;

@@ -4,10 +4,12 @@ import { CustomTabBar } from "../../src/components/CustomTabBar";
 import { useMembers, useTasks } from "../../src/hooks/useApi";
 import { syncBirthdayReminders, syncEveningDigest, syncTaskReminders } from "../../src/lib/notifications";
 import { useSettingsStore } from "../../src/state/settingsStore";
+import { useWidgetSync } from "../../src/widgets/sync";
 
 export default function TabsLayout() {
   const { data: tasks } = useTasks();
   const { data: members } = useMembers();
+  useWidgetSync();
 
   useEffect(() => {
     if (tasks) syncTaskReminders(tasks);

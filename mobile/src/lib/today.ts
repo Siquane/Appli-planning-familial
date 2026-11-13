@@ -1,4 +1,5 @@
 import type { Meal, MonthlyBudget, Recipe, Task, Weekday } from "../api/types";
+import { formatEuros } from "./money";
 
 export interface TodaySummary {
   taskCount: number;
@@ -37,4 +38,22 @@ export function todaySummary(
       capCents: caps.length > 0 ? caps.reduce((sum, c) => sum + (c.limitCents ?? 0), 0) : null,
     },
   };
+}
+
+export interface TodayLines {
+  tasks: string;
+  dinner: string;
+  budget: string;
+  overBudget: boolean;
+}
+
+/** The three sentences shown by the « Aujourd'hui » card and the widget. */
+export function todayLines(s: TodaySummary): TodayLines {
+  const n = `${s.taskCount} tâche${s.taskCount > 1 ? "s" : ""}`;
+  const tasks = s.taskCount === 0 ? "Rien de prévu aujourd'hui" : s.next ? `${n} · prochaine : ${s.next.time} ${s.next.title}` : `${n} · journée terminée`;
+  const dinner = s.dinner ? `Ce soir : ${s.dinner}` : "Dîner pas encore prévu";
+  const left = s.budget.capCents !== null ? s.budget.capCents - s.budget.spentCents : null;
+  const budget =
+    left === null ? `${formatEuros(s.budget.spentCents)} dépensés ce mois-ci` : left >= 0 ? `Reste ${formatEuros(left)} sur les plafonds du mois` : `Plafonds dépassés de ${formatEuros(-left)}`;
+  return { tasks, dinner, budget, overBudget: left !== null && left < 0 };
 }

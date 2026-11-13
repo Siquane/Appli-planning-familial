@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 import { API_URL } from "../api/client";
 import type { User } from "../api/types";
 import { clearQueryCache } from "../lib/queryClient";
+import { refreshWidgets } from "../widgets/refresh";
 
 const ACCESS_KEY = "passerelle.accessToken";
 const REFRESH_KEY = "passerelle.refreshToken";
@@ -173,6 +174,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user: null, accessToken: null, refreshToken: null });
     // Never show one account's cached data to the next one.
     await clearQueryCache();
+    // …nor on the home-screen widgets.
+    await refreshWidgets(null);
     if (refreshToken) {
       fetch(`${API_URL}/auth/logout`, {
         method: "POST",

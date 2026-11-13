@@ -6,7 +6,7 @@ Dernière mise à jour : 13 novembre 2026.
 ## Contexte
 
 - Application famille : planning, tâches récurrentes, livre de recettes, anniversaires, menu de la semaine, documents, budget.
-- Stack : serveur Express + Prisma (Postgres) dans `server/`, application mobile Expo SDK 57 / React Native dans `mobile/`.
+- Stack : serveur Express + Prisma (Postgres) dans `server/`, application mobile Expo SDK 58 / React Native 0.88 dans `mobile/`.
 - Dépôt : `Siquane/Appli-planning-familial` (privé). Branche principale : `main`.
 - Une session = une branche de travail `claude/...`, fusionnée dans `main` par pull request.
 
@@ -79,9 +79,13 @@ Dernière mise à jour : 13 novembre 2026.
 - **Export du budget** : Budget → « Exporter le mois (tableur) », CSV pour Excel en français, envoyé par le menu de partage du téléphone.
 - **Sauvegarde hebdomadaire** : workflow `.github/workflows/backup.yml`, chaque dimanche vers 4 h, `pg_dump` compressé dans R2 sous `backups/`, 8 dernières gardées. Il faut 5 secrets GitHub (Settings → Secrets and variables → Actions) : `BACKUP_DATABASE_URL` (même valeur que `DATABASE_URL` dans Render), `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (mêmes valeurs que dans Render). Sans eux, le workflow ne fait rien et reste vert. Restaurer : télécharger le fichier depuis R2, puis `gunzip -c fichier.sql.gz | psql "<adresse Neon>"`.
 
-## Prochain lot (natif, nouvel APK, `runtimeVersion` "2")
+## Lot natif (13/11/2026, `runtimeVersion` "2", nouvel APK nécessaire)
 
-Expo SDK 58, widget Android, alertes de bug Sentry (compte sentry.io gratuit + clé DSN à fournir). Puis, à part : mises à jour majeures du serveur.
+- **Expo SDK 58** (React Native 0.88, React 19.3). Expo Router embarque désormais sa propre barre d'onglets : `CustomTabBar` reçoit `navigateToTab(route.key)` au lieu de `navigation` (type `BottomTabBarProps` de `expo-router/tabs`) ; `@react-navigation/bottom-tabs` retiré. `@react-native-async-storage/async-storage` reste en v3 (la liste SDK 58 indique 2.2.0, mais la v3 fonctionne déjà sur les APK).
+- **4 widgets Android** (`react-native-android-widget`, déclarés dans `app.json`) : « Aujourd'hui », « Tâches du jour », « Menu », « Courses ». L'utilisateur choisit lesquels poser depuis la liste des widgets du téléphone. L'appli enregistre un résumé de ses données sur le téléphone à chaque changement (`src/widgets/sync.ts`, `snapshot.ts`) et redessine les widgets ; Android les redessine aussi toutes les 30 min à partir de ce résumé (`taskHandler.tsx`, enregistré dans `mobile/index.js`, nouveau point d'entrée). Un appui ouvre l'écran correspondant (`/repas?tab=courses` pour les courses). La déconnexion vide les widgets.
+- **Sentry** (`src/lib/sentry.ts`) : erreurs uniquement, pas de données personnelles. **Inactif tant que la DSN est vide** : il suffit de la coller dans `src/lib/sentry.ts` (ce n'est pas un secret, elle est publique dans l'appli) puis de fusionner, sans nouvel APK.
+
+Ensuite, à part : mises à jour majeures du serveur (Prisma 7, Express 5).
 
 ## Idées notées pour plus tard
 
@@ -90,7 +94,6 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 ## Mises à jour majeures à prévoir plus tard (non faites, demandent du code)
 
 - Serveur : Prisma 5 → 7, Express 4 → 5, zod 3 → 4, vitest 2 → 5, TypeScript 5 → 7, googleapis, msal-node.
-- Mobile : Expo SDK 57 → 58 (entraîne react-native, expo-* et outils de test).
 - À noter : plusieurs bibliothèques natives mobiles sont déjà plus récentes que la liste officielle d'Expo SDK 57 (async-storage 3, gesture-handler 3, reanimated 4.5.3, screens 4.27, safe-area-context 5.8, svg 15.15.5, worklets 0.11). Si la compilation Android échoue sur l'une d'elles, c'est la première piste.
 
 ## Préférences de l'utilisateur
@@ -105,4 +108,4 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Routes : `server/src/routes/`, migrations Prisma : `server/prisma/migrations/` (générées et vérifiées avec `prisma migrate diff`).
 - Mobile : hooks dans `mobile/src/hooks/useApi.ts`, API dans `mobile/src/api/resources.ts`, types dans `mobile/src/api/types.ts`.
 - Avant de livrer : `npm run typecheck` et `npm test` dans `server/` (Postgres local requis, base `passerelle_test`) et dans `mobile/` (`npx jest`), plus `npx expo export --platform android` pour vérifier que l'appli se compile.
-- Expo : lire la doc versionnée v57 (voir `mobile/AGENTS.md`).
+- Expo : lire la doc versionnée v58 (voir `mobile/AGENTS.md`).
