@@ -90,7 +90,7 @@ export default function PremiumScreen() {
           return (
             <Card key={pack.id} style={{ gap: space[6], borderWidth: active ? 1 : 0, borderColor: color.accent400 }}>
               {/* Left: icon(s) with the name under them. Right: the price, centred on that block. */}
-              <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space[3], paddingHorizontal: space[4] }}>
                 <View style={{ flex: 1, alignItems: "flex-start", gap: 2 }}>
                   {pack.id === "meals" ? (
                     <ToqueIcon size={56} color={color.pillar2} />
