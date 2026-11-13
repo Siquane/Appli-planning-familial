@@ -6,27 +6,37 @@ export interface CategoryOption {
   custom: boolean;
 }
 
+// Keep in sync with server/src/lib/expenseCategories.ts (same keys, same order).
 export const EXPENSE_CATEGORIES: { value: FixedExpenseCategory; label: string }[] = [
   { value: "courses", label: "Courses" },
   { value: "logement", label: "Logement" },
+  { value: "énergie", label: "Énergie & eau" },
+  { value: "assurances", label: "Assurances" },
   { value: "transport", label: "Transport" },
   { value: "santé", label: "Santé" },
   { value: "enfants", label: "Enfants" },
+  { value: "abonnements", label: "Abonnements & télécom" },
+  { value: "restaurants", label: "Restaurants & sorties" },
   { value: "loisirs", label: "Loisirs" },
-  { value: "factures", label: "Factures" },
-  { value: "autre", label: "Autre" },
+  { value: "shopping", label: "Shopping & vêtements" },
+  { value: "vacances", label: "Vacances & voyages" },
+  { value: "impôts", label: "Impôts & taxes" },
+  { value: "épargne", label: "Épargne" },
+  { value: "animaux", label: "Animaux" },
+  { value: "cadeaux", label: "Cadeaux" },
+  { value: "divers", label: "Divers" },
 ];
 
-/** Fixed categories, then the family's own, with "Autre" kept last. */
+/** Fixed categories, then the family's own, with "Divers" kept last. */
 export function buildCategoryOptions(custom: CustomExpenseCategory[]): CategoryOption[] {
   const fixed = EXPENSE_CATEGORIES.map((c) => ({ ...c, custom: false }));
-  const other = fixed.filter((c) => c.value === "autre");
-  return [...fixed.filter((c) => c.value !== "autre"), ...custom.map((c) => ({ value: c.id, label: c.name, custom: true })), ...other];
+  const other = fixed.filter((c) => c.value === "divers");
+  return [...fixed.filter((c) => c.value !== "divers"), ...custom.map((c) => ({ value: c.id, label: c.name, custom: true })), ...other];
 }
 
-/** Label for a category key or custom id; an unknown id (just deleted) reads as "Autre". */
+/** Label for a category key or custom id; an unknown id (just deleted) reads as "Divers". */
 export function categoryLabel(options: CategoryOption[], category: ExpenseCategory) {
-  return options.find((c) => c.value === category)?.label ?? "Autre";
+  return options.find((c) => c.value === category)?.label ?? "Divers";
 }
 
 /** "12,50" / "12.5" / "1 200" -> cents, or null when it isn't a positive amount. */

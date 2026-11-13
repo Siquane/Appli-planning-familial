@@ -9,11 +9,19 @@ import { authHeader, signup } from "../helpers";
 const month = currentMonth();
 
 describe("budget: custom categories", () => {
-  it("creates, uses, renames and deletes a category — its expenses move to 'autre'", async () => {
+  it("refuses a custom category that duplicates a fixed one by key or label", async () => {
+    const { accessToken } = await signup(app);
+    for (const name of ["Assurances", "divers", "Énergie & eau"]) {
+      const res = await request(app).post("/expense-categories").set(authHeader(accessToken)).send({ name });
+      expect(res.status).toBe(400);
+    }
+  });
+
+  it("creates, uses, renames and deletes a category — its expenses move to 'divers'", async () => {
     const { accessToken } = await signup(app);
     const auth = authHeader(accessToken);
 
-    const created = await request(app).post("/expense-categories").set(auth).send({ name: "Animaux" });
+    const created = await request(app).post("/expense-categories").set(auth).send({ name: "Jardin" });
     expect(created.status).toBe(201);
     const id = created.body.category.id;
 
@@ -28,15 +36,15 @@ describe("budget: custom categories", () => {
 
     await request(app).delete(`/expense-categories/${id}`).set(auth).expect(204);
     const list = await request(app).get(`/expenses?month=${month}`).set(auth);
-    expect(list.body.expenses[0].category).toBe("autre");
-    expect(list.body.byCategory).toEqual([{ category: "autre", totalCents: 3000, limitCents: null }]);
+    expect(list.body.expenses[0].category).toBe("divers");
+    expect(list.body.byCategory).toEqual([{ category: "divers", totalCents: 3000, limitCents: null }]);
     expect((await request(app).get("/expense-categories").set(auth)).body.categories).toHaveLength(0);
   });
 
   it("rejects another family's category", async () => {
     const userA = await signup(app, { email: "a@passerelle.test" });
     const userB = await signup(app, { email: "b@passerelle.test" });
-    const cat = await request(app).post("/expense-categories").set(authHeader(userA.accessToken)).send({ name: "Animaux" });
+    const cat = await request(app).post("/expense-categories").set(authHeader(userA.accessToken)).send({ name: "Jardin" });
     const res = await request(app)
       .post("/expenses")
       .set(authHeader(userB.accessToken))
@@ -129,7 +137,7 @@ describe("budget: recurring expenses", () => {
 
   it("validates the day of month", async () => {
     const { accessToken } = await signup(app);
-    const res = await request(app).post("/recurring-expenses").set(authHeader(accessToken)).send({ label: "x", amountCents: 100, category: "autre", dayOfMonth: 32 });
+    const res = await request(app).post("/recurring-expenses").set(authHeader(accessToken)).send({ label: "x", amountCents: 100, category: "divers", dayOfMonth: 32 });
     expect(res.status).toBe(400);
   });
 

@@ -174,7 +174,24 @@ export interface DocumentUploadTicket {
   upload: { url: string; method: "PUT"; headers: Record<string, string> };
 }
 
-export type FixedExpenseCategory = "courses" | "logement" | "transport" | "santé" | "enfants" | "loisirs" | "factures" | "autre";
+export type FixedExpenseCategory =
+  | "courses"
+  | "logement"
+  | "énergie"
+  | "assurances"
+  | "transport"
+  | "santé"
+  | "enfants"
+  | "abonnements"
+  | "restaurants"
+  | "loisirs"
+  | "shopping"
+  | "vacances"
+  | "impôts"
+  | "épargne"
+  | "animaux"
+  | "cadeaux"
+  | "divers";
 // A fixed key, or the id of one of the family's CustomExpenseCategory.
 export type ExpenseCategory = string;
 

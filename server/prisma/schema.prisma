@@ -185,8 +185,8 @@ model Document {
 
 // Manually entered household expense. amountCents avoids float rounding;
 // date is a calendar day (no time, no timezone).
-// category: one of the fixed keys 'courses' | 'logement' | 'transport' |
-// 'santé' | 'enfants' | 'loisirs' | 'factures' | 'autre', or the id of one of
+// category: one of the fixed keys listed in lib/expenseCategories.ts
+// ('courses', 'logement', 'énergie', … 'divers'), or the id of one of
 // the family's ExpenseCategory rows (see lib/expenseCategories.ts).
 // recurringId: set when the row was generated from a RecurringExpense.
 model Expense {
@@ -195,7 +195,7 @@ model Expense {
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   label       String
   amountCents Int
-  category    String            @default("autre")
+  category    String            @default("divers")
   date        DateTime          @db.Date
   memberId    String?
   member      FamilyMember?     @relation(fields: [memberId], references: [id], onDelete: SetNull)
@@ -208,7 +208,7 @@ model Expense {
 }
 
 // Category created by the family, on top of the fixed list. Deleting one moves
-// its expenses, budgets and recurring expenses to 'autre'.
+// its expenses and recurring expenses to 'divers' (its budget is dropped).
 model ExpenseCategory {
   id        String   @id @default(cuid())
   userId    String
@@ -236,7 +236,7 @@ model RecurringExpense {
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   label       String
   amountCents Int
-  category    String        @default("autre")
+  category    String        @default("divers")
   memberId    String?
   member      FamilyMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
   dayOfMonth  Int
