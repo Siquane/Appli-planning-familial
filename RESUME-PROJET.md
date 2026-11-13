@@ -79,13 +79,23 @@ Dernière mise à jour : 13 novembre 2026.
 - **Export du budget** : Budget → « Exporter le mois (tableur) », CSV pour Excel en français, envoyé par le menu de partage du téléphone.
 - **Sauvegarde hebdomadaire** : workflow `.github/workflows/backup.yml`, chaque dimanche vers 4 h, `pg_dump` compressé dans R2 sous `backups/`, 8 dernières gardées. Il faut 5 secrets GitHub (Settings → Secrets and variables → Actions) : `BACKUP_DATABASE_URL` (même valeur que `DATABASE_URL` dans Render), `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (mêmes valeurs que dans Render). Sans eux, le workflow ne fait rien et reste vert. Restaurer : télécharger le fichier depuis R2, puis `gunzip -c fichier.sql.gz | psql "<adresse Neon>"`.
 
-## Lot natif (13/11/2026, `runtimeVersion` "2", nouvel APK nécessaire)
+## Lot natif (13/11/2026, `runtimeVersion` "3", nouvel APK nécessaire)
 
 - **Expo SDK 58** (React Native 0.88, React 19.3). Expo Router embarque désormais sa propre barre d'onglets : `CustomTabBar` reçoit `navigateToTab(route.key)` au lieu de `navigation` (type `BottomTabBarProps` de `expo-router/tabs`) ; `@react-navigation/bottom-tabs` retiré. `@react-native-async-storage/async-storage` reste en v3 (la liste SDK 58 indique 2.2.0, mais la v3 fonctionne déjà sur les APK).
 - **4 widgets Android** (`react-native-android-widget`, déclarés dans `app.json`) : « Aujourd'hui », « Tâches du jour », « Menu », « Courses ». L'utilisateur choisit lesquels poser depuis la liste des widgets du téléphone. L'appli enregistre un résumé de ses données sur le téléphone à chaque changement (`src/widgets/sync.ts`, `snapshot.ts`) et redessine les widgets ; Android les redessine aussi toutes les 30 min à partir de ce résumé (`taskHandler.tsx`, enregistré dans `mobile/index.js`, nouveau point d'entrée). Un appui ouvre l'écran correspondant (`/repas?tab=courses` pour les courses). La déconnexion vide les widgets.
 - **Sentry** (`src/lib/sentry.ts`) : erreurs uniquement, pas de données personnelles. Actif : DSN du projet Sentry (organisation `siquanelab`, serveurs européens) dans `src/lib/sentry.ts` (pas un secret, elle est publique dans l'appli). Les erreurs apparaissent sur sentry.io → Issues.
 
 Ensuite, à part : mises à jour majeures du serveur (Prisma 7, Express 5).
+
+## Style Passerelle (13/11/2026)
+
+- L'appli reprend le logo : fond bleu nuit `#070912`, cartes `#0f1426`, texte blanc bleuté, dégradé néon cyan → bleu → violet (`theme/tokens.ts` : `color`, `gradient`, `glow`).
+- Titres en Space Grotesk, texte en Inter.
+- Éléments de marque dans `src/components/Brand.tsx` : `PasserelleArch` (arche à côté du titre de chaque onglet), `GradientRule` (filet sous le titre), `GradientFill` (dégradé dessiné avec react-native-svg, pas de module natif en plus).
+- Onglets : l'icône dans l'anneau de sa couleur, halo autour de l'onglet actif (fond intérieur très léger pour garder le contraste). Le « + » est un rond à bord dégradé.
+- Boutons principaux remplis du dégradé, texte foncé. Catégories de tâches aux couleurs des anneaux (`categoryColor` dans `lib/weekdays.ts`, Santé en vert).
+- Icône, icône Android et écran de lancement refaits depuis le logo (`mobile/assets/`). Logo source : `assets/brand/logo-passerelle.png`.
+- `runtimeVersion` passé de "1" à "2" (icône et écran de lancement sont natifs) : il faut compiler un nouvel APK après la fusion.
 
 ## Idées notées pour plus tard
 

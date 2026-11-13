@@ -11,6 +11,7 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
+import { SpaceGrotesk_500Medium, SpaceGrotesk_700Bold } from "@expo-google-fonts/space-grotesk";
 import { persistOptions, queryClient } from "../src/lib/queryClient";
 import { useAuthStore, wakeServer } from "../src/state/authStore";
 import { useOnboardingStore } from "../src/state/onboardingStore";
@@ -24,7 +25,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 SystemUI.setBackgroundColorAsync(color.bg).catch(() => {});
 
 function RootLayout() {
-  const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold });
+  const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, SpaceGrotesk_500Medium, SpaceGrotesk_700Bold });
   const hydrated = useAuthStore((s) => s.hydrated);
   const hydrate = useAuthStore((s) => s.hydrate);
   const onboardingHydrated = useOnboardingStore((s) => s.hydrated);

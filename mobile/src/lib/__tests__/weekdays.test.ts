@@ -1,4 +1,5 @@
-import { categoryTagVariant, formatDuration, jsDayToWeekday, priorityLabel, todayWeekday } from "../weekdays";
+import { color } from "../../theme/tokens";
+import { categoryColor, formatDuration, jsDayToWeekday, priorityLabel, todayWeekday } from "../weekdays";
 
 describe("jsDayToWeekday", () => {
   it("maps JS Sun-first days onto the Lun-first 0..6 convention", () => {
@@ -19,12 +20,13 @@ describe("todayWeekday", () => {
   });
 });
 
-describe("categoryTagVariant", () => {
-  it("maps known categories to their tag variant", () => {
-    expect(categoryTagVariant("École")).toBe("accent");
-    expect(categoryTagVariant("Santé")).toBe("outline");
-    expect(categoryTagVariant("Maison")).toBe("neutral");
-    expect(categoryTagVariant("Loisirs")).toBe("neutral");
+describe("categoryColor", () => {
+  it("gives each category one of the logo's ring colours", () => {
+    expect(categoryColor("École")).toBe(color.pillar1);
+    expect(categoryColor("Travail")).toBe(color.pillar2);
+    expect(categoryColor("Maison")).toBe(color.pillar3);
+    expect(categoryColor("Loisirs")).toBe(color.pillar4);
+    expect(categoryColor("Santé")).toBe(color.success);
   });
 });
 

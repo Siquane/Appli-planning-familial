@@ -8,7 +8,7 @@ jest.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({
 jest.mock("react-native-svg", () => {
   const { View } = jest.requireActual("react-native");
   const Svg = (props: { color?: string; stroke?: string; children?: unknown }) => <View {...props} />;
-  return { __esModule: true, default: Svg, Path: Svg, Circle: Svg, Rect: Svg };
+  return { __esModule: true, default: Svg, Path: Svg, Circle: Svg, Rect: Svg, Line: Svg, Defs: Svg, LinearGradient: Svg, Stop: Svg };
 });
 
 const routes = ["home", "repas", "budget", "famille"].map((name) => ({ key: name, name }));

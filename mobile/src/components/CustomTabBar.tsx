@@ -5,10 +5,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CalendarIcon, MealIcon, WalletIcon, ProfileIcon, PlusIcon } from "./icons";
 import { Text } from "./Text";
 import { QuickAddSheet } from "./QuickAddSheet";
-import { color, space } from "../theme/tokens";
+import { color, glow, space } from "../theme/tokens";
+import { GradientFill } from "./Brand";
 
 // The 4 pillars of Passerelle, two on each side of the « + ».
-// Each takes the colour of its ring in the logo (cyan → violet).
+// Each is one of the logo's rings (cyan → violet) around the tab's icon; the
+// active ring lights up with a neon halo, like on the logo.
 const TABS: Record<string, { label: string; tint: string; Icon: (props: { size: number; color: string }) => React.JSX.Element }> = {
   home: { label: "Planning", tint: color.pillar1, Icon: CalendarIcon },
   repas: { label: "Repas", tint: color.pillar2, Icon: MealIcon },
@@ -34,23 +36,27 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
       <Pressable
         key={route.key}
         onPress={() => navigateToTab(route.key)}
-        style={{ flex: 1, alignItems: "center", gap: 3 }}
+        style={{ flex: 1, alignItems: "center", gap: 4 }}
         accessibilityRole="tab"
         accessibilityLabel={label}
         accessibilityState={{ selected: isFocused }}
       >
-        {/* The active tab shows its ring, like the logo's points. */}
         <View
           style={{
-            width: 8,
-            height: 8,
-            borderRadius: 4,
+            width: 38,
+            height: 38,
+            borderRadius: 19,
             borderWidth: 2,
-            borderColor: isFocused ? pillar : "transparent",
-            marginBottom: 1,
+            borderColor: tint,
+            alignItems: "center",
+            justifyContent: "center",
+            // Only a faint tint inside the ring, so the icon keeps strong contrast.
+            backgroundColor: isFocused ? `${pillar}0d` : "transparent",
+            boxShadow: isFocused ? `${glow(`${pillar}99`, 8)}, ${glow(`${pillar}40`, 18)}` : undefined,
           }}
-        />
-        <Icon size={22} color={tint} />
+        >
+          <Icon size={19} color={tint} />
+        </View>
         <Text size={10.5} style={{ color: tint }}>
           {label}
         </Text>
@@ -77,19 +83,19 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
         onPress={() => setQuickAdd(true)}
         accessibilityLabel="Ajouter"
         style={{
-          width: 50,
-          height: 50,
-          borderRadius: 14,
-          borderWidth: 1.5,
-          borderColor: color.accent,
-          alignItems: "center",
-          justifyContent: "center",
+          width: 52,
+          height: 52,
+          borderRadius: 26,
+          padding: 2,
           marginHorizontal: space[3],
-          marginTop: -22,
-          backgroundColor: color.bg,
+          marginTop: -24,
+          boxShadow: glow("rgba(76,196,255,0.5)", 18),
         }}
       >
-        <PlusIcon size={22} color={color.accent} />
+        <GradientFill radius={26} />
+        <View style={{ flex: 1, borderRadius: 24, backgroundColor: color.bg, alignItems: "center", justifyContent: "center" }}>
+          <PlusIcon size={22} color={color.pillar2} />
+        </View>
       </Pressable>
 
       {right.map(renderTab)}

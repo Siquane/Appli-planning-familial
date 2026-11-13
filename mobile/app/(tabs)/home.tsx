@@ -43,7 +43,7 @@ export default function HomeScreen() {
 
   return (
     <Screen techGrid refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={color.accent} />}>
-      <TabHeader title="Planning" pillar={color.pillar1} subtitle={`Salut, ${user?.name?.split(" ")[0] ?? ""} 👋`} />
+      <TabHeader title="Planning" subtitle={`Salut, ${user?.name?.split(" ")[0] ?? ""} 👋`} />
 
       <TodayCard />
 
