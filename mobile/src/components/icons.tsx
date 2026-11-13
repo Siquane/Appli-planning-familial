@@ -204,11 +204,13 @@ export function WalletIcon({ size = 16, color = "currentColor" }: IconProps) {
   );
 }
 
+// A steaming bowl: clean geometric lines that stay legible at tab size.
 export function MealIcon({ size = 16, color = "currentColor" }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M7 3v7a2 2 0 1 1-4 0V3M5 10v11M9 3v6a2 2 0 1 0 4 0V3" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M18 3c-1.7 0-3 2-3 5s1.3 5 3 5M18 3v18" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M4 12h16a8 8 0 0 1-16 0z" fill={color} fillOpacity={0.3} stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M8.5 8c-.8-1 .8-2 0-3.2M12 8c-.8-1 .8-2 0-3.2M15.5 8c-.8-1 .8-2 0-3.2" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M9 20.5h6" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }
