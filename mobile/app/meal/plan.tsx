@@ -192,7 +192,7 @@ export default function MealPlanScreen() {
             disabled={!!rerolling || proposal.length === 0}
           />
           <Button
-            label={weeksLeft > 0 ? "Tout regénérer (compte comme une génération)" : "Tout regénérer · Premium"}
+            label={weeksLeft > 0 ? "Tout regénérer (compte comme une génération)" : "Tout regénérer · Pack Menus"}
             variant="secondary"
             block
             onPress={weeksLeft > 0 ? onGenerate : () => router.push("/premium")}
@@ -281,7 +281,7 @@ export default function MealPlanScreen() {
         <TextField label="À éviter (optionnel)" value={prefs.avoid} onChangeText={(v) => update("avoid", v)} placeholder="Ex. champignons, poivrons…" />
 
         <Button
-          label={weeksLeft <= 0 ? "Passer à Premium pour générer" : slots.length ? `Proposer ${slots.length} repas` : "Rien à proposer"}
+          label={weeksLeft <= 0 ? "Pack Menus pour générer" : slots.length ? `Proposer ${slots.length} repas` : "Rien à proposer"}
           variant="primary"
           block
           onPress={weeksLeft <= 0 ? () => router.push("/premium") : onGenerate}
@@ -292,7 +292,7 @@ export default function MealPlanScreen() {
           <Pressable onPress={() => router.push("/premium")} disabled={quota.period === "premium"}>
             <Text size={12} tone={weeksLeft > 0 ? "faint" : "accent"} center>
               {mealQuotaLabel(quota)}
-              {quota.period !== "premium" ? " Premium : chaque semaine ›" : ""}
+              {quota.period !== "premium" ? " Pack Menus : chaque semaine ›" : ""}
             </Text>
           </Pressable>
         )}

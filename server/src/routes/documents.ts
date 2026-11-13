@@ -5,7 +5,7 @@ import type { Document } from "@prisma/client";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { getStorage, MAX_FILE_SIZE, removeObjects, type Storage } from "../lib/storage";
-import { FREE_DOCUMENT_LIMIT, userIsPremium } from "../lib/plan";
+import { FREE_DOCUMENT_LIMIT, hasUnlimitedDocuments } from "../lib/plan";
 
 // Family document library + recipe attachments (see model Document).
 // Upload is done in three steps so the file never goes through this API:
@@ -125,11 +125,11 @@ documentsRouter.post("/", async (req, res) => {
     await prisma.document.deleteMany({ where: { id: { in: stale.map((s) => s.id) } } });
   }
 
-  if (!(await userIsPremium(userId))) {
+  if (!(await hasUnlimitedDocuments(userId))) {
     const count = await prisma.document.count({ where: { userId } });
     if (count >= FREE_DOCUMENT_LIMIT) {
       return res.status(403).json({
-        error: `La version gratuite garde jusqu'à ${FREE_DOCUMENT_LIMIT} documents. Passe à Premium pour en ajouter sans limite.`,
+        error: `La version gratuite garde jusqu'à ${FREE_DOCUMENT_LIMIT} documents. Avec un pack Premium, ils sont illimités.`,
         code: "premium_required",
       });
     }

@@ -18,7 +18,10 @@ async function account() {
   const { accessToken, user } = await signup(app);
   return { auth: authHeader(accessToken), userId: user.id };
 }
-const makePremium = (userId: string) => prisma.user.update({ where: { id: userId }, data: { premiumUntil: new Date(Date.now() + 30 * DAY) } });
+const soon = () => new Date(Date.now() + 30 * DAY);
+const makePremium = (userId: string) => prisma.user.update({ where: { id: userId }, data: { budgetUntil: soon(), mealsUntil: soon() } });
+const giveBudget = (userId: string) => prisma.user.update({ where: { id: userId }, data: { budgetUntil: soon() } });
+const giveMeals = (userId: string) => prisma.user.update({ where: { id: userId }, data: { mealsUntil: soon() } });
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -65,15 +68,19 @@ describe("menu generation quotas", () => {
     expect((await request(app).get("/meals/quota").set(auth)).body.quota.weeksUsed).toBe(0);
   });
 
-  it("gives Premium 12 weeks and 60 « autre idée » a month", async () => {
+  it("gives the Menus pack 12 weeks and 60 « autre idée » a month", async () => {
     mockPlanner();
     const { auth, userId } = await account();
-    await makePremium(userId);
+    await giveMeals(userId);
     await prisma.mealGeneration.createMany({ data: Array.from({ length: 11 }, () => ({ userId, kind: "week" })) });
     expect((await week(auth)).status).toBe(200);
     expect((await week(auth)).status).toBe(403);
     const plan = await request(app).get("/plan").set(auth);
-    expect(plan.body).toMatchObject({ premium: true, meals: { period: "premium", weeksLimit: 12, rerollsLimit: 60 }, documents: { limit: null } });
+    expect(plan.body).toMatchObject({
+      packs: { budget: { active: false }, meals: { active: true } },
+      meals: { period: "premium", weeksLimit: 12, rerollsLimit: 60 },
+      documents: { limit: null },
+    });
   });
 
   it("refuses a reroll that covers several meals", async () => {
@@ -116,6 +123,16 @@ describe("budget cap alerts (Premium)", () => {
     await request(app).put("/category-budgets").set(auth).send({ category: "courses", limitCents: 10000 });
     expect((await add(auth, 12000)).body.alert).toMatchObject({ level: 100 });
     expect((await add(auth, 100)).body.alert).toBeNull();
+  });
+
+  it("needs the Budget pack, not the Menus one", async () => {
+    const { auth, userId } = await account();
+    await giveMeals(userId);
+    await request(app).put("/category-budgets").set(auth).send({ category: "courses", limitCents: 10000 });
+    expect((await add(auth, 12000)).body.alert).toBeNull();
+    const refused = await request(app).post("/savings-goals").set(auth).send({ name: "x", targetCents: 100 });
+    expect(refused.status).toBe(403);
+    expect(refused.body.pack).toBe("budget");
   });
 
   it("does nothing for a free account", async () => {
@@ -169,5 +186,55 @@ describe("monthly report (Premium)", () => {
       ],
     });
     expect(res.body.months[0].totalCents).toBe(0);
+  });
+});
+
+describe("end-of-month forecast (Budget pack)", () => {
+  it("is reserved to the Budget pack and returns the projection for the current month", async () => {
+    const { auth, userId } = await account();
+    expect((await request(app).get("/expenses/forecast").set(auth)).status).toBe(403);
+    await giveBudget(userId);
+    await request(app).post("/expenses").set(auth).send({ label: "a", amountCents: 1000, category: "courses", date: `${currentMonth()}-01` });
+    const res = await request(app).get("/expenses/forecast").set(auth);
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ month: currentMonth(), spentCents: 1000, usualCents: null });
+    expect(res.body.projectedCents).toBeGreaterThanOrEqual(1000);
+  });
+});
+
+describe("expense export (Budget pack)", () => {
+  it("exports a CSV for French spreadsheets, and a PDF", async () => {
+    const { auth, userId } = await account();
+    const month = currentMonth();
+    expect((await request(app).get(`/expenses/export?from=${month}&to=${month}&format=csv`).set(auth)).status).toBe(403);
+    await giveBudget(userId);
+    const member = await request(app).post("/members").set(auth).send({ name: "Jules", tint: "neutral" });
+    await request(app).post("/expenses").set(auth).send({ label: "Cantine; mars", amountCents: 123456, category: "enfants", memberId: member.body.member?.id ?? null, date: `${month}-02` });
+    await request(app).post("/expenses").set(auth).send({ label: "=SOMME(A1)", amountCents: 500, category: "divers", date: `${month}-01` });
+
+    const csv = await request(app).get(`/expenses/export?from=${month}&to=${month}&format=csv`).set(auth);
+    expect(csv.status).toBe(200);
+    expect(csv.headers["content-type"]).toContain("text/csv");
+    expect(csv.headers["content-disposition"]).toBe(`attachment; filename="depenses-${month}.csv"`);
+    const lines = csv.text.replace("﻿", "").trim().split("\r\n");
+    expect(lines[0]).toBe("Date;Libellé;Catégorie;Pour qui;Montant (€);Récurrente");
+    expect(lines[1]).toBe(`01/${month.slice(5)}/${month.slice(0, 4)};'=SOMME(A1);Divers;;5,00;non`);
+    expect(lines[2]).toContain(`"Cantine; mars";Enfants;`);
+    expect(lines[2]).toContain(";1234,56;non");
+
+    const pdf = await request(app).get(`/expenses/export?from=${month}&to=${month}&format=pdf`).set(auth).buffer(true).parse((res, cb) => {
+      const chunks: Buffer[] = [];
+      res.on("data", (c: Buffer) => chunks.push(c));
+      res.on("end", () => cb(null, Buffer.concat(chunks)));
+    });
+    expect(pdf.status).toBe(200);
+    expect((pdf.body as Buffer).subarray(0, 5).toString()).toBe("%PDF-");
+  });
+
+  it("refuses an inverted or too long period", async () => {
+    const { auth, userId } = await account();
+    await giveBudget(userId);
+    expect((await request(app).get("/expenses/export?from=2026-05&to=2026-01&format=csv").set(auth)).status).toBe(400);
+    expect((await request(app).get("/expenses/export?from=2024-01&to=2026-01&format=csv").set(auth)).status).toBe(400);
   });
 });

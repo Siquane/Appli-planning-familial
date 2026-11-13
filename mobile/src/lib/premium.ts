@@ -1,10 +1,43 @@
 import { router } from "expo-router";
 import { needsPremium } from "../api/client";
 import { useToastStore } from "../state/toastStore";
-import type { MealQuota } from "../api/types";
+import type { MealQuota, Plan } from "../api/types";
 
-export const PREMIUM_PRICE_MONTH = "2,99 €";
-export const PREMIUM_PRICE_YEAR = "19,99 €";
+// Two packs, or both (« Les 2 ») at a lower price. Prices are shown in the
+// app only; the store products will carry the real ones.
+export const PACKS = [
+  {
+    id: "budget",
+    name: "Pack Budget",
+    month: "1,99 €",
+    year: "14,99 €",
+    features: [
+      "Objectifs d'épargne avec jauge",
+      "Alertes à 80 % et 100 % des plafonds",
+      "Bilan sur 6 mois et prévision de fin de mois",
+      "Export CSV et PDF (impôts, CAF, prêt)",
+      "Documents illimités",
+    ],
+  },
+  {
+    id: "meals",
+    name: "Pack Menus",
+    month: "2,99 €",
+    year: "19,99 €",
+    features: ["Menus générés chaque semaine", "Des « autre idée » pour ajuster chaque repas", "Documents illimités"],
+  },
+  {
+    id: "both",
+    name: "Les 2",
+    month: "3,99 €",
+    year: "29,99 €",
+    features: ["Tout le pack Budget", "Tout le pack Menus", "Moins cher que les deux séparés"],
+  },
+] as const;
+
+export const hasBudgetPack = (plan: Plan | undefined) => !!plan?.packs.budget.active;
+export const hasMealsPack = (plan: Plan | undefined) => !!plan?.packs.meals.active;
+export const hasAnyPack = (plan: Plan | undefined) => hasBudgetPack(plan) || hasMealsPack(plan);
 
 /**
  * Shows the error. When it's a Premium wall (feature or quota), also opens the
@@ -15,10 +48,10 @@ export function showApiError(e: unknown) {
   if (needsPremium(e)) router.push("/premium");
 }
 
-/** "3 génération(s) restante(s)…" line under the menu generator button. */
+/** "3 générations gratuites…" line under the menu generator button. */
 export function mealQuotaLabel(q: MealQuota): string {
   const left = Math.max(0, q.weeksLimit - q.weeksUsed);
-  if (q.period === "premium") return `Premium : ${left} génération${left > 1 ? "s" : ""} restante${left > 1 ? "s" : ""} ce mois-ci.`;
+  if (q.period === "premium") return `Pack Menus : ${left} génération${left > 1 ? "s" : ""} restante${left > 1 ? "s" : ""} ce mois-ci.`;
   const plural = left > 1 ? "s" : "";
   const when = q.period === "trial" ? "pendant ton premier mois" : "ce mois-ci";
   return left > 0 ? `${left} génération${plural} gratuite${plural} ${when}.` : `Génération gratuite utilisée ${when}.`;

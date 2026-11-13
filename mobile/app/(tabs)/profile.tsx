@@ -26,7 +26,8 @@ export default function ProfileScreen() {
   const { data: members = [] } = useMembers();
   const { data: status, refetch } = useCalendarStatus();
   const disconnect = useDisconnectCalendar();
-  const premium = usePlan().data?.premium ?? false;
+  const plan = usePlan().data;
+  const packLabel = plan?.packs.budget.active && plan.packs.meals.active ? "Premium · les 2 packs" : plan?.packs.budget.active ? "Premium · pack Budget" : plan?.packs.meals.active ? "Premium · pack Menus" : "Passer à Premium";
   const [connecting, setConnecting] = useState<string | null>(null);
 
   async function onConnect(provider: "google" | "outlook" | "apple") {
@@ -124,7 +125,7 @@ export default function ProfileScreen() {
         <Card row style={{ alignItems: "center" }}>
           <Text size={16}>✨</Text>
           <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
-            {premium ? "Premium" : "Passer à Premium"}
+            {packLabel}
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />
         </Card>

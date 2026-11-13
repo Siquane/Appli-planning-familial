@@ -16,9 +16,10 @@ model User {
   name         String
   initials     String
   createdAt    DateTime  @default(now())
-  // Premium is active while this is in the future. Set by hand for now
-  // (npm run premium), later by the store purchase webhook.
-  premiumUntil DateTime?
+  // Each pack is active while its date is in the future ("Les 2" sets both).
+  // Set by hand for now (npm run premium), later by the store purchase.
+  budgetUntil  DateTime?
+  mealsUntil   DateTime?
 
   members             FamilyMember[]
   tasks               Task[]

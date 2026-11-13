@@ -7,16 +7,18 @@ import { Card } from "../src/components/Card";
 import { Button } from "../src/components/Button";
 import { TopBar } from "../src/components/TopBar";
 import { ChevronLeftIcon, ChevronRightIcon, RecurringIcon, WalletIcon } from "../src/components/icons";
-import { useExpenseCategories, useMembers, useMonthlyBudget, usePlan } from "../src/hooks/useApi";
+import { useExpenseCategories, useForecast, useMembers, useMonthlyBudget, usePlan } from "../src/hooks/useApi";
 import { categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../src/lib/money";
 import { color, radius, space } from "../src/theme/tokens";
+import { hasBudgetPack } from "../src/lib/premium";
 
 export default function BudgetScreen() {
   const [month, setMonth] = useState(currentMonth());
   const { data, isLoading } = useMonthlyBudget(month);
   const { options } = useExpenseCategories();
   const { data: members = [] } = useMembers();
-  const premium = usePlan().data?.premium ?? false;
+  const premium = hasBudgetPack(usePlan().data);
+  const { data: forecast } = useForecast(premium);
   const expenses = data?.expenses ?? [];
   const byCategory = data?.byCategory ?? [];
   const biggest = Math.max(0, ...byCategory.map((c) => c.totalCents));
@@ -63,12 +65,35 @@ export default function BudgetScreen() {
           )}
         </Card>
 
+        {premium && isCurrent && forecast && (
+          <Card style={{ gap: space[1] }}>
+            <Text size={12} tone="muted">
+              Prévision de fin de mois
+            </Text>
+            <Text size={15} weight="medium">
+              À ce rythme, environ {formatEuros(roundEuros(forecast.projectedCents))}
+            </Text>
+            {forecast.upcomingRecurringCents > 0 && (
+              <Text size={12} tone="faint">
+                Dont {formatEuros(forecast.upcomingRecurringCents)} de dépenses récurrentes encore à venir
+              </Text>
+            )}
+            {forecast.usualCents !== null && (
+              <Text size={12} tone={forecast.projectedCents > forecast.usualCents * 1.05 ? "danger" : "faint"}>
+                {forecast.projectedCents > forecast.usualCents * 1.05
+                  ? `Au-dessus de d'habitude (${formatEuros(roundEuros(forecast.usualCents))} en moyenne)`
+                  : `D'habitude : ${formatEuros(roundEuros(forecast.usualCents))} en moyenne`}
+              </Text>
+            )}
+          </Card>
+        )}
+
         <View style={{ flexDirection: "row", gap: space[2] }}>
           <Button label="+ Ajouter une dépense" variant="secondary" style={{ flex: 1 }} onPress={() => router.push(`/expense/new?month=${month}`)} />
           <Button label="Réglages" variant="ghost" onPress={() => router.push("/budget-settings")} />
         </View>
         <View style={{ flexDirection: "row", gap: space[2] }}>
-          <Button label={premium ? "📈 Bilan" : "📈 Bilan ✨"} variant="secondary" style={{ flex: 1 }} onPress={() => router.push("/budget-report")} />
+          <Button label={premium ? "📈 Bilan & export" : "📈 Bilan & export ✨"} variant="secondary" style={{ flex: 1 }} onPress={() => router.push("/budget-report")} />
           <Button label={premium ? "🎯 Épargne" : "🎯 Épargne ✨"} variant="secondary" style={{ flex: 1 }} onPress={() => router.push("/savings")} />
         </View>
 
@@ -169,4 +194,9 @@ function MonthArrow({ onPress, label, children }: { onPress: () => void; label: 
       {children}
     </Pressable>
   );
+}
+
+/** A forecast is an estimate: show whole tens of euros. */
+function roundEuros(cents: number) {
+  return Math.round(cents / 1000) * 1000;
 }

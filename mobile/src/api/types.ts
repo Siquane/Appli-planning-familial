@@ -175,9 +175,13 @@ export interface MealQuota {
   resetsAt: string;
 }
 
+export interface PackStatus {
+  active: boolean;
+  until: string | null;
+}
+
 export interface Plan {
-  premium: boolean;
-  premiumUntil: string | null;
+  packs: { budget: PackStatus; meals: PackStatus };
   meals: MealQuota;
   /** limit null = unlimited (Premium). */
   documents: { used: number; limit: number | null };
@@ -197,6 +201,15 @@ export interface CapAlert {
   level: 80 | 100;
   totalCents: number;
   limitCents: number;
+}
+
+export interface Forecast {
+  month: string;
+  spentCents: number;
+  upcomingRecurringCents: number;
+  projectedCents: number;
+  /** Average total of the previous months, null without history. */
+  usualCents: number | null;
 }
 
 export interface ReportMonth {

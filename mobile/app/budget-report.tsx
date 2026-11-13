@@ -8,6 +8,11 @@ import { TopBar } from "../src/components/TopBar";
 import { useBudgetReport, useExpenseCategories, usePlan } from "../src/hooks/useApi";
 import { categoryLabel, formatEuros, monthLabel, shortMonthLabel } from "../src/lib/money";
 import { compareMonths } from "../src/lib/report";
+import { hasBudgetPack } from "../src/lib/premium";
+import { Chip } from "../src/components/Chip";
+import { Button } from "../src/components/Button";
+import { EXPORT_PERIODS, exportExpenses, type ExportFormat, type ExportPeriod } from "../src/lib/exportExpenses";
+import { useToastStore } from "../src/state/toastStore";
 import { color, radius, space } from "../src/theme/tokens";
 
 const CHART_HEIGHT = 140;
@@ -16,7 +21,7 @@ const CHART_HEIGHT = 140;
 // that month) and what changed compared to the month before.
 export default function BudgetReportScreen() {
   const { data: plan } = usePlan();
-  const premium = plan?.premium ?? false;
+  const premium = hasBudgetPack(plan);
   const { data: months = [], isLoading } = useBudgetReport(6, premium);
   const { options } = useExpenseCategories();
   const [selected, setSelected] = useState<number | null>(null);
@@ -33,7 +38,7 @@ export default function BudgetReportScreen() {
           <Pressable onPress={() => router.push("/premium")}>
             <Card>
               <Text size={13} weight="medium">
-                Fonction Premium ✨
+                Pack Budget ✨
               </Text>
               <Text size={12} tone="muted">
                 Tes dépenses sur 6 mois en un coup d'œil, et ce qui a changé d'un mois à l'autre. Voir Premium ›
@@ -165,7 +170,49 @@ export default function BudgetReportScreen() {
             </Card>
           </View>
         )}
+
+        <ExportSection />
       </ScrollView>
     </Screen>
+  );
+}
+
+// Budget pack: the month's expenses as a CSV (spreadsheets) or a PDF (to print
+// or send to the CAF, the bank…), through the phone's share sheet.
+function ExportSection() {
+  const [period, setPeriod] = useState<ExportPeriod>("month");
+  const [busy, setBusy] = useState<ExportFormat | null>(null);
+
+  async function onExport(format: ExportFormat) {
+    setBusy(format);
+    try {
+      await exportExpenses(period, format);
+    } catch (e) {
+      useToastStore.getState().show(e instanceof Error ? e.message : "L'export a échoué.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <View style={{ gap: space[2] }}>
+      <Text weight="medium" size={13} tone="muted">
+        Exporter les dépenses
+      </Text>
+      <Card style={{ gap: space[3] }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+          {EXPORT_PERIODS.map((p) => (
+            <Chip key={p.id} label={p.label} size="sm" selected={period === p.id} onPress={() => setPeriod(p.id)} />
+          ))}
+        </View>
+        <View style={{ flexDirection: "row", gap: space[2] }}>
+          <Button label="CSV (tableur)" variant="secondary" style={{ flex: 1 }} onPress={() => onExport("csv")} loading={busy === "csv"} disabled={!!busy} />
+          <Button label="PDF" variant="secondary" style={{ flex: 1 }} onPress={() => onExport("pdf")} loading={busy === "pdf"} disabled={!!busy} />
+        </View>
+        <Text size={11.5} tone="faint">
+          Pour les impôts, la CAF ou un dossier de prêt : le fichier s'ouvre dans le menu de partage du téléphone.
+        </Text>
+      </Card>
+    </View>
   );
 }

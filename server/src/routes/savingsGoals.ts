@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { SavingsGoal } from "@prisma/client";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
-import { requirePremium } from "../lib/plan";
+import { requireBudgetPack } from "../lib/plan";
 import { amountCents } from "./expenses";
 
 // Premium: savings goals (« Vacances d'été : 1 200 € »). A payment into a goal
@@ -45,7 +45,7 @@ const goalSchema = z.object({
 
 savingsGoalsRouter.post("/", async (req, res) => {
   const userId = req.userId!;
-  if (!(await requirePremium(userId, res, "Les objectifs d'épargne"))) return;
+  if (!(await requireBudgetPack(userId, res, "Les objectifs d'épargne"))) return;
   const parsed = goalSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const { deadline, ...rest } = parsed.data;
@@ -57,7 +57,7 @@ savingsGoalsRouter.post("/", async (req, res) => {
 
 savingsGoalsRouter.patch("/:id", async (req, res) => {
   const userId = req.userId!;
-  if (!(await requirePremium(userId, res, "Les objectifs d'épargne"))) return;
+  if (!(await requireBudgetPack(userId, res, "Les objectifs d'épargne"))) return;
   const parsed = goalSchema.partial().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await prisma.savingsGoal.findFirst({ where: { id: req.params.id, userId } });
@@ -81,7 +81,7 @@ savingsGoalsRouter.delete("/:id", async (req, res) => {
 // POST /savings-goals/:id/payments { amountCents, date? } -> a new 'épargne' expense for the goal.
 savingsGoalsRouter.post("/:id/payments", async (req, res) => {
   const userId = req.userId!;
-  if (!(await requirePremium(userId, res, "Les objectifs d'épargne"))) return;
+  if (!(await requireBudgetPack(userId, res, "Les objectifs d'épargne"))) return;
   const parsed = z.object({ amountCents, date: dayString.optional() }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const goal = await prisma.savingsGoal.findFirst({ where: { id: req.params.id, userId } });

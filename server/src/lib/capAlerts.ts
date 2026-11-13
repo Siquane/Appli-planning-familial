@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../db";
-import { userIsPremium } from "./plan";
+import { userHasBudgetPack } from "./plan";
 import { categoryName as nameOf } from "./expenseCategories";
 
 // Premium: when a category reaches 80 % then 100 % of its monthly cap, the
@@ -31,7 +31,7 @@ export function crossedLevel(totalCents: number, limitCents: number, alreadyRais
 export async function checkCapAlert(userId: string, category: string, month: string): Promise<CapAlertInfo | null> {
   const budget = await prisma.categoryBudget.findUnique({ where: { userId_category: { userId, category } } });
   if (!budget) return null;
-  if (!(await userIsPremium(userId))) return null;
+  if (!(await userHasBudgetPack(userId))) return null;
 
   const [y, m] = month.split("-").map(Number);
   const [sum, raised] = await Promise.all([
