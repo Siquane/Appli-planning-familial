@@ -85,6 +85,10 @@ Dernière mise à jour : 13 novembre 2026.
 - **4 widgets Android** (`react-native-android-widget`, déclarés dans `app.json`) : « Aujourd'hui », « Tâches du jour », « Menu », « Courses ». L'utilisateur choisit lesquels poser depuis la liste des widgets du téléphone. L'appli enregistre un résumé de ses données sur le téléphone à chaque changement (`src/widgets/sync.ts`, `snapshot.ts`) et redessine les widgets ; Android les redessine aussi toutes les 30 min à partir de ce résumé (`taskHandler.tsx`, enregistré dans `mobile/index.js`, nouveau point d'entrée). Un appui ouvre l'écran correspondant (`/repas?tab=courses` pour les courses). La déconnexion vide les widgets.
 - **Sentry** (`src/lib/sentry.ts`) : erreurs uniquement, pas de données personnelles. Actif : DSN du projet Sentry (organisation `siquanelab`, serveurs européens) dans `src/lib/sentry.ts` (pas un secret, elle est publique dans l'appli). Les erreurs apparaissent sur sentry.io → Issues.
 
+- **Widgets, suite** : aperçu illustré dans la liste des widgets (`mobile/assets/widgets/*.png`, générés en HTML) ; widget vide = message + exemple grisé ; un appui ouvre le bon écran via `passerelle://widget/<planning|menu|courses>` (`app/+native-intent.tsx`, `src/widgets/links.ts`, avec reprise après la redirection de démarrage).
+- **Profil** : nom modifiable (Profil → Modifier/Ajouter), route serveur `PATCH /auth/me` (recalcule les initiales) ; l'appli resynchronise l'utilisateur via `GET /auth/me` à l'ouverture.
+- Planning plus aéré (espacement 20 sur tous les écrans), les 7 jours tiennent sur une ligne.
+
 Ensuite, à part : mises à jour majeures du serveur (Prisma 7, Express 5).
 
 ## Style Passerelle (13/11/2026)

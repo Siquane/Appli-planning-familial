@@ -6,6 +6,8 @@ import { BackHeader } from "../src/components/PageHeader";
 import { Text } from "../src/components/Text";
 import { Card } from "../src/components/Card";
 import { Button } from "../src/components/Button";
+import { TextField } from "../src/components/TextField";
+import { updateName } from "../src/lib/account";
 import { Avatar } from "../src/components/Avatar";
 import { CalendarIcon, ChevronRightIcon, RecurringIcon } from "../src/components/icons";
 import { useCalendarStatus, useDisconnectCalendar } from "../src/hooks/useApi";
@@ -28,6 +30,32 @@ export default function ProfileScreen() {
   const { data: status, refetch } = useCalendarStatus();
   const disconnect = useDisconnectCalendar();
   const [connecting, setConnecting] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const hasName = !!user?.name?.trim();
+
+  function startEditName() {
+    setNameDraft(user?.name?.trim() ?? "");
+    setEditingName(true);
+  }
+
+  async function saveName() {
+    if (!nameDraft.trim()) {
+      useToastStore.getState().show("Indique au moins ton prénom.");
+      return;
+    }
+    setSavingName(true);
+    try {
+      await updateName(nameDraft);
+      setEditingName(false);
+      useToastStore.getState().show("Nom enregistré.");
+    } catch (e) {
+      useToastStore.getState().show(e instanceof Error ? e.message : "Impossible d'enregistrer le nom.");
+    } finally {
+      setSavingName(false);
+    }
+  }
 
   // Google/Outlook need OAuth credentials on the server (see /calendar/status).
   // Without them, connecting would only open a raw error page in the browser.
@@ -69,15 +97,35 @@ export default function ProfileScreen() {
       <BackHeader title="Mon profil" />
       <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
         <Avatar initials={user?.initials ?? ""} bg={color.accent800} fg={color.accent100} size={56} />
-        <View>
-          <Text heading weight="semibold" size={18}>
-            {user?.name}
+        <View style={{ flex: 1 }}>
+          <Text heading weight="semibold" size={18} tone={hasName ? undefined : "muted"}>
+            {hasName ? user!.name : "Prénom non renseigné"}
           </Text>
           <Text tone="muted" size={13}>
             {user?.email}
           </Text>
         </View>
+        {!editingName && <Button label={hasName ? "Modifier" : "Ajouter"} variant="ghost" onPress={startEditName} />}
       </View>
+
+      {editingName && (
+        <Card style={{ gap: space[3] }}>
+          <TextField
+            label="Prénom et nom"
+            value={nameDraft}
+            onChangeText={setNameDraft}
+            placeholder="Ex. Anaïs Martin"
+            autoCapitalize="words"
+            autoFocus
+            returnKeyType="done"
+            onSubmitEditing={saveName}
+          />
+          <View style={{ flexDirection: "row", gap: space[2], justifyContent: "flex-end" }}>
+            <Button label="Annuler" variant="ghost" onPress={() => setEditingName(false)} />
+            <Button label="Enregistrer" variant="primary" loading={savingName} onPress={saveName} />
+          </View>
+        </Card>
+      )}
 
       <View style={{ gap: space[2] }}>
         <Text weight="medium" size={13} tone="muted">

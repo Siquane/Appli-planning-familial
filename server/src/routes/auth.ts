@@ -18,7 +18,7 @@ function initialsFor(name: string): string {
 const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
-  name: z.string().min(1),
+  name: z.string().trim().min(1),
 });
 
 authRouter.post("/signup", accountLimiter, async (req, res) => {
@@ -162,6 +162,14 @@ authRouter.post("/logout", async (req, res) => {
 authRouter.get("/me", requireAuth, async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.userId } });
   if (!user) return res.status(404).json({ error: "Not found" });
+  res.json({ user: publicUser(user) });
+});
+
+// Change one's display name (shown as « Salut, … » and in the avatar).
+authRouter.patch("/me", requireAuth, async (req, res) => {
+  const parsed = z.object({ name: z.string().trim().min(1, "Un prénom est nécessaire").max(80, "Nom trop long") }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
+  const user = await prisma.user.update({ where: { id: req.userId }, data: { name: parsed.data.name, initials: initialsFor(parsed.data.name) } });
   res.json({ user: publicUser(user) });
 });
 

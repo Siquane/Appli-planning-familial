@@ -39,6 +39,8 @@ interface AuthState {
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (email: string, code: string, password: string) => Promise<void>;
   refresh: () => Promise<boolean>;
+  /** Replace the signed-in user (after a rename or a fresh /auth/me). */
+  setUser: (user: User) => Promise<void>;
 }
 
 async function persist(user: User, accessToken: string, refreshToken: string) {
@@ -196,5 +198,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       return false;
     }
+  },
+
+  setUser: async (user) => {
+    if (!get().accessToken) return;
+    await storage.set(USER_KEY, JSON.stringify(user));
+    set({ user });
   },
 }));

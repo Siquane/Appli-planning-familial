@@ -93,6 +93,23 @@ describe("GET /auth/me", () => {
   });
 });
 
+describe("PATCH /auth/me", () => {
+  it("renames the user and recomputes the initials", async () => {
+    const { accessToken } = await signup(app, { email: "rename@passerelle.test" });
+    const res = await request(app).patch("/auth/me").set(authHeader(accessToken)).send({ name: "  Anaïs Martin " });
+    expect(res.status).toBe(200);
+    expect(res.body.user).toMatchObject({ name: "Anaïs Martin", initials: "AM" });
+    const me = await request(app).get("/auth/me").set(authHeader(accessToken));
+    expect(me.body.user.name).toBe("Anaïs Martin");
+  });
+
+  it("refuses an empty name and needs to be signed in", async () => {
+    const { accessToken } = await signup(app, { email: "blank@passerelle.test" });
+    expect((await request(app).patch("/auth/me").set(authHeader(accessToken)).send({ name: "   " })).status).toBe(400);
+    expect((await request(app).patch("/auth/me").send({ name: "X" })).status).toBe(401);
+  });
+});
+
 describe("password reset", () => {
   const sent: Mail[] = [];
   beforeEach(() => {

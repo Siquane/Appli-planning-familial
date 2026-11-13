@@ -6,6 +6,7 @@ import { syncBirthdayReminders, syncEveningDigest, syncTaskReminders } from "../
 import { useSettingsStore } from "../../src/state/settingsStore";
 import { useWidgetSync } from "../../src/widgets/sync";
 import { takeWidgetRoute } from "../../src/widgets/links";
+import { syncUser } from "../../src/lib/account";
 
 export default function TabsLayout() {
   const { data: tasks } = useTasks();
@@ -17,6 +18,8 @@ export default function TabsLayout() {
   useEffect(() => {
     const route = takeWidgetRoute();
     if (route && route !== "/home") router.navigate(route as never);
+    // Keep the name/initials in step with the server.
+    syncUser();
   }, []);
 
   useEffect(() => {
