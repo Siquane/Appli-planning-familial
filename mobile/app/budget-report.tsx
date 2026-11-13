@@ -38,10 +38,10 @@ export default function BudgetReportScreen() {
           <Pressable onPress={() => router.push("/premium")}>
             <Card>
               <Text size={13} weight="medium">
-                Pack Budget ✨
+                Budget+ ✨
               </Text>
               <Text size={12} tone="muted">
-                Tes dépenses sur 6 mois en un coup d'œil, et ce qui a changé d'un mois à l'autre. Voir Premium ›
+                Tes dépenses sur 6 mois en un coup d'œil, et ce qui a changé d'un mois à l'autre. Voir Budget+ ›
               </Text>
             </Card>
           </Pressable>

@@ -177,3 +177,8 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Mobile : hooks dans `mobile/src/hooks/useApi.ts`, API dans `mobile/src/api/resources.ts`, types dans `mobile/src/api/types.ts`.
 - Avant de livrer : `npm run typecheck` et `npm test` dans `server/` (Postgres local requis, base `passerelle_test`) et dans `mobile/` (`npx jest`), plus `npx expo export --platform android` pour vérifier que l'appli se compile.
 - Expo : lire la doc versionnée v58 (voir `mobile/AGENTS.md`).
+
+## Noms des offres (13/11/2026, soir)
+
+- Les abonnements s'appellent **Repas+** (ex-pack Menus), **Budget+** (ex-pack Budget) et **Passerelle+** (les deux, ex-« Les 2 ») ; l'écran s'intitule « Passerelle+ ». Icônes : toque (`ToqueIcon`) pour Repas+, tirelire (`PiggyBankIcon`) pour Budget+. Les identifiants techniques ne changent pas (`budget`, `meals`, `both`, champs `budgetUntil`/`mealsUntil`).
+- Politique de confidentialité : `docs/politique-confidentialite.html`, publiée sur https://claude.ai/artifact/6q5yK3yYE2SmCnZAMqDxmv (à rendre publique par l'utilisatrice, menu Partager). Responsable : Anaïs Guyon, contact Siquane.lab@gmail.com. Lien dans Profil → Confidentialité.

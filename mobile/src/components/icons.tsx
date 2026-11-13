@@ -215,6 +215,51 @@ export function MealIcon({ size = 16, color = "currentColor" }: IconProps) {
   );
 }
 
+// Chef's toque (Repas+): three symmetric puffs over a plain band. Thin strokes
+// on purpose (the offer icons sit next to text, not in the tab bar).
+export function ToqueIcon({ size = 16, color = "currentColor" }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M7.4 14.6A3.8 3.8 0 0 1 9.2 7.6a3.2 3.2 0 0 1 5.6 0 3.8 3.8 0 0 1 1.8 7z"
+        fill={color}
+        fillOpacity={0.2}
+        stroke={color}
+        strokeWidth={0.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path d="M7.4 14.6v4.4c0 .6.4 1 1 1h7.2c.6 0 1-.4 1-1v-4.4" stroke={color} strokeWidth={0.6} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+// Piggy bank (Budget+): rounded body, snout, ear, curly tail, a coin above the slot.
+export function PiggyBankIcon({ size = 16, color = "currentColor" }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M4.8 13.2c0-3.3 3.2-5.6 7-5.6 2.5 0 4.6.9 5.8 2.3l.3.7h.9c.4 0 .6.2.6.6v1.6c0 .4-.2.6-.6.6h-.8c-.5 1.5-1.2 2.8-2.3 3.7v2.3c0 .4-.3.7-.7.7h-1.1c-.4 0-.7-.3-.7-.7V18c-.5.1-1 .2-1.4.2-.7 0-1.4-.1-2-.2v1.4c0 .4-.3.7-.7.7H8c-.4 0-.7-.3-.7-.7v-2.5c-1.5-.9-2.5-2.2-2.5-3.7z"
+        fill={color}
+        fillOpacity={0.2}
+        stroke={color}
+        strokeWidth={0.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M14.5 8.1c.2-1 .7-1.8 1.4-2.2.4.7.6 1.6.6 2.7M10 9.8h3M4.8 12.6c-.9 0-1.4-.6-1.2-1.3"
+        stroke={color}
+        strokeWidth={0.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle cx={11.5} cy={4.4} r={1.7} stroke={color} strokeWidth={0.6} />
+      <Circle cx={16.4} cy={11.3} r={0.6} fill={color} />
+    </Svg>
+  );
+}
+
 export function SearchEmptyIcon({ size = 26, color = "currentColor" }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

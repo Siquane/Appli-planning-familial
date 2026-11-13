@@ -130,7 +130,7 @@ documentsRouter.post("/", async (req, res) => {
     const count = await prisma.document.count({ where: { userId } });
     if (count >= FREE_DOCUMENT_LIMIT) {
       return res.status(403).json({
-        error: `La version gratuite garde jusqu'à ${FREE_DOCUMENT_LIMIT} documents. Avec un pack Premium, ils sont illimités.`,
+        error: `La version gratuite garde jusqu'à ${FREE_DOCUMENT_LIMIT} documents. Avec Repas+, Budget+ ou Passerelle+, ils sont illimités.`,
         code: "premium_required",
       });
     }

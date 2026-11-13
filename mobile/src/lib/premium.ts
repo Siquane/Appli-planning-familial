@@ -3,12 +3,12 @@ import { needsPremium } from "../api/client";
 import { useToastStore } from "../state/toastStore";
 import type { MealQuota, Plan } from "../api/types";
 
-// Two packs, or both (« Les 2 ») at a lower price. Prices are shown in the
+// Two offers, Repas+ and Budget+, or both (Passerelle+) at a lower price. Prices are shown in the
 // app only; the store products will carry the real ones.
 export const PACKS = [
   {
     id: "budget",
-    name: "Pack Budget",
+    name: "Budget+",
     month: "1,99 €",
     year: "14,99 €",
     features: [
@@ -21,17 +21,17 @@ export const PACKS = [
   },
   {
     id: "meals",
-    name: "Pack Menus",
+    name: "Repas+",
     month: "2,99 €",
     year: "19,99 €",
     features: ["Menus générés chaque semaine", "Des « autre idée » pour ajuster chaque repas", "Documents illimités"],
   },
   {
     id: "both",
-    name: "Les 2",
+    name: "Passerelle+",
     month: "3,99 €",
     year: "29,99 €",
-    features: ["Tout le pack Budget", "Tout le pack Menus", "Moins cher que les deux séparés"],
+    features: ["Tout Repas+", "Tout Budget+", "Moins cher que les deux séparés"],
   },
 ] as const;
 
@@ -51,8 +51,16 @@ export function showApiError(e: unknown) {
 /** "3 générations gratuites…" line under the menu generator button. */
 export function mealQuotaLabel(q: MealQuota): string {
   const left = Math.max(0, q.weeksLimit - q.weeksUsed);
-  if (q.period === "premium") return `Pack Menus : ${left} génération${left > 1 ? "s" : ""} restante${left > 1 ? "s" : ""} ce mois-ci.`;
+  if (q.period === "premium") return `Repas+ : ${left} génération${left > 1 ? "s" : ""} restante${left > 1 ? "s" : ""} ce mois-ci.`;
   const plural = left > 1 ? "s" : "";
   const when = q.period === "trial" ? "pendant ton premier mois" : "ce mois-ci";
   return left > 0 ? `${left} génération${plural} gratuite${plural} ${when}.` : `Génération gratuite utilisée ${when}.`;
+}
+
+/** « à vie » for the family's lifetime accounts (far-future date), else « jusqu'au 12 déc. 2027 ». */
+export function packUntilLabel(until: string | null): string {
+  if (!until) return "";
+  const d = new Date(until);
+  if (d.getFullYear() >= 2900) return "à vie";
+  return `jusqu'au ${d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}`;
 }
