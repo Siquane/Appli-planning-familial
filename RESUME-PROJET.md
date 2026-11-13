@@ -1,7 +1,7 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 13 novembre 2026.
+Dernière mise à jour : 13 novembre 2026 (après-midi).
 
 ## Contexte
 
@@ -91,7 +91,17 @@ Expo SDK 58, widget Android, alertes de bug Sentry (compte sentry.io gratuit + c
 - Onglets : l'icône dans l'anneau de sa couleur, halo autour de l'onglet actif (fond intérieur très léger pour garder le contraste). Le « + » est un rond à bord dégradé.
 - Boutons principaux remplis du dégradé, texte foncé. Catégories de tâches aux couleurs des anneaux (`categoryColor` dans `lib/weekdays.ts`, Santé en vert).
 - Icône, icône Android et écran de lancement refaits depuis le logo (`mobile/assets/`). Logo source : `assets/brand/logo-passerelle.png`.
-- `runtimeVersion` passé de "1" à "2" (icône et écran de lancement sont natifs) : il faut compiler un nouvel APK après la fusion.
+- `runtimeVersion` passé de "1" à "2" (icône et écran de lancement sont natifs).
+- Icône de l'onglet Repas : bol fumant (`MealIcon` dans `components/icons.tsx`, PR #12), au lieu de fourchette + couteau. Icônes en couleur unie (pas de dégradé vertical, choix de l'utilisateur).
+- Profil de marque pour les documents produits par Claude : `CLAUDE.md` à la racine (couleurs, logo, format « pages visuelles »).
+
+## APK actuel et installation (13/11/2026)
+
+- **APK à installer** (compilé après les PR #10, runtime "2") : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/c5add826-3f5f-42bf-a1a3-a121c6947ff7
+- L'ancien lien (build `5a8ba245…`, runtime "1") est périmé : ne plus l'utiliser.
+- Problème rencontré : « Application non installée » en installant par-dessus l'ancienne version (signature différente probable). Solution : **désinstaller l'ancienne appli d'abord**, puis installer. Les données sont sur le serveur ; il faut se reconnecter et réactiver les notifications.
+- Le bol de l'onglet Repas (PR #12) arrive par EAS Update : fermer puis rouvrir l'appli une fois après l'installation.
+- À confirmer à la prochaine session : l'installation a-t-elle réussi ? Le halo des onglets rend-il bien sur le téléphone (jamais vu sur un vrai appareil) ?
 
 ## Idées notées pour plus tard
 
