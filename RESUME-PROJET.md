@@ -1,7 +1,7 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 13 novembre 2026 (après-midi).
+Dernière mise à jour : 13 novembre 2026 (fin d'après-midi).
 
 ## Contexte
 
@@ -116,12 +116,29 @@ Ensuite, à part : mises à jour majeures du serveur (Prisma 7, Express 5).
 
 Comptes séparés pour chaque membre de la famille, synchronisation Google Agenda, statistiques du budget sur 12 mois, étoiles pour les tâches des enfants, idées cadeaux d'anniversaire, liste de courses en temps réel, thème clair, version iPhone (99 €/an).
 
-## État des dépendances (13/11/2026)
+## Dépendances et mises à jour (12–13/11/2026)
+
+- **Faites** : zod 3 → 4, vitest 2 → 5 (+ vite 8), googleapis 189, msal-node 7 (PR #7) ; mises à jour sûres serveur et app (PR #13) ; Expo SDK 58 (PR #11), qui corrige aussi les alertes « high » d'`expo-router`. `engines.node >= 22` dans `server/package.json`.
+- **Règle zod 4** : ne jamais écrire `schema.partial()` pour une route PATCH (les `.default()` s'appliquent quand même et réinitialisaient les champs absents). Utiliser `patchSchema(schema)` (`server/src/lib/validation.ts`), déjà en place sur toutes les routes PATCH ; test de non-régression dans `tests/routes/members.test.ts`.
 
 - Serveur : à jour dans les versions actuelles (`npm update`), `npm audit` : 0 faille. Déjà faits : zod 4, vitest 5.
 - Appli : alignée sur la liste Expo SDK 58 (sauf async-storage gardé en v3, qui fonctionne). `npm audit fix` appliqué ; il reste des alertes faibles/moyennes uniquement dans les outils de test (chaîne jest-expo / jest 29), qui ne partent pas dans l'APK. Elles disparaîtront avec jest 30 quand jest-expo le prendra en charge.
 - Mises à jour majeures encore à faire (demandent du code, PR dédiée) : Prisma 5 → 7, Express 4 → 5 (+ `@types/express` 5, express-rate-limit 8), TypeScript 5 → 7 (serveur) et 6 → 7 (appli), dotenv 18, bcryptjs 3, nanoid 6, `@types/node` 26.
 - Appli, à suivre au prochain APK : `@sentry/react-native` 8.35 (la liste SDK 58 indique 8.28), gesture-handler 3.5. Ne pas les monter sans nouveau `runtimeVersion` (modules natifs).
+
+## Numéro de version Android (PR #5, 11/11/2026)
+
+- `mobile/eas.json` : `appVersionSource: "remote"` + `autoIncrement: true` sur le profil `preview`. EAS augmente le `versionCode` à chaque build, pour que les nouveaux APK s'installent par-dessus l'ancien. Avant, toutes les versions avaient le `versionCode` 1.
+- Le build lancé le 13/11 vers 14 h 46 depuis `main` (run n°14, avant la fusion de la PR #11) est en runtime "2" : **ne pas l'installer**, il ne recevra pas de mises à jour. Utiliser l'APK indiqué dans « APK actuel et installation ».
+
+## Incidents réglés (9–11/11/2026), à connaître
+
+- **Mauvais serveur** : l'app pointait vers `appli-planning-familial.onrender.com` (sans `-0lyd`), un service qui **n'est pas le nôtre**. Les comptes créés et les mots de passe tapés avant le 11/11 y sont partis. L'adresse correcte est dans `mobile/eas.json`. Ne pas réutiliser les anciens mots de passe.
+- **Réveil du serveur Render** : l'app réessaie pendant 60 s quand le serveur dort (502/503/504), affiche « Le serveur démarre… » après 5 s et appelle `/health` au lancement (`mobile/src/state/authStore.ts`, `useSlowHint`). Le serveur renvoie 500 (pas 502) si l'envoi d'e-mail échoue, pour ne pas déclencher ces réessais.
+- **Clavier Android** : l'app est en plein écran (Expo 57), Android ne réduit plus l'écran pour le clavier. Tous les formulaires utilisent `KeyboardScrollView` ou `<Screen keyboard>` (`mobile/src/components/`). À reprendre pour tout nouvel écran avec des champs.
+- **Mot de passe oublié** : Brevo configuré et testé (code reçu par e-mail). Variables Render : `BREVO_API_KEY` (clé à accès restreint, « Emails transactionnels : Tous », expire après 90 jours sans envoi), `MAIL_FROM_EMAIL` (adresse validée dans Brevo → Expéditeurs), `MAIL_FROM_NAME` (facultatif). Les e-mails peuvent arriver dans les spams.
+- **Build EAS** : `eas-cli` exige Node 22 (workflow corrigé, PR #3).
+- La session n'a pas accès réseau à render.com, expo.dev ni à l'API Expo : demander des captures à l'utilisatrice pour Render.
 
 ## Préférences de l'utilisateur
 
@@ -129,6 +146,7 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Poser des questions de clarification avant les réponses détaillées, avec des choix cliquables.
 - Ne pas multiplier les étapes manuelles : préférer un commit unique, une PR prête à fusionner.
 - Ne pas uploader de fichiers directement sur `main` pendant qu'une PR est ouverte (cela a créé un conflit une fois).
+- Avant de fusionner une PR ou de lancer un build, demander confirmation (choix cliquable).
 
 ## Conventions du dépôt
 
