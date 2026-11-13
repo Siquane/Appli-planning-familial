@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, View } from "react-native";
+import { Alert, Linking, View } from "react-native";
 import { router } from "expo-router";
 import { KeyboardScrollView } from "../src/components/KeyboardScrollView";
 import { Screen } from "../src/components/Screen";
@@ -26,6 +26,9 @@ function Section({ title, children }: { title: string; children: string }) {
     </View>
   );
 }
+
+/** Public privacy policy page (also the URL given to the Play Store). */
+export const PRIVACY_POLICY_URL = "https://claude.ai/artifact/6q5yK3yYE2SmCnZAMqDxmv";
 
 // What Passerelle stores, where it goes, and the user's rights (RGPD): withdraw
 // the health-data consent, delete the account.
@@ -118,6 +121,8 @@ export default function PrivacyScreen() {
           </Text>
           {consentedAt ? <Button label="Retirer mon accord et effacer ces données" variant="secondary" block loading={setConsent.isPending} onPress={onWithdraw} /> : null}
         </Card>
+
+        <Button label="Lire la politique de confidentialité complète" variant="ghost" block onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})} />
 
         <Card style={{ gap: space[3] }}>
           <Text size={15} weight="medium">

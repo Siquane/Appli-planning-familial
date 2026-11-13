@@ -1,0 +1,296 @@
+<title>Passerelle · Confidentialité</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+  /* Layout: one reading column, a sticky table of contents on wide screens, brand gradient as the only flourish. */
+  :root {
+    --bg: #070912;
+    --surface: #0f1426;
+    --line: #1e2740;
+    --fg: #e8f4ff;
+    --muted: #9fb0c8;
+    --cyan: #22e5ff;
+    --blue: #3fb8ff;
+    --violet: #9b5cff;
+    --link: #5fd0ff;
+    --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+    --body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f5f8fc; --surface: #ffffff; --line: #dbe3ef; --fg: #0d1426; --muted: #4b5a73;
+      --cyan: #0098b3; --blue: #1f7fd1; --violet: #6b35d6; --link: #0b6fc4; color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f8fc; --surface: #ffffff; --line: #dbe3ef; --fg: #0d1426; --muted: #4b5a73;
+    --cyan: #0098b3; --blue: #1f7fd1; --violet: #6b35d6; --link: #0b6fc4; color-scheme: light;
+  }
+
+  body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.65; }
+  .wrap {
+    max-width: 1080px; margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 40px 64px;
+  }
+  header { display: grid; gap: 14px; margin-bottom: 40px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 600; letter-spacing: 0.14em; font-size: 13px; color: var(--muted); }
+  .brand svg { flex: none; }
+  h1 { font-family: var(--display); font-weight: 700; font-size: clamp(32px, 6vw, 48px); line-height: 1.1; margin: 0; text-wrap: balance; }
+  .rule { height: 3px; width: 120px; border-radius: 3px; background: linear-gradient(90deg, var(--cyan), var(--blue), var(--violet)); }
+  .meta { color: var(--muted); font-size: 14px; margin: 0; }
+
+  .grid { display: grid; grid-template-columns: 1fr; gap: 40px; }
+  @media (min-width: 900px) { .grid { grid-template-columns: 220px minmax(0, 1fr); } }
+  nav { font-size: 14px; }
+  @media (min-width: 900px) { nav { position: sticky; top: calc(24px + env(safe-area-inset-top, 0px)); align-self: start; } }
+  nav p { margin: 0 0 8px; font-family: var(--display); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px; color: var(--muted); }
+  nav ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+  nav a { color: var(--fg); text-decoration: none; }
+  nav a:hover, nav a:focus-visible { color: var(--link); text-decoration: underline; }
+
+  main { min-width: 0; max-width: 68ch; display: grid; gap: 36px; }
+  .summary { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; display: grid; gap: 8px; }
+  .summary h2 { margin: 0; font-size: 18px; }
+  .summary ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+  section { display: grid; gap: 10px; scroll-margin-top: 24px; }
+  h2 { font-family: var(--display); font-weight: 600; font-size: 22px; line-height: 1.3; margin: 0; text-wrap: balance; }
+  h3 { font-family: var(--display); font-weight: 600; font-size: 17px; margin: 8px 0 0; }
+  p, li { margin: 0; }
+  ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+  a { color: var(--link); }
+  a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  strong { font-weight: 600; }
+  .note { color: var(--muted); font-size: 14px; }
+  .table { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  th { font-family: var(--display); font-weight: 600; background: var(--surface); }
+  tr:last-child td { border-bottom: 0; }
+  .contact { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .email { font-family: var(--body); font-weight: 600; user-select: all; }
+  button.copy {
+    font: inherit; font-size: 13px; color: var(--fg); background: var(--surface); border: 1px solid var(--line);
+    border-radius: 8px; padding: 4px 10px; cursor: pointer;
+  }
+  button.copy:hover { border-color: var(--blue); }
+  button.copy:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand" aria-label="Passerelle">
+      <svg width="28" height="18" viewBox="0 0 28 18" aria-hidden="true">
+        <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#22E5FF"/><stop offset=".5" stop-color="#3FB8FF"/><stop offset="1" stop-color="#9B5CFF"/></linearGradient></defs>
+        <path d="M2 16 C6 2, 22 2, 26 16" fill="none" stroke="url(#g)" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="2" cy="16" r="2" fill="#22E5FF"/><circle cx="9.5" cy="6.4" r="2" fill="#3FB8FF"/><circle cx="18.5" cy="6.4" r="2" fill="#6F8BFF"/><circle cx="26" cy="16" r="2" fill="#9B5CFF"/>
+      </svg>
+      PASSERELLE
+    </div>
+    <h1>Politique de confidentialité</h1>
+    <div class="rule" aria-hidden="true"></div>
+    <p class="meta">Application mobile Passerelle (planning familial) · En vigueur le 13 novembre 2026</p>
+  </header>
+
+  <div class="grid">
+    <nav aria-label="Sommaire">
+      <p>Sommaire</p>
+      <ol>
+        <li><a href="#responsable">Responsable</a></li>
+        <li><a href="#donnees">Données collectées</a></li>
+        <li><a href="#finalites">Finalités et bases légales</a></li>
+        <li><a href="#sante">Santé et régimes</a></li>
+        <li><a href="#claude">Menus générés par Claude</a></li>
+        <li><a href="#prestataires">Prestataires</a></li>
+        <li><a href="#transferts">Transferts hors UE</a></li>
+        <li><a href="#duree">Durées de conservation</a></li>
+        <li><a href="#enfants">Enfants et partage</a></li>
+        <li><a href="#securite">Sécurité</a></li>
+        <li><a href="#droits">Vos droits</a></li>
+        <li><a href="#modifs">Modifications</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <div class="summary">
+        <h2>En bref</h2>
+        <ul>
+          <li>Vos données servent uniquement à faire fonctionner Passerelle pour votre famille.</li>
+          <li>Aucune publicité, aucune revente de données, aucun pistage publicitaire.</li>
+          <li>Les régimes, allergies et aliments à limiter ne sont enregistrés qu'avec votre accord explicite.</li>
+          <li>Pour générer des menus, Claude (Anthropic) reçoit les goûts de chacun <strong>sans prénom</strong>.</li>
+          <li>Vous pouvez tout modifier, retirer votre accord ou supprimer votre compte depuis l'application.</li>
+        </ul>
+      </div>
+
+      <section id="responsable">
+        <h2>1. Responsable du traitement</h2>
+        <p>Passerelle est éditée par <strong>Anaïs Guyon</strong>, qui décide de l'usage des données et en est responsable au sens du Règlement général sur la protection des données (RGPD).</p>
+        <p class="contact">Contact pour toute question ou demande :
+          <span class="email" id="email">Siquane.lab@gmail.com</span>
+          <button class="copy" type="button" id="copy-email">Copier l'adresse</button>
+        </p>
+      </section>
+
+      <section id="donnees">
+        <h2>2. Données collectées</h2>
+        <p>Passerelle ne collecte que ce que vous saisissez, plus quelques données techniques nécessaires au service.</p>
+        <h3>Votre compte</h3>
+        <ul>
+          <li>Adresse e-mail, prénom et mot de passe (enregistré sous forme chiffrée, jamais en clair).</li>
+        </ul>
+        <h3>Votre famille et votre organisation</h3>
+        <ul>
+          <li>Membres de la famille : prénom, âge ou date de naissance (facultatifs).</li>
+          <li>Préférences repas de chaque membre : plats préférés, ce qu'il ou elle n'aime pas, appétit, jours de cantine, notes.</li>
+          <li>Avec votre accord seulement : régime alimentaire, allergies et intolérances, aliments à limiter (voir section 4).</li>
+          <li>Tâches, rappels, contraintes horaires, anniversaires, menus, recettes, liste de courses.</li>
+          <li>Budget : dépenses, catégories, plafonds, objectifs d'épargne.</li>
+          <li>Documents et photos que vous ajoutez (ils peuvent contenir des informations sensibles : vous choisissez ce que vous y mettez).</li>
+        </ul>
+        <h3>Données techniques</h3>
+        <ul>
+          <li>Les rappels sont programmés sur votre téléphone lui-même : aucun identifiant de notification n'est envoyé au serveur.</li>
+          <li>En cas de plantage de l'application : un rapport technique (modèle d'appareil, version, message d'erreur), sans nom, e-mail ni contenu saisi.</li>
+          <li>Si vous souscrivez un abonnement : l'état de votre abonnement (actif ou non, date de fin). Le paiement est géré par Google Play ; Passerelle ne voit jamais vos coordonnées bancaires.</li>
+        </ul>
+      </section>
+
+      <section id="finalites">
+        <h2>3. Finalités et bases légales</h2>
+        <div class="table">
+          <table>
+            <thead><tr><th>Ce que nous faisons</th><th>Base légale (RGPD)</th></tr></thead>
+            <tbody>
+              <tr><td>Fournir l'application : planning, repas, budget, documents, rappels</td><td>Exécution du contrat (art. 6.1.b)</td></tr>
+              <tr><td>Enregistrer régimes, allergies et aliments à limiter, et en tenir compte dans les menus</td><td>Consentement explicite (art. 9.2.a)</td></tr>
+              <tr><td>Générer des menus avec Claude, à votre demande</td><td>Exécution du contrat (art. 6.1.b)</td></tr>
+              <tr><td>Gérer les abonnements Premium</td><td>Exécution du contrat (art. 6.1.b)</td></tr>
+              <tr><td>Sécurité du service, limitation des tentatives de connexion, rapports de plantage</td><td>Intérêt légitime (art. 6.1.f)</td></tr>
+              <tr><td>E-mail de réinitialisation du mot de passe</td><td>Exécution du contrat (art. 6.1.b)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="sante">
+        <h2>4. Données de santé et régimes alimentaires</h2>
+        <p>Une allergie ou une intolérance est une donnée de santé ; certains régimes (halal, casher…) peuvent révéler une religion. Ce sont des données sensibles.</p>
+        <ul>
+          <li>Elles ne sont enregistrées qu'après votre <strong>accord explicite</strong>, donné une fois pour la famille depuis la fiche d'un membre.</li>
+          <li>Elles servent <strong>uniquement</strong> à adapter les menus générés.</li>
+          <li>Vous pouvez retirer votre accord à tout moment (Profil → Confidentialité et données) : ces données sont alors <strong>effacées immédiatement</strong> pour tous les membres.</li>
+        </ul>
+      </section>
+
+      <section id="claude">
+        <h2>5. Menus générés par Claude</h2>
+        <p>Quand vous demandez à Passerelle de proposer des menus, les informations nécessaires sont envoyées à Claude, un service d'intelligence artificielle d'Anthropic :</p>
+        <ul>
+          <li>vos réponses aux questions (régimes de la famille, temps de cuisine, envies, aliments à éviter) ;</li>
+          <li>les titres de vos recettes et les repas déjà prévus dans la semaine ;</li>
+          <li>les préférences de chaque membre, désigné par <strong>« Adulte 1 », « Enfant 2 »…</strong> avec son âge. Aucun prénom, aucune adresse e-mail, aucun genre n'est transmis.</li>
+        </ul>
+        <p>Rien n'est envoyé tant que vous n'utilisez pas cette fonction. Anthropic n'utilise pas ces données pour entraîner ses modèles.</p>
+      </section>
+
+      <section id="prestataires">
+        <h2>6. Prestataires (sous-traitants)</h2>
+        <p>Passerelle s'appuie sur des prestataires qui traitent les données pour son compte, uniquement pour faire fonctionner le service :</p>
+        <div class="table">
+          <table>
+            <thead><tr><th>Prestataire</th><th>Rôle</th><th>Localisation</th></tr></thead>
+            <tbody>
+              <tr><td>Neon</td><td>Base de données</td><td>Union européenne (Francfort)</td></tr>
+              <tr><td>Render</td><td>Hébergement du serveur</td><td>Selon la région du service ; société américaine</td></tr>
+              <tr><td>Cloudflare (R2)</td><td>Stockage des documents et photos (privé)</td><td>Société américaine</td></tr>
+              <tr><td>Anthropic</td><td>Génération des menus (Claude)</td><td>États-Unis</td></tr>
+              <tr><td>Brevo</td><td>Envoi des e-mails de mot de passe oublié</td><td>France / Union européenne</td></tr>
+              <tr><td>Sentry</td><td>Rapports de plantage</td><td>Union européenne (Allemagne)</td></tr>
+              <tr><td>Expo</td><td>Distribution des mises à jour de l'application (aucune donnée personnelle)</td><td>États-Unis</td></tr>
+              <tr><td>Google Play et RevenueCat</td><td>Paiement et suivi des abonnements</td><td>États-Unis</td></tr>
+              <tr><td>Google ou Microsoft</td><td>Synchronisation d'agenda, seulement si vous la connectez</td><td>États-Unis</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Les données ne sont jamais vendues ni utilisées à des fins publicitaires.</p>
+      </section>
+
+      <section id="transferts">
+        <h2>7. Transferts hors de l'Union européenne</h2>
+        <p>Certains prestataires sont établis aux États-Unis. Ces transferts sont encadrés par le cadre de protection des données UE–États-Unis (Data Privacy Framework) lorsque le prestataire y adhère, ou à défaut par les clauses contractuelles types de la Commission européenne.</p>
+      </section>
+
+      <section id="duree">
+        <h2>8. Durées de conservation</h2>
+        <ul>
+          <li>Vos données sont conservées tant que votre compte existe.</li>
+          <li>Les régimes, allergies et aliments à limiter sont effacés dès que vous retirez votre accord.</li>
+          <li>À la suppression du compte, toutes vos données et vos fichiers sont effacés immédiatement. Une copie de sécurité de la base, réalisée chaque semaine, est conservée 8 semaines au plus : vos données en disparaissent donc au plus tard 8 semaines après la suppression.</li>
+          <li>Les codes de réinitialisation du mot de passe expirent après quelques minutes ; les jetons de connexion expirent automatiquement.</li>
+        </ul>
+      </section>
+
+      <section id="enfants">
+        <h2>9. Enfants et partage du planning</h2>
+        <ul>
+          <li>Il faut avoir <strong>18 ans</strong> pour créer un compte Passerelle.</li>
+          <li>Les enfants n'ont pas de compte : c'est le parent qui saisit leurs informations, sous sa responsabilité.</li>
+          <li>Le lien de partage du planning permet à une personne de votre choix de consulter vos tâches partagées, en lecture seule et sans compte. Il affiche les prénoms des membres concernés : ne le transmettez qu'à des personnes de confiance.</li>
+        </ul>
+      </section>
+
+      <section id="securite">
+        <h2>10. Sécurité</h2>
+        <ul>
+          <li>Tous les échanges passent par une connexion chiffrée (HTTPS).</li>
+          <li>Les mots de passe sont enregistrés chiffrés ; les tentatives de connexion répétées sont bloquées.</li>
+          <li>Les documents sont stockés dans un espace privé, accessibles seulement par des liens temporaires.</li>
+        </ul>
+      </section>
+
+      <section id="droits">
+        <h2>11. Vos droits</h2>
+        <p>Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, de portabilité et d'opposition, ainsi que du droit de retirer votre consentement à tout moment.</p>
+        <ul>
+          <li><strong>Dans l'application :</strong> modifiez ou supprimez chaque information ; Profil → Confidentialité et données pour retirer votre accord ou supprimer votre compte.</li>
+          <li><strong>Par e-mail :</strong> écrivez à l'adresse indiquée en section 1. Une réponse vous est apportée sous un mois.</li>
+          <li><strong>Réclamation :</strong> vous pouvez saisir la CNIL (cnil.fr), l'autorité française de protection des données.</li>
+        </ul>
+        <p class="note">Un abonnement Play Store se résilie depuis le Play Store ; supprimer votre compte ne l'annule pas automatiquement.</p>
+      </section>
+
+      <section id="modifs">
+        <h2>12. Modifications</h2>
+        <p>Cette politique peut évoluer avec l'application. La date en haut de page indique la dernière version ; en cas de changement important, vous en serez informé dans l'application.</p>
+      </section>
+    </main>
+  </div>
+
+  <footer>Passerelle · Anaïs Guyon · Dernière mise à jour : 13 novembre 2026</footer>
+</div>
+
+<script>
+  document.getElementById("copy-email").addEventListener("click", (e) => {
+    const btn = e.currentTarget;
+    const text = document.getElementById("email").textContent.trim();
+    const done = (label) => { btn.textContent = label; setTimeout(() => (btn.textContent = "Copier l'adresse"), 1800); };
+    try {
+      navigator.clipboard.writeText(text).then(() => done("Copiée"), () => selectEmail(done));
+    } catch { selectEmail(done); }
+  });
+  function selectEmail(done) {
+    const range = document.createRange();
+    range.selectNodeContents(document.getElementById("email"));
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    done("Sélectionnée, copiez-la");
+  }
+</script>
