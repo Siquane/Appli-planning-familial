@@ -19,6 +19,9 @@ model User {
   // Set by hand for now (npm run premium), later by the store purchase.
   budgetUntil  DateTime?
   mealsUntil   DateTime?
+  // Explicit consent to store members' diets, allergies and foods to limit
+  // (health data / may reveal religion, RGPD art. 9). Null = not given.
+  foodHealthConsentAt DateTime?
 
   members             FamilyMember[]
   tasks               Task[]
@@ -74,6 +77,19 @@ model FamilyMember {
   age      Int?
   birthday DateTime?
   order    Int       @default(0)
+
+  // Food preferences, used to tailor generated menus. Sent to Claude
+  // without the member's name (see services/mealPlanner.ts).
+  favoriteFoods String   @default("")
+  dislikedFoods String   @default("")
+  appetite      String?  // "petit" | "moyen" | "gros"
+  canteenDays   Int[]    @default([]) // 0 = lundi … 4 = vendredi: lunch eaten outside
+  foodNotes     String   @default("")
+  // Sensitive (health / may reveal religion): only stored while the account
+  // has given explicit consent (User.foodHealthConsentAt), cleared when it's withdrawn.
+  diets         String[] @default([])
+  allergies     String   @default("")
+  foodsToLimit  String   @default("")
 
   tasks             TaskMember[]
   recipes           RecipeMember[]

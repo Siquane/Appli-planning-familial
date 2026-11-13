@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { z } from "zod";
 import { prisma } from "../db";
+import { removeObjects } from "../lib/storage";
 import { generateRefreshToken, hashRefreshToken, signAccessToken, verifyAccessToken } from "../lib/jwt";
 import { requireAuth } from "../middleware/auth";
 import { sendPasswordResetCode } from "../services/mailer";
@@ -171,6 +172,21 @@ authRouter.patch("/me", requireAuth, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const user = await prisma.user.update({ where: { id: req.userId }, data: { name: parsed.data.name, initials: initialsFor(parsed.data.name) } });
   res.json({ user: publicUser(user) });
+});
+
+// Delete one's account and everything in it (RGPD right to erasure, also
+// required by the Play Store). The password confirms it's really the owner.
+// Every table cascades from User; stored files (R2) are removed first.
+authRouter.delete("/me", requireAuth, loginLimiter, async (req, res) => {
+  const parsed = z.object({ password: z.string().min(1, "Mot de passe requis") }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
+  const user = await prisma.user.findUnique({ where: { id: req.userId } });
+  if (!user) return res.status(404).json({ error: "Not found" });
+  if (!(await bcrypt.compare(parsed.data.password, user.passwordHash))) return res.status(401).json({ error: "Mot de passe incorrect" });
+  const files = await prisma.document.findMany({ where: { userId: user.id }, select: { fileKey: true } });
+  await removeObjects(files.map((f) => f.fileKey));
+  await prisma.user.delete({ where: { id: user.id } });
+  res.status(204).end();
 });
 
 async function issueTokens(userId: string, email: string) {

@@ -188,6 +188,15 @@ export default function ProfileScreen() {
         </Card>
       </Pressable>
 
+      <Pressable onPress={() => router.push("/privacy")}>
+        <Card row style={{ alignItems: "center" }}>
+          <Text size={14} style={{ flex: 1 }}>
+            Confidentialité et données
+          </Text>
+          <ChevronRightIcon size={14} color={color.neutral500} />
+        </Card>
+      </Pressable>
+
       <Pressable onPress={() => router.push("/suggestions")}>
         <Card row style={{ alignItems: "center" }}>
           <Text size={14} style={{ flex: 1 }}>

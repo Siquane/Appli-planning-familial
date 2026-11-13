@@ -28,6 +28,9 @@ export default function FamilleTab() {
           <Text weight="medium" size={13} tone="muted">
             Membres ({members.length})
           </Text>
+          <Text size={12} tone="faint">
+            Touche un membre pour ses goûts, son régime et ses allergies : les menus générés en tiennent compte.
+          </Text>
           <Card>
             {members.length === 0 && (
               <Text size={13} tone="muted">
@@ -35,8 +38,10 @@ export default function FamilleTab() {
               </Text>
             )}
             {members.map((m, i) => (
-              <View
+              <Pressable
                 key={m.id}
+                onPress={() => router.push(`/member/${m.id}`)}
+                accessibilityLabel={`Fiche de ${m.name}`}
                 style={{ flexDirection: "row", alignItems: "center", gap: space[2], paddingVertical: 6, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: color.divider }}
               >
                 <Avatar initials={m.initials} bg={m.tint === "neutral" ? color.neutral700 : color.accent800} fg={m.tint === "neutral" ? color.neutral100 : color.accent100} size={30} />
@@ -48,7 +53,8 @@ export default function FamilleTab() {
                     {m.age} ans
                   </Text>
                 )}
-              </View>
+                <ChevronRightIcon size={14} color={color.neutral500} />
+              </Pressable>
             ))}
           </Card>
         </View>
