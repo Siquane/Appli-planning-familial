@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
-import type { DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
+import { shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
+import type { ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
 import { useAuthStore } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
 import { buildCategoryOptions } from "../lib/money";
@@ -228,6 +228,48 @@ export function useUpdateRecurringExpense() {
 export function useDeleteRecurringExpense() {
   const invalidate = useInvalidateBudget();
   return useMutation({ mutationFn: (id: string) => recurringExpensesApi.remove(id), onSuccess: () => invalidate("recurring-expenses") });
+}
+
+export function useShoppingList() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["shopping"], queryFn: () => shoppingApi.list().then((r) => r.items), enabled });
+}
+
+export function useAddShoppingItem() {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (label: string) => shoppingApi.add(label), onSuccess: () => qc.invalidateQueries({ queryKey: ["shopping"] }) });
+}
+
+// Ticking an item updates the list at once (no wait for the server), then
+// reconciles — in a shop with weak signal the tap must feel instant.
+export function useToggleShoppingItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, checked }: { id: string; checked: boolean }) => shoppingApi.update(id, { checked }),
+    onMutate: async ({ id, checked }) => {
+      await qc.cancelQueries({ queryKey: ["shopping"] });
+      const previous = qc.getQueryData<ShoppingItem[]>(["shopping"]);
+      qc.setQueryData<ShoppingItem[]>(["shopping"], (items) => items?.map((i) => (i.id === id ? { ...i, checked } : i)));
+      return { previous };
+    },
+    onError: (_e, _v, ctx) => ctx?.previous && qc.setQueryData(["shopping"], ctx.previous),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["shopping"] }),
+  });
+}
+
+export function useDeleteShoppingItem() {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (id: string) => shoppingApi.remove(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["shopping"] }) });
+}
+
+export function useShoppingFromMenu() {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: () => shoppingApi.fromMenu(), onSuccess: (r) => qc.setQueryData(["shopping"], r.items) });
+}
+
+export function useClearCheckedShopping() {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: () => shoppingApi.clearChecked(), onSuccess: (r) => qc.setQueryData(["shopping"], r.items) });
 }
 
 export function useTasks() {

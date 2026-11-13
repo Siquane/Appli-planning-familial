@@ -8,6 +8,7 @@ import { Button } from "../../src/components/Button";
 import { WeekStrip } from "../../src/components/WeekStrip";
 import { TaskCard } from "../../src/components/TaskCard";
 import { TabHeader } from "../../src/components/PageHeader";
+import { TodayCard } from "../../src/components/TodayCard";
 import { ReshuffleIcon, CalendarIcon, GiftIcon } from "../../src/components/icons";
 import { useMembers, useTasks } from "../../src/hooks/useApi";
 import { useAuthStore } from "../../src/state/authStore";
@@ -43,6 +44,8 @@ export default function HomeScreen() {
   return (
     <Screen techGrid refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={color.accent} />}>
       <TabHeader title="Planning" subtitle={`Salut, ${user?.name?.split(" ")[0] ?? ""} 👋`} />
+
+      <TodayCard />
 
       <WeekStrip selected={selected} onSelect={setSelected} today={today} />
 

@@ -229,3 +229,20 @@ export interface RecurringExpense {
 }
 
 export type RecurringExpenseInput = Omit<RecurringExpense, "id" | "startMonth">;
+
+export interface ShoppingItem {
+  id: string;
+  label: string;
+  checked: boolean;
+  /** Added by « Générer depuis le menu ». */
+  fromMenu: boolean;
+  createdAt: string;
+}
+
+/** Draft returned by POST /recipes/import — not saved yet. */
+export interface ImportedRecipe {
+  title: string;
+  ingredients: string[];
+  steps: string[];
+  notes: string;
+}
