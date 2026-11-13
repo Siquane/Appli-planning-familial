@@ -21,7 +21,7 @@ export function TodayCard() {
   const lines = todayLines(s);
 
   return (
-    <Card style={{ gap: space[3] }}>
+    <Card style={{ gap: space[4], paddingVertical: space[6] }}>
       <Text weight="medium" size={13} tone="muted">
         Aujourd'hui
       </Text>

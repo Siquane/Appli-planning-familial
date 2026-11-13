@@ -16,6 +16,8 @@ export interface WidgetContent {
   title: string;
   rows: WidgetRow[];
   empty?: string;
+  /** Shown dimmed, labelled « Exemple », while there's nothing real to show. */
+  example?: string[];
 }
 
 function monthOf(d: Date) {
@@ -42,7 +44,10 @@ export function summaryContent(s: WidgetSnapshot, now: Date): WidgetContent {
           : { text: `Plafonds dépassés de ${formatEuros(-left)}`, tone: "danger" },
     );
   }
-  return { title: "Aujourd'hui", rows };
+  const nothing = todays.length === 0 && !dinner && (!b || b.spentCents === 0);
+  return nothing
+    ? { title: "Aujourd'hui", rows: [], empty: "Rien de prévu pour l'instant", example: ["17:00 Piscine", "Ce soir : Gratin de pâtes", "Reste 320,00 € ce mois-ci"] }
+    : { title: "Aujourd'hui", rows };
 }
 
 export function tasksContent(s: WidgetSnapshot, now: Date, max = 6): WidgetContent {
@@ -58,6 +63,7 @@ export function tasksContent(s: WidgetSnapshot, now: Date, max = 6): WidgetConte
     title: `${WEEKDAYS_FULL[today]} · ${todays.length} tâche${todays.length > 1 ? "s" : ""}`,
     rows: shown.map((t) => ({ text: `${t.time}  ${t.title}`, tone: t === nextTask ? "strong" : t.time < time ? "faint" : undefined })),
     empty: "Rien de prévu aujourd'hui",
+    example: ["08:30  Déposer les enfants", "17:00  Piscine", "19:30  Devoirs"],
   };
 }
 
@@ -70,11 +76,14 @@ export function menuContent(s: WidgetSnapshot, now: Date, days = 4): WidgetConte
     const label = w === today ? "Ce soir" : WEEKDAYS_FULL[w as Weekday];
     rows.push({ text: `${label} : ${dinner ? dinner.title : "—"}`, tone: w === today ? "strong" : undefined });
   }
+  if (!rows.some((r) => !r.text.endsWith(": —"))) {
+    return { title: "Menu de la semaine", rows: [], empty: "Menu pas encore prévu", example: ["Ce soir : Gratin de pâtes", "Demain : Soupe et tartines", "Puis : Poulet rôti"] };
+  }
   return { title: "Menu de la semaine", rows };
 }
 
 export function shoppingContent(s: WidgetSnapshot, max = 7): WidgetContent {
   const rows: WidgetRow[] = s.shopping.slice(0, max).map((label) => ({ text: `•  ${label}` }));
   if (s.shopping.length > max) rows.push({ text: `+ ${s.shopping.length - max} autre${s.shopping.length - max > 1 ? "s" : ""}`, tone: "faint" });
-  return { title: `Courses · ${s.shopping.length} à acheter`, rows, empty: "Liste de courses vide" };
+  return { title: `Courses · ${s.shopping.length} à acheter`, rows, empty: "Liste de courses vide", example: ["•  Lait", "•  Pain", "•  Pommes"] };
 }

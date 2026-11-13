@@ -15,10 +15,10 @@ type View_ = "menu" | "recettes" | "courses";
 export default function RepasTab() {
   const [view, setView] = useState<View_>("menu");
   // The shopping-list widget opens /repas?tab=courses.
-  const { tab } = useLocalSearchParams<{ tab?: string }>();
+  const { tab, w } = useLocalSearchParams<{ tab?: string; w?: string }>();
   useEffect(() => {
     if (tab === "menu" || tab === "recettes" || tab === "courses") setView(tab);
-  }, [tab]);
+  }, [tab, w]);
 
   return (
     <Screen scroll={false} padded={false} edges={["top"]}>

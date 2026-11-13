@@ -1,15 +1,23 @@
 import { useEffect } from "react";
-import { Tabs } from "expo-router";
+import { router, Tabs } from "expo-router";
 import { CustomTabBar } from "../../src/components/CustomTabBar";
 import { useMembers, useTasks } from "../../src/hooks/useApi";
 import { syncBirthdayReminders, syncEveningDigest, syncTaskReminders } from "../../src/lib/notifications";
 import { useSettingsStore } from "../../src/state/settingsStore";
 import { useWidgetSync } from "../../src/widgets/sync";
+import { takeWidgetRoute } from "../../src/widgets/links";
 
 export default function TabsLayout() {
   const { data: tasks } = useTasks();
   const { data: members } = useMembers();
   useWidgetSync();
+
+  // Opened from a widget while the app was closed: the start-up redirect
+  // lands on Planning, so go on to the screen the widget asked for.
+  useEffect(() => {
+    const route = takeWidgetRoute();
+    if (route && route !== "/home") router.navigate(route as never);
+  }, []);
 
   useEffect(() => {
     if (tasks) syncTaskReminders(tasks);

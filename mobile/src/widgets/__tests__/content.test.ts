@@ -35,7 +35,7 @@ describe("summaryContent", () => {
   });
 
   it("ignores last month's budget and flags an overrun", () => {
-    expect(summaryContent(snap({ budget: { month: "2026-10", spentCents: 1, capCents: 2 } }), now).rows).toHaveLength(2);
+    expect(summaryContent(snap({ tasks: [task("Piscine", "17:00", 2)], budget: { month: "2026-10", spentCents: 1, capCents: 2 } }), now).rows).toHaveLength(2);
     const over = summaryContent(snap({ budget: { month: "2026-11", spentCents: 300, capCents: 200 } }), now).rows[2];
     expect(over.tone).toBe("danger");
   });
@@ -64,5 +64,15 @@ describe("menuContent / shoppingContent", () => {
     const c = shoppingContent(snap({ shopping: ["a", "b", "c", "d"] }), 2);
     expect(c.title).toBe("Courses · 4 à acheter");
     expect(c.rows.map((r) => r.text)).toEqual(["•  a", "•  b", "+ 2 autres"]);
+  });
+});
+
+describe("empty widgets", () => {
+  it("show an example instead of a blank card", () => {
+    for (const c of [summaryContent(snap(), now), tasksContent(snap(), now), menuContent(snap(), now), shoppingContent(snap())]) {
+      expect(c.rows).toEqual([]);
+      expect(c.empty).toBeTruthy();
+      expect(c.example?.length).toBeGreaterThan(0);
+    }
   });
 });
