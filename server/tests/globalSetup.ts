@@ -6,7 +6,7 @@ import { TEST_DATABASE_URL } from "./testDbUrl";
 // current Prisma schema so route tests hit a real (but disposable)
 // database instead of mocking Prisma.
 export async function setup() {
-  execSync("npx prisma db push --force-reset --skip-generate", {
+  execSync("npx prisma db push --force-reset", {
     cwd: __dirname + "/..",
     env: { ...process.env, DATABASE_URL: TEST_DATABASE_URL },
     stdio: "inherit",
