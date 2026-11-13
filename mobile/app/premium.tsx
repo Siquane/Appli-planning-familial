@@ -89,30 +89,34 @@ export default function PremiumScreen() {
           const until = pack.id === "both" ? plan?.packs.budget.until : pack.id === "budget" ? plan?.packs.budget.until : plan?.packs.meals.until;
           return (
             <Card key={pack.id} style={{ gap: space[2], borderWidth: active ? 1 : 0, borderColor: color.accent400 }}>
-              {/* Icon(s) on top, then the name under them, then the price. */}
-              <View style={{ alignItems: "center", gap: 2 }}>
-                {pack.id === "meals" ? (
-                  <ToqueIcon size={56} color={color.pillar2} />
-                ) : pack.id === "budget" ? (
-                  <PiggyBankIcon size={56} color={color.pillar3} />
-                ) : (
-                  <View style={{ flexDirection: "row", gap: 2 }}>
-                    <ToqueIcon size={48} color={color.pillar2} />
-                    <PiggyBankIcon size={48} color={color.pillar3} />
-                  </View>
-                )}
-                <Text heading weight="semibold" size={17} center>
-                  {pack.name}
-                </Text>
-                <Text size={14} weight="medium" center>
-                  {pack.month}
-                  <Text size={12} tone="muted">
-                    {" / mois"}
+              {/* Left: icon(s) with the name under them. Right: the price. */}
+              <View style={{ flexDirection: "row", alignItems: "flex-end", gap: space[3] }}>
+                <View style={{ flex: 1, alignItems: "flex-start", gap: 2 }}>
+                  {pack.id === "meals" ? (
+                    <ToqueIcon size={56} color={color.pillar2} />
+                  ) : pack.id === "budget" ? (
+                    <PiggyBankIcon size={56} color={color.pillar3} />
+                  ) : (
+                    <View style={{ flexDirection: "row", gap: 2 }}>
+                      <ToqueIcon size={48} color={color.pillar2} />
+                      <PiggyBankIcon size={48} color={color.pillar3} />
+                    </View>
+                  )}
+                  <Text heading weight="semibold" size={17}>
+                    {pack.name}
                   </Text>
-                </Text>
-                <Text size={12} tone="faint" center>
-                  ou {pack.year} / an
-                </Text>
+                </View>
+                <View style={{ alignItems: "flex-end", gap: 2 }}>
+                  <Text size={14} weight="medium">
+                    {pack.month}
+                    <Text size={12} tone="muted">
+                      {" / mois"}
+                    </Text>
+                  </Text>
+                  <Text size={12} tone="faint">
+                    ou {pack.year} / an
+                  </Text>
+                </View>
               </View>
               {pack.features.map((f) => (
                 <View key={f} style={{ flexDirection: "row", gap: space[2] }}>
