@@ -96,13 +96,13 @@ export function quotaProblem(quota: MealQuota, kind: GenerationKind): string | n
   if (kind === "week" && quota.weeksUsed >= quota.weeksLimit) {
     if (quota.period === "premium") return "Tu as atteint la limite de générations de ce mois-ci. Elle repart le 1er du mois.";
     return quota.period === "trial"
-      ? "Tes 4 générations d'essai sont utilisées. Le pack Menus permet de générer tes menus chaque semaine."
-      : "Ta génération gratuite du mois est utilisée. Le pack Menus permet de générer tes menus chaque semaine.";
+      ? "Tes 4 générations d'essai sont utilisées. Avec Repas+, tu génères tes menus chaque semaine."
+      : "Ta génération gratuite du mois est utilisée. Avec Repas+, tu génères tes menus chaque semaine.";
   }
   if (kind === "reroll" && quota.rerollsUsed >= quota.rerollsLimit) {
     return quota.period === "premium"
       ? "Tu as atteint la limite d'« autre idée » de ce mois-ci."
-      : "Plus d'« autre idée » disponible pour cette semaine. Le pack Menus en donne davantage.";
+      : "Plus d'« autre idée » disponible pour cette semaine. Repas+ en donne davantage.";
   }
   return null;
 }
@@ -117,7 +117,7 @@ export async function hasUnlimitedDocuments(userId: string) {
 export async function requireBudgetPack(userId: string, res: Response, feature: string): Promise<boolean> {
   const user = await packDates(userId);
   if (user && hasPack(user, "budget")) return true;
-  res.status(403).json({ error: `${feature} fait partie du pack Budget.`, code: "premium_required", pack: "budget" });
+  res.status(403).json({ error: `${feature} fait partie de Budget+.`, code: "premium_required", pack: "budget" });
   return false;
 }
 

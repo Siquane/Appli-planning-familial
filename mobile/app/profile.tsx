@@ -30,7 +30,7 @@ export default function ProfileScreen() {
   const { data: status, refetch } = useCalendarStatus();
   const disconnect = useDisconnectCalendar();
   const plan = usePlan().data;
-  const packLabel = plan?.packs.budget.active && plan.packs.meals.active ? "Premium · les 2 packs" : plan?.packs.budget.active ? "Premium · pack Budget" : plan?.packs.meals.active ? "Premium · pack Menus" : "Passer à Premium";
+  const packLabel = plan?.packs.budget.active && plan.packs.meals.active ? "Passerelle+" : plan?.packs.budget.active ? "Budget+" : plan?.packs.meals.active ? "Repas+" : "Découvrir Passerelle+";
   const [connecting, setConnecting] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");

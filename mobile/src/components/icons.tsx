@@ -215,6 +215,44 @@ export function MealIcon({ size = 16, color = "currentColor" }: IconProps) {
   );
 }
 
+// Chef's toque (Repas+): puffed top, band with two pleats.
+export function ToqueIcon({ size = 16, color = "currentColor" }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M7 14.5a3.6 3.6 0 0 1-.9-7.1 4.2 4.2 0 0 1 5.9-3.1 4.2 4.2 0 0 1 5.9 3.1 3.6 3.6 0 0 1-.9 7.1z"
+        fill={color}
+        fillOpacity={0.3}
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path d="M7.5 14.5v5a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-5M10.5 15.5v3M13.5 15.5v3" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+// Piggy bank (Budget+), with a coin above the slot.
+export function PiggyBankIcon({ size = 16, color = "currentColor" }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M4.5 13a6.5 5 0 0 1 11.6-3.1h1.6l1.3-2v3.2a5 5 0 0 1 1.5 1.9h1v3h-1.3a6 6 0 0 1-2.2 2.2V20.5h-2.5v-1.4a8.5 8.5 0 0 1-3.6 0v1.4H7.4v-2.3A5 5 0 0 1 4.5 13z"
+        fill={color}
+        fillOpacity={0.3}
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path d="M10 8.6h3.5M4.6 12.2c-1.4-.2-1.9-1.4-1.2-2.3" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx={11.75} cy={4} r={1.7} stroke={color} strokeWidth={1.8} />
+      <Circle cx={16.6} cy={12} r={0.6} fill={color} />
+    </Svg>
+  );
+}
+
 export function SearchEmptyIcon({ size = 26, color = "currentColor" }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

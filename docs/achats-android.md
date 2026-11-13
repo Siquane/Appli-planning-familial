@@ -1,6 +1,6 @@
 # Mettre en place les abonnements sur Android
 
-L'appli vend 3 abonnements (pack Budget, pack Menus, Les 2) via **Google Play**, gérés par **RevenueCat**.
+L'appli vend 3 abonnements, **Budget+** (identifiant technique `budget`), **Repas+** (`meals`) et **Passerelle+** (les deux, `both`), via **Google Play**, gérés par **RevenueCat**. Dans la Play Console, donner ces noms affichés aux produits.
 Le code est prêt : il reste à créer les produits et à brancher les clés. Compter une à deux heures, plus les délais de Google.
 
 À faire dans cet ordre.
@@ -64,7 +64,7 @@ Les noms `budget`, `meals`, `both` (droits et offres) sont utilisés par le code
   ```json
   "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_xxxxxxxx"
   ```
-  Elle n'est pas secrète (elle est dans l'appli). Sans elle, l'écran Premium affiche « L'abonnement arrive bientôt ».
+  Elle n'est pas secrète (elle est dans l'appli). Sans elle, l'écran Passerelle+ affiche « L'abonnement arrive bientôt ».
 - **Clé secrète** (commence par `sk_`) → sur **Render**, variable `REVENUECAT_SECRET_KEY`. Elle est secrète : jamais dans le code.
 
 **RevenueCat → Integrations → Webhooks** :
@@ -85,7 +85,7 @@ Puis refaire un build (`eas build --platform android --profile production`) et l
 
 - L'appli identifie le client RevenueCat avec l'id du compte. Après un achat ou une restauration, elle appelle `POST /billing/sync` : le serveur lit les droits chez RevenueCat et met à jour `budgetUntil` / `mealsUntil`.
 - À chaque événement (renouvellement, résiliation, expiration, remboursement…), RevenueCat appelle le webhook et le serveur relit les droits. C'est RevenueCat qui fait foi : un pack qu'il n'accorde plus est retiré, y compris une date posée à la main avec `npm run premium`.
-- Passer d'un pack à « Les 2 », ou de mensuel à annuel, **remplace** l'abonnement Google Play au lieu d'en ajouter un deuxième. Prendre l'autre pack seul **s'ajoute**.
+- Passer de Repas+ ou Budget+ à Passerelle+, ou de mensuel à annuel, **remplace** l'abonnement Google Play au lieu d'en ajouter un deuxième. Prendre l'autre pack seul **s'ajoute**.
 - Pour offrir un pack à un testeur une fois RevenueCat en place, utiliser **« Grant entitlement »** dans RevenueCat plutôt que `npm run premium`.
 
 ## Plus tard : iPhone

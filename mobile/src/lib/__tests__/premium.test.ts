@@ -10,7 +10,7 @@ describe("mealQuotaLabel", () => {
   it("describes the trial, the free month and Premium", () => {
     expect(mealQuotaLabel({ ...base, period: "trial", weeksLimit: 4, weeksUsed: 1 })).toBe("3 générations gratuites pendant ton premier mois.");
     expect(mealQuotaLabel({ ...base, period: "free", weeksLimit: 1, weeksUsed: 1 })).toBe("Génération gratuite utilisée ce mois-ci.");
-    expect(mealQuotaLabel({ ...base, period: "premium", weeksLimit: 12, weeksUsed: 11 })).toBe("Pack Menus : 1 génération restante ce mois-ci.");
+    expect(mealQuotaLabel({ ...base, period: "premium", weeksLimit: 12, weeksUsed: 11 })).toBe("Repas+ : 1 génération restante ce mois-ci.");
   });
 });
 

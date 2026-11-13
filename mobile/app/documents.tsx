@@ -32,7 +32,7 @@ export default function DocumentsScreen() {
       <TopBar title="Documents" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: 18, gap: space[2] }} showsVerticalScrollIndicator={false}>
         <Button
-          label={full ? "+ Ajouter un document · Premium" : "+ Ajouter un document"}
+          label={full ? "+ Ajouter un document · Passerelle+" : "+ Ajouter un document"}
           variant="secondary"
           block
           onPress={() => router.push(full ? "/premium" : "/document/new")}

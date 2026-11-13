@@ -52,10 +52,10 @@ export default function SavingsScreen() {
           <Pressable onPress={() => router.push("/premium")}>
             <Card>
               <Text size={13} weight="medium">
-                Pack Budget ✨
+                Budget+ ✨
               </Text>
               <Text size={12} tone="muted">
-                Mets de côté pour les vacances, Noël ou la voiture, et regarde la jauge se remplir. Voir Premium ›
+                Mets de côté pour les vacances, Noël ou la voiture, et regarde la jauge se remplir. Voir Budget+ ›
               </Text>
             </Card>
           </Pressable>
@@ -79,7 +79,7 @@ export default function SavingsScreen() {
           <TextField label="Montant à atteindre (€)" value={target} onChangeText={setTarget} keyboardType="decimal-pad" placeholder="1 200" />
           <DateField label="Pour quand ? (optionnel)" value={deadline} onChange={setDeadline} />
           <Button
-            label={premium ? "Créer l'objectif" : "Créer l'objectif · Pack Budget"}
+            label={premium ? "Créer l'objectif" : "Créer l'objectif · Budget+"}
             variant="primary"
             block
             onPress={onCreate}

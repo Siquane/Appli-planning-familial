@@ -7,7 +7,7 @@ import { Screen } from "../src/components/Screen";
 import { Text } from "../src/components/Text";
 import { Card } from "../src/components/Card";
 import { TopBar } from "../src/components/TopBar";
-import { CheckIcon } from "../src/components/icons";
+import { CheckIcon, PiggyBankIcon, ToqueIcon } from "../src/components/icons";
 import { usePlan } from "../src/hooks/useApi";
 import { PACKS, hasAnyPack, mealQuotaLabel, packUntilLabel } from "../src/lib/premium";
 import { color, space } from "../src/theme/tokens";
@@ -77,23 +77,34 @@ export default function PremiumScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title="Premium" onBack={() => router.back()} />
+      <TopBar title="Passerelle+" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <Text size={13} tone="muted">
           Planning, tâches, recettes, menu et budget restent gratuits. Choisis seulement ce qui te sert.
         </Text>
 
         {PACKS.map((pack) => {
-          // With both packs active, highlight « Les 2 » only.
+          // With both packs active, highlight Passerelle+ only.
           const active = pack.id === "both" ? both : !both && isActive(plan, pack.id);
           const until = pack.id === "both" ? plan?.packs.budget.until : pack.id === "budget" ? plan?.packs.budget.until : plan?.packs.meals.until;
           return (
             <Card key={pack.id} style={{ gap: space[2], borderWidth: active ? 1 : 0, borderColor: color.accent400 }}>
               <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-                <Text heading weight="semibold" size={17} style={{ flex: 1 }}>
-                  {pack.name}
-                  {pack.id === "both" ? " ✨" : ""}
-                </Text>
+                <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: space[2] }}>
+                  {pack.id === "meals" ? (
+                    <ToqueIcon size={20} color={color.pillar2} />
+                  ) : pack.id === "budget" ? (
+                    <PiggyBankIcon size={20} color={color.pillar3} />
+                  ) : (
+                    <View style={{ flexDirection: "row", gap: 2 }}>
+                      <ToqueIcon size={18} color={color.pillar2} />
+                      <PiggyBankIcon size={18} color={color.pillar3} />
+                    </View>
+                  )}
+                  <Text heading weight="semibold" size={17}>
+                    {pack.name}
+                  </Text>
+                </View>
                 <Text size={14} weight="medium">
                   {pack.month}
                   <Text size={12} tone="muted">
@@ -147,7 +158,7 @@ export default function PremiumScreen() {
           // Everything is unlocked: no free quota to show.
           <Card style={{ gap: space[1] }}>
             <Text size={14} weight="medium">
-              Les 2 packs sont actifs {packUntilLabel(plan.packs.budget.until)}
+              Passerelle+ est actif {packUntilLabel(plan.packs.budget.until)}
             </Text>
             <Text size={13} tone="muted">
               Tout Passerelle est débloqué : menus, budget et documents sans limite.
@@ -192,7 +203,7 @@ export default function PremiumScreen() {
         )}
         {hasAnyPack(plan) && !both && (
           <Text size={12} tone="faint" center>
-            Le pack « Les 2 » revient moins cher que les deux séparés.
+            Passerelle+ revient moins cher que Repas+ et Budget+ séparés.
           </Text>
         )}
       </ScrollView>
