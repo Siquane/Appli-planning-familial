@@ -92,13 +92,13 @@ export default function PremiumScreen() {
               <View style={{ flexDirection: "row", alignItems: "baseline" }}>
                 <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: space[2] }}>
                   {pack.id === "meals" ? (
-                    <ToqueIcon size={20} color={color.pillar2} />
+                    <ToqueIcon size={28} color={color.pillar2} />
                   ) : pack.id === "budget" ? (
-                    <PiggyBankIcon size={20} color={color.pillar3} />
+                    <PiggyBankIcon size={28} color={color.pillar3} />
                   ) : (
                     <View style={{ flexDirection: "row", gap: 2 }}>
-                      <ToqueIcon size={18} color={color.pillar2} />
-                      <PiggyBankIcon size={18} color={color.pillar3} />
+                      <ToqueIcon size={24} color={color.pillar2} />
+                      <PiggyBankIcon size={24} color={color.pillar3} />
                     </View>
                   )}
                   <Text heading weight="semibold" size={17}>
