@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { planApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
-import type { ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
+import type { MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
 import { useAuthStore } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
 import { buildCategoryOptions } from "../lib/money";
@@ -25,9 +25,26 @@ export function useCreateMember() {
 export function useUpdateMember() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<{ name: string; initials: string; tint: Tint; age: number | null; birthday: string | null }> }) =>
-      membersApi.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: MemberInput }) => membersApi.update(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["members"] }),
+  });
+}
+
+/** Account-wide consent to store diets, allergies and foods to limit (RGPD). */
+export function useFoodConsent() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["food-consent"], queryFn: () => membersApi.foodConsent().then((r) => r.consentedAt), enabled });
+}
+
+export function useSetFoodConsent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (give: boolean) => (give ? membersApi.giveFoodConsent().then(() => undefined) : membersApi.withdrawFoodConsent()),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["food-consent"] });
+      // Withdrawing erases the sensitive fields server-side.
+      qc.invalidateQueries({ queryKey: ["members"] });
+    },
   });
 }
 

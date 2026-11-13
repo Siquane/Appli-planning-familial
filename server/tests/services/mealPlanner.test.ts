@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildUserPrompt, sanitizeProposal, type PlannerContext } from "../../src/services/mealPlanner";
+import { anonymizeMembers, buildUserPrompt, sanitizeProposal, type PlannerContext } from "../../src/services/mealPlanner";
 
 const recipes = [{ id: "r1", title: "Lasagnes de Mamie" }];
 
@@ -42,7 +42,13 @@ describe("buildUserPrompt", () => {
       avoid: "",
     },
     recipes,
-    members: [{ name: "Léa", age: 6 }, { name: "Marc", age: null }],
+    members: anonymizeMembers(
+      [
+        { age: 6, favoriteFoods: "pâtes", dislikedFoods: "champignons", appetite: "petit", canteenDays: [0, 1], foodNotes: "", diets: [], allergies: "arachides", foodsToLimit: "" },
+        { age: null, favoriteFoods: "", dislikedFoods: "", appetite: null, canteenDays: [], foodNotes: "", diets: [], allergies: "", foodsToLimit: "" },
+      ],
+      true,
+    ),
     keptMeals: [],
     exclude: ["Pizza"],
   };
@@ -51,7 +57,8 @@ describe("buildUserPrompt", () => {
     const p = buildUserPrompt(base);
     expect(p).toContain("sans-porc");
     expect(p).toContain("arachides");
-    expect(p).toContain("Léa (6 ans), Marc");
+    expect(p).toContain("- Enfant 1 (6 ans) — allergies / intolérances (strict) : arachides ; aime : pâtes ; n'aime pas : champignons ; appétit : petit ; déjeune hors de la maison (cantine) le lundi, mardi");
+    expect(p).toContain("- Membre 1\n");
     expect(p).toContain("[r1] Lasagnes de Mamie");
     expect(p).toContain("Repas avec poisson souhaités sur la semaine : 2");
     expect(p).not.toContain("végétariens souhaités");
@@ -64,3 +71,30 @@ describe("buildUserPrompt", () => {
     expect(p).not.toContain("Lasagnes");
   });
 });
+
+describe("anonymizeMembers", () => {
+  const member = (age: number | null) => ({
+    age,
+    favoriteFoods: "",
+    dislikedFoods: "",
+    appetite: null,
+    canteenDays: [],
+    foodNotes: "",
+    diets: ["halal"],
+    allergies: "gluten",
+    foodsToLimit: "sucre",
+  });
+
+  it("labels members by age group, never by name", () => {
+    const labels = anonymizeMembers([member(40), member(8), member(38), member(3), member(null)], true).map((m) => m.label);
+    expect(labels).toEqual(["Adulte 1", "Enfant 1", "Adulte 2", "Enfant 2", "Membre 1"]);
+  });
+
+  it("drops the sensitive fields without consent", () => {
+    const [m] = anonymizeMembers([member(40)], false);
+    expect(m).toMatchObject({ diets: [], allergies: "", foodsToLimit: "" });
+    const [withConsent] = anonymizeMembers([member(40)], true);
+    expect(withConsent).toMatchObject({ diets: ["halal"], allergies: "gluten", foodsToLimit: "sucre" });
+  });
+});
+

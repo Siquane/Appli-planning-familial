@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
 import type { Meal } from "@prisma/client";
 import { isMealAiConfigured } from "../env";
-import { COOK_TIMES, DIETS, MealPlannerError, RECIPE_USAGE, proposeMeals } from "../services/mealPlanner";
+import { COOK_TIMES, DIETS, MealPlannerError, RECIPE_USAGE, anonymizeMembers, proposeMeals } from "../services/mealPlanner";
 import { getMealQuota, quotaProblem } from "../lib/plan";
 
 export const mealsRouter = Router();
@@ -102,9 +102,15 @@ mealsRouter.post("/generate", async (req, res) => {
   const problem = quotaProblem(quota, kind);
   if (problem) return res.status(403).json({ error: problem, code: "quota_exceeded", quota });
 
-  const [recipes, members, meals] = await Promise.all([
+  const [recipes, storedMembers, user, meals] = await Promise.all([
     prisma.recipe.findMany({ where: { userId: req.userId }, select: { id: true, title: true }, orderBy: { title: "asc" } }),
-    prisma.familyMember.findMany({ where: { userId: req.userId }, select: { name: true, age: true }, orderBy: { order: "asc" } }),
+    // No name selected: members reach Claude as « Adulte 1 », « Enfant 2 »…
+    prisma.familyMember.findMany({
+      where: { userId: req.userId },
+      select: { age: true, favoriteFoods: true, dislikedFoods: true, appetite: true, canteenDays: true, foodNotes: true, diets: true, allergies: true, foodsToLimit: true },
+      orderBy: { order: "asc" },
+    }),
+    prisma.user.findUnique({ where: { id: req.userId }, select: { foodHealthConsentAt: true } }),
     prisma.meal.findMany({ where: { userId: req.userId }, include: { recipe: { select: { title: true } } } }),
   ]);
   const requested = new Set(slots.map((s) => `${s.weekday}|${s.type}`));
@@ -114,6 +120,7 @@ mealsRouter.post("/generate", async (req, res) => {
     .filter((m) => m.title);
 
   try {
+    const members = anonymizeMembers(storedMembers, !!user?.foodHealthConsentAt);
     const proposal = await proposeMeals({ slots, preferences, recipes, members, keptMeals, exclude });
     // Only successful generations count against the quota.
     await prisma.mealGeneration.create({ data: { userId: req.userId!, kind } });

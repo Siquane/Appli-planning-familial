@@ -16,7 +16,37 @@ export interface Member {
   age: number | null;
   birthday: string | null;
   order: number;
+  // Food preferences (menus générés).
+  favoriteFoods: string;
+  dislikedFoods: string;
+  appetite: Appetite | null;
+  /** 0 = lundi … 4 = vendredi : déjeuner à la cantine. */
+  canteenDays: number[];
+  foodNotes: string;
+  // Sensitive: only accepted by the server after the account's consent.
+  diets: MemberDiet[];
+  allergies: string;
+  foodsToLimit: string;
 }
+
+export type Appetite = "petit" | "moyen" | "gros";
+export type MemberDiet = "végétarien" | "pescetarien" | "sans-porc" | "halal" | "casher" | "sans-gluten" | "sans-lactose";
+
+export type MemberInput = Partial<{
+  name: string;
+  initials: string;
+  tint: Tint;
+  age: number | null;
+  birthday: string | null;
+  favoriteFoods: string;
+  dislikedFoods: string;
+  appetite: Appetite | null;
+  canteenDays: number[];
+  foodNotes: string;
+  diets: MemberDiet[];
+  allergies: string;
+  foodsToLimit: string;
+}>;
 
 export type Category = "École" | "Travail" | "Maison" | "Santé" | "Loisirs";
 export type Priority = "high" | "medium" | "low";

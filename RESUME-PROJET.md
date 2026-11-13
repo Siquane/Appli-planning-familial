@@ -106,6 +106,14 @@ Dernière mise à jour : 13 novembre 2026 (soir, reprise de la branche Premium).
 
 Mises à jour majeures du serveur : faites le 13/11 au soir (voir « Dépendances et mises à jour »).
 
+## Préférences repas par membre et RGPD (13/11/2026, soir)
+
+- **Fiche membre** (`app/member/[id].tsx`, ouverte depuis l'onglet Famille) : prénom, âge, et section **« Repas » en accordéon** (`components/Accordion.tsx`) : plats préférés, n'aime pas, appétit, jours de cantine, notes ; puis « Santé et régime » : régime, allergies, aliments à limiter.
+- **Données sensibles (RGPD art. 9)** : régime, allergies et aliments à limiter ne sont acceptés par le serveur qu'après un **accord explicite** du compte (`User.foodHealthConsentAt`, routes `GET/POST/DELETE /members/food-consent`). Retirer l'accord efface ces champs chez tous les membres.
+- **Menus générés** : les membres sont envoyés à Claude **sans prénom** (« Adulte 1 », « Enfant 2 », selon l'âge ; `anonymizeMembers` dans `services/mealPlanner.ts`), données sensibles seulement avec l'accord. Pas de genre, ni saisi ni deviné (choix de l'utilisatrice).
+- **Page Confidentialité** (Profil → Confidentialité et données, `app/privacy.tsx`) : ce qui est stocké et où, ce qui part chez Claude, retrait de l'accord, **suppression du compte** (`DELETE /auth/me` avec mot de passe ; efface aussi les fichiers R2). Base de la future politique de confidentialité exigée par le Play Store.
+- Décision : Passerelle est destinée à d'autres familles à terme → faire « RGPD propre » dès maintenant.
+
 ## Style Passerelle (13/11/2026)
 
 - L'appli reprend le logo : fond bleu nuit `#070912`, cartes `#0f1426`, texte blanc bleuté, dégradé néon cyan → bleu → violet (`theme/tokens.ts` : `color`, `gradient`, `glow`).

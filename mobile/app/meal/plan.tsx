@@ -218,6 +218,11 @@ export default function MealPlanScreen() {
     <Screen scroll={false} padded={false}>
       <TopBar title="Générer mes menus" onBack={() => router.back()} />
       <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+        <Pressable onPress={() => router.push("/famille")}>
+          <Text size={12} tone="faint">
+            Les goûts, régimes et allergies de chaque membre (onglet Famille → un membre → Repas) sont aussi pris en compte.
+          </Text>
+        </Pressable>
         <Question title="Quels jours ?">
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
             {ALL_DAYS.map((d) => (

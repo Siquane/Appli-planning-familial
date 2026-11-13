@@ -18,3 +18,12 @@ export async function syncUser(): Promise<void> {
     // Offline or server asleep: keep what we have.
   }
 }
+
+/**
+ * Delete the account and all its data (password confirms it). Signs out on
+ * success so the app returns to the login screen with nothing cached.
+ */
+export async function deleteAccount(password: string): Promise<void> {
+  await api.delete<void>("/auth/me", { password });
+  await useAuthStore.getState().signOut();
+}

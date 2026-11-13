@@ -22,6 +22,7 @@ import type {
   MealSlot,
   ProposedMeal,
   Member,
+  MemberInput,
   MonthlyBudget,
   Notification,
   Priority,
@@ -43,9 +44,11 @@ export const membersApi = {
   list: () => api.get<{ members: Member[] }>("/members"),
   create: (data: { name: string; initials?: string; tint?: Tint; age?: number | null; birthday?: string | null }) =>
     api.post<{ member: Member }>("/members", data),
-  update: (id: string, data: Partial<{ name: string; initials: string; tint: Tint; age: number | null; birthday: string | null }>) =>
-    api.patch<{ member: Member }>(`/members/${id}`, data),
+  update: (id: string, data: MemberInput) => api.patch<{ member: Member }>(`/members/${id}`, data),
   remove: (id: string) => api.delete<void>(`/members/${id}`),
+  foodConsent: () => api.get<{ consentedAt: string | null }>("/members/food-consent"),
+  giveFoodConsent: () => api.post<{ consentedAt: string }>("/members/food-consent", {}),
+  withdrawFoodConsent: () => api.delete<void>("/members/food-consent"),
 };
 
 export const tasksApi = {
