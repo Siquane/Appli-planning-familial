@@ -11,7 +11,7 @@ import { ChipPicker } from "../../src/components/ChipPicker";
 import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
 import { useCreateExpense, useDeleteExpense, useExpenseCategories, useMembers, useMonthlyBudget, useUpdateExpense } from "../../src/hooks/useApi";
-import { centsToInput, currentMonth, fromDayString, parseAmount, toDayString } from "../../src/lib/money";
+import { centsToInput, currentMonth, formatEuros, fromDayString, parseAmount, toDayString } from "../../src/lib/money";
 import { useToastStore } from "../../src/state/toastStore";
 import { space } from "../../src/theme/tokens";
 
@@ -52,13 +52,19 @@ export default function ExpenseFormScreen() {
     if (amountCents === null) return;
     const payload = { label: label.trim(), amountCents, category, memberId, date: toDayString(date) };
     try {
-      if (existing) {
-        await updateExpense.mutateAsync({ id: existing.id, data: payload });
-        useToastStore.getState().show("Dépense modifiée.");
-      } else {
-        await createExpense.mutateAsync(payload);
-        useToastStore.getState().show("Dépense ajoutée.");
-      }
+      const res = existing ? await updateExpense.mutateAsync({ id: existing.id, data: payload }) : await createExpense.mutateAsync(payload);
+      const saved = existing ? "Dépense modifiée." : "Dépense ajoutée.";
+      // Premium cap alert, raised by the server when this expense crossed 80 % or 100 %.
+      const alert = res.alert;
+      useToastStore
+        .getState()
+        .show(
+          alert
+            ? alert.level === 100
+              ? `${saved} ⚠️ Plafond « ${alert.categoryName} » atteint : ${formatEuros(alert.totalCents)} sur ${formatEuros(alert.limitCents)}.`
+              : `${saved} « ${alert.categoryName} » à ${Math.floor((alert.totalCents * 100) / alert.limitCents)} % du plafond : ${formatEuros(alert.totalCents)} sur ${formatEuros(alert.limitCents)}.`
+            : saved,
+        );
       router.back();
     } catch (e) {
       useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");

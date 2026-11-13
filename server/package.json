@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "test": "vitest run"
+    "test": "vitest run",
+    "premium": "tsx scripts/premium.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
