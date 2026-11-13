@@ -128,9 +128,19 @@ export default function MealPlanScreen() {
       <Screen scroll={false} padded={false}>
         <TopBar title="Proposition de menus" onBack={() => setProposal(null)} />
         <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
-          <Text size={13} tone="muted">
-            Touche ↻ pour une autre idée, ✕ pour laisser le créneau vide. Rien n'est enregistré avant de valider.
-          </Text>
+          {/* Same icons as the buttons on each card, so the legend matches. */}
+          <View style={{ gap: space[1] }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", rowGap: space[1] }}>
+              <Text size={13} tone="muted">Touche </Text>
+              <ReshuffleIcon size={16} color={color.accent400} />
+              <Text size={13} tone="muted"> pour une autre idée, </Text>
+              <CloseIcon size={14} color={color.neutral500} />
+              <Text size={13} tone="muted"> pour laisser le créneau vide.</Text>
+            </View>
+            <Text size={13} tone="muted">
+              Rien n'est enregistré avant de valider.
+            </Text>
+          </View>
           {quota && quota.period !== "premium" && (
             <Text size={12} tone="faint">
               {rerollsLeft > 0 ? `${rerollsLeft} « autre idée » restante${rerollsLeft > 1 ? "s" : ""}.` : "Plus d'« autre idée » disponible."}

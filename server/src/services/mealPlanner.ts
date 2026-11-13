@@ -65,7 +65,7 @@ const ProposalSchema = z4.object({
       type: z4.enum(MEAL_TYPES),
       title: z4.string().describe("Nom du plat, court, en français"),
       recipeId: z4.string().nullable().describe("id d'une recette de la famille si le plat en vient, sinon null"),
-      notes: z4.string().describe("Une ligne utile (accompagnement, astuce, à préparer la veille) ou chaîne vide"),
+      notes: z4.string().describe("Une astuce pratique sur le plat (accompagnement, à préparer la veille) sans parler des membres de la famille, ou chaîne vide"),
     }),
   ),
 });
@@ -81,7 +81,8 @@ Règles :
 - Petit-déjeuner et goûter restent simples (pas de vraie cuisine en semaine).
 - Pense aux enfants s'il y en a : plats qu'ils mangent volontiers, sans tomber dans les nuggets tous les jours.
 - Quand tu reprends une recette de la famille, mets son id dans recipeId et son titre exact dans title. Sinon recipeId = null.
-- Titres courts (« Gratin de courgettes », pas une phrase). Notes : une ligne au plus, ou vide.`;
+- Titres courts (« Gratin de courgettes », pas une phrase).
+- Notes : une astuce pratique sur le plat (accompagnement, à préparer la veille…), une ligne au plus, ou vide. Ne parle jamais des membres de la famille dans les notes : ne les nomme pas et ne devine ni leur genre (« les garçons », « les filles ») ni leurs goûts.`;
 
 function describePreferences(p: PlannerPreferences): string {
   const lines: string[] = [];
