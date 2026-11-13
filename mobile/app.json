@@ -52,12 +52,67 @@
           "photosPermission": "Passerelle a besoin d'accéder à vos photos pour joindre une image à une recette ou à un document.",
           "cameraPermission": "Passerelle a besoin de l'appareil photo pour photographier une recette ou un document."
         }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "Resume",
+              "label": "Passerelle · Aujourd'hui",
+              "description": "Prochaine tâche, dîner du soir et budget du mois",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 1800000,
+              "previewImage": "./assets/widgets/resume.png"
+            },
+            {
+              "name": "Taches",
+              "label": "Passerelle · Tâches du jour",
+              "description": "Les tâches d'aujourd'hui avec leur heure",
+              "minWidth": "250dp",
+              "minHeight": "180dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 3,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 1800000,
+              "previewImage": "./assets/widgets/taches.png"
+            },
+            {
+              "name": "Menu",
+              "label": "Passerelle · Menu",
+              "description": "Le dîner de ce soir et des prochains jours",
+              "minWidth": "250dp",
+              "minHeight": "140dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 1800000,
+              "previewImage": "./assets/widgets/menu.png"
+            },
+            {
+              "name": "Courses",
+              "label": "Passerelle · Courses",
+              "description": "Ce qu'il reste à acheter",
+              "minWidth": "180dp",
+              "minHeight": "180dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 3,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 1800000,
+              "previewImage": "./assets/widgets/courses.png"
+            }
+          ]
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
     },
-    "runtimeVersion": "2",
+    "runtimeVersion": "3",
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0

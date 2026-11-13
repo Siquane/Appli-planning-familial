@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
 import { ScrollView, View } from "react-native";
 import { Screen } from "../../src/components/Screen";
 import { Chip } from "../../src/components/Chip";
@@ -13,6 +14,11 @@ type View_ = "menu" | "recettes" | "courses";
 // « Repas » tab: weekly menu, recipe book and shopping list.
 export default function RepasTab() {
   const [view, setView] = useState<View_>("menu");
+  // The shopping-list widget opens /repas?tab=courses.
+  const { tab, w } = useLocalSearchParams<{ tab?: string; w?: string }>();
+  useEffect(() => {
+    if (tab === "menu" || tab === "recettes" || tab === "courses") setView(tab);
+  }, [tab, w]);
 
   return (
     <Screen scroll={false} padded={false} edges={["top"]}>

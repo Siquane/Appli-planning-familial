@@ -1,5 +1,5 @@
 import renderer, { act } from "react-test-renderer";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/tabs";
 import { CustomTabBar } from "../CustomTabBar";
 import { color } from "../../theme/tokens";
 
@@ -14,13 +14,13 @@ jest.mock("react-native-svg", () => {
 const routes = ["home", "repas", "budget", "famille"].map((name) => ({ key: name, name }));
 
 function render(index: number) {
-  const navigation = { navigate: jest.fn() };
+  const navigateToTab = jest.fn();
   let tree!: renderer.ReactTestRenderer;
   act(() => {
-    const props = { state: { routes, index }, navigation } as unknown as BottomTabBarProps;
+    const props = { state: { routes, index }, navigateToTab } as unknown as BottomTabBarProps;
     tree = renderer.create(<CustomTabBar {...props} />);
   });
-  return { tree, navigation };
+  return { tree, navigateToTab };
 }
 
 const tab = (tree: renderer.ReactTestRenderer, label: string) =>
@@ -28,10 +28,10 @@ const tab = (tree: renderer.ReactTestRenderer, label: string) =>
 
 describe("CustomTabBar", () => {
   it("shows the 4 pillars around the + and navigates to them", () => {
-    const { tree, navigation } = render(0);
+    const { tree, navigateToTab } = render(0);
     for (const label of ["Planning", "Repas", "Budget", "Famille"]) expect(tab(tree, label)).toBeTruthy();
     act(() => tab(tree, "Budget").props.onPress());
-    expect(navigation.navigate).toHaveBeenCalledWith("budget");
+    expect(navigateToTab).toHaveBeenCalledWith("budget");
   });
 
   it("colours the active tab with its ring colour from the logo", () => {

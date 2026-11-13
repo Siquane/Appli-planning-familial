@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 import { API_URL } from "../api/client";
 import type { User } from "../api/types";
 import { clearQueryCache } from "../lib/queryClient";
+import { refreshWidgets } from "../widgets/refresh";
 
 const ACCESS_KEY = "passerelle.accessToken";
 const REFRESH_KEY = "passerelle.refreshToken";
@@ -38,6 +39,8 @@ interface AuthState {
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (email: string, code: string, password: string) => Promise<void>;
   refresh: () => Promise<boolean>;
+  /** Replace the signed-in user (after a rename or a fresh /auth/me). */
+  setUser: (user: User) => Promise<void>;
 }
 
 async function persist(user: User, accessToken: string, refreshToken: string) {
@@ -173,6 +176,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user: null, accessToken: null, refreshToken: null });
     // Never show one account's cached data to the next one.
     await clearQueryCache();
+    // …nor on the home-screen widgets.
+    await refreshWidgets(null);
     if (refreshToken) {
       fetch(`${API_URL}/auth/logout`, {
         method: "POST",
@@ -193,5 +198,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       return false;
     }
+  },
+
+  setUser: async (user) => {
+    if (!get().accessToken) return;
+    await storage.set(USER_KEY, JSON.stringify(user));
+    set({ user });
   },
 }));

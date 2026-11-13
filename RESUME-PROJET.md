@@ -1,12 +1,27 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 13 novembre 2026 (fin d'après-midi).
+Dernière mise à jour : 13 novembre 2026 (fin d'après-midi, PR #11 fusionnée).
+
+## ⚠️ Point de reprise (13/11/2026, fin de session) — à lire d'abord
+
+- **PR #11 fusionnée dans `main`** le 13/11 à la demande de l'utilisatrice (branche `claude/appli-planning-familial-setup-1cljht`) : Expo SDK 58, 4 widgets Android, Sentry, aperçus/exemples de widgets, liens widget → bon écran, Planning aéré, nom modifiable dans le profil (`PATCH /auth/me`), dépendances à jour. `main` (PR #12, #13, #14, #15) y avait été fusionné avant ; tests verts (serveur 103, appli 96).
+- **`runtimeVersion` "3"** sur `main` désormais : les mises à jour publiées ne visent plus que les APK "3".
+- **APK de test de la PR #11** (runtime "3", compilé depuis la branche, sans les tout derniers changements JS qui arriveront par mise à jour après fusion) : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/541514d0-0b8f-4289-b02a-c78da8d7119e
+- **À faire, dans l'ordre** :
+  1. L'utilisatrice teste cet APK (widgets : aperçu, exemple quand vide, appui → bon écran ; Planning ; Profil → nom). Si « Application non installée » : désinstaller l'ancienne appli d'abord (voir « APK actuel et installation »).
+  2. Corriger ce qu'elle signale (par PR, petites mises à jour JS sans nouvel APK).
+  3. Lancer « EAS Build (Android preview) » **depuis main** pour l'APK définitif runtime "3" ; vérifier que « EAS Update » a publié ; Render redéploie le serveur (route `PATCH /auth/me`).
+  4. Ensuite (PR séparée) : mises à jour majeures du serveur (Prisma 7, Express 5…), voir « État des dépendances ».
+- **Attention aux sessions parallèles** : plusieurs sessions ont fusionné dans main pendant que la #11 était ouverte (conflits sur `package-lock.json`, `app.json`/`runtimeVersion`, `CustomTabBar`). Avant de pousser : `git fetch origin main` et fusionner main ; ne jamais redescendre `runtimeVersion`.
+- Sentry actif (DSN dans `mobile/src/lib/sentry.ts`, organisation `siquanelab`, serveurs UE).
+- Sauvegarde hebdomadaire : workflow prêt, **5 secrets GitHub encore à ajouter** par l'utilisatrice (voir « Améliorations sans nouvel APK »).
+- cron-job.org (garder Render éveillé, `/health` toutes les 10 min) : à faire par l'utilisatrice si ce n'est pas déjà fait.
 
 ## Contexte
 
 - Application famille : planning, tâches récurrentes, livre de recettes, anniversaires, menu de la semaine, documents, budget.
-- Stack : serveur Express + Prisma (Postgres) dans `server/`, application mobile Expo SDK 57 / React Native dans `mobile/`.
+- Stack : serveur Express + Prisma (Postgres) dans `server/`, application mobile Expo SDK 58 / React Native 0.88 dans `mobile/`.
 - Dépôt : `Siquane/Appli-planning-familial` (privé). Branche principale : `main`.
 - Une session = une branche de travail `claude/...`, fusionnée dans `main` par pull request.
 
@@ -64,11 +79,11 @@ Dernière mise à jour : 13 novembre 2026 (fin d'après-midi).
 
 ## Mises à jour de l'appli sans nouvel APK (EAS Update, 13/11/2026)
 
-- `expo-updates` installé, canal `preview`, `runtimeVersion: "1"` dans `mobile/app.json`.
+- `expo-updates` installé, canal `preview`. `runtimeVersion` actuel : **"3"** (lot natif SDK 58 + widgets + Sentry) dans `mobile/app.json`.
 - Workflow `.github/workflows/eas-update.yml` : à chaque fusion dans `main` qui touche `mobile/`, publie une mise à jour ; l'appli la télécharge et l'applique au démarrage (`src/lib/updates.ts`). Aussi lançable à la main (« Run workflow »).
 - **Règle à respecter** : si un changement ajoute ou modifie un module natif, une permission ou `app.json` côté natif, augmenter `runtimeVersion` ("1" → "2") et compiler un nouvel APK. Garde-fou : si `package.json` ou `app.json` changent sans nouveau `runtimeVersion`, le workflow ne publie rien (avertissement).
 - L'URL de mise à jour (`https://u.expo.dev/<projectId>`) est ajoutée en CI par `mobile/scripts/configure-updates.js`, après `eas init` (build et update).
-- Il faut **un dernier APK** compilé après la fusion de cette fonctionnalité pour l'activer sur les téléphones.
+- Un APK n'est nécessaire que lorsque `runtimeVersion` change ; tout le reste arrive par mise à jour au démarrage.
 
 ## Améliorations sans nouvel APK (13/11/2026)
 
@@ -79,9 +94,17 @@ Dernière mise à jour : 13 novembre 2026 (fin d'après-midi).
 - **Export du budget** : Budget → « Exporter le mois (tableur) », CSV pour Excel en français, envoyé par le menu de partage du téléphone.
 - **Sauvegarde hebdomadaire** : workflow `.github/workflows/backup.yml`, chaque dimanche vers 4 h, `pg_dump` compressé dans R2 sous `backups/`, 8 dernières gardées. Il faut 5 secrets GitHub (Settings → Secrets and variables → Actions) : `BACKUP_DATABASE_URL` (même valeur que `DATABASE_URL` dans Render), `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (mêmes valeurs que dans Render). Sans eux, le workflow ne fait rien et reste vert. Restaurer : télécharger le fichier depuis R2, puis `gunzip -c fichier.sql.gz | psql "<adresse Neon>"`.
 
-## Prochain lot (natif, nouvel APK, `runtimeVersion` "3")
+## Lot natif (13/11/2026, `runtimeVersion` "3", nouvel APK nécessaire)
 
-Expo SDK 58, widget Android, alertes de bug Sentry (compte sentry.io gratuit + clé DSN à fournir). Puis, à part : mises à jour majeures du serveur.
+- **Expo SDK 58** (React Native 0.88, React 19.3). Expo Router embarque désormais sa propre barre d'onglets : `CustomTabBar` reçoit `navigateToTab(route.key)` au lieu de `navigation` (type `BottomTabBarProps` de `expo-router/tabs`) ; `@react-navigation/bottom-tabs` retiré. `@react-native-async-storage/async-storage` reste en v3 (la liste SDK 58 indique 2.2.0, mais la v3 fonctionne déjà sur les APK).
+- **4 widgets Android** (`react-native-android-widget`, déclarés dans `app.json`) : « Aujourd'hui », « Tâches du jour », « Menu », « Courses ». L'utilisateur choisit lesquels poser depuis la liste des widgets du téléphone. L'appli enregistre un résumé de ses données sur le téléphone à chaque changement (`src/widgets/sync.ts`, `snapshot.ts`) et redessine les widgets ; Android les redessine aussi toutes les 30 min à partir de ce résumé (`taskHandler.tsx`, enregistré dans `mobile/index.js`, nouveau point d'entrée). Un appui ouvre l'écran correspondant (`/repas?tab=courses` pour les courses). La déconnexion vide les widgets.
+- **Sentry** (`src/lib/sentry.ts`) : erreurs uniquement, pas de données personnelles. Actif : DSN du projet Sentry (organisation `siquanelab`, serveurs européens) dans `src/lib/sentry.ts` (pas un secret, elle est publique dans l'appli). Les erreurs apparaissent sur sentry.io → Issues.
+
+- **Widgets, suite** : aperçu illustré dans la liste des widgets (`mobile/assets/widgets/*.png`, générés en HTML) ; widget vide = message + exemple grisé ; un appui ouvre le bon écran via `passerelle://widget/<planning|menu|courses>` (`app/+native-intent.tsx`, `src/widgets/links.ts`, avec reprise après la redirection de démarrage).
+- **Profil** : nom modifiable (Profil → Modifier/Ajouter), route serveur `PATCH /auth/me` (recalcule les initiales) ; l'appli resynchronise l'utilisateur via `GET /auth/me` à l'ouverture.
+- Planning plus aéré (espacement 20 sur tous les écrans), les 7 jours tiennent sur une ligne.
+
+Ensuite, à part : mises à jour majeures du serveur (Prisma 7, Express 5).
 
 ## Style Passerelle (13/11/2026)
 
@@ -91,34 +114,37 @@ Expo SDK 58, widget Android, alertes de bug Sentry (compte sentry.io gratuit + c
 - Onglets : l'icône dans l'anneau de sa couleur, halo autour de l'onglet actif (fond intérieur très léger pour garder le contraste). Le « + » est un rond à bord dégradé.
 - Boutons principaux remplis du dégradé, texte foncé. Catégories de tâches aux couleurs des anneaux (`categoryColor` dans `lib/weekdays.ts`, Santé en vert).
 - Icône, icône Android et écran de lancement refaits depuis le logo (`mobile/assets/`). Logo source : `assets/brand/logo-passerelle.png`.
-- `runtimeVersion` passé de "1" à "2" (icône et écran de lancement sont natifs).
+- `runtimeVersion` passé de "1" à "2" pour ce lot, puis "3" avec le lot natif SDK 58 (qui inclut ce style).
 - Icône de l'onglet Repas : bol fumant (`MealIcon` dans `components/icons.tsx`, PR #12), au lieu de fourchette + couteau. Icônes en couleur unie (pas de dégradé vertical, choix de l'utilisateur).
 - Profil de marque pour les documents produits par Claude : `CLAUDE.md` à la racine (couleurs, logo, format « pages visuelles »).
 
 ## APK actuel et installation (13/11/2026)
 
-- **APK à installer** (compilé après les PR #10, runtime "2") : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/c5add826-3f5f-42bf-a1a3-a121c6947ff7
-- L'ancien lien (build `5a8ba245…`, runtime "1") est périmé : ne plus l'utiliser.
-- Problème rencontré : « Application non installée » en installant par-dessus l'ancienne version (signature différente probable). Solution : **désinstaller l'ancienne appli d'abord**, puis installer. Les données sont sur le serveur ; il faut se reconnecter et réactiver les notifications.
-- Le bol de l'onglet Repas (PR #12) arrive par EAS Update : fermer puis rouvrir l'appli une fois après l'installation.
-- À confirmer à la prochaine session : l'installation a-t-elle réussi ? Le halo des onglets rend-il bien sur le téléphone (jamais vu sur un vrai appareil) ?
+- **APK à installer** (runtime "3" : Expo SDK 58, widgets, Sentry, style Passerelle) : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/541514d0-0b8f-4289-b02a-c78da8d7119e
+- Liens périmés, à ne plus utiliser : `5a8ba245…` (runtime "1") et `c5add826…` (runtime "2", sessions parallèles du 13/11). Ils ne reçoivent plus de mises à jour.
+- Problème rencontré : « Application non installée » en installant par-dessus une ancienne version (signature différente probable). Solution : **désinstaller l'ancienne appli d'abord**, puis installer. Les données sont sur le serveur ; il faut se reconnecter et réactiver les notifications.
+- Ce qui a été ajouté après la compilation de cet APK (bol de l'onglet Repas, nom modifiable dans le profil, dépendances) arrive par EAS Update **une fois la PR #11 fusionnée** (les mises à jour ne sont publiées que depuis main) : fermer puis rouvrir l'appli une fois.
+- À confirmer : l'installation a-t-elle réussi ? Le halo des onglets rend-il bien sur le téléphone (jamais vu sur un vrai appareil) ?
+- Éviter les sessions en parallèle sur l'appli : le 13/11, trois sessions ont produit des APK et des résumés contradictoires.
 
 ## Idées notées pour plus tard
 
 Comptes séparés pour chaque membre de la famille, synchronisation Google Agenda, statistiques du budget sur 12 mois, étoiles pour les tâches des enfants, idées cadeaux d'anniversaire, liste de courses en temps réel, thème clair, version iPhone (99 €/an).
 
-## Dépendances et mises à jour (PR #7 et #13, 12–13/11/2026)
+## Dépendances et mises à jour (12–13/11/2026)
 
-- **Faites** : zod 3 → 4, vitest 2 → 5 (+ vite 8, @types/node 22), googleapis 189, msal-node 7 (PR #7) ; puis mises à jour « sûres » (correctifs et versions mineures) serveur et app (PR #13). Serveur : `npm audit` = 0 vulnérabilité. `engines.node >= 22` dans `server/package.json`.
-- **Règle zod 4** : ne jamais écrire `schema.partial()` pour une route PATCH. Avec zod 4, les `.default()` s'appliquent quand même et un PATCH réinitialisait les champs absents (notes, membres, couleur…). Utiliser `patchSchema(schema)` (`server/src/lib/validation.ts`), déjà en place sur toutes les routes PATCH ; test de non-régression dans `tests/routes/members.test.ts`.
-- **Restant côté app** : 12 alertes `npm audit` (dont 3 « high » via `expo-router` : `decode-uri-component`, `query-string`), corrigées seulement par **Expo SDK 58** (prévu dans le prochain lot natif).
-- **Restant côté serveur** (non fait, demande du code) : Prisma 5 → 7, Express 4 → 5, TypeScript 5 → 7, bcryptjs 3, dotenv, nanoid.
-- Bibliothèques natives mobiles volontairement non touchées par la PR #13 (`expo install --check` était bloqué par le réseau de la session). Plusieurs sont déjà plus récentes que la liste officielle d'Expo SDK 57 (async-storage 3, gesture-handler 3, reanimated 4.5.3, screens 4.27, safe-area-context 5.8, svg 15.15.5, worklets 0.11) : première piste si la compilation Android échoue.
+- **Faites** : zod 3 → 4, vitest 2 → 5 (+ vite 8), googleapis 189, msal-node 7 (PR #7) ; mises à jour sûres serveur et app (PR #13) ; Expo SDK 58 (PR #11), qui corrige aussi les alertes « high » d'`expo-router`. `engines.node >= 22` dans `server/package.json`.
+- **Règle zod 4** : ne jamais écrire `schema.partial()` pour une route PATCH (les `.default()` s'appliquent quand même et réinitialisaient les champs absents). Utiliser `patchSchema(schema)` (`server/src/lib/validation.ts`), déjà en place sur toutes les routes PATCH ; test de non-régression dans `tests/routes/members.test.ts`.
+
+- Serveur : à jour dans les versions actuelles (`npm update`), `npm audit` : 0 faille. Déjà faits : zod 4, vitest 5.
+- Appli : alignée sur la liste Expo SDK 58 (sauf async-storage gardé en v3, qui fonctionne). `npm audit fix` appliqué ; il reste des alertes faibles/moyennes uniquement dans les outils de test (chaîne jest-expo / jest 29), qui ne partent pas dans l'APK. Elles disparaîtront avec jest 30 quand jest-expo le prendra en charge.
+- Mises à jour majeures encore à faire (demandent du code, PR dédiée) : Prisma 5 → 7, Express 4 → 5 (+ `@types/express` 5, express-rate-limit 8), TypeScript 5 → 7 (serveur) et 6 → 7 (appli), dotenv 18, bcryptjs 3, nanoid 6, `@types/node` 26.
+- Appli, à suivre au prochain APK : `@sentry/react-native` 8.35 (la liste SDK 58 indique 8.28), gesture-handler 3.5. Ne pas les monter sans nouveau `runtimeVersion` (modules natifs).
 
 ## Numéro de version Android (PR #5, 11/11/2026)
 
 - `mobile/eas.json` : `appVersionSource: "remote"` + `autoIncrement: true` sur le profil `preview`. EAS augmente le `versionCode` à chaque build, pour que les nouveaux APK s'installent par-dessus l'ancien. Avant, toutes les versions avaient le `versionCode` 1.
-- Build lancé le 13/11 vers 14 h 46 (heure de Paris) après la PR #13 (run n°14 du workflow « EAS Build ») : premier build avec ce réglage, à confirmer (lien APK à la fin du workflow, `versionCode` visible sur la page expo.dev du build).
+- Le build lancé le 13/11 vers 14 h 46 depuis `main` (run n°14, avant la fusion de la PR #11) est en runtime "2" : **ne pas l'installer**, il ne recevra pas de mises à jour. Utiliser l'APK indiqué dans « APK actuel et installation ».
 
 ## Incidents réglés (9–11/11/2026), à connaître
 
@@ -142,4 +168,4 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Routes : `server/src/routes/`, migrations Prisma : `server/prisma/migrations/` (générées et vérifiées avec `prisma migrate diff`).
 - Mobile : hooks dans `mobile/src/hooks/useApi.ts`, API dans `mobile/src/api/resources.ts`, types dans `mobile/src/api/types.ts`.
 - Avant de livrer : `npm run typecheck` et `npm test` dans `server/` (Postgres local requis, base `passerelle_test`) et dans `mobile/` (`npx jest`), plus `npx expo export --platform android` pour vérifier que l'appli se compile.
-- Expo : lire la doc versionnée v57 (voir `mobile/AGENTS.md`).
+- Expo : lire la doc versionnée v58 (voir `mobile/AGENTS.md`).
