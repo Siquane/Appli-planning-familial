@@ -11,7 +11,8 @@ import { TextField } from "../../src/components/TextField";
 import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
 import { CloseIcon, ReshuffleIcon } from "../../src/components/icons";
-import { useGenerateMeals, useMeals, useSaveMeals } from "../../src/hooks/useApi";
+import { useGenerateMeals, useMeals, usePlan, useSaveMeals } from "../../src/hooks/useApi";
+import { mealQuotaLabel, showApiError } from "../../src/lib/premium";
 import { useSlowHint } from "../../src/hooks/useSlowHint";
 import { useToastStore } from "../../src/state/toastStore";
 import { WEEKDAYS_FULL, WEEKDAYS_SHORT } from "../../src/lib/weekdays";
@@ -46,6 +47,10 @@ export default function MealPlanScreen() {
   const { data: meals = [] } = useMeals();
   const generate = useGenerateMeals();
   const save = useSaveMeals();
+  const { data: plan } = usePlan();
+  const quota = plan?.meals;
+  const weeksLeft = quota ? quota.weeksLimit - quota.weeksUsed : 1;
+  const rerollsLeft = quota ? quota.rerollsLimit - quota.rerollsUsed : 1;
 
   const [days, setDays] = useState<Weekday[]>(ALL_DAYS);
   const [types, setTypes] = useState<MealType[]>(["déjeuner", "dîner"]);
@@ -71,14 +76,14 @@ export default function MealPlanScreen() {
     }
     savePreferences(prefs);
     try {
-      const res = await generate.mutateAsync({ slots, preferences: prefs });
+      const res = await generate.mutateAsync({ slots, preferences: prefs, kind: "week" });
       if (res.meals.length === 0) {
         useToastStore.getState().show("Aucune proposition reçue, réessaie.");
         return;
       }
       setProposal(res.meals);
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      showApiError(e);
     }
   }
 
@@ -91,11 +96,12 @@ export default function MealPlanScreen() {
         slots: [{ weekday: meal.weekday, type: meal.type }],
         preferences: prefs,
         exclude: proposal.map((m) => m.title),
+        kind: "reroll",
       });
       const next = res.meals[0];
       if (next) setProposal((p) => p?.map((m) => (m.weekday === meal.weekday && m.type === meal.type ? next : m)) ?? p);
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      showApiError(e);
     } finally {
       setRerolling(null);
     }
@@ -125,6 +131,11 @@ export default function MealPlanScreen() {
           <Text size={13} tone="muted">
             Touche ↻ pour une autre idée, ✕ pour laisser le créneau vide. Rien n'est enregistré avant de valider.
           </Text>
+          {quota && quota.period !== "premium" && (
+            <Text size={12} tone="faint">
+              {rerollsLeft > 0 ? `${rerollsLeft} « autre idée » restante${rerollsLeft > 1 ? "s" : ""}.` : "Plus d'« autre idée » disponible."}
+            </Text>
+          )}
           {byDay.map(({ day, items }) => (
             <View key={day} style={{ gap: space[2] }}>
               <Text size={13} weight="semibold">
@@ -180,7 +191,14 @@ export default function MealPlanScreen() {
             loading={save.isPending}
             disabled={!!rerolling || proposal.length === 0}
           />
-          <Button label="Tout regénérer" variant="secondary" block onPress={onGenerate} loading={generate.isPending && !rerolling} disabled={!!rerolling} />
+          <Button
+            label={weeksLeft > 0 ? "Tout regénérer (compte comme une génération)" : "Tout regénérer · Pack Menus"}
+            variant="secondary"
+            block
+            onPress={weeksLeft > 0 ? onGenerate : () => router.push("/premium")}
+            loading={generate.isPending && !rerolling}
+            disabled={!!rerolling}
+          />
         </KeyboardScrollView>
       </Screen>
     );
@@ -263,13 +281,21 @@ export default function MealPlanScreen() {
         <TextField label="À éviter (optionnel)" value={prefs.avoid} onChangeText={(v) => update("avoid", v)} placeholder="Ex. champignons, poivrons…" />
 
         <Button
-          label={slots.length ? `Proposer ${slots.length} repas` : "Rien à proposer"}
+          label={weeksLeft <= 0 ? "Pack Menus pour générer" : slots.length ? `Proposer ${slots.length} repas` : "Rien à proposer"}
           variant="primary"
           block
-          onPress={onGenerate}
+          onPress={weeksLeft <= 0 ? () => router.push("/premium") : onGenerate}
           loading={generate.isPending}
-          disabled={slots.length === 0}
+          disabled={weeksLeft > 0 && slots.length === 0}
         />
+        {quota && (
+          <Pressable onPress={() => router.push("/premium")} disabled={quota.period === "premium"}>
+            <Text size={12} tone={weeksLeft > 0 ? "faint" : "accent"} center>
+              {mealQuotaLabel(quota)}
+              {quota.period !== "premium" ? " Pack Menus : chaque semaine ›" : ""}
+            </Text>
+          </Pressable>
+        )}
         {slow && (
           <Text size={12} tone="muted" center>
             Claude compose ta semaine, ça prend quelques secondes…

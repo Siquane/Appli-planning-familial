@@ -10,7 +10,7 @@ import { TextField } from "../src/components/TextField";
 import { updateName } from "../src/lib/account";
 import { Avatar } from "../src/components/Avatar";
 import { CalendarIcon, ChevronRightIcon, RecurringIcon } from "../src/components/icons";
-import { useCalendarStatus, useDisconnectCalendar } from "../src/hooks/useApi";
+import { useCalendarStatus, useDisconnectCalendar, usePlan } from "../src/hooks/useApi";
 import { useAuthStore } from "../src/state/authStore";
 import { useToastStore } from "../src/state/toastStore";
 import { connectAppleCalendar, startOAuthConnect } from "../src/lib/calendarConnect";
@@ -29,6 +29,8 @@ export default function ProfileScreen() {
 
   const { data: status, refetch } = useCalendarStatus();
   const disconnect = useDisconnectCalendar();
+  const plan = usePlan().data;
+  const packLabel = plan?.packs.budget.active && plan.packs.meals.active ? "Premium · les 2 packs" : plan?.packs.budget.active ? "Premium · pack Budget" : plan?.packs.meals.active ? "Premium · pack Menus" : "Passer à Premium";
   const [connecting, setConnecting] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
@@ -165,6 +167,16 @@ export default function ProfileScreen() {
           })}
         </Card>
       </View>
+
+      <Pressable onPress={() => router.push("/premium")}>
+        <Card row style={{ alignItems: "center" }}>
+          <Text size={16}>✨</Text>
+          <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
+            {packLabel}
+          </Text>
+          <ChevronRightIcon size={14} color={color.neutral500} />
+        </Card>
+      </Pressable>
 
       <Pressable onPress={() => router.push("/recurring-tasks")}>
         <Card row style={{ alignItems: "center" }}>

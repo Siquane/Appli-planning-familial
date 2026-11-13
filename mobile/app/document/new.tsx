@@ -14,6 +14,7 @@ import { DocumentIcon } from "../../src/components/icons";
 import { useDocuments, useMembers, useUpdateDocument, useUploadDocument } from "../../src/hooks/useApi";
 import { DOCUMENT_CATEGORIES, formatSize, type PickedFile } from "../../src/lib/documentUpload";
 import { useToastStore } from "../../src/state/toastStore";
+import { showApiError } from "../../src/lib/premium";
 import { color, space } from "../../src/theme/tokens";
 import type { DocumentCategory } from "../../src/api/types";
 
@@ -58,7 +59,7 @@ export default function DocumentFormScreen() {
       }
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      showApiError(e);
     }
   }
 

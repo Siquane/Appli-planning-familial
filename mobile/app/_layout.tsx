@@ -18,6 +18,7 @@ import { useOnboardingStore } from "../src/state/onboardingStore";
 import { Toast } from "../src/components/Toast";
 import { applyPendingUpdate } from "../src/lib/updates";
 import { initSentry, Sentry, sentryEnabled } from "../src/lib/sentry";
+import { resetBilling } from "../src/lib/billing";
 import { color } from "../src/theme/tokens";
 
 initSentry();
@@ -56,6 +57,7 @@ function RootLayout() {
     } else if (hadUser.current) {
       hadUser.current = false;
       queryClient.clear();
+      resetBilling();
       router.replace("/(auth)/login");
     }
   }, [ready, user]);

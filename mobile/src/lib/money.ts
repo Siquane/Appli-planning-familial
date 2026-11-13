@@ -149,3 +149,15 @@ export function budgetToCsv(
   lines.push(["", "Total", "", "", centsForCsv(rows.reduce((sum, e) => sum + e.amountCents, 0)), ""].join(";"));
   return lines.join("\n");
 }
+
+/** "2026-11" -> "nov." (chart axis). */
+export function shortMonthLabel(month: string): string {
+  return SHORT_MONTHS[Number(month.split("-")[1]) - 1];
+}
+
+/** Whole months left until a "YYYY-MM-DD" deadline (at least 1), or null without one. */
+export function monthsLeft(deadline: string | null, now = new Date()): number | null {
+  if (!deadline) return null;
+  const [y, m] = deadline.split("-").map(Number);
+  return Math.max(1, (y - now.getFullYear()) * 12 + (m - 1 - now.getMonth()));
+}

@@ -13,7 +13,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "test": "vitest run"
+    "test": "vitest run",
+    "premium": "tsx scripts/premium.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
@@ -29,6 +30,7 @@
     "googleapis": "^189.0.0",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^3.3.7",
+    "pdfkit": "^0.17.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -37,6 +39,7 @@
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.20.5",
+    "@types/pdfkit": "^0.17.7",
     "@types/supertest": "^6.0.2",
     "prisma": "^5.20.0",
     "supertest": "^7.0.0",

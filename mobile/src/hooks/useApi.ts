@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
+import { planApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
 import type { ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
 import { useAuthStore } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
@@ -93,7 +93,51 @@ export function useDeleteMeal() {
 }
 
 export function useGenerateMeals() {
-  return useMutation({ mutationFn: mealsApi.generate });
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: mealsApi.generate, onSettled: () => qc.invalidateQueries({ queryKey: ["plan"] }) });
+}
+
+export function usePlan() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["plan"], queryFn: () => planApi.get(), enabled });
+}
+
+export function useSavingsGoals() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["savings-goals"], queryFn: () => savingsGoalsApi.list().then((r) => r.goals), enabled });
+}
+
+function useInvalidateGoals() {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: ["savings-goals"] });
+    qc.invalidateQueries({ queryKey: ["expenses"] });
+  };
+}
+
+export function useCreateSavingsGoal() {
+  const invalidate = useInvalidateGoals();
+  return useMutation({ mutationFn: savingsGoalsApi.create, onSuccess: invalidate });
+}
+
+export function useDeleteSavingsGoal() {
+  const invalidate = useInvalidateGoals();
+  return useMutation({ mutationFn: (id: string) => savingsGoalsApi.remove(id), onSuccess: invalidate });
+}
+
+export function usePaySavingsGoal() {
+  const invalidate = useInvalidateGoals();
+  return useMutation({ mutationFn: ({ id, amountCents }: { id: string; amountCents: number }) => savingsGoalsApi.pay(id, amountCents), onSuccess: invalidate });
+}
+
+export function useForecast(enabled = true) {
+  const authed = useEnabled();
+  return useQuery({ queryKey: ["expenses", "forecast"], queryFn: () => expensesApi.forecast(), enabled: authed && enabled });
+}
+
+export function useBudgetReport(months = 6, enabled = true) {
+  const authed = useEnabled();
+  return useQuery({ queryKey: ["expenses", "report", months], queryFn: () => expensesApi.report(months).then((r) => r.months), enabled: authed && enabled });
 }
 
 export function useSaveMeals() {
@@ -119,7 +163,10 @@ export function useUploadDocument() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ file, data }: { file: PickedFile; data: DocumentInput }) => uploadPickedFile(file, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["documents"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["documents"] });
+      qc.invalidateQueries({ queryKey: ["plan"] });
+    },
   });
 }
 
@@ -148,7 +195,10 @@ export function useCreateExpense() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: ExpenseInput) => expensesApi.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["expenses"] }),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ["expenses"] });
+      if (res.alert) qc.invalidateQueries({ queryKey: ["notifications"] });
+    },
   });
 }
 
@@ -156,7 +206,10 @@ export function useUpdateExpense() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<ExpenseInput> }) => expensesApi.update(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["expenses"] }),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ["expenses"] });
+      if (res.alert) qc.invalidateQueries({ queryKey: ["notifications"] });
+    },
   });
 }
 

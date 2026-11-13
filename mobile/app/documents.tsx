@@ -9,7 +9,8 @@ import { Button } from "../src/components/Button";
 import { TopBar } from "../src/components/TopBar";
 import { DocumentRow } from "../src/components/DocumentRow";
 import { DocumentIcon } from "../src/components/icons";
-import { useDocuments, useMembers } from "../src/hooks/useApi";
+import { useDocuments, useMembers, usePlan } from "../src/hooks/useApi";
+import { Pressable } from "react-native";
 import { categoryLabel, DOCUMENT_CATEGORIES } from "../src/lib/documentUpload";
 import { color, space } from "../src/theme/tokens";
 import type { DocumentCategory } from "../src/api/types";
@@ -17,6 +18,9 @@ import type { DocumentCategory } from "../src/api/types";
 export default function DocumentsScreen() {
   const { data: documents = [], isLoading } = useDocuments();
   const { data: members = [] } = useMembers();
+  const { data: plan } = usePlan();
+  const docLimit = plan?.documents.limit ?? null;
+  const full = docLimit !== null && plan!.documents.used >= docLimit;
   const [category, setCategory] = useState<DocumentCategory | null>(null);
   const [memberId, setMemberId] = useState<string | null>(null);
 
@@ -27,7 +31,19 @@ export default function DocumentsScreen() {
     <Screen scroll={false} padded={false}>
       <TopBar title="Documents" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: 18, gap: space[2] }} showsVerticalScrollIndicator={false}>
-        <Button label="+ Ajouter un document" variant="secondary" block onPress={() => router.push("/document/new")} />
+        <Button
+          label={full ? "+ Ajouter un document · Premium" : "+ Ajouter un document"}
+          variant="secondary"
+          block
+          onPress={() => router.push(full ? "/premium" : "/document/new")}
+        />
+        {docLimit !== null && (
+          <Pressable onPress={() => router.push("/premium")}>
+            <Text size={11.5} tone={full ? "accent" : "faint"} center>
+              {plan!.documents.used} / {docLimit} documents gratuits{full ? " · illimités avec un pack ›" : ""}
+            </Text>
+          </Pressable>
+        )}
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2], paddingVertical: space[1] }}>
           <Chip label="Tous" size="sm" selected={category === null} onPress={() => setCategory(null)} />

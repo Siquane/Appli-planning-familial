@@ -12,6 +12,12 @@ import type {
   FamilyDocument,
   Meal,
   MealInput,
+  MealQuota,
+  Plan,
+  SavingsGoal,
+  CapAlert,
+  ReportMonth,
+  Forecast,
   MealPlanPreferences,
   MealSlot,
   ProposedMeal,
@@ -74,9 +80,22 @@ export const mealsApi = {
   set: (data: MealInput) => api.post<{ meal: Meal }>("/meals", data),
   remove: (id: string) => api.delete<void>(`/meals/${id}`),
   /** Asks the server (Claude) for suggestions — nothing is saved. */
-  generate: (data: { slots: MealSlot[]; preferences: MealPlanPreferences; exclude?: string[] }) =>
-    api.post<{ meals: ProposedMeal[] }>("/meals/generate", data),
+  generate: (data: { slots: MealSlot[]; preferences: MealPlanPreferences; exclude?: string[]; kind: "week" | "reroll" }) =>
+    api.post<{ meals: ProposedMeal[]; quota: MealQuota }>("/meals/generate", data),
   saveMany: (meals: MealInput[]) => api.post<{ meals: Meal[] }>("/meals/bulk", { meals }),
+};
+
+export const planApi = {
+  get: () => api.get<Plan>("/plan"),
+};
+
+export const savingsGoalsApi = {
+  list: () => api.get<{ goals: SavingsGoal[] }>("/savings-goals"),
+  create: (data: { name: string; targetCents: number; deadline: string | null }) => api.post<{ goal: SavingsGoal }>("/savings-goals", data),
+  update: (id: string, data: Partial<{ name: string; targetCents: number; deadline: string | null }>) =>
+    api.patch<{ goal: SavingsGoal }>(`/savings-goals/${id}`, data),
+  remove: (id: string) => api.delete<void>(`/savings-goals/${id}`),
+  pay: (id: string, amountCents: number) => api.post<{ goal: SavingsGoal; month: string }>(`/savings-goals/${id}/payments`, { amountCents }),
 };
 
 export const documentsApi = {
@@ -92,8 +111,10 @@ export const documentsApi = {
 
 export const expensesApi = {
   month: (month: string) => api.get<MonthlyBudget>(`/expenses?month=${month}`),
-  create: (data: ExpenseInput) => api.post<{ expense: Expense }>("/expenses", data),
-  update: (id: string, data: Partial<ExpenseInput>) => api.patch<{ expense: Expense }>(`/expenses/${id}`, data),
+  create: (data: ExpenseInput) => api.post<{ expense: Expense; alert: CapAlert | null }>("/expenses", data),
+  update: (id: string, data: Partial<ExpenseInput>) => api.patch<{ expense: Expense; alert: CapAlert | null }>(`/expenses/${id}`, data),
+  forecast: () => api.get<Forecast>("/expenses/forecast"),
+  report: (months = 6) => api.get<{ months: ReportMonth[] }>(`/expenses/report?months=${months}`),
   remove: (id: string) => api.delete<void>(`/expenses/${id}`),
 };
 

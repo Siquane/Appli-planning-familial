@@ -51,6 +51,37 @@ Le bouton « Générer mes menus » de l'écran Repas pose quelques questions pu
 |---|---|
 | `ANTHROPIC_API_KEY` | clé API créée sur console.anthropic.com → *API Keys* (chaque génération est facturée à l'usage, quelques centimes) |
 
+**Premium à vie pour les comptes de la famille**
+
+| Variable | Valeur |
+|---|---|
+| `LIFETIME_PREMIUM_EMAILS` | adresses e-mail des comptes de la famille, séparées par des virgules. Au démarrage du serveur, ces comptes reçoivent les 2 packs sans date de fin ; une synchronisation RevenueCat ne les leur retire pas. |
+
+**Activer un pack Premium à la main (en attendant le paiement dans l'appli)**
+
+Depuis le dossier `server`, avec la connection string Neon de production :
+
+```bash
+DATABASE_URL="<connection string Neon>" npm run premium -- toi@exemple.fr budget 2027-12-31   # pack Budget jusqu'à cette date incluse
+DATABASE_URL="<connection string Neon>" npm run premium -- toi@exemple.fr menus 2027-12-31    # pack Menus
+DATABASE_URL="<connection string Neon>" npm run premium -- toi@exemple.fr tout 2027-12-31     # les 2
+DATABASE_URL="<connection string Neon>" npm run premium -- toi@exemple.fr tout off            # tout retirer
+```
+
+Gratuit : 20 documents ; menus générés : 4 semaines le premier mois puis 1 par mois (15 « autre idée » par semaine générée).
+Pack Budget : objectifs d'épargne, alertes de plafond, bilan, prévision de fin de mois, export CSV/PDF.
+Pack Menus : 12 semaines et 60 « autre idée » par mois.
+Les deux packs donnent les documents illimités. Ces valeurs sont dans `src/lib/plan.ts`.
+
+**Abonnements Android (RevenueCat, optionnel)**
+
+Toute la mise en place (Play Console, RevenueCat, clés, test) est décrite dans [`docs/achats-android.md`](../docs/achats-android.md). Côté Render :
+
+| Variable | Valeur |
+|---|---|
+| `REVENUECAT_SECRET_KEY` | clé secrète RevenueCat (`sk_…`) |
+| `REVENUECAT_WEBHOOK_AUTH` | la valeur exacte mise en « Authorization header » du webhook RevenueCat (ex. `Bearer 3f9…`) |
+
 Ne pas laisser `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` vides : `src/env.ts` retombe sinon sur des valeurs de dev codées en dur.
 
 **Stockage des documents — [Cloudflare R2](https://dash.cloudflare.com) (optionnel)**

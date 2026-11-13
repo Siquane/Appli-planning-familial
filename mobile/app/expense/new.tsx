@@ -54,18 +54,22 @@ export default function ExpenseFormScreen() {
     // Computed before saving, from the month's totals as they were.
     const crossed = capCrossed(data, payload, existing);
     try {
-      if (existing) {
-        await updateExpense.mutateAsync({ id: existing.id, data: payload });
-        useToastStore.getState().show("Dépense modifiée.");
-      } else {
-        await createExpense.mutateAsync(payload);
-        useToastStore.getState().show("Dépense ajoutée.");
-      }
-      if (crossed) {
-        useToastStore
-          .getState()
-          .show(`⚠️ Plafond « ${categoryLabel(options, category)} » dépassé : ${formatEuros(crossed.totalCents)} / ${formatEuros(crossed.limitCents)}.`);
-      }
+      const res = existing ? await updateExpense.mutateAsync({ id: existing.id, data: payload }) : await createExpense.mutateAsync(payload);
+      const saved = existing ? "Dépense modifiée." : "Dépense ajoutée.";
+      // Premium: the server raises an alert at 80 % and 100 % of the cap.
+      // Everyone else: the local check above, when the cap is crossed.
+      const alert = res.alert;
+      useToastStore
+        .getState()
+        .show(
+          alert
+            ? alert.level === 100
+              ? `${saved} ⚠️ Plafond « ${alert.categoryName} » atteint : ${formatEuros(alert.totalCents)} sur ${formatEuros(alert.limitCents)}.`
+              : `${saved} « ${alert.categoryName} » à ${Math.floor((alert.totalCents * 100) / alert.limitCents)} % du plafond : ${formatEuros(alert.totalCents)} sur ${formatEuros(alert.limitCents)}.`
+            : crossed
+              ? `${saved} ⚠️ Plafond « ${categoryLabel(options, category)} » dépassé : ${formatEuros(crossed.totalCents)} / ${formatEuros(crossed.limitCents)}.`
+              : saved,
+        );
       router.back();
     } catch (e) {
       useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");

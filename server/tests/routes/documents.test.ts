@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { app } from "../../src/index";
 import { MAX_FILE_SIZE, setStorageForTests, type Storage } from "../../src/lib/storage";
 import { authHeader, signup } from "../helpers";
+import { prisma } from "../../src/db";
 
 // In-memory stand-in for R2/S3: `objects` holds what the app would have PUT.
 class FakeStorage implements Storage {
@@ -165,5 +166,20 @@ describe("documents", () => {
     const { accessToken } = await signup(app);
     const res = await request(app).post("/documents").set(authHeader(accessToken)).send(pdf);
     expect(res.status).toBe(503);
+  });
+
+  it("caps a free account at 20 documents and lifts the cap with either pack", async () => {
+    const { accessToken, user } = await signup(app);
+    const auth = authHeader(accessToken);
+    await prisma.document.createMany({
+      data: Array.from({ length: 20 }, (_, i) => ({ userId: user.id, title: `d${i}`, category: "autre", fileKey: `k${i}`, fileName: "a.pdf", mimeType: "application/pdf", size: 1, status: "ready" })),
+    });
+
+    const refused = await request(app).post("/documents").set(auth).send({ ...pdf, category: "santé" });
+    expect(refused.status).toBe(403);
+    expect(refused.body.code).toBe("premium_required");
+
+    await prisma.user.update({ where: { id: user.id }, data: { mealsUntil: new Date(Date.now() + 86_400_000) } });
+    expect((await request(app).post("/documents").set(auth).send({ ...pdf, category: "santé" })).status).toBe(201);
   });
 });

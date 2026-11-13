@@ -40,6 +40,15 @@ export const env = {
   // Weekly menu suggestions (POST /meals/generate) call the Claude API.
   // Leave empty to disable the feature (route answers 503).
   anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
+  // In-app purchases through RevenueCat. secretKey: project secret API key
+  // (sk_…) to read a customer's entitlements; webhookAuth: the value set as
+  // « Authorization header » on the RevenueCat webhook. Empty = disabled.
+  revenuecat: {
+    secretKey: process.env.REVENUECAT_SECRET_KEY ?? "",
+    webhookAuth: process.env.REVENUECAT_WEBHOOK_AUTH ?? "",
+  },
+  // Comma-separated emails that get both Premium packs forever (family accounts).
+  lifetimePremiumEmails: process.env.LIFETIME_PREMIUM_EMAILS ?? "",
   appDeepLink: process.env.APP_DEEP_LINK ?? "passerelle://calendar-connected",
 };
 
@@ -49,3 +58,4 @@ export const isStorageConfigured = () =>
   !!(env.storage.bucket && env.storage.accessKeyId && env.storage.secretAccessKey);
 export const isMailConfigured = () => !!(env.brevo.apiKey && env.brevo.senderEmail);
 export const isMealAiConfigured = () => !!env.anthropicApiKey;
+export const isBillingConfigured = () => !!env.revenuecat.secretKey;

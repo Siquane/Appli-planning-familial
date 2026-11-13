@@ -166,6 +166,58 @@ export interface ProposedMeal extends MealSlot {
   notes: string;
 }
 
+export interface MealQuota {
+  period: "trial" | "free" | "premium";
+  weeksUsed: number;
+  weeksLimit: number;
+  rerollsUsed: number;
+  rerollsLimit: number;
+  resetsAt: string;
+}
+
+export interface PackStatus {
+  active: boolean;
+  until: string | null;
+}
+
+export interface Plan {
+  packs: { budget: PackStatus; meals: PackStatus };
+  meals: MealQuota;
+  /** limit null = unlimited (Premium). */
+  documents: { used: number; limit: number | null };
+}
+
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  targetCents: number;
+  savedCents: number;
+  deadline: string | null; // "YYYY-MM-DD"
+}
+
+export interface CapAlert {
+  category: ExpenseCategory;
+  categoryName: string;
+  level: 80 | 100;
+  totalCents: number;
+  limitCents: number;
+}
+
+export interface Forecast {
+  month: string;
+  spentCents: number;
+  upcomingRecurringCents: number;
+  projectedCents: number;
+  /** Average total of the previous months, null without history. */
+  usualCents: number | null;
+}
+
+export interface ReportMonth {
+  month: string; // "YYYY-MM"
+  totalCents: number;
+  byCategory: { category: ExpenseCategory; totalCents: number }[];
+}
+
 export interface CalendarStatus {
   connections: CalendarConnection[];
   googleConfigured: boolean;
@@ -238,6 +290,7 @@ export interface Expense {
   category: ExpenseCategory;
   memberId: string | null;
   recurringId: string | null;
+  goalId: string | null;
   date: string;
   createdAt: string;
   updatedAt: string;
