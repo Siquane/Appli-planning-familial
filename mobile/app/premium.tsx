@@ -9,7 +9,7 @@ import { Card } from "../src/components/Card";
 import { TopBar } from "../src/components/TopBar";
 import { CheckIcon } from "../src/components/icons";
 import { usePlan } from "../src/hooks/useApi";
-import { PACKS, hasAnyPack, mealQuotaLabel } from "../src/lib/premium";
+import { PACKS, hasAnyPack, mealQuotaLabel, packUntilLabel } from "../src/lib/premium";
 import { color, space } from "../src/theme/tokens";
 import { Button } from "../src/components/Button";
 import { useAuthStore } from "../src/state/authStore";
@@ -143,7 +143,17 @@ export default function PremiumScreen() {
           );
         })}
 
-        {plan && (
+        {plan && both ? (
+          // Everything is unlocked: no free quota to show.
+          <Card style={{ gap: space[1] }}>
+            <Text size={14} weight="medium">
+              Les 2 packs sont actifs {packUntilLabel(plan.packs.budget.until)}
+            </Text>
+            <Text size={13} tone="muted">
+              Tout Passerelle est débloqué : menus, budget et documents sans limite.
+            </Text>
+          </Card>
+        ) : plan ? (
           <View style={{ gap: space[2] }}>
             <Text size={13} tone="muted">
               Ce qu'il te reste en gratuit
@@ -155,11 +165,11 @@ export default function PremiumScreen() {
                   {plan.documents.used} / {plan.documents.limit} documents
                 </Text>
               ) : (
-                <Text size={13}>Documents illimités</Text>
+                <Text size={13}>Documents illimités (grâce à ton pack)</Text>
               )}
             </Card>
           </View>
-        )}
+        ) : null}
 
         {billing ? (
           <View style={{ gap: space[2] }}>

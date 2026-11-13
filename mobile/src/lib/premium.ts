@@ -56,3 +56,11 @@ export function mealQuotaLabel(q: MealQuota): string {
   const when = q.period === "trial" ? "pendant ton premier mois" : "ce mois-ci";
   return left > 0 ? `${left} génération${plural} gratuite${plural} ${when}.` : `Génération gratuite utilisée ${when}.`;
 }
+
+/** « à vie » for the family's lifetime accounts (far-future date), else « jusqu'au 12 déc. 2027 ». */
+export function packUntilLabel(until: string | null): string {
+  if (!until) return "";
+  const d = new Date(until);
+  if (d.getFullYear() >= 2900) return "à vie";
+  return `jusqu'au ${d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}`;
+}
