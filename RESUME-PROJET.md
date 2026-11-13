@@ -70,9 +70,22 @@ Dernière mise à jour : 13 novembre 2026.
 - L'URL de mise à jour (`https://u.expo.dev/<projectId>`) est ajoutée en CI par `mobile/scripts/configure-updates.js`, après `eas init` (build et update).
 - Il faut **un dernier APK** compilé après la fusion de cette fonctionnalité pour l'activer sur les téléphones.
 
+## Améliorations sans nouvel APK (13/11/2026)
+
+- **Liste de courses** (Repas → Courses) : ajout à la main, « Générer depuis le menu de la semaine » (ingrédients des recettes du menu, sans doublons), cases à cocher, « Vider » le panier. Serveur : modèle `ShoppingItem`, routes `/shopping`.
+- **Import de recette depuis un lien** (Nouvelle recette → Importer) : le serveur lit les données schema.org Recipe de la page (`server/src/lib/recipeImport.ts`), refuse les adresses privées, 8 s et 3 Mo max ; rien n'est enregistré avant validation du formulaire.
+- **Recherche globale** (`/search`) : tâches, recettes et ingrédients, documents, dépenses du mois, liste de courses, sans tenir compte des accents (`src/lib/search.ts`).
+- **Carte « Aujourd'hui »** en haut du Planning : prochaine tâche, dîner du soir, reste sur les plafonds du mois (`src/lib/today.ts`).
+- **Export du budget** : Budget → « Exporter le mois (tableur) », CSV pour Excel en français, envoyé par le menu de partage du téléphone.
+- **Sauvegarde hebdomadaire** : workflow `.github/workflows/backup.yml`, chaque dimanche vers 4 h, `pg_dump` compressé dans R2 sous `backups/`, 8 dernières gardées. Il faut 5 secrets GitHub (Settings → Secrets and variables → Actions) : `BACKUP_DATABASE_URL` (même valeur que `DATABASE_URL` dans Render), `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (mêmes valeurs que dans Render). Sans eux, le workflow ne fait rien et reste vert. Restaurer : télécharger le fichier depuis R2, puis `gunzip -c fichier.sql.gz | psql "<adresse Neon>"`.
+
+## Prochain lot (natif, nouvel APK, `runtimeVersion` "2")
+
+Expo SDK 58, widget Android, alertes de bug Sentry (compte sentry.io gratuit + clé DSN à fournir). Puis, à part : mises à jour majeures du serveur.
+
 ## Idées notées pour plus tard
 
-Comptes séparés pour chaque membre de la famille, sauvegarde hebdomadaire de la base vers R2, liste de courses générée depuis le menu, synchronisation Google Agenda, widget Android, export CSV du budget.
+Comptes séparés pour chaque membre de la famille, synchronisation Google Agenda, statistiques du budget sur 12 mois, étoiles pour les tâches des enfants, idées cadeaux d'anniversaire, liste de courses en temps réel, thème clair, version iPhone (99 €/an).
 
 ## Mises à jour majeures à prévoir plus tard (non faites, demandent du code)
 

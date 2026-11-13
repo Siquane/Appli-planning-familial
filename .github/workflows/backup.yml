@@ -1,0 +1,55 @@
+name: Sauvegarde de la base
+
+# Every Sunday night, a full dump of the Neon database (pg_dump, compressed)
+# goes to the R2 bucket under backups/. The last 8 are kept.
+# Needs these repository secrets (Settings → Secrets → Actions):
+#   BACKUP_DATABASE_URL  Neon connection string (the same as DATABASE_URL in Render)
+#   S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY  (same as Render)
+# Until they're set, the job only prints a notice and stays green.
+on:
+  schedule:
+    - cron: "17 3 * * 0"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+      S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+      S3_BUCKET: ${{ secrets.S3_BUCKET }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      KEEP: 8
+    steps:
+      - name: Secrets configured?
+        id: check
+        run: |
+          if [ -z "$DATABASE_URL" ] || [ -z "$S3_BUCKET" ] || [ -z "$AWS_ACCESS_KEY_ID" ]; then
+            echo "::notice::Sauvegarde non configurée : ajoutez les secrets BACKUP_DATABASE_URL, S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID et S3_SECRET_ACCESS_KEY."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Dump the database
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          name="passerelle-$(date -u +%Y-%m-%d).sql.gz"
+          # pg_dump 17 reads Postgres 16 and 17 servers (Neon).
+          docker run --rm -e DATABASE_URL postgres:17 sh -c 'pg_dump --no-owner --no-privileges "$DATABASE_URL"' | gzip -9 > "$name"
+          test "$(stat -c %s "$name")" -gt 1000 || { echo "::error::Sauvegarde vide ou trop petite."; exit 1; }
+          echo "NAME=$name" >> "$GITHUB_ENV"
+          ls -lh "$name"
+
+      - name: Upload to R2 and keep the last ${{ env.KEEP }}
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          aws s3 cp "$NAME" "s3://$S3_BUCKET/backups/$NAME" --endpoint-url "$S3_ENDPOINT" --only-show-errors
+          old=$(aws s3 ls "s3://$S3_BUCKET/backups/" --endpoint-url "$S3_ENDPOINT" | awk '{print $4}' | grep '^passerelle-.*\.sql\.gz$' | sort | head -n -"$KEEP")
+          for f in $old; do
+            aws s3 rm "s3://$S3_BUCKET/backups/$f" --endpoint-url "$S3_ENDPOINT" --only-show-errors
+          done
+          echo "Sauvegarde envoyée : backups/$NAME"
