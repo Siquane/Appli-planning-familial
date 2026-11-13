@@ -51,16 +51,21 @@ Le bouton « Générer mes menus » de l'écran Repas pose quelques questions pu
 |---|---|
 | `ANTHROPIC_API_KEY` | clé API créée sur console.anthropic.com → *API Keys* (chaque génération est facturée à l'usage, quelques centimes) |
 
-**Activer Premium à la main (en attendant le paiement dans l'appli)**
+**Activer un pack Premium à la main (en attendant le paiement dans l'appli)**
 
 Depuis le dossier `server`, avec la connection string Neon de production :
 
 ```bash
-DATABASE_URL="<connection string Neon>" npm run premium -- toi@exemple.fr 2027-12-31   # Premium jusqu'à cette date incluse
-DATABASE_URL="<connection string Neon>" npm run premium -- toi@exemple.fr off          # le retirer
+DATABASE_URL="<connection string Neon>" npm run premium -- toi@exemple.fr budget 2027-12-31   # pack Budget jusqu'à cette date incluse
+DATABASE_URL="<connection string Neon>" npm run premium -- toi@exemple.fr menus 2027-12-31    # pack Menus
+DATABASE_URL="<connection string Neon>" npm run premium -- toi@exemple.fr tout 2027-12-31     # les 2
+DATABASE_URL="<connection string Neon>" npm run premium -- toi@exemple.fr tout off            # tout retirer
 ```
 
-Gratuit : 20 documents ; menus générés : 4 semaines le premier mois puis 1 par mois (15 « autre idée » par semaine générée). Premium : documents illimités, 12 semaines et 60 « autre idée » par mois, objectifs d'épargne, alertes de plafond, bilan. Ces valeurs sont dans `src/lib/plan.ts`.
+Gratuit : 20 documents ; menus générés : 4 semaines le premier mois puis 1 par mois (15 « autre idée » par semaine générée).
+Pack Budget : objectifs d'épargne, alertes de plafond, bilan, prévision de fin de mois, export CSV/PDF.
+Pack Menus : 12 semaines et 60 « autre idée » par mois.
+Les deux packs donnent les documents illimités. Ces valeurs sont dans `src/lib/plan.ts`.
 
 Ne pas laisser `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` vides : `src/env.ts` retombe sinon sur des valeurs de dev codées en dur.
 

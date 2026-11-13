@@ -130,6 +130,11 @@ export function usePaySavingsGoal() {
   return useMutation({ mutationFn: ({ id, amountCents }: { id: string; amountCents: number }) => savingsGoalsApi.pay(id, amountCents), onSuccess: invalidate });
 }
 
+export function useForecast(enabled = true) {
+  const authed = useEnabled();
+  return useQuery({ queryKey: ["expenses", "forecast"], queryFn: () => expensesApi.forecast(), enabled: authed && enabled });
+}
+
 export function useBudgetReport(months = 6, enabled = true) {
   const authed = useEnabled();
   return useQuery({ queryKey: ["expenses", "report", months], queryFn: () => expensesApi.report(months).then((r) => r.months), enabled: authed && enabled });

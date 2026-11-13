@@ -7,7 +7,11 @@ import { checkCategoryAndMember } from "../lib/expenseCategories";
 import { materializeRecurring } from "../lib/recurring";
 import { patchSchema } from "../lib/validation";
 import { checkCapAlert } from "../lib/capAlerts";
-import { requirePremium } from "../lib/plan";
+import { requireBudgetPack } from "../lib/plan";
+import { forecastMonth } from "../lib/forecast";
+import { daysInMonth } from "../lib/recurring";
+import { toCsv, toPdf, type ExportRow } from "../lib/expenseExport";
+import { FIXED_LABELS } from "../lib/expenseCategories";
 
 // Household budget: expenses entered by hand (or copied each month from a
 // recurring expense), one category each, summed per month and compared to
@@ -95,7 +99,7 @@ expensesRouter.get("/report", async (req, res) => {
   const parsed = z.object({ months: z.coerce.number().int().min(2).max(12).default(6) }).safeParse(req.query);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const userId = req.userId!;
-  if (!(await requirePremium(userId, res, "Le bilan"))) return;
+  if (!(await requireBudgetPack(userId, res, "Le bilan"))) return;
 
   const now = currentMonth();
   const months = Array.from({ length: parsed.data.months }, (_, i) => shiftMonth(now, i - parsed.data.months + 1));
@@ -117,6 +121,100 @@ expensesRouter.get("/report", async (req, res) => {
   });
   res.json({ months: report });
 });
+
+// Premium: GET /expenses/forecast -> where the current month is heading.
+expensesRouter.get("/forecast", async (req, res) => {
+  const userId = req.userId!;
+  if (!(await requireBudgetPack(userId, res, "La prévision"))) return;
+  const month = currentMonth();
+  const today = todayString();
+  await materializeRecurring(userId, month, month);
+
+  const history = [1, 2, 3].map((n) => shiftMonth(month, -n));
+  const expenses = await prisma.expense.findMany({
+    where: { userId, date: { gte: monthRange(history[2]).gte, lt: monthRange(month).lt } },
+    select: { amountCents: true, date: true, recurringId: true },
+  });
+  const inMonth = (m: string) => expenses.filter((e) => e.date.toISOString().startsWith(m));
+  const sum = (list: { amountCents: number }[]) => list.reduce((a, e) => a + e.amountCents, 0);
+
+  const current = inMonth(month);
+  const day = (e: { date: Date }) => e.date.toISOString().slice(0, 10);
+  const recurring = current.filter((e) => e.recurringId);
+  const variable = current.filter((e) => !e.recurringId);
+  // Only past months that had spending: a month before the app was used says nothing.
+  const past = history.map(inMonth).filter((list) => list.length > 0);
+
+  const forecast = forecastMonth(
+    {
+      today: Number(today.slice(8, 10)),
+      daysInMonth: daysInMonth(month),
+      recurringCents: sum(recurring),
+      upcomingRecurringCents: sum(recurring.filter((e) => day(e) > today)),
+      variableSoFarCents: sum(variable.filter((e) => day(e) <= today)),
+      plannedVariableCents: sum(variable.filter((e) => day(e) > today)),
+      previousVariableCents: past.map((list) => sum(list.filter((e) => !e.recurringId))),
+    },
+    past.map(sum),
+  );
+  res.json({ month, ...forecast });
+});
+
+// Budget pack: GET /expenses/export?from=2026-01&to=2026-11&format=csv|pdf
+// -> the file itself (attachment), oldest expense first. 24 months at most.
+expensesRouter.get("/export", async (req, res) => {
+  const parsed = z
+    .object({ from: monthString, to: monthString, format: z.enum(["csv", "pdf"]) })
+    .refine((q) => q.from <= q.to, "La période est inversée")
+    .refine((q) => monthsBetween(q.from, q.to) < 24, "24 mois au maximum")
+    .safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
+  const userId = req.userId!;
+  if (!(await requireBudgetPack(userId, res, "L'export"))) return;
+  const { from, to, format } = parsed.data;
+
+  const now = currentMonth();
+  for (let m = from; m <= to && m <= now; m = shiftMonth(m, 1)) await materializeRecurring(userId, m, now);
+
+  const [user, expenses, custom] = await Promise.all([
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { name: true } }),
+    prisma.expense.findMany({
+      where: { userId, date: { gte: monthRange(from).gte, lt: monthRange(to).lt } },
+      orderBy: [{ date: "asc" }, { createdAt: "asc" }],
+      include: { member: { select: { name: true } } },
+    }),
+    prisma.expenseCategory.findMany({ where: { userId }, select: { id: true, name: true } }),
+  ]);
+  const names = new Map<string, string>([...Object.entries(FIXED_LABELS), ...custom.map((c) => [c.id, c.name] as [string, string])]);
+  const rows: ExportRow[] = expenses.map((e) => ({
+    date: e.date.toISOString().slice(0, 10),
+    label: e.label,
+    category: names.get(e.category) ?? FIXED_LABELS.divers,
+    member: e.member?.name ?? "",
+    amountCents: e.amountCents,
+    recurring: !!e.recurringId,
+  }));
+
+  const data = { familyName: user.name, from, to, rows };
+  const fileName = `depenses-${from}${from === to ? "" : `-${to}`}.${format}`;
+  res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+  if (format === "csv") {
+    res.type("text/csv; charset=utf-8").send(toCsv(data));
+  } else {
+    res.type("application/pdf").send(await toPdf(data));
+  }
+});
+
+function monthsBetween(from: string, to: string) {
+  const [fy, fm] = from.split("-").map(Number);
+  const [ty, tm] = to.split("-").map(Number);
+  return (ty - fy) * 12 + (tm - fm);
+}
+
+/** Today in Paris as "YYYY-MM-DD". */
+function todayString(now: Date = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+}
 
 /** "2026-11" shifted by n months. */
 export function shiftMonth(month: string, n: number) {

@@ -12,7 +12,7 @@ import { TopBar } from "../src/components/TopBar";
 import { TrashIcon } from "../src/components/icons";
 import { useCreateSavingsGoal, useDeleteSavingsGoal, usePaySavingsGoal, usePlan, useSavingsGoals } from "../src/hooks/useApi";
 import { formatEuros, monthsLeft, parseAmount, toDayString } from "../src/lib/money";
-import { showApiError } from "../src/lib/premium";
+import { hasBudgetPack, showApiError } from "../src/lib/premium";
 import { useToastStore } from "../src/state/toastStore";
 import { color, radius, space } from "../src/theme/tokens";
 import type { SavingsGoal } from "../src/api/types";
@@ -28,7 +28,7 @@ export default function SavingsScreen() {
   const [deadline, setDeadline] = useState<Date | null>(null);
 
   const targetCents = parseAmount(target);
-  const premium = plan?.premium ?? false;
+  const premium = hasBudgetPack(plan);
 
   async function onCreate() {
     if (!premium) return router.push("/premium");
@@ -52,7 +52,7 @@ export default function SavingsScreen() {
           <Pressable onPress={() => router.push("/premium")}>
             <Card>
               <Text size={13} weight="medium">
-                Fonction Premium ✨
+                Pack Budget ✨
               </Text>
               <Text size={12} tone="muted">
                 Mets de côté pour les vacances, Noël ou la voiture, et regarde la jauge se remplir. Voir Premium ›
@@ -79,7 +79,7 @@ export default function SavingsScreen() {
           <TextField label="Montant à atteindre (€)" value={target} onChangeText={setTarget} keyboardType="decimal-pad" placeholder="1 200" />
           <DateField label="Pour quand ? (optionnel)" value={deadline} onChange={setDeadline} />
           <Button
-            label={premium ? "Créer l'objectif" : "Créer l'objectif · Premium"}
+            label={premium ? "Créer l'objectif" : "Créer l'objectif · Pack Budget"}
             variant="primary"
             block
             onPress={onCreate}

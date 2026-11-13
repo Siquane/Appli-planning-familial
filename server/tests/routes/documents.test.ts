@@ -168,7 +168,7 @@ describe("documents", () => {
     expect(res.status).toBe(503);
   });
 
-  it("caps a free account at 20 documents and lifts the cap with Premium", async () => {
+  it("caps a free account at 20 documents and lifts the cap with either pack", async () => {
     const { accessToken, user } = await signup(app);
     const auth = authHeader(accessToken);
     await prisma.document.createMany({
@@ -179,7 +179,7 @@ describe("documents", () => {
     expect(refused.status).toBe(403);
     expect(refused.body.code).toBe("premium_required");
 
-    await prisma.user.update({ where: { id: user.id }, data: { premiumUntil: new Date(Date.now() + 86_400_000) } });
+    await prisma.user.update({ where: { id: user.id }, data: { mealsUntil: new Date(Date.now() + 86_400_000) } });
     expect((await request(app).post("/documents").set(auth).send({ ...pdf, category: "santé" })).status).toBe(201);
   });
 });
