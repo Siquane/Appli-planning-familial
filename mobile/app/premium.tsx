@@ -89,8 +89,8 @@ export default function PremiumScreen() {
           const until = pack.id === "both" ? plan?.packs.budget.until : pack.id === "budget" ? plan?.packs.budget.until : plan?.packs.meals.until;
           return (
             <Card key={pack.id} style={{ gap: space[2], borderWidth: active ? 1 : 0, borderColor: color.accent400 }}>
-              {/* Icon(s) on the left; name, then price below it, so long names never squeeze the price. */}
-              <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
+              {/* Icon(s) on top, then the name under them, then the price. */}
+              <View style={{ alignItems: "center", gap: 2 }}>
                 {pack.id === "meals" ? (
                   <ToqueIcon size={56} color={color.pillar2} />
                 ) : pack.id === "budget" ? (
@@ -101,20 +101,18 @@ export default function PremiumScreen() {
                     <PiggyBankIcon size={48} color={color.pillar3} />
                   </View>
                 )}
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Text heading weight="semibold" size={17}>
-                    {pack.name}
+                <Text heading weight="semibold" size={17} center>
+                  {pack.name}
+                </Text>
+                <Text size={14} weight="medium" center>
+                  {pack.month}
+                  <Text size={12} tone="muted">
+                    {" / mois"}
                   </Text>
-                  <Text size={14} weight="medium">
-                    {pack.month}
-                    <Text size={12} tone="muted">
-                      {" / mois"}
-                    </Text>
-                  </Text>
-                  <Text size={12} tone="faint">
-                    ou {pack.year} / an
-                  </Text>
-                </View>
+                </Text>
+                <Text size={12} tone="faint" center>
+                  ou {pack.year} / an
+                </Text>
               </View>
               {pack.features.map((f) => (
                 <View key={f} style={{ flexDirection: "row", gap: space[2] }}>
