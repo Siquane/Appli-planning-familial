@@ -1,7 +1,7 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 13 novembre 2026 (après-midi).
+Dernière mise à jour : 13 novembre 2026 (fin d'après-midi).
 
 ## Contexte
 
@@ -107,11 +107,27 @@ Expo SDK 58, widget Android, alertes de bug Sentry (compte sentry.io gratuit + c
 
 Comptes séparés pour chaque membre de la famille, synchronisation Google Agenda, statistiques du budget sur 12 mois, étoiles pour les tâches des enfants, idées cadeaux d'anniversaire, liste de courses en temps réel, thème clair, version iPhone (99 €/an).
 
-## Mises à jour majeures à prévoir plus tard (non faites, demandent du code)
+## Dépendances et mises à jour (PR #7 et #13, 12–13/11/2026)
 
-- Serveur : Prisma 5 → 7, Express 4 → 5, zod 3 → 4, vitest 2 → 5, TypeScript 5 → 7, googleapis, msal-node.
-- Mobile : Expo SDK 57 → 58 (entraîne react-native, expo-* et outils de test).
-- À noter : plusieurs bibliothèques natives mobiles sont déjà plus récentes que la liste officielle d'Expo SDK 57 (async-storage 3, gesture-handler 3, reanimated 4.5.3, screens 4.27, safe-area-context 5.8, svg 15.15.5, worklets 0.11). Si la compilation Android échoue sur l'une d'elles, c'est la première piste.
+- **Faites** : zod 3 → 4, vitest 2 → 5 (+ vite 8, @types/node 22), googleapis 189, msal-node 7 (PR #7) ; puis mises à jour « sûres » (correctifs et versions mineures) serveur et app (PR #13). Serveur : `npm audit` = 0 vulnérabilité. `engines.node >= 22` dans `server/package.json`.
+- **Règle zod 4** : ne jamais écrire `schema.partial()` pour une route PATCH. Avec zod 4, les `.default()` s'appliquent quand même et un PATCH réinitialisait les champs absents (notes, membres, couleur…). Utiliser `patchSchema(schema)` (`server/src/lib/validation.ts`), déjà en place sur toutes les routes PATCH ; test de non-régression dans `tests/routes/members.test.ts`.
+- **Restant côté app** : 12 alertes `npm audit` (dont 3 « high » via `expo-router` : `decode-uri-component`, `query-string`), corrigées seulement par **Expo SDK 58** (prévu dans le prochain lot natif).
+- **Restant côté serveur** (non fait, demande du code) : Prisma 5 → 7, Express 4 → 5, TypeScript 5 → 7, bcryptjs 3, dotenv, nanoid.
+- Bibliothèques natives mobiles volontairement non touchées par la PR #13 (`expo install --check` était bloqué par le réseau de la session). Plusieurs sont déjà plus récentes que la liste officielle d'Expo SDK 57 (async-storage 3, gesture-handler 3, reanimated 4.5.3, screens 4.27, safe-area-context 5.8, svg 15.15.5, worklets 0.11) : première piste si la compilation Android échoue.
+
+## Numéro de version Android (PR #5, 11/11/2026)
+
+- `mobile/eas.json` : `appVersionSource: "remote"` + `autoIncrement: true` sur le profil `preview`. EAS augmente le `versionCode` à chaque build, pour que les nouveaux APK s'installent par-dessus l'ancien. Avant, toutes les versions avaient le `versionCode` 1.
+- Build lancé le 13/11 vers 14 h 46 (heure de Paris) après la PR #13 (run n°14 du workflow « EAS Build ») : premier build avec ce réglage, à confirmer (lien APK à la fin du workflow, `versionCode` visible sur la page expo.dev du build).
+
+## Incidents réglés (9–11/11/2026), à connaître
+
+- **Mauvais serveur** : l'app pointait vers `appli-planning-familial.onrender.com` (sans `-0lyd`), un service qui **n'est pas le nôtre**. Les comptes créés et les mots de passe tapés avant le 11/11 y sont partis. L'adresse correcte est dans `mobile/eas.json`. Ne pas réutiliser les anciens mots de passe.
+- **Réveil du serveur Render** : l'app réessaie pendant 60 s quand le serveur dort (502/503/504), affiche « Le serveur démarre… » après 5 s et appelle `/health` au lancement (`mobile/src/state/authStore.ts`, `useSlowHint`). Le serveur renvoie 500 (pas 502) si l'envoi d'e-mail échoue, pour ne pas déclencher ces réessais.
+- **Clavier Android** : l'app est en plein écran (Expo 57), Android ne réduit plus l'écran pour le clavier. Tous les formulaires utilisent `KeyboardScrollView` ou `<Screen keyboard>` (`mobile/src/components/`). À reprendre pour tout nouvel écran avec des champs.
+- **Mot de passe oublié** : Brevo configuré et testé (code reçu par e-mail). Variables Render : `BREVO_API_KEY` (clé à accès restreint, « Emails transactionnels : Tous », expire après 90 jours sans envoi), `MAIL_FROM_EMAIL` (adresse validée dans Brevo → Expéditeurs), `MAIL_FROM_NAME` (facultatif). Les e-mails peuvent arriver dans les spams.
+- **Build EAS** : `eas-cli` exige Node 22 (workflow corrigé, PR #3).
+- La session n'a pas accès réseau à render.com, expo.dev ni à l'API Expo : demander des captures à l'utilisatrice pour Render.
 
 ## Préférences de l'utilisateur
 
@@ -119,6 +135,7 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Poser des questions de clarification avant les réponses détaillées, avec des choix cliquables.
 - Ne pas multiplier les étapes manuelles : préférer un commit unique, une PR prête à fusionner.
 - Ne pas uploader de fichiers directement sur `main` pendant qu'une PR est ouverte (cela a créé un conflit une fois).
+- Avant de fusionner une PR ou de lancer un build, demander confirmation (choix cliquable).
 
 ## Conventions du dépôt
 
