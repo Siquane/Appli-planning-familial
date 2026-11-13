@@ -13,6 +13,8 @@ import { useCreateRecipe, useMembers, useRecipes, useUpdateRecipe } from "../../
 import { useToastStore } from "../../src/state/toastStore";
 import { space } from "../../src/theme/tokens";
 import type { Recipe } from "../../src/api/types";
+import { recipesApi } from "../../src/api/resources";
+import { Card } from "../../src/components/Card";
 
 export default function RecipeFormScreen() {
   const { edit } = useLocalSearchParams<{ edit?: string }>();
@@ -28,6 +30,28 @@ export default function RecipeFormScreen() {
   const [steps, setSteps] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [memberIds, setMemberIds] = useState<string[]>([]);
+  const [importUrl, setImportUrl] = useState("");
+  const [importing, setImporting] = useState(false);
+
+  // Fills the form from a recipe web page; nothing is saved until « Créer ».
+  async function onImport() {
+    const url = importUrl.trim();
+    if (!url) return;
+    setImporting(true);
+    try {
+      const { recipe } = await recipesApi.importFromUrl(/^https?:\/\//i.test(url) ? url : `https://${url}`);
+      setTitle(recipe.title);
+      setIngredients(recipe.ingredients);
+      setSteps(recipe.steps);
+      if (recipe.notes) setNotes((n) => (n ? `${n}\n${recipe.notes}` : recipe.notes));
+      setImportUrl("");
+      useToastStore.getState().show("Recette importée : vérifiez-la puis enregistrez.");
+    } catch (e) {
+      useToastStore.getState().show(e instanceof Error ? e.message : "Import impossible.");
+    } finally {
+      setImporting(false);
+    }
+  }
 
   useEffect(() => {
     if (!existing) return;
@@ -65,6 +89,16 @@ export default function RecipeFormScreen() {
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier la recette" : "Nouvelle recette"} onBack={() => router.back()} />
       <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+        {!existing && (
+          <Card style={{ gap: space[2] }}>
+            <Text size={13} tone="muted">
+              Importer depuis un site de recettes (optionnel)
+            </Text>
+            <TextField value={importUrl} onChangeText={setImportUrl} placeholder="Coller le lien de la recette" autoCapitalize="none" keyboardType="url" />
+            <Button label="Importer" variant="secondary" block onPress={onImport} disabled={!importUrl.trim()} loading={importing} />
+          </Card>
+        )}
+
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Gratin de courgettes" />
 
         <ListEditor label="Ingrédients" placeholder="Ex. 2 courgettes" items={ingredients} onChange={setIngredients} />

@@ -23,6 +23,7 @@ model User {
   meals               Meal[]
   documents           Document[]
   expenses            Expense[]
+  shoppingItems       ShoppingItem[]
   expenseCategories   ExpenseCategory[]
   categoryBudgets     CategoryBudget[]
   recurringExpenses   RecurringExpense[]
@@ -255,6 +256,20 @@ model RecurringRun {
   month       String
 
   @@id([recurringId, month])
+}
+
+// Shopping list shared by the family. fromMenu: added by « Générer depuis le
+// menu » (ingredients of the week's recipes) rather than typed by hand.
+model ShoppingItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String
+  checked   Boolean  @default(false)
+  fromMenu  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Constraints {

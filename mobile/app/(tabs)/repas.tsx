@@ -5,11 +5,12 @@ import { Chip } from "../../src/components/Chip";
 import { TabHeader } from "../../src/components/PageHeader";
 import { MealsBody } from "../../src/screens/MealsBody";
 import { RecipesBody } from "../../src/screens/RecipesBody";
+import { ShoppingBody } from "../../src/screens/ShoppingBody";
 import { color, space } from "../../src/theme/tokens";
 
-type View_ = "menu" | "recettes";
+type View_ = "menu" | "recettes" | "courses";
 
-// « Repas » tab: the weekly menu and the recipe book, side by side.
+// « Repas » tab: weekly menu, recipe book and shopping list.
 export default function RepasTab() {
   const [view, setView] = useState<View_>("menu");
 
@@ -18,10 +19,11 @@ export default function RepasTab() {
       <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <TabHeader title="Repas" pillar={color.pillar2} />
         <View style={{ flexDirection: "row", gap: space[1] }}>
-          <Chip label="Menu de la semaine" selected={view === "menu"} onPress={() => setView("menu")} fill />
+          <Chip label="Menu" selected={view === "menu"} onPress={() => setView("menu")} fill />
           <Chip label="Recettes" selected={view === "recettes"} onPress={() => setView("recettes")} fill />
+          <Chip label="Courses" selected={view === "courses"} onPress={() => setView("courses")} fill />
         </View>
-        {view === "menu" ? <MealsBody /> : <RecipesBody />}
+        {view === "menu" ? <MealsBody /> : view === "recettes" ? <RecipesBody /> : <ShoppingBody />}
       </ScrollView>
     </Screen>
   );

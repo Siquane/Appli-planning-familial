@@ -112,3 +112,30 @@ export function capCrossed(
   const after = before - counted + next.amountCents;
   return before <= row.limitCents && after > row.limitCents ? { totalCents: after, limitCents: row.limitCents } : null;
 }
+
+/** Cents as "1234,56" — no thousands separator, so spreadsheets read it as a number. */
+export function centsForCsv(cents: number): string {
+  const sign = cents < 0 ? "-" : "";
+  const abs = Math.abs(cents);
+  return `${sign}${Math.floor(abs / 100)},${String(abs % 100).padStart(2, "0")}`;
+}
+
+const csvCell = (value: string) => (/[;"\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
+
+/**
+ * A month's expenses as CSV for a French spreadsheet (« ; » between columns,
+ * decimal comma), oldest first, with a total line.
+ */
+export function budgetToCsv(
+  expenses: { date: string; label: string; category: string; memberId: string | null; amountCents: number; recurringId: string | null }[],
+  labelOf: (category: string) => string,
+  memberName: (id: string | null) => string,
+): string {
+  const rows = [...expenses].sort((a, b) => a.date.localeCompare(b.date));
+  const lines = [["Date", "Libellé", "Catégorie", "Pour qui", "Montant (€)", "Récurrente"].join(";")];
+  for (const e of rows) {
+    lines.push([e.date, csvCell(e.label), csvCell(labelOf(e.category)), csvCell(memberName(e.memberId)), centsForCsv(e.amountCents), e.recurringId ? "oui" : ""].join(";"));
+  }
+  lines.push(["", "Total", "", "", centsForCsv(rows.reduce((sum, e) => sum + e.amountCents, 0)), ""].join(";"));
+  return lines.join("\n");
+}
