@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import type { Request } from "express";
 
 // Brute-force protection on the auth endpoints. Limits are per client IP
@@ -19,7 +19,8 @@ export const loginLimiter = rateLimit({
   standardHeaders: "draft-7",
   legacyHeaders: false,
   skip,
-  keyGenerator: (req) => `${req.ip}|${emailOf(req)}`,
+  // ipKeyGenerator groups an IPv6 address by its /56 block (one home network).
+  keyGenerator: (req) => `${ipKeyGenerator(req.ip ?? "")}|${emailOf(req)}`,
   message: message(15),
 });
 

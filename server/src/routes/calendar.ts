@@ -36,8 +36,8 @@ calendarRouter.get("/status", requireAuth, async (req, res) => {
 });
 
 calendarRouter.delete("/:provider", requireAuth, async (req, res) => {
-  await prisma.calendarConnection.deleteMany({ where: { userId: req.userId, provider: req.params.provider } });
-  await prisma.task.updateMany({ where: { userId: req.userId, externalProvider: req.params.provider }, data: { synced: false, externalEventId: null, externalProvider: null } });
+  await prisma.calendarConnection.deleteMany({ where: { userId: req.userId, provider: String(req.params.provider) } });
+  await prisma.task.updateMany({ where: { userId: req.userId, externalProvider: String(req.params.provider) }, data: { synced: false, externalEventId: null, externalProvider: null } });
   res.status(204).end();
 });
 

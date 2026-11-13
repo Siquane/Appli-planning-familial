@@ -28,7 +28,7 @@ shareRouter.post("/people", requireAuth, async (req, res) => {
 });
 
 shareRouter.delete("/people/:id", requireAuth, async (req, res) => {
-  const existing = await prisma.sharedPerson.findFirst({ where: { id: req.params.id, userId: req.userId } });
+  const existing = await prisma.sharedPerson.findFirst({ where: { id: String(req.params.id), userId: req.userId } });
   if (!existing) return res.status(404).json({ error: "Not found" });
   await prisma.sharedPerson.delete({ where: { id: existing.id } });
   res.status(204).end();
