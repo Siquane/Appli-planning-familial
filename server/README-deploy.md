@@ -51,6 +51,12 @@ Le bouton « Générer mes menus » de l'écran Repas pose quelques questions pu
 |---|---|
 | `ANTHROPIC_API_KEY` | clé API créée sur console.anthropic.com → *API Keys* (chaque génération est facturée à l'usage, quelques centimes) |
 
+**Premium à vie pour les comptes de la famille**
+
+| Variable | Valeur |
+|---|---|
+| `LIFETIME_PREMIUM_EMAILS` | adresses e-mail des comptes de la famille, séparées par des virgules. Au démarrage du serveur, ces comptes reçoivent les 2 packs sans date de fin ; une synchronisation RevenueCat ne les leur retire pas. |
+
 **Activer un pack Premium à la main (en attendant le paiement dans l'appli)**
 
 Depuis le dossier `server`, avec la connection string Neon de production :

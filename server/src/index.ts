@@ -19,6 +19,7 @@ import { recurringExpensesRouter } from "./routes/recurringExpenses";
 import { savingsGoalsRouter } from "./routes/savingsGoals";
 import { planRouter } from "./routes/plan";
 import { billingRouter } from "./routes/billing";
+import { grantLifetimePremium } from "./lib/lifetimePremium";
 
 export const app = express();
 // Render terminates HTTPS in front of the app: trust that one hop so
@@ -57,4 +58,7 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
 
 if (require.main === module) {
   app.listen(env.port, () => console.log(`Passerelle API listening on :${env.port}`));
+  grantLifetimePremium()
+    .then((n) => n > 0 && console.log(`Premium à vie : ${n} compte(s)`))
+    .catch((e) => console.error("Premium à vie non appliqué", e));
 }

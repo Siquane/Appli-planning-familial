@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { env } from "../env";
+import { isLifetimeEmail, LIFETIME_UNTIL } from "./lifetimePremium";
 
 // RevenueCat is the source of truth for store subscriptions. Its entitlement
 // identifiers match our packs: "budget" and "meals" (the « Les 2 » products
@@ -34,9 +35,13 @@ export async function fetchPackDates(appUserId: string): Promise<{ budgetUntil: 
 /**
  * Copies RevenueCat's view onto the user. Once a user is synced, RevenueCat
  * wins: a pack it doesn't grant is cleared (expired, refunded…), including a
- * date set by hand with `npm run premium`.
+ * date set by hand with `npm run premium` — except for lifetime accounts
+ * (LIFETIME_PREMIUM_EMAILS), which always keep both packs.
  */
 export async function syncUserPacks(userId: string) {
-  const dates = await fetchPackDates(userId);
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { email: true } });
+  const dates = isLifetimeEmail(user.email)
+    ? { budgetUntil: LIFETIME_UNTIL, mealsUntil: LIFETIME_UNTIL }
+    : await fetchPackDates(userId);
   return prisma.user.update({ where: { id: userId }, data: dates, select: { budgetUntil: true, mealsUntil: true } });
 }

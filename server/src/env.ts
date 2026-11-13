@@ -47,6 +47,8 @@ export const env = {
     secretKey: process.env.REVENUECAT_SECRET_KEY ?? "",
     webhookAuth: process.env.REVENUECAT_WEBHOOK_AUTH ?? "",
   },
+  // Comma-separated emails that get both Premium packs forever (family accounts).
+  lifetimePremiumEmails: process.env.LIFETIME_PREMIUM_EMAILS ?? "",
   appDeepLink: process.env.APP_DEEP_LINK ?? "passerelle://calendar-connected",
 };
 
