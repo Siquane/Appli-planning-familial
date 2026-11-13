@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, Share, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
@@ -8,7 +8,7 @@ import { Button } from "../../src/components/Button";
 import { TabHeader } from "../../src/components/PageHeader";
 import { ChevronLeftIcon, ChevronRightIcon, RecurringIcon, WalletIcon } from "../../src/components/icons";
 import { useExpenseCategories, useMembers, useMonthlyBudget } from "../../src/hooks/useApi";
-import { categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../../src/lib/money";
+import { budgetToCsv, categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../../src/lib/money";
 import { color, radius, space } from "../../src/theme/tokens";
 
 export default function BudgetScreen() {
@@ -66,6 +66,22 @@ export default function BudgetScreen() {
           <Button label="+ Ajouter une dépense" variant="secondary" style={{ flex: 1 }} onPress={() => router.push(`/expense/new?month=${month}`)} />
           <Button label="Réglages" variant="ghost" onPress={() => router.push("/budget-settings")} />
         </View>
+
+        {expenses.length > 0 && (
+          <Button
+            label="Exporter le mois (tableur)"
+            variant="ghost"
+            block
+            onPress={() => {
+              const csv = budgetToCsv(
+                expenses,
+                (c) => categoryLabel(options, c),
+                (id) => members.find((m) => m.id === id)?.name ?? "",
+              );
+              Share.share({ title: `Budget ${monthLabel(month)}`, message: csv }).catch(() => {});
+            }}
+          />
+        )}
 
         {byCategory.length > 0 && (
           <View style={{ gap: space[2] }}>

@@ -90,3 +90,29 @@ describe("capCrossed", () => {
     expect(capCrossed(budget, { category: "courses", amountCents: 11000, date: "2026-11-03" }, previous)).toEqual({ totalCents: 61000, limitCents: 60000 });
   });
 });
+
+describe("budgetToCsv", () => {
+  const { budgetToCsv, centsForCsv } = jest.requireActual("../money") as typeof import("../money");
+
+  it("writes French spreadsheet numbers", () => {
+    expect(centsForCsv(123456)).toBe("1234,56");
+    expect(centsForCsv(5)).toBe("0,05");
+  });
+
+  it("lists the month's expenses oldest first with a total, quoting tricky labels", () => {
+    const csv = budgetToCsv(
+      [
+        { date: "2026-11-12", label: 'Cinéma "Dune"; IMAX', category: "loisirs", memberId: "m1", amountCents: 2400, recurringId: null },
+        { date: "2026-11-05", label: "Loyer", category: "logement", memberId: null, amountCents: 90000, recurringId: "r1" },
+      ],
+      (c) => ({ loisirs: "Loisirs", logement: "Logement" })[c] ?? c,
+      (id) => (id === "m1" ? "Léa" : ""),
+    );
+    expect(csv.split("\n")).toEqual([
+      "Date;Libellé;Catégorie;Pour qui;Montant (€);Récurrente",
+      "2026-11-05;Loyer;Logement;;900,00;oui",
+      '2026-11-12;"Cinéma ""Dune""; IMAX";Loisirs;Léa;24,00;',
+      ";Total;;;924,00;",
+    ]);
+  });
+});
