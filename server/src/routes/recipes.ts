@@ -5,6 +5,7 @@ import { requireAuth } from "../middleware/auth";
 import { removeObjects } from "../lib/storage";
 import type { Recipe } from "@prisma/client";
 import { patchSchema } from "../lib/validation";
+import { ImportError, importRecipeFromUrl } from "../lib/recipeImport";
 
 export const recipesRouter = Router();
 recipesRouter.use(requireAuth);
@@ -59,6 +60,19 @@ recipesRouter.post("/", async (req, res) => {
     include,
   });
   res.status(201).json({ recipe: serializeRecipe(recipe) });
+});
+
+// Reads a recipe from a web page and returns it as a draft (nothing is
+// saved): the app fills its form with it so the user can check and edit.
+recipesRouter.post("/import", async (req, res) => {
+  const parsed = z.object({ url: z.string().trim().min(1, "Adresse manquante") }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
+  try {
+    res.json({ recipe: await importRecipeFromUrl(parsed.data.url) });
+  } catch (e) {
+    if (e instanceof ImportError) return res.status(422).json({ error: e.message });
+    throw e;
+  }
 });
 
 recipesRouter.patch("/:id", async (req, res) => {
