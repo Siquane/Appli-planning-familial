@@ -64,11 +64,11 @@ Dernière mise à jour : 13 novembre 2026.
 
 ## Mises à jour de l'appli sans nouvel APK (EAS Update, 13/11/2026)
 
-- `expo-updates` installé, canal `preview`, `runtimeVersion: "1"` dans `mobile/app.json`.
+- `expo-updates` installé, canal `preview`. `runtimeVersion` actuel : **"3"** (lot natif SDK 58 + widgets + Sentry) dans `mobile/app.json`.
 - Workflow `.github/workflows/eas-update.yml` : à chaque fusion dans `main` qui touche `mobile/`, publie une mise à jour ; l'appli la télécharge et l'applique au démarrage (`src/lib/updates.ts`). Aussi lançable à la main (« Run workflow »).
 - **Règle à respecter** : si un changement ajoute ou modifie un module natif, une permission ou `app.json` côté natif, augmenter `runtimeVersion` ("1" → "2") et compiler un nouvel APK. Garde-fou : si `package.json` ou `app.json` changent sans nouveau `runtimeVersion`, le workflow ne publie rien (avertissement).
 - L'URL de mise à jour (`https://u.expo.dev/<projectId>`) est ajoutée en CI par `mobile/scripts/configure-updates.js`, après `eas init` (build et update).
-- Il faut **un dernier APK** compilé après la fusion de cette fonctionnalité pour l'activer sur les téléphones.
+- Un APK n'est nécessaire que lorsque `runtimeVersion` change ; tout le reste arrive par mise à jour au démarrage.
 
 ## Améliorations sans nouvel APK (13/11/2026)
 
@@ -105,10 +105,12 @@ Ensuite, à part : mises à jour majeures du serveur (Prisma 7, Express 5).
 
 Comptes séparés pour chaque membre de la famille, synchronisation Google Agenda, statistiques du budget sur 12 mois, étoiles pour les tâches des enfants, idées cadeaux d'anniversaire, liste de courses en temps réel, thème clair, version iPhone (99 €/an).
 
-## Mises à jour majeures à prévoir plus tard (non faites, demandent du code)
+## État des dépendances (13/11/2026)
 
-- Serveur : Prisma 5 → 7, Express 4 → 5, zod 3 → 4, vitest 2 → 5, TypeScript 5 → 7, googleapis, msal-node.
-- À noter : plusieurs bibliothèques natives mobiles sont déjà plus récentes que la liste officielle d'Expo SDK 57 (async-storage 3, gesture-handler 3, reanimated 4.5.3, screens 4.27, safe-area-context 5.8, svg 15.15.5, worklets 0.11). Si la compilation Android échoue sur l'une d'elles, c'est la première piste.
+- Serveur : à jour dans les versions actuelles (`npm update`), `npm audit` : 0 faille. Déjà faits : zod 4, vitest 5.
+- Appli : alignée sur la liste Expo SDK 58 (sauf async-storage gardé en v3, qui fonctionne). `npm audit fix` appliqué ; il reste des alertes faibles/moyennes uniquement dans les outils de test (chaîne jest-expo / jest 29), qui ne partent pas dans l'APK. Elles disparaîtront avec jest 30 quand jest-expo le prendra en charge.
+- Mises à jour majeures encore à faire (demandent du code, PR dédiée) : Prisma 5 → 7, Express 4 → 5 (+ `@types/express` 5, express-rate-limit 8), TypeScript 5 → 7 (serveur) et 6 → 7 (appli), dotenv 18, bcryptjs 3, nanoid 6, `@types/node` 26.
+- Appli, à suivre au prochain APK : `@sentry/react-native` 8.35 (la liste SDK 58 indique 8.28), gesture-handler 3.5. Ne pas les monter sans nouveau `runtimeVersion` (modules natifs).
 
 ## Préférences de l'utilisateur
 
