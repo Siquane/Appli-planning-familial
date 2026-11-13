@@ -12,6 +12,9 @@ import type {
   FamilyDocument,
   Meal,
   MealInput,
+  MealPlanPreferences,
+  MealSlot,
+  ProposedMeal,
   Member,
   MonthlyBudget,
   Notification,
@@ -70,6 +73,10 @@ export const mealsApi = {
   list: () => api.get<{ meals: Meal[] }>("/meals"),
   set: (data: MealInput) => api.post<{ meal: Meal }>("/meals", data),
   remove: (id: string) => api.delete<void>(`/meals/${id}`),
+  /** Asks the server (Claude) for suggestions — nothing is saved. */
+  generate: (data: { slots: MealSlot[]; preferences: MealPlanPreferences; exclude?: string[] }) =>
+    api.post<{ meals: ProposedMeal[] }>("/meals/generate", data),
+  saveMany: (meals: MealInput[]) => api.post<{ meals: Meal[] }>("/meals/bulk", { meals }),
 };
 
 export const documentsApi = {

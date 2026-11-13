@@ -92,6 +92,18 @@ export function useDeleteMeal() {
   });
 }
 
+export function useGenerateMeals() {
+  return useMutation({ mutationFn: mealsApi.generate });
+}
+
+export function useSaveMeals() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (meals: MealInput[]) => mealsApi.saveMany(meals),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["meals"] }),
+  });
+}
+
 // Library and recipe attachments share the ["documents"] prefix so one
 // invalidation refreshes both.
 export function useDocuments(recipeId?: string) {
