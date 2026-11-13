@@ -10,7 +10,7 @@ import { CalendarIcon, ClockIcon, DeadlineIcon } from "../../src/components/icon
 import { useDeleteTask, useMembers, useTasks } from "../../src/hooks/useApi";
 import { useToastStore } from "../../src/state/toastStore";
 import { color, space } from "../../src/theme/tokens";
-import { categoryTagVariant, formatDuration, priorityLabel, WEEKDAYS_FULL } from "../../src/lib/weekdays";
+import { categoryColor, formatDuration, priorityLabel, WEEKDAYS_FULL } from "../../src/lib/weekdays";
 
 export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -55,7 +55,7 @@ export default function TaskDetailScreen() {
       <TopBar title={task.title} onBack={() => router.back()} onDuplicate={() => router.push(`/task/new?duplicate=${task.id}`)} onEdit={() => router.push(`/task/new?edit=${task.id}`)} onDelete={onDelete} />
       <View style={{ padding: 18, gap: space[4] }}>
         <View style={{ flexDirection: "row", gap: space[2] }}>
-          <Tag label={task.category} variant={categoryTagVariant(task.category)} />
+          <Tag label={task.category} tint={categoryColor(task.category)} />
           {task.priority === "high" && <Tag label={priorityLabel(task.priority)} variant="outline" />}
           {task.recurring && <Tag label="Récurrente" variant="neutral" />}
           {task.reminder && <Tag label="Rappel activé" variant="neutral" />}

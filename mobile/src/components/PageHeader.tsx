@@ -3,6 +3,7 @@ import { Pressable, View } from "react-native";
 import { router } from "expo-router";
 import { Text } from "./Text";
 import { Avatar } from "./Avatar";
+import { GradientRule, PasserelleArch } from "./Brand";
 import { BellIcon, ChevronLeftIcon, SearchIcon } from "./icons";
 import { useNotifications } from "../hooks/useApi";
 import { useAuthStore } from "../state/authStore";
@@ -18,9 +19,10 @@ const iconButton = {
   justifyContent: "center",
 } as const;
 
-// Top of each of the 4 tabs: the tab's title, then search, notifications
+// Top of each of the 4 tabs: the Passerelle arch and the tab's title with a
+// gradient line under it, then search, notifications
 // (dot when unread) and the profile avatar — they used to be tabs themselves.
-export function TabHeader({ title, subtitle, pillar }: { title: string; subtitle?: string; /** The tab's ring colour from the logo. */ pillar?: string }) {
+export function TabHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   const user = useAuthStore((s) => s.user);
   const { data: notifications = [] } = useNotifications();
   const hasUnread = notifications.some((n) => n.unread);
@@ -28,11 +30,14 @@ export function TabHeader({ title, subtitle, pillar }: { title: string; subtitle
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
       <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
-          {pillar && <View style={{ width: 12, height: 12, borderRadius: 6, borderWidth: 3, borderColor: pillar }} />}
-          <Text heading weight="semibold" size={20} numberOfLines={1} style={{ flexShrink: 1 }}>
-            {title}
-          </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
+          <PasserelleArch width={42} />
+          <View style={{ flexShrink: 1 }}>
+            <Text heading weight="semibold" size={22} numberOfLines={1}>
+              {title}
+            </Text>
+            <GradientRule />
+          </View>
         </View>
         {subtitle ? (
           <Text size={12.5} tone="muted" numberOfLines={1}>

@@ -79,9 +79,19 @@ Dernière mise à jour : 13 novembre 2026.
 - **Export du budget** : Budget → « Exporter le mois (tableur) », CSV pour Excel en français, envoyé par le menu de partage du téléphone.
 - **Sauvegarde hebdomadaire** : workflow `.github/workflows/backup.yml`, chaque dimanche vers 4 h, `pg_dump` compressé dans R2 sous `backups/`, 8 dernières gardées. Il faut 5 secrets GitHub (Settings → Secrets and variables → Actions) : `BACKUP_DATABASE_URL` (même valeur que `DATABASE_URL` dans Render), `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (mêmes valeurs que dans Render). Sans eux, le workflow ne fait rien et reste vert. Restaurer : télécharger le fichier depuis R2, puis `gunzip -c fichier.sql.gz | psql "<adresse Neon>"`.
 
-## Prochain lot (natif, nouvel APK, `runtimeVersion` "2")
+## Prochain lot (natif, nouvel APK, `runtimeVersion` "3")
 
 Expo SDK 58, widget Android, alertes de bug Sentry (compte sentry.io gratuit + clé DSN à fournir). Puis, à part : mises à jour majeures du serveur.
+
+## Style Passerelle (13/11/2026)
+
+- L'appli reprend le logo : fond bleu nuit `#070912`, cartes `#0f1426`, texte blanc bleuté, dégradé néon cyan → bleu → violet (`theme/tokens.ts` : `color`, `gradient`, `glow`).
+- Titres en Space Grotesk, texte en Inter.
+- Éléments de marque dans `src/components/Brand.tsx` : `PasserelleArch` (arche à côté du titre de chaque onglet), `GradientRule` (filet sous le titre), `GradientFill` (dégradé dessiné avec react-native-svg, pas de module natif en plus).
+- Onglets : l'icône dans l'anneau de sa couleur, halo autour de l'onglet actif (fond intérieur très léger pour garder le contraste). Le « + » est un rond à bord dégradé.
+- Boutons principaux remplis du dégradé, texte foncé. Catégories de tâches aux couleurs des anneaux (`categoryColor` dans `lib/weekdays.ts`, Santé en vert).
+- Icône, icône Android et écran de lancement refaits depuis le logo (`mobile/assets/`). Logo source : `assets/brand/logo-passerelle.png`.
+- `runtimeVersion` passé de "1" à "2" (icône et écran de lancement sont natifs) : il faut compiler un nouvel APK après la fusion.
 
 ## Idées notées pour plus tard
 

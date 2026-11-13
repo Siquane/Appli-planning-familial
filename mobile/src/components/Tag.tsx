@@ -10,8 +10,10 @@ const variants: Record<Variant, { bg?: string; fg: string; border?: string }> = 
   outline: { fg: color.accent, border: color.accent },
 };
 
-export function Tag({ label, variant = "outline" }: { label: string; variant?: Variant }) {
-  const v = variants[variant];
+// `tint` colours the tag from one hue (text, faint fill, soft border) — used
+// for task categories, which follow the logo's ring colours.
+export function Tag({ label, variant = "outline", tint }: { label: string; variant?: Variant; tint?: string }) {
+  const v = tint ? { bg: `${tint}1f`, fg: tint, border: `${tint}59` } : variants[variant];
   return (
     <View
       style={{
