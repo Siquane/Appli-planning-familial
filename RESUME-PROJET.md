@@ -1,7 +1,22 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 13 novembre 2026 (fin d'après-midi).
+Dernière mise à jour : 13 novembre 2026 (fin d'après-midi, PR #11 fusionnée).
+
+## ⚠️ Point de reprise (13/11/2026, fin de session) — à lire d'abord
+
+- **PR #11 fusionnée dans `main`** le 13/11 à la demande de l'utilisatrice (branche `claude/appli-planning-familial-setup-1cljht`) : Expo SDK 58, 4 widgets Android, Sentry, aperçus/exemples de widgets, liens widget → bon écran, Planning aéré, nom modifiable dans le profil (`PATCH /auth/me`), dépendances à jour. `main` (PR #12, #13, #14, #15) y avait été fusionné avant ; tests verts (serveur 103, appli 96).
+- **`runtimeVersion` "3"** sur `main` désormais : les mises à jour publiées ne visent plus que les APK "3".
+- **APK de test de la PR #11** (runtime "3", compilé depuis la branche, sans les tout derniers changements JS qui arriveront par mise à jour après fusion) : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/541514d0-0b8f-4289-b02a-c78da8d7119e
+- **À faire, dans l'ordre** :
+  1. L'utilisatrice teste cet APK (widgets : aperçu, exemple quand vide, appui → bon écran ; Planning ; Profil → nom). Si « Application non installée » : désinstaller l'ancienne appli d'abord (voir « APK actuel et installation »).
+  2. Corriger ce qu'elle signale (par PR, petites mises à jour JS sans nouvel APK).
+  3. Lancer « EAS Build (Android preview) » **depuis main** pour l'APK définitif runtime "3" ; vérifier que « EAS Update » a publié ; Render redéploie le serveur (route `PATCH /auth/me`).
+  4. Ensuite (PR séparée) : mises à jour majeures du serveur (Prisma 7, Express 5…), voir « État des dépendances ».
+- **Attention aux sessions parallèles** : plusieurs sessions ont fusionné dans main pendant que la #11 était ouverte (conflits sur `package-lock.json`, `app.json`/`runtimeVersion`, `CustomTabBar`). Avant de pousser : `git fetch origin main` et fusionner main ; ne jamais redescendre `runtimeVersion`.
+- Sentry actif (DSN dans `mobile/src/lib/sentry.ts`, organisation `siquanelab`, serveurs UE).
+- Sauvegarde hebdomadaire : workflow prêt, **5 secrets GitHub encore à ajouter** par l'utilisatrice (voir « Améliorations sans nouvel APK »).
+- cron-job.org (garder Render éveillé, `/health` toutes les 10 min) : à faire par l'utilisatrice si ce n'est pas déjà fait.
 
 ## Contexte
 
@@ -108,7 +123,7 @@ Ensuite, à part : mises à jour majeures du serveur (Prisma 7, Express 5).
 - **APK à installer** (runtime "3" : Expo SDK 58, widgets, Sentry, style Passerelle) : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/541514d0-0b8f-4289-b02a-c78da8d7119e
 - Liens périmés, à ne plus utiliser : `5a8ba245…` (runtime "1") et `c5add826…` (runtime "2", sessions parallèles du 13/11). Ils ne reçoivent plus de mises à jour.
 - Problème rencontré : « Application non installée » en installant par-dessus une ancienne version (signature différente probable). Solution : **désinstaller l'ancienne appli d'abord**, puis installer. Les données sont sur le serveur ; il faut se reconnecter et réactiver les notifications.
-- Ce qui a été ajouté après la compilation de cet APK (bol de l'onglet Repas, nom modifiable dans le profil, dépendances) arrive par EAS Update : fermer puis rouvrir l'appli une fois après l'installation.
+- Ce qui a été ajouté après la compilation de cet APK (bol de l'onglet Repas, nom modifiable dans le profil, dépendances) arrive par EAS Update **une fois la PR #11 fusionnée** (les mises à jour ne sont publiées que depuis main) : fermer puis rouvrir l'appli une fois.
 - À confirmer : l'installation a-t-elle réussi ? Le halo des onglets rend-il bien sur le téléphone (jamais vu sur un vrai appareil) ?
 - Éviter les sessions en parallèle sur l'appli : le 13/11, trois sessions ont produit des APK et des résumés contradictoires.
 
