@@ -15,7 +15,6 @@ Dernière mise à jour : 13 novembre 2026 (soir, reprise de la branche Premium).
 - **À faire par l'utilisatrice dans Render** : `ANTHROPIC_API_KEY` (menus) et `LIFETIME_PREMIUM_EMAILS` (son adresse de compte, et celles de la famille, séparées par des virgules) → Premium à vie au redémarrage.
 - RevenueCat / Play Console : pas configurés (sans clé `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`, l'écran Premium affiche « bientôt »). Guide : `docs/achats-android.md`. Profil EAS `production` (.aab) prêt, sur le canal `preview`.
 - L'autre session qui parlait de `claude/passerelle-continuation-9zzxuo` et du commit `11b892e` se trompait : ni l'une ni l'autre n'existent ; anniversaires et recettes sont dans main depuis longtemps.
-- Ensuite : mises à jour majeures du serveur (Prisma 7, Express 5…), voir « État des dépendances ».
 - Sauvegarde hebdomadaire : **5 secrets GitHub encore à ajouter**. cron-job.org (`/health` toutes les 10 min) : à faire si pas fait.
 - Règles : avant de pousser, `git fetch origin main` et fusionner main ; ne jamais redescendre `runtimeVersion` ; migrations datées **après** la dernière de main.
 
@@ -105,7 +104,7 @@ Dernière mise à jour : 13 novembre 2026 (soir, reprise de la branche Premium).
 - **Profil** : nom modifiable (Profil → Modifier/Ajouter), route serveur `PATCH /auth/me` (recalcule les initiales) ; l'appli resynchronise l'utilisateur via `GET /auth/me` à l'ouverture.
 - Planning plus aéré (espacement 20 sur tous les écrans), les 7 jours tiennent sur une ligne.
 
-Ensuite, à part : mises à jour majeures du serveur (Prisma 7, Express 5).
+Mises à jour majeures du serveur : faites le 13/11 au soir (voir « Dépendances et mises à jour »).
 
 ## Style Passerelle (13/11/2026)
 
@@ -139,7 +138,7 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 
 - Serveur : à jour dans les versions actuelles (`npm update`), `npm audit` : 0 faille. Déjà faits : zod 4, vitest 5.
 - Appli : alignée sur la liste Expo SDK 58 (sauf async-storage gardé en v3, qui fonctionne). `npm audit fix` appliqué ; il reste des alertes faibles/moyennes uniquement dans les outils de test (chaîne jest-expo / jest 29), qui ne partent pas dans l'APK. Elles disparaîtront avec jest 30 quand jest-expo le prendra en charge.
-- Mises à jour majeures encore à faire (demandent du code, PR dédiée) : Prisma 5 → 7, Express 4 → 5 (+ `@types/express` 5, express-rate-limit 8), TypeScript 5 → 7 (serveur) et 6 → 7 (appli), dotenv 18, bcryptjs 3, nanoid 6, `@types/node` 26.
+- **Mises à jour majeures du serveur faites (13/11 soir)** : Prisma 7 (adaptateur `@prisma/adapter-pg`, URL de la base dans `server/prisma.config.ts`, plus dans le schéma ; `migrate diff --to-schema` + `SHADOW_DATABASE_URL` en CI), Express 5, express-rate-limit 8 (`ipKeyGenerator`), TypeScript 7 (`module`/`moduleResolution` = `nodenext`), dotenv 18, bcryptjs 3, nanoid 6, googleapis 190, pdfkit 0.20. `@types/node` gardé en 22 (Node 22 sur Render ; `engines.node >= 22.12`, exigé par Prisma 7). Prisma 7 refuse `db push --force-reset` lancé par une IA sans accord explicite : les tests locaux demandent la variable `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` (texte exact de l'accord de l'utilisatrice) ; la CI n'est pas concernée.
 - Appli, à suivre au prochain APK : `@sentry/react-native` 8.35 (la liste SDK 58 indique 8.28), gesture-handler 3.5. Ne pas les monter sans nouveau `runtimeVersion` (modules natifs).
 
 ## Numéro de version Android (PR #5, 11/11/2026)
