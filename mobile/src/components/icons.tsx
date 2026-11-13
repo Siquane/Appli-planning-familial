@@ -215,40 +215,47 @@ export function MealIcon({ size = 16, color = "currentColor" }: IconProps) {
   );
 }
 
-// Chef's toque (Repas+): puffed top, band with two pleats.
+// Chef's toque (Repas+): puffed top over a plain band. Thin strokes on purpose
+// (the offer icons sit next to text, not in the tab bar).
 export function ToqueIcon({ size = 16, color = "currentColor" }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M7 14.5a3.6 3.6 0 0 1-.9-7.1 4.2 4.2 0 0 1 5.9-3.1 4.2 4.2 0 0 1 5.9 3.1 3.6 3.6 0 0 1-.9 7.1z"
+        d="M7.2 15C4.3 14.6 3.4 10.6 6 9.2c-.3-3 2.7-4.9 5-3.4.9-2.7 4.7-2.8 5.6-.1 2.5-.6 4.4 2.1 2.9 4.2 1.7 1.7.6 4.6-2.1 5.1z"
         fill={color}
-        fillOpacity={0.3}
+        fillOpacity={0.2}
         stroke={color}
-        strokeWidth={1.8}
+        strokeWidth={1.3}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <Path d="M7.5 14.5v5a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-5M10.5 15.5v3M13.5 15.5v3" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M7.2 15v4c0 .6.4 1 1 1h7.6c.6 0 1-.4 1-1v-4" stroke={color} strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }
 
-// Piggy bank (Budget+), with a coin above the slot.
+// Piggy bank (Budget+): rounded body, snout, ear, curly tail, a coin above the slot.
 export function PiggyBankIcon({ size = 16, color = "currentColor" }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M4.5 13a6.5 5 0 0 1 11.6-3.1h1.6l1.3-2v3.2a5 5 0 0 1 1.5 1.9h1v3h-1.3a6 6 0 0 1-2.2 2.2V20.5h-2.5v-1.4a8.5 8.5 0 0 1-3.6 0v1.4H7.4v-2.3A5 5 0 0 1 4.5 13z"
+        d="M4.8 13.2c0-3.3 3.2-5.6 7-5.6 2.5 0 4.6.9 5.8 2.3h1.6c.5 0 .8.3.8.8v2.6c0 .5-.3.8-.8.8h-1.1c-.5 1.3-1.4 2.3-2.6 3v2.3c0 .4-.3.7-.7.7h-1.1c-.4 0-.7-.3-.7-.7V18c-.5.1-1 .2-1.4.2-.7 0-1.4-.1-2-.2v1.4c0 .4-.3.7-.7.7H8c-.4 0-.7-.3-.7-.7v-2.5c-1.5-.9-2.5-2.2-2.5-3.7z"
         fill={color}
-        fillOpacity={0.3}
+        fillOpacity={0.2}
         stroke={color}
-        strokeWidth={1.8}
+        strokeWidth={1.3}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <Path d="M10 8.6h3.5M4.6 12.2c-1.4-.2-1.9-1.4-1.2-2.3" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-      <Circle cx={11.75} cy={4} r={1.7} stroke={color} strokeWidth={1.8} />
-      <Circle cx={16.6} cy={12} r={0.6} fill={color} />
+      <Path
+        d="M14.5 8.1c.2-1 .7-1.8 1.4-2.2.4.7.6 1.6.6 2.7M10 9.8h3M4.8 12.6c-.9 0-1.4-.6-1.2-1.3"
+        stroke={color}
+        strokeWidth={1.3}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle cx={11.5} cy={4.4} r={1.7} stroke={color} strokeWidth={1.3} />
+      <Circle cx={16.9} cy={11.4} r={0.65} fill={color} />
     </Svg>
   );
 }
