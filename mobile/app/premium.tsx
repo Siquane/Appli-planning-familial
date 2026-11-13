@@ -89,8 +89,8 @@ export default function PremiumScreen() {
           const until = pack.id === "both" ? plan?.packs.budget.until : pack.id === "budget" ? plan?.packs.budget.until : plan?.packs.meals.until;
           return (
             <Card key={pack.id} style={{ gap: space[2], borderWidth: active ? 1 : 0, borderColor: color.accent400 }}>
-              {/* Left: icon(s) with the name under them. Right: the price. */}
-              <View style={{ flexDirection: "row", alignItems: "flex-end", gap: space[3] }}>
+              {/* Left: icon(s) with the name under them. Right: the price, centred on that block. */}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
                 <View style={{ flex: 1, alignItems: "flex-start", gap: 2 }}>
                   {pack.id === "meals" ? (
                     <ToqueIcon size={56} color={color.pillar2} />
