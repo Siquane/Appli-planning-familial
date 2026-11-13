@@ -88,7 +88,7 @@ export default function PremiumScreen() {
           const active = pack.id === "both" ? both : !both && isActive(plan, pack.id);
           const until = pack.id === "both" ? plan?.packs.budget.until : pack.id === "budget" ? plan?.packs.budget.until : plan?.packs.meals.until;
           return (
-            <Card key={pack.id} style={{ gap: space[2], borderWidth: active ? 1 : 0, borderColor: color.accent400 }}>
+            <Card key={pack.id} style={{ gap: space[6], borderWidth: active ? 1 : 0, borderColor: color.accent400 }}>
               {/* Left: icon(s) with the name under them. Right: the price, centred on that block. */}
               <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
                 <View style={{ flex: 1, alignItems: "flex-start", gap: 2 }}>
@@ -118,16 +118,19 @@ export default function PremiumScreen() {
                   </Text>
                 </View>
               </View>
-              {pack.features.map((f) => (
-                <View key={f} style={{ flexDirection: "row", gap: space[2] }}>
-                  <View style={{ paddingTop: 2 }}>
-                    <CheckIcon size={14} color={color.accent400} />
+              {/* Features packed together, set apart from the header and the buttons. */}
+              <View style={{ gap: 2 }}>
+                {pack.features.map((f) => (
+                  <View key={f} style={{ flexDirection: "row", gap: space[2] }}>
+                    <View style={{ paddingTop: 2 }}>
+                      <CheckIcon size={14} color={color.accent400} />
+                    </View>
+                    <Text size={13} style={{ flex: 1 }}>
+                      {f}
+                    </Text>
                   </View>
-                  <Text size={13} style={{ flex: 1 }}>
-                    {f}
-                  </Text>
-                </View>
-              ))}
+                ))}
+              </View>
               {active && until ? (
                 <Text size={12} tone="accent">
                   {until.startsWith("2999") ? "Actif" : `Actif · prochaine échéance le ${frenchDate(until)}`}
