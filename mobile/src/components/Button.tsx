@@ -1,7 +1,8 @@
 import { ActivityIndicator, Pressable, ViewStyle } from "react-native";
 import { ReactNode } from "react";
 import { Text } from "./Text";
-import { color, radius, space } from "../theme/tokens";
+import { color, glow, radius, space } from "../theme/tokens";
+import { GradientFill } from "./Brand";
 
 type Variant = "primary" | "secondary" | "ghost" | "icon";
 
@@ -17,8 +18,8 @@ interface Props {
   accessibilityLabel?: string;
 }
 
-// Primary actions are an accent outline, never a filled button — Nocturne's
-// "Do: Outline primary actions" rule.
+// Primary actions are filled with the logo's neon gradient (dark text on top);
+// secondary and ghost buttons stay sober.
 export function Button({ label, onPress, variant = "secondary", block, disabled, loading, icon, style, accessibilityLabel }: Props) {
   const isIcon = variant === "icon";
   return (
@@ -33,32 +34,28 @@ export function Button({ label, onPress, variant = "secondary", block, disabled,
           alignItems: "center",
           justifyContent: "center",
           gap: 6,
-          paddingVertical: isIcon ? 0 : space[2],
           paddingHorizontal: isIcon ? 0 : space[3] * 1.2,
           width: isIcon ? 36 : block ? "100%" : undefined,
           height: isIcon ? 36 : undefined,
           borderRadius: radius.md,
-          borderWidth: variant === "ghost" ? 0 : 1,
-          borderColor: variant === "primary" ? color.accent : variant === "secondary" || isIcon ? color.divider : "transparent",
-          backgroundColor: pressed
-            ? variant === "primary"
-              ? "rgba(34,211,238,0.22)"
-              : variant === "secondary" || isIcon
-              ? "rgba(233,233,237,0.14)"
-              : "transparent"
-            : "transparent",
-          opacity: disabled ? 0.45 : 1,
+          borderWidth: variant === "ghost" || variant === "primary" ? 0 : 1,
+          borderColor: variant === "secondary" || isIcon ? color.divider : "transparent",
+          paddingVertical: isIcon ? 0 : variant === "primary" ? space[3] : space[2],
+          backgroundColor: pressed && (variant === "secondary" || isIcon) ? "rgba(232,244,255,0.12)" : "transparent",
+          boxShadow: variant === "primary" && !disabled ? glow("rgba(76,196,255,0.35)", 14) : undefined,
+          opacity: disabled ? 0.45 : pressed && variant === "primary" ? 0.85 : 1,
         },
         style,
       ]}
     >
+      {variant === "primary" && <GradientFill radius={radius.md} />}
       {loading ? (
-        <ActivityIndicator size="small" color={variant === "primary" ? color.accent : color.text} />
+        <ActivityIndicator size="small" color={variant === "primary" ? color.bg : color.text} />
       ) : (
         <>
           {icon}
           {label ? (
-            <Text weight="medium" heading size={14} style={{ color: variant === "primary" || variant === "ghost" ? color.accent : color.text }}>
+            <Text weight="medium" heading size={14} style={{ color: variant === "primary" ? color.bg : variant === "ghost" ? color.accent : color.text }}>
               {label}
             </Text>
           ) : null}

@@ -1,47 +1,54 @@
-// Passerelle's "data-grid" theme: the Nocturne design system's neutral ramp,
-// dividers, shadows and type tokens, with Nocturne's default blurple accent
-// (#9184d9) and blue-black ground (#161826) swapped for a cyan accent and a
-// neutral graphite ground — the direction the design chat landed on
-// ("un peu plus tech", then "change le bleu sombre en une autre couleur").
-// Ported 1:1 from project/_ds/nocturne-.../styles.css + the design source file
-// :root override block.
-
+// Passerelle theme, aligned on the logo: a deep night-blue ground (#070912,
+// the logo's background), slate-blue surfaces, blue-white text, and the logo's
+// neon ramp cyan → blue → violet. The 4 rings of the logo give the 4 tabs
+// their colours. Spacing, radii and shadows still follow the Nocturne system.
 export const color = {
-  bg: "#121316",
-  surface: "#1c1e22",
-  text: "#e9e9ed",
-  divider: "rgba(233,233,237,0.16)",
+  bg: "#070912",
+  surface: "#0f1426",
+  text: "#e8f4ff",
+  divider: "rgba(232,244,255,0.13)",
 
-  accent: "#22d3ee",
-  accent100: "#e6fbff",
-  accent200: "#b8f2fb",
-  accent300: "#7ee6f5",
-  accent400: "#3fd4ea",
-  accent500: "#22d3ee",
-  accent600: "#12a8c2",
-  accent700: "#0e7c96",
-  accent800: "#0a5568",
-  accent900: "#062f3d",
+  accent: "#22e5ff",
+  accent100: "#e6fcff",
+  accent200: "#b5f5ff",
+  accent300: "#7aeeff",
+  accent400: "#45e8ff",
+  accent500: "#22e5ff",
+  accent600: "#12b4cc",
+  accent700: "#0d8599",
+  accent800: "#0a4f5e",
+  accent900: "#062a33",
 
-  neutral100: "#f3f5fe",
-  neutral200: "#e4e7f5",
-  neutral300: "#cfd3e5",
-  neutral400: "#b2b6ca",
-  neutral500: "#9397ab",
-  neutral600: "#75798c",
-  neutral700: "#595d6c",
-  neutral800: "#3f424d",
-  neutral900: "#292b31",
+  // Neutrals lean slightly blue so greys sit naturally on the night-blue ground.
+  neutral100: "#eef3ff",
+  neutral200: "#dde4f5",
+  neutral300: "#c3cbe2",
+  neutral400: "#a3adc9",
+  neutral500: "#7f8aa8",
+  neutral600: "#5f6986",
+  neutral700: "#434c66",
+  neutral800: "#2a3249",
+  neutral900: "#181e30",
 
-  danger: "#ef4444",
+  danger: "#ff5c6c",
+  success: "#3ddc97",
 
   // The 4 rings of the Passerelle logo, left to right (cyan → violet):
   // one per tab — Planning, Repas, Budget, Famille.
-  pillar1: "#22d3ee",
-  pillar2: "#4cb8ff",
-  pillar3: "#7b9cff",
-  pillar4: "#a35cff",
+  pillar1: "#22e5ff",
+  pillar2: "#4cc4ff",
+  pillar3: "#7a9cff",
+  pillar4: "#9b5cff",
 } as const;
+
+// The logo's neon gradient, left to right. Used for primary buttons, the + and
+// the line under each tab title.
+export const gradient = [color.pillar1, color.pillar2, color.pillar4] as const;
+
+// A soft neon halo, like the glow around the logo's rings (RN boxShadow).
+export function glow(c: string, blur = 12) {
+  return `0 0 ${blur}px ${c}`;
+}
 
 export const radius = { sm: 4, md: 8, lg: 14 } as const;
 
@@ -59,8 +66,9 @@ export const shadow = {
 import { Platform } from "react-native";
 
 export const font = {
-  heading: "Inter_500Medium",
-  headingSemibold: "Inter_600SemiBold",
+  // Titles use Space Grotesk, the geometric type of the PASSERELLE wordmark.
+  heading: "SpaceGrotesk_500Medium",
+  headingSemibold: "SpaceGrotesk_700Bold",
   body: "Inter_400Regular",
   bodyMedium: "Inter_500Medium",
   bodySemibold: "Inter_600SemiBold",

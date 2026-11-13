@@ -6,7 +6,7 @@ import { Tag } from "./Tag";
 import { AvatarStack } from "./Avatar";
 import { ClockIcon, RecurringIcon } from "./icons";
 import { color, space } from "../theme/tokens";
-import { categoryTagVariant, formatDuration } from "../lib/weekdays";
+import { categoryColor, formatDuration } from "../lib/weekdays";
 import type { Member, Task } from "../api/types";
 
 export function TaskCard({ task, members }: { task: Task; members: Member[] }) {
@@ -48,7 +48,7 @@ export function TaskCard({ task, members }: { task: Task; members: Member[] }) {
             </Text>
           </View>
           <View style={{ flexDirection: "row", gap: space[2], alignItems: "center" }}>
-            <Tag label={task.category} variant={categoryTagVariant(task.category)} />
+            <Tag label={task.category} tint={categoryColor(task.category)} />
             {task.priority === "high" && <Tag label="Priorité haute" variant="outline" />}
           </View>
         </View>

@@ -1,3 +1,4 @@
+import { color } from "../theme/tokens";
 import type { Weekday } from "../api/types";
 
 // 0=Lun ... 6=Dim — matches the server's convention (app/server/src/lib/dates.ts).
@@ -12,14 +13,22 @@ export function todayWeekday(): Weekday {
   return jsDayToWeekday(new Date().getDay());
 }
 
-export function categoryTagVariant(category: string): "accent" | "neutral" | "outline" {
+// Each task category takes one of the logo's ring colours; Santé gets the
+// neon green so it stays distinct from the 4 tab colours.
+export function categoryColor(category: string): string {
   switch (category) {
     case "École":
-      return "accent";
+      return color.pillar1;
+    case "Travail":
+      return color.pillar2;
+    case "Maison":
+      return color.pillar3;
+    case "Loisirs":
+      return color.pillar4;
     case "Santé":
-      return "outline";
+      return color.success;
     default:
-      return "neutral";
+      return color.neutral400;
   }
 }
 

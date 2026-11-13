@@ -70,6 +70,16 @@ Dernière mise à jour : 13 novembre 2026.
 - L'URL de mise à jour (`https://u.expo.dev/<projectId>`) est ajoutée en CI par `mobile/scripts/configure-updates.js`, après `eas init` (build et update).
 - Il faut **un dernier APK** compilé après la fusion de cette fonctionnalité pour l'activer sur les téléphones.
 
+## Style Passerelle (13/11/2026)
+
+- L'appli reprend le logo : fond bleu nuit `#070912`, cartes `#0f1426`, texte blanc bleuté, dégradé néon cyan → bleu → violet (`theme/tokens.ts` : `color`, `gradient`, `glow`).
+- Titres en Space Grotesk, texte en Inter.
+- Éléments de marque dans `src/components/Brand.tsx` : `PasserelleArch` (arche à côté du titre de chaque onglet), `GradientRule` (filet sous le titre), `GradientFill` (dégradé dessiné avec react-native-svg, pas de module natif en plus).
+- Onglets : l'icône dans l'anneau de sa couleur, halo autour de l'onglet actif (fond intérieur très léger pour garder le contraste). Le « + » est un rond à bord dégradé.
+- Boutons principaux remplis du dégradé, texte foncé. Catégories de tâches aux couleurs des anneaux (`categoryColor` dans `lib/weekdays.ts`, Santé en vert).
+- Icône, icône Android et écran de lancement refaits depuis le logo (`mobile/assets/`). Logo source : `assets/brand/logo-passerelle.png`.
+- `runtimeVersion` passé de "1" à "2" (icône et écran de lancement sont natifs) : il faut compiler un nouvel APK après la fusion.
+
 ## Idées notées pour plus tard
 
 Comptes séparés pour chaque membre de la famille, sauvegarde hebdomadaire de la base vers R2, liste de courses générée depuis le menu, synchronisation Google Agenda, widget Android, export CSV du budget.
