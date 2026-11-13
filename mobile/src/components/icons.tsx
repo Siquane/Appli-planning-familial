@@ -215,21 +215,21 @@ export function MealIcon({ size = 16, color = "currentColor" }: IconProps) {
   );
 }
 
-// Chef's toque (Repas+): puffed top over a plain band. Thin strokes on purpose
-// (the offer icons sit next to text, not in the tab bar).
+// Chef's toque (Repas+): three symmetric puffs over a plain band. Thin strokes
+// on purpose (the offer icons sit next to text, not in the tab bar).
 export function ToqueIcon({ size = 16, color = "currentColor" }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M7.2 15C4.3 14.6 3.4 10.6 6 9.2c-.3-3 2.7-4.9 5-3.4.9-2.7 4.7-2.8 5.6-.1 2.5-.6 4.4 2.1 2.9 4.2 1.7 1.7.6 4.6-2.1 5.1z"
+        d="M7.4 14.6A3.8 3.8 0 0 1 9.2 7.6a3.2 3.2 0 0 1 5.6 0 3.8 3.8 0 0 1 1.8 7z"
         fill={color}
         fillOpacity={0.2}
         stroke={color}
-        strokeWidth={1.3}
+        strokeWidth={1.1}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <Path d="M7.2 15v4c0 .6.4 1 1 1h7.6c.6 0 1-.4 1-1v-4" stroke={color} strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M7.4 14.6v4.4c0 .6.4 1 1 1h7.2c.6 0 1-.4 1-1v-4.4" stroke={color} strokeWidth={1.1} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -243,18 +243,18 @@ export function PiggyBankIcon({ size = 16, color = "currentColor" }: IconProps) 
         fill={color}
         fillOpacity={0.2}
         stroke={color}
-        strokeWidth={1.3}
+        strokeWidth={1.1}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <Path
         d="M14.5 8.1c.2-1 .7-1.8 1.4-2.2.4.7.6 1.6.6 2.7M10 9.8h3M4.8 12.6c-.9 0-1.4-.6-1.2-1.3"
         stroke={color}
-        strokeWidth={1.3}
+        strokeWidth={1.1}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <Circle cx={11.5} cy={4.4} r={1.7} stroke={color} strokeWidth={1.3} />
+      <Circle cx={11.5} cy={4.4} r={1.7} stroke={color} strokeWidth={1.1} />
       <Circle cx={16.9} cy={11.4} r={0.65} fill={color} />
     </Svg>
   );
