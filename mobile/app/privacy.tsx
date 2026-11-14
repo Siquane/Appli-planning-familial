@@ -15,6 +15,8 @@ import { ApiError } from "../src/api/client";
 import { useToastStore } from "../src/state/toastStore";
 import { space, gutter } from "../src/theme/tokens";
 import { errorText } from "../src/lib/errors";
+import { HeirPickerModal } from "../src/components/HeirPickerModal";
+import { parseHeirs, type HeirChoice } from "../src/lib/family";
 
 function Section({ title, children }: { title: string; children: string }) {
   return (
@@ -38,6 +40,8 @@ export default function PrivacyScreen() {
   const { data: consentedAt } = useFoodConsent();
   const setConsent = useSetFoodConsent();
   const [password, setPassword] = useState("");
+  // Several adults could take the family over: the owner chooses (see HeirPickerModal).
+  const [heirChoices, setHeirChoices] = useState<HeirChoice[] | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   function onWithdraw() {
@@ -59,6 +63,18 @@ export default function PrivacyScreen() {
     );
   }
 
+  async function deleteForGood(heirId?: string) {
+    setDeleting(true);
+    try {
+      await deleteAccount(password, true, heirId);
+      router.replace("/");
+    } catch (err) {
+      useToastStore.getState().show(errorText(err, "supprimer le compte"));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   function onDelete() {
     Alert.alert(
       "Supprimer ton compte ?",
@@ -77,6 +93,11 @@ export default function PrivacyScreen() {
               if (e instanceof ApiError && e.code === "family_has_members") {
                 // Other accounts use this family: say so and ask again before deleting for everyone.
                 setDeleting(false);
+                const heirs = parseHeirs(e.details);
+                if (heirs.length > 1) {
+                  setHeirChoices(heirs);
+                  return;
+                }
                 const handedOver = !!(e.details as { heir?: string | null } | undefined)?.heir;
                 Alert.alert(handedOver ? "Confier la famille avant de partir" : "D'autres comptes utilisent cette famille", e.message, [
                   { text: "Annuler", style: "cancel" },
@@ -182,6 +203,17 @@ export default function PrivacyScreen() {
           <Button label="Supprimer mon compte" variant="secondary" block loading={deleting} disabled={!password} onPress={onDelete} />
         </Accordion>
       </KeyboardScrollView>
+      {heirChoices ? (
+        <HeirPickerModal
+          heirs={heirChoices}
+          busy={deleting}
+          onCancel={() => setHeirChoices(null)}
+          onConfirm={async (id) => {
+            await deleteForGood(id);
+            setHeirChoices(null);
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }

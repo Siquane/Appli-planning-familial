@@ -55,3 +55,15 @@ export function noticeText(notice: FamilyNotice): { title: string; body: string;
       };
   }
 }
+
+export interface HeirChoice {
+  id: string;
+  name: string;
+}
+
+/** The adults who could take the family over, from the server's answer when the owner deletes their account. */
+export function parseHeirs(details: unknown): HeirChoice[] {
+  const heirs = (details as { heirs?: unknown } | null | undefined)?.heirs;
+  if (!Array.isArray(heirs)) return [];
+  return heirs.filter((h): h is HeirChoice => !!h && typeof h.id === "string" && typeof h.name === "string");
+}
