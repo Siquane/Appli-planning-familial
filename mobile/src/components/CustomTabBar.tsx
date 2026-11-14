@@ -59,6 +59,7 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
           style={{
             width: 8,
             height: 8,
+            marginTop: 3,
             borderRadius: 4,
             borderWidth: 1.5,
             borderColor: isFocused ? pillar : "transparent",
