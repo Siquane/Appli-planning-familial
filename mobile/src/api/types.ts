@@ -211,7 +211,10 @@ export interface MealQuota {
 
 export interface PackStatus {
   active: boolean;
+  /** Paid date, or the end of the trial while it runs. */
   until: string | null;
+  /** Budget+ only: the free trial. */
+  trial?: { available: boolean; active: boolean; days: number; endsAt: string | null };
 }
 
 export interface Plan {

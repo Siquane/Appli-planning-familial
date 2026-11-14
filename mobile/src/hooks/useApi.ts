@@ -119,6 +119,11 @@ export function usePlan() {
   return useQuery({ queryKey: ["plan"], queryFn: () => planApi.get(), enabled });
 }
 
+export function useStartBudgetTrial() {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: () => planApi.startBudgetTrial(), onSuccess: (plan) => qc.setQueryData(["plan"], plan) });
+}
+
 export function useSavingsGoals() {
   const enabled = useEnabled();
   return useQuery({ queryKey: ["savings-goals"], queryFn: () => savingsGoalsApi.list().then((r) => r.goals), enabled });

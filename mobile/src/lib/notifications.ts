@@ -1,4 +1,5 @@
 import * as Notifications from "expo-notifications";
+import { TRIAL_REMINDER_DAYS, trialReminderDate } from "./premium";
 import { Platform } from "react-native";
 import { useToastStore } from "../state/toastStore";
 import type { Member, Task, Weekday } from "../api/types";
@@ -193,4 +194,25 @@ export async function syncEveningDigest(tasks: Task[], enabled: boolean): Promis
       });
     })
   );
+}
+
+// ---------------------------------------------------------------------------
+// Budget+ trial: one reminder a few days before it ends (see trialReminderDate).
+
+const TRIAL_REMINDER_ID = "trial:budget";
+
+/** Schedules (or cancels, when `endsAt` is null or the moment has passed) the « trial ends soon » reminder. */
+export async function syncTrialReminder(endsAt: string | null | undefined): Promise<void> {
+  if (Platform.OS === "web") return;
+  await Notifications.cancelScheduledNotificationAsync(TRIAL_REMINDER_ID).catch(() => {});
+  const date = trialReminderDate(endsAt);
+  if (!date || !(await hasNotificationPermission())) return;
+  await Notifications.scheduleNotificationAsync({
+    identifier: TRIAL_REMINDER_ID,
+    content: {
+      title: "Budget+",
+      body: `Plus que ${TRIAL_REMINDER_DAYS} jours d'essai gratuit. Pour garder l'import de relevés, l'épargne et le bilan, passe à Budget+.`,
+    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
+  });
 }

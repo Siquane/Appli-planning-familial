@@ -14,7 +14,7 @@ import { PartyIcon, PiggyBankIcon, TrashIcon } from "../src/components/icons";
 import { MoreLink } from "../src/components/MoreLink";
 import { useCreateSavingsGoal, useDeleteSavingsGoal, usePaySavingsGoal, usePlan, useSavingsGoals } from "../src/hooks/useApi";
 import { formatEuros, monthsLeft, parseAmount, toDayString } from "../src/lib/money";
-import { hasBudgetPack, showApiError } from "../src/lib/premium";
+import { budgetOfferLabel, hasBudgetPack, showApiError } from "../src/lib/premium";
 import { useToastStore } from "../src/state/toastStore";
 import { color, radius, space, gutter } from "../src/theme/tokens";
 import type { SavingsGoal } from "../src/api/types";
@@ -62,7 +62,7 @@ export default function SavingsScreen() {
               <Text size={13} tone="muted">
                 Mets de côté pour les vacances, Noël ou la voiture, et regarde la jauge se remplir.
               </Text>
-              <MoreLink label="Voir Budget+" />
+              <MoreLink label={budgetOfferLabel(plan)} />
             </Card>
           </Pressable>
         )}

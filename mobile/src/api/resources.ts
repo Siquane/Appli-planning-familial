@@ -92,6 +92,7 @@ export const mealsApi = {
 
 export const planApi = {
   get: () => api.get<Plan>("/plan"),
+  startBudgetTrial: () => api.post<Plan>("/plan/trial/budget"),
 };
 
 export const statementsApi = {
