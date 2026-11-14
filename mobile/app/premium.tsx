@@ -7,9 +7,10 @@ import { Screen } from "../src/components/Screen";
 import { Text } from "../src/components/Text";
 import { Card } from "../src/components/Card";
 import { TopBar } from "../src/components/TopBar";
-import { CheckIcon, PiggyBankIcon, ToqueIcon } from "../src/components/icons";
-import { usePlan } from "../src/hooks/useApi";
-import { PACKS, hasAnyPack, mealQuotaLabel, packUntilLabel } from "../src/lib/premium";
+import { CheckIcon, PiggyBankIcon, SparkleIcon, ToqueIcon } from "../src/components/icons";
+import { usePlan, useStartBudgetTrial } from "../src/hooks/useApi";
+import { PACKS, hasPaidPack, mealQuotaLabel, packUntilLabel, trialDaysLeft } from "../src/lib/premium";
+import { requestNotificationPermission, syncTrialReminder } from "../src/lib/notifications";
 import { color, space, gutter } from "../src/theme/tokens";
 import { Button } from "../src/components/Button";
 import { useAuthStore } from "../src/state/authStore";
@@ -23,8 +24,10 @@ function frenchDate(iso: string) {
 
 function isActive(plan: Plan | undefined, id: (typeof PACKS)[number]["id"]) {
   if (!plan) return false;
-  if (id === "both") return plan.packs.budget.active && plan.packs.meals.active;
-  return plan.packs[id].active;
+  // The trial isn't a purchase: Budget+ only counts as active once it's paid.
+  const budgetPaid = plan.packs.budget.active && !plan.packs.budget.trial?.active;
+  if (id === "both") return budgetPaid && plan.packs.meals.active;
+  return id === "budget" ? budgetPaid : plan.packs[id].active;
 }
 
 // The Premium packs, bought through Google Play (RevenueCat). Without a
@@ -34,6 +37,7 @@ export default function PremiumScreen() {
   const both = isActive(plan, "both");
   const userId = useAuthStore((s) => s.user?.id);
   const qc = useQueryClient();
+  const startTrial = useStartBudgetTrial();
   const billing = isBillingAvailable();
   const [prices, setPrices] = useState<Partial<Record<PackOffering, PackPrices>>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -58,6 +62,17 @@ export default function PremiumScreen() {
       useToastStore.getState().show(e instanceof Error ? e.message : "L'achat n'a pas abouti.");
     } finally {
       setBusy(null);
+    }
+  }
+
+  async function onTrial() {
+    try {
+      const updated = await startTrial.mutateAsync();
+      useToastStore.getState().show(`Essai de ${(updated.packs.budget.trial?.days ?? 28) / 7} semaines démarré. Bon essai !`, "sparkle");
+      // The reminder 5 days before the end needs the notification permission.
+      if (await requestNotificationPermission()) await syncTrialReminder(updated.packs.budget.trial?.endsAt);
+    } catch (e) {
+      useToastStore.getState().show(e instanceof Error ? e.message : "Impossible de démarrer l'essai. Réessaie.");
     }
   }
 
@@ -87,6 +102,7 @@ export default function PremiumScreen() {
           // With both packs active, highlight Passerelle+ only.
           const active = pack.id === "both" ? both : !both && isActive(plan, pack.id);
           const until = pack.id === "both" ? plan?.packs.budget.until : pack.id === "budget" ? plan?.packs.budget.until : plan?.packs.meals.until;
+          const trial = pack.id === "budget" ? plan?.packs.budget.trial : undefined;
           return (
             <Card key={pack.id} style={{ gap: space.lg, borderWidth: active ? 1 : 0, borderColor: color.accent400 }}>
               {/* Left: icon(s) with the name under them. Right: the price, centred on that block. */}
@@ -134,6 +150,14 @@ export default function PremiumScreen() {
                   </View>
                 ))}
               </View>
+              {trial?.active && trial.endsAt && !active ? (
+                <Text size={13} tone="accent">
+                  {`Essai gratuit jusqu'au ${frenchDate(trial.endsAt)} · il reste ${trialDaysLeft(trial.endsAt)} jour${trialDaysLeft(trial.endsAt) > 1 ? "s" : ""}`}
+                </Text>
+              ) : null}
+              {trial?.available && !active ? (
+                <Button label={`Essayer ${trial.days / 7} semaines gratuitement`} icon={<SparkleIcon size={18} color={color.bg} />} variant="primary" block loading={startTrial.isPending} onPress={onTrial} />
+              ) : null}
               {active && until ? (
                 <Text size={13} tone="accent">
                   {until.startsWith("2999") ? "Actif" : `Actif · prochaine échéance le ${frenchDate(until)}`}
@@ -194,7 +218,7 @@ export default function PremiumScreen() {
         {billing ? (
           <View style={{ gap: space.sm }}>
             <Button label="Restaurer mes achats" variant="ghost" block onPress={onRestore} loading={busy === "restore"} disabled={!!busy} />
-            {hasAnyPack(plan) && (
+            {hasPaidPack(plan) && (
               <Button label="Gérer ou résilier mon abonnement" variant="ghost" block onPress={() => Linking.openURL(MANAGE_SUBSCRIPTIONS_URL)} />
             )}
             <Text size={11} tone="faint" center>
@@ -210,7 +234,7 @@ export default function PremiumScreen() {
             </Card>
           )
         )}
-        {hasAnyPack(plan) && !both && (
+        {hasPaidPack(plan) && !both && (
           <Text size={13} tone="faint" center>
             Passerelle+ revient moins cher que Repas+ et Budget+ séparés.
           </Text>

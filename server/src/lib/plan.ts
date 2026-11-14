@@ -9,6 +9,8 @@ import { prisma } from "../db";
 //   - Pack Budget: savings goals, cap alerts, report, forecast, export.
 
 export const FREE_DOCUMENT_LIMIT = 20;
+/** Free trial of Budget+, started once by the family (POST /plan/trial/budget). */
+export const BUDGET_TRIAL_DAYS = 28;
 export const TRIAL_DAYS = 30;
 export const TRIAL_WEEKS = 4;
 export const FREE_WEEKS_PER_MONTH = 1;
@@ -20,12 +22,25 @@ export type GenerationKind = "week" | "reroll";
 
 export type Pack = "budget" | "meals";
 
-type PackDates = { budgetUntil: Date | null; mealsUntil: Date | null };
+type PackDates = { budgetUntil: Date | null; mealsUntil: Date | null; budgetTrialStartedAt?: Date | null };
 const PACK_FIELD = { budget: "budgetUntil", meals: "mealsUntil" } as const;
 
-export function hasPack(user: PackDates, pack: Pack, now = new Date()) {
+/** When the Budget+ trial ends, or null if it was never started. */
+export function budgetTrialEnd(user: Pick<PackDates, "budgetTrialStartedAt">): Date | null {
+  return user.budgetTrialStartedAt ? new Date(user.budgetTrialStartedAt.getTime() + BUDGET_TRIAL_DAYS * 86_400_000) : null;
+}
+
+/** True when a paid (or lifetime) pack is running, not just the trial. */
+export function hasPaidPack(user: PackDates, pack: Pack, now = new Date()) {
   const until = user[PACK_FIELD[pack]];
   return !!until && until > now;
+}
+
+export function hasPack(user: PackDates, pack: Pack, now = new Date()) {
+  if (hasPaidPack(user, pack, now)) return true;
+  // The trial opens Budget+ only.
+  const trialEnd = pack === "budget" ? budgetTrialEnd(user) : null;
+  return !!trialEnd && trialEnd > now;
 }
 
 export function hasAnyPack(user: PackDates, now = new Date()) {
@@ -33,7 +48,7 @@ export function hasAnyPack(user: PackDates, now = new Date()) {
 }
 
 async function packDates(userId: string): Promise<PackDates | null> {
-  return prisma.user.findUnique({ where: { id: userId }, select: { budgetUntil: true, mealsUntil: true } });
+  return prisma.user.findUnique({ where: { id: userId }, select: { budgetUntil: true, mealsUntil: true, budgetTrialStartedAt: true } });
 }
 
 /** First instant of the current calendar month (UTC). */

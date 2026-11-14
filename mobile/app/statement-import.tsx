@@ -16,7 +16,7 @@ import { MoreLink } from "../src/components/MoreLink";
 import { useExpenseCategories, useImportStatement, useParseStatement, usePlan } from "../src/hooks/useApi";
 import { useSlowHint } from "../src/hooks/useSlowHint";
 import { categoryLabel, formatEuros } from "../src/lib/money";
-import { hasBudgetPack, showApiError } from "../src/lib/premium";
+import { budgetOfferLabel, hasBudgetPack, showApiError } from "../src/lib/premium";
 import { formatDay, importLabel, importedMessage, initialReview, selectedCount, selectedTotal, toImportPayload, type ReviewRow } from "../src/lib/statementImport";
 import { useToastStore } from "../src/state/toastStore";
 import { color, space, gutter } from "../src/theme/tokens";
@@ -88,7 +88,7 @@ export default function StatementImportScreen() {
                   <Text size={13} tone="muted">
                     Importe ton relevé de compte en PDF : tes dépenses sont retrouvées, classées et ajoutées au budget.
                   </Text>
-                  <MoreLink label="Voir Budget+" />
+                  <MoreLink label={budgetOfferLabel(plan)} />
                 </Card>
               </Pressable>
             )}

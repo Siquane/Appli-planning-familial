@@ -18,6 +18,8 @@ model User {
   // Each pack is active while its date is in the future ("Les 2" sets both).
   // Set by hand for now (npm run premium), later by the store purchase.
   budgetUntil  DateTime?
+  // Free trial of Budget+: started once per account, lasts BUDGET_TRIAL_DAYS (lib/plan.ts).
+  budgetTrialStartedAt DateTime?
   mealsUntil   DateTime?
   // Explicit consent to store members' diets, allergies and foods to limit
   // (health data / may reveal religion, RGPD art. 9). Null = not given.

@@ -11,7 +11,7 @@ import { TopBar } from "../src/components/TopBar";
 import { useBudgetReport, useExpenseCategories, usePlan } from "../src/hooks/useApi";
 import { categoryLabel, formatEuros, monthLabel, shortMonthLabel } from "../src/lib/money";
 import { compareMonths } from "../src/lib/report";
-import { hasBudgetPack } from "../src/lib/premium";
+import { budgetOfferLabel, hasBudgetPack } from "../src/lib/premium";
 import { Chip } from "../src/components/Chip";
 import { Button } from "../src/components/Button";
 import { EXPORT_PERIODS, exportExpenses, type ExportFormat, type ExportPeriod } from "../src/lib/exportExpenses";
@@ -49,7 +49,7 @@ export default function BudgetReportScreen() {
               <Text size={13} tone="muted">
                 Tes dépenses sur 6 mois en un coup d'œil, et ce qui a changé d'un mois à l'autre.
               </Text>
-              <MoreLink label="Voir Budget+" />
+              <MoreLink label={budgetOfferLabel(plan)} />
             </Card>
           </Pressable>
         </View>

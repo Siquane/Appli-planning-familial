@@ -78,6 +78,14 @@ Dernière mise à jour : 13 novembre 2026 (soir, reprise de la branche Premium).
 - Famille = membres, documents, anniversaires, partage.
 - Recherche (`/search`), notifications (`/inbox`, pour ne pas entrer en conflit avec l'écran d'accueil `(onboarding)/notifications`) et profil (`/profile`) ne sont plus des onglets : icônes en haut de chaque onglet (`TabHeader` dans `components/PageHeader.tsx`).
 
+## Essai gratuit de Budget+ (14/11/2026)
+
+- **4 semaines (28 jours), une seule fois par compte**, démarré à la demande : bouton « Essayer 4 semaines gratuitement » sur l'écran Passerelle+ (carte Budget+), bandeau « Essaie Budget+… » dans l'onglet Budget, accroches des écrans Épargne, Bilan et Import. Comptes existants compris.
+- Serveur : `User.budgetTrialStartedAt` ; `hasPack(user, "budget")` est vrai pendant l'essai, donc tous les verrous Budget+ suivent sans autre changement (documents illimités aussi, comme avec un pack). `POST /plan/trial/budget` (409 si déjà utilisé ou si un pack payant tourne) ; `GET /plan` ajoute `packs.budget.trial { available, active, days, endsAt }`. Un achat pendant l'essai reprend la main (la date payée prime, RevenueCat n'est pas touché).
+- Appli : bandeau « il reste N jours » dans l'onglet Budget ; dans les 5 derniers jours, bandeau mis en valeur et **notification locale** 5 jours avant la fin à 10 h (`syncTrialReminder`, demande l'autorisation des notifications au démarrage de l'essai). L'écran Passerelle+ garde les boutons d'achat pendant l'essai et n'affiche plus « Gérer mon abonnement » tant que rien n'est payé.
+- Pour changer la durée : `BUDGET_TRIAL_DAYS` dans `server/src/lib/plan.ts` (l'appli lit `days` envoyé par le serveur).
+- Les menus gardent leur essai historique (4 générations pendant les 30 jours après la création du compte).
+
 ## Import de relevé bancaire PDF (Budget+, 14/11/2026)
 
 - Budget → « Importer un relevé » (`mobile/app/statement-import.tsx`) : choix d'un PDF, liste des dépenses trouvées avec catégorie proposée, cases à cocher, « Chaque mois » pour créer une dépense récurrente, puis import des lignes cochées.

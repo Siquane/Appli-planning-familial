@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { MoreLink } from "../../src/components/MoreLink";
 import { Pressable, hitSlopFor } from "../../src/components/Touchable";
 import { ScrollView, Share, View } from "react-native";
 import { router } from "expo-router";
@@ -11,14 +12,22 @@ import { ChartIcon, ChevronLeftIcon, DocumentIcon, ChevronRightIcon, PlusIcon, R
 import { useExpenseCategories, useForecast, useMembers, useMonthlyBudget, usePlan } from "../../src/hooks/useApi";
 import { budgetToCsv, categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../../src/lib/money";
 import { color, radius, space, gutter } from "../../src/theme/tokens";
-import { hasBudgetPack } from "../../src/lib/premium";
+import { budgetTrial, hasBudgetPack, trialNotice } from "../../src/lib/premium";
+import { syncTrialReminder } from "../../src/lib/notifications";
 
 export default function BudgetScreen() {
   const [month, setMonth] = useState(currentMonth());
   const { data, isLoading } = useMonthlyBudget(month);
   const { options } = useExpenseCategories();
   const { data: members = [] } = useMembers();
-  const premium = hasBudgetPack(usePlan().data);
+  const { data: plan } = usePlan();
+  const premium = hasBudgetPack(plan);
+  const notice = trialNotice(plan);
+  const trial = budgetTrial(plan);
+  // Keeps the « trial ends soon » reminder in step with the trial (also after a reinstall).
+  useEffect(() => {
+    if (plan) syncTrialReminder(trial?.active ? trial.endsAt : null);
+  }, [plan, trial?.active, trial?.endsAt]);
   const { data: forecast } = useForecast(premium);
   const expenses = data?.expenses ?? [];
   const byCategory = data?.byCategory ?? [];
@@ -48,6 +57,20 @@ export default function BudgetScreen() {
             <ChevronRightIcon size={16} color={color.text} />
           </MonthArrow>
         </View>
+
+        {notice && (
+          <Pressable onPress={() => router.push("/premium")} accessibilityLabel={notice.text}>
+            <Card style={{ gap: space.xs, borderWidth: notice.kind === "ending" ? 1 : 0, borderColor: color.accent400 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+                <SparkleIcon size={18} color={color.accent400} />
+                <Text size={13} weight="medium" tone={notice.kind === "ending" ? "accent" : "text"} style={{ flex: 1 }}>
+                  {notice.text}
+                </Text>
+              </View>
+              <MoreLink label={notice.kind === "offer" ? "Essayer maintenant" : "Voir Budget+"} />
+            </Card>
+          </Pressable>
+        )}
 
         <Card style={{ alignItems: "center", paddingVertical: space.lg }}>
           <Text size={13} tone="muted">
