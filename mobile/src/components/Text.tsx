@@ -36,6 +36,8 @@ const weightFont: Record<NonNullable<Props["weight"]>, string> = {
 export function Text({ size = TYPE.body, weight = "regular", tone = "text", mono, heading, center, style, ...rest }: Props) {
   const s: TextStyle = {
     fontSize: scaled(size),
+    // Airier lines for reading text, tighter for titles.
+    lineHeight: Math.round(scaled(size) * (heading ? 1.25 : 1.4)),
     color: toneColor[tone],
     fontFamily: mono ? font.mono : heading ? (weight === "semibold" ? font.headingSemibold : font.heading) : weightFont[weight],
     textAlign: center ? "center" : undefined,
