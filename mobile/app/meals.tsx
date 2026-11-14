@@ -8,7 +8,7 @@ export default function MealsScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Menu de la semaine" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22 }} showsVerticalScrollIndicator={false}>
         <MealsBody />
       </ScrollView>
     </Screen>

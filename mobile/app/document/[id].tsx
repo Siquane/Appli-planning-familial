@@ -23,7 +23,7 @@ export default function DocumentDetailScreen() {
     return (
       <Screen scroll={false}>
         <TopBar title="Document" onBack={() => router.back()} />
-        <Text tone="muted" style={{ padding: 18 }}>
+        <Text tone="muted" style={{ padding: 22 }}>
           Ce document n'existe plus.
         </Text>
       </Screen>
@@ -53,7 +53,7 @@ export default function DocumentDetailScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={doc.title} onBack={() => router.back()} onEdit={() => router.push(`/document/new?edit=${doc.id}`)} onDelete={onDelete} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         {isImage(doc) && doc.url ? (
           <Image source={{ uri: doc.url }} resizeMode="contain" style={{ width: "100%", aspectRatio: 3 / 4, borderRadius: radius.md, backgroundColor: color.surface }} />
         ) : (

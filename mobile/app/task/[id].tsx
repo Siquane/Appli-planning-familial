@@ -23,7 +23,7 @@ export default function TaskDetailScreen() {
     return (
       <Screen scroll={false}>
         <TopBar title="Tâche" onBack={() => router.back()} />
-        <Text tone="muted" style={{ padding: 18 }}>
+        <Text tone="muted" style={{ padding: 22 }}>
           Cette tâche n'existe plus.
         </Text>
       </Screen>
@@ -53,7 +53,7 @@ export default function TaskDetailScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={task.title} onBack={() => router.back()} onDuplicate={() => router.push(`/task/new?duplicate=${task.id}`)} onEdit={() => router.push(`/task/new?edit=${task.id}`)} onDelete={onDelete} />
-      <View style={{ padding: 18, gap: space[4] }}>
+      <View style={{ padding: 22, gap: space[4] }}>
         <View style={{ flexDirection: "row", gap: space[2] }}>
           <Tag label={task.category} tint={categoryColor(task.category)} />
           {task.priority === "high" && <Tag label={priorityLabel(task.priority)} variant="outline" />}

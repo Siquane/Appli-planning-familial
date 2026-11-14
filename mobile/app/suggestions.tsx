@@ -65,7 +65,7 @@ export default function SuggestionsScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Suggestions selon l'âge" onBack={fromOnboarding ? goHome : () => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <Text tone="muted" size={13}>
           Des tâches récurrentes courantes pour l'âge de chaque membre — appuie sur une suggestion pour la créer, tu choisiras ensuite le jour et l'heure.
         </Text>

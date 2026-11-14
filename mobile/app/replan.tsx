@@ -26,7 +26,7 @@ export default function ReplanScreen() {
   return (
     <Screen scroll={false} padded={false} techGrid>
       <TopBar title="Replanifier ma semaine" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
           <ReshuffleIcon size={18} color={color.accent} />
           <Text tone="muted" size={13} style={{ flex: 1 }}>

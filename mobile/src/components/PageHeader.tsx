@@ -61,8 +61,8 @@ export function TabHeader({ title, subtitle, subtitleIcon }: { title: string; su
         <Avatar initials={user?.initials ?? ""} bg={color.accent800} fg={color.accent100} size={36} />
       </Pressable>
     </View>
-    {/* Edge to edge: cancels the 18 px side padding of the tab screens. */}
-    <View style={{ height: 2, marginHorizontal: -18 }}>
+    {/* Edge to edge: cancels the 22 px side padding of the tab screens. */}
+    <View style={{ height: 2, marginHorizontal: -22 }}>
       <GradientFill />
     </View>
     </View>

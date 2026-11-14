@@ -77,7 +77,7 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
         alignItems: "center",
         paddingBottom: (insets.bottom || 10) + space[4],
         paddingTop: 10,
-        paddingHorizontal: 18,
+        paddingHorizontal: 22,
         borderTopWidth: 1,
         borderTopColor: color.divider,
         backgroundColor: color.bg,

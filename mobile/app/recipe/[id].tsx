@@ -29,7 +29,7 @@ export default function RecipeDetailScreen() {
     return (
       <Screen scroll={false}>
         <TopBar title="Recette" onBack={() => router.back()} />
-        <Text tone="muted" style={{ padding: 18 }}>
+        <Text tone="muted" style={{ padding: 22 }}>
           Cette recette n'existe plus.
         </Text>
       </Screen>
@@ -75,7 +75,7 @@ export default function RecipeDetailScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={recipe.title} onBack={() => router.back()} onEdit={() => router.push(`/recipe/new?edit=${recipe.id}`)} onDelete={onDelete} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         {fans.length > 0 && (
           <View style={{ gap: space[2] }}>
             <Text weight="medium" size={13} tone="muted">

@@ -61,7 +61,7 @@ export default function MealEditScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={`${type} · ${WEEKDAYS_FULL[weekday]}`} onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Pâtes bolognaise" />
 
         {recipes.length > 0 && (

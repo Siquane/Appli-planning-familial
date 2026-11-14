@@ -13,7 +13,7 @@ interface Props {
 
 export function TopBar({ title, onBack, onDuplicate, onEdit, onDelete }: Props) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: color.divider }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 22, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: color.divider }}>
       <Pressable
         onPress={onBack}
         accessibilityRole="button"

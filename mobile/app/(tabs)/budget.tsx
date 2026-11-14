@@ -27,7 +27,7 @@ export default function BudgetScreen() {
 
   return (
     <Screen scroll={false} padded={false} edges={["top"]}>
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <TabHeader title="Budget" />
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <MonthArrow onPress={() => setMonth(shiftMonth(month, -1))} label="Mois précédent">

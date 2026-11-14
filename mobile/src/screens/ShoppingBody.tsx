@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
-import { Text } from "../components/Text";
+import { Text, scaled } from "../components/Text";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { CheckIcon, CloseIcon } from "../components/icons";
@@ -52,7 +52,7 @@ export function ShoppingBody() {
             flex: 1,
             color: color.text,
             fontFamily: font.body,
-            fontSize: 14,
+            fontSize: scaled(14),
             paddingVertical: 10,
             paddingHorizontal: 12,
             borderRadius: radius.md,

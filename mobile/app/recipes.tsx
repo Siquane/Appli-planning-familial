@@ -8,7 +8,7 @@ export default function RecipesScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Livre de recettes" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22 }} showsVerticalScrollIndicator={false}>
         <RecipesBody />
       </ScrollView>
     </Screen>

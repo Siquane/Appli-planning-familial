@@ -95,7 +95,7 @@ export default function MemberScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={member.name} onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <Card style={{ gap: space[4] }}>
           <TextField label="Prénom" value={name} onChangeText={setName} />
           <TextField label="Âge (facultatif)" value={age} onChangeText={setAge} keyboardType="number-pad" placeholder="Ex. 8" />

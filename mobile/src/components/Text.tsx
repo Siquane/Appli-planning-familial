@@ -18,6 +18,11 @@ const toneColor: Record<NonNullable<Props["tone"]>, string> = {
   danger: color.danger,
 };
 
+// Every text in the app is drawn 10 % larger than its nominal size (rounded
+// to half a pixel), so screens keep their relative hierarchy.
+export const TYPE_SCALE = 1.1;
+export const scaled = (size: number) => Math.round(size * TYPE_SCALE * 2) / 2;
+
 const weightFont: Record<NonNullable<Props["weight"]>, string> = {
   regular: font.body,
   medium: font.bodyMedium,
@@ -26,7 +31,7 @@ const weightFont: Record<NonNullable<Props["weight"]>, string> = {
 
 export function Text({ size = 14, weight = "regular", tone = "text", mono, heading, center, style, ...rest }: Props) {
   const s: TextStyle = {
-    fontSize: size,
+    fontSize: scaled(size),
     color: toneColor[tone],
     fontFamily: mono ? font.mono : heading ? (weight === "semibold" ? font.headingSemibold : font.heading) : weightFont[weight],
     textAlign: center ? "center" : undefined,
