@@ -13,6 +13,7 @@ import { useFoodConsent, useSetFoodConsent } from "../src/hooks/useApi";
 import { deleteAccount } from "../src/lib/account";
 import { useToastStore } from "../src/state/toastStore";
 import { space } from "../src/theme/tokens";
+import { errorText } from "../src/lib/errors";
 
 function Section({ title, children }: { title: string; children: string }) {
   return (
@@ -50,7 +51,7 @@ export default function PrivacyScreen() {
           onPress: () =>
             setConsent.mutate(false, {
               onSuccess: () => useToastStore.getState().show("Accord retiré, données de santé effacées."),
-              onError: (e) => useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue."),
+              onError: (e) => useToastStore.getState().show(errorText(e, "mettre à jour ce réglage")),
             }),
         },
       ],
@@ -72,7 +73,7 @@ export default function PrivacyScreen() {
               await deleteAccount(password);
               router.replace("/");
             } catch (e) {
-              useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+              useToastStore.getState().show(errorText(e, "mettre à jour ce réglage"));
             } finally {
               setDeleting(false);
             }

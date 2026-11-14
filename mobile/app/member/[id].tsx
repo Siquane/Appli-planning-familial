@@ -18,6 +18,7 @@ import { APPETITE_OPTIONS, CANTEEN_DAY_OPTIONS, MEMBER_DIET_OPTIONS, foodSummary
 import { useToastStore } from "../../src/state/toastStore";
 import { color, space } from "../../src/theme/tokens";
 import type { Appetite, MemberDiet } from "../../src/api/types";
+import { errorText } from "../../src/lib/errors";
 
 // A family member's page: name, age and the « Repas » preferences that tailor
 // generated menus. Diets, allergies and foods to limit are health-related
@@ -89,7 +90,7 @@ export default function MemberScreen() {
       useToastStore.getState().show("Fiche enregistrée.");
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "enregistrer la fiche"));
     }
   }
 

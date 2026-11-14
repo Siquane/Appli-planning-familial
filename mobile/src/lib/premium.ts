@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { needsPremium } from "../api/client";
 import { useToastStore } from "../state/toastStore";
 import type { MealQuota, Plan } from "../api/types";
+import { errorText } from "./errors";
 
 // Two offers, Repas+ and Budget+, or both (Passerelle+) at a lower price. Prices are shown in the
 // app only; the store products will carry the real ones.
@@ -44,7 +45,7 @@ export const hasAnyPack = (plan: Plan | undefined) => hasBudgetPack(plan) || has
  * Premium screen so the explanation and the offer are one tap away.
  */
 export function showApiError(e: unknown) {
-  useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+  useToastStore.getState().show(errorText(e, "terminer cette action"));
   if (needsPremium(e)) router.push("/premium");
 }
 

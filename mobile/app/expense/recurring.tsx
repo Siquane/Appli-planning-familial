@@ -1,3 +1,4 @@
+import { errorText } from "../../src/lib/errors";
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -72,7 +73,7 @@ export default function RecurringExpenseFormScreen() {
       }
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "enregistrer la dépense récurrente"));
     }
   }
 

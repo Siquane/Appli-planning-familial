@@ -8,6 +8,7 @@ import { Button } from "../../src/components/Button";
 import { useAuthStore } from "../../src/state/authStore";
 import { useSlowHint } from "../../src/hooks/useSlowHint";
 import { space } from "../../src/theme/tokens";
+import { errorText } from "../../src/lib/errors";
 
 export default function SignupScreen() {
   const signUp = useAuthStore((s) => s.signUp);
@@ -25,7 +26,7 @@ export default function SignupScreen() {
       await signUp(email.trim(), password, name.trim());
       router.replace("/");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Une erreur est survenue");
+      setError(errorText(e, "créer le compte"));
     } finally {
       setLoading(false);
     }

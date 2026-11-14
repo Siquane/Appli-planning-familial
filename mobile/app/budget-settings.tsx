@@ -1,3 +1,4 @@
+import { errorText } from "../src/lib/errors";
 import { useState } from "react";
 import { Pressable, hitSlopFor } from "../src/components/Touchable";
 import { Alert, TextInput, View } from "react-native";
@@ -23,7 +24,7 @@ import { useToastStore } from "../src/state/toastStore";
 import { color, font, radius, space } from "../src/theme/tokens";
 
 const toast = (m: string) => useToastStore.getState().show(m);
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : "Une erreur est survenue.");
+const errorMessage = (e: unknown) => (errorText(e, "enregistrer le réglage"));
 
 const inputStyle = {
   color: color.text,

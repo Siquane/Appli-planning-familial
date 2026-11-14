@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { errorText } from "../../src/lib/errors";
 import { Pressable } from "../../src/components/Touchable";
 import { View } from "react-native";
 import { router } from "expo-router";
@@ -120,7 +121,7 @@ export default function MealPlanScreen() {
       useToastStore.getState().show(`${proposal.length} repas ajoutés au menu.`);
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "enregistrer les menus"));
     }
   }
 

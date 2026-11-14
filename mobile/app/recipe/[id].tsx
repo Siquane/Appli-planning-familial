@@ -14,6 +14,7 @@ import { formatSize, type PickedFile } from "../../src/lib/documentUpload";
 import type { FamilyDocument } from "../../src/api/types";
 import { useToastStore } from "../../src/state/toastStore";
 import { color, space } from "../../src/theme/tokens";
+import { errorText } from "../../src/lib/errors";
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -61,7 +62,7 @@ export default function RecipeDetailScreen() {
       await uploadAttachment.mutateAsync({ file, data: { recipeId: recipe!.id } });
       useToastStore.getState().show("Pièce jointe ajoutée.");
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "ajouter la pièce jointe"));
     }
   }
 

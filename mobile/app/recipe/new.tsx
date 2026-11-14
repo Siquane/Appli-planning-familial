@@ -15,6 +15,7 @@ import { space } from "../../src/theme/tokens";
 import type { Recipe } from "../../src/api/types";
 import { recipesApi } from "../../src/api/resources";
 import { Card } from "../../src/components/Card";
+import { errorText } from "../../src/lib/errors";
 
 export default function RecipeFormScreen() {
   const { edit } = useLocalSearchParams<{ edit?: string }>();
@@ -81,7 +82,7 @@ export default function RecipeFormScreen() {
       }
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "enregistrer la recette"));
     }
   }
 

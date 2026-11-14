@@ -14,6 +14,7 @@ import { useCreateExpense, useDeleteExpense, useExpenseCategories, useMembers, u
 import { capCrossed, categoryLabel, centsToInput, currentMonth, formatEuros, fromDayString, parseAmount, toDayString } from "../../src/lib/money";
 import { useToastStore } from "../../src/state/toastStore";
 import { space } from "../../src/theme/tokens";
+import { errorText } from "../../src/lib/errors";
 
 // New expense, or edit/delete with ?edit=<id>&month=<YYYY-MM> (the month the
 // expense was listed under, so it can be found in that month's cache).
@@ -73,7 +74,7 @@ export default function ExpenseFormScreen() {
       else useToastStore.getState().show(saved);
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "enregistrer la dépense"));
     }
   }
 

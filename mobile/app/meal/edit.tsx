@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { errorText } from "../../src/lib/errors";
 import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
@@ -44,7 +45,7 @@ export default function MealEditScreen() {
       useToastStore.getState().show("Repas enregistré.");
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "enregistrer le repas"));
     }
   }
 

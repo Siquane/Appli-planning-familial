@@ -8,6 +8,7 @@ import { Button } from "../../src/components/Button";
 import { useAuthStore } from "../../src/state/authStore";
 import { useSlowHint } from "../../src/hooks/useSlowHint";
 import { space } from "../../src/theme/tokens";
+import { errorText } from "../../src/lib/errors";
 
 export default function ForgotPasswordScreen() {
   const params = useLocalSearchParams<{ email?: string }>();
@@ -29,7 +30,7 @@ export default function ForgotPasswordScreen() {
     try {
       await action();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Une erreur est survenue");
+      setError(errorText(e, "envoyer la demande"));
     } finally {
       setLoading(false);
     }

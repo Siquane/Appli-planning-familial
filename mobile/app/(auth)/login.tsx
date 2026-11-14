@@ -8,6 +8,7 @@ import { Button } from "../../src/components/Button";
 import { useAuthStore } from "../../src/state/authStore";
 import { useSlowHint } from "../../src/hooks/useSlowHint";
 import { color, space } from "../../src/theme/tokens";
+import { errorText } from "../../src/lib/errors";
 
 export default function LoginScreen() {
   const signIn = useAuthStore((s) => s.signIn);
@@ -24,7 +25,7 @@ export default function LoginScreen() {
       await signIn(email.trim(), password);
       router.replace("/");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Une erreur est survenue");
+      setError(errorText(e, "te connecter"));
     } finally {
       setLoading(false);
     }

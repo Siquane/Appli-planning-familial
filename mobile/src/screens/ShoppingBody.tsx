@@ -9,6 +9,7 @@ import { useAddShoppingItem, useClearCheckedShopping, useDeleteShoppingItem, use
 import { useToastStore } from "../state/toastStore";
 import { fromMenuMessage } from "../lib/shopping";
 import { color, font, radius, space } from "../theme/tokens";
+import { errorText } from "../lib/errors";
 
 const toast = (m: string) => useToastStore.getState().show(m);
 
@@ -28,13 +29,13 @@ export function ShoppingBody() {
   function onAdd() {
     const value = label.trim();
     if (!value) return;
-    add.mutate(value, { onSuccess: () => setLabel(""), onError: (e) => toast(e instanceof Error ? e.message : "Une erreur est survenue.") });
+    add.mutate(value, { onSuccess: () => setLabel(""), onError: (e) => toast(errorText(e, "mettre à jour la liste")) });
   }
 
   function onFromMenu() {
     fromMenu.mutate(undefined, {
       onSuccess: (r) => toast(fromMenuMessage(r.added, r.withoutIngredients)),
-      onError: (e) => toast(e instanceof Error ? e.message : "Une erreur est survenue."),
+      onError: (e) => toast(errorText(e, "mettre à jour la liste")),
     });
   }
 

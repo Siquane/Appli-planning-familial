@@ -19,6 +19,7 @@ import { confirmReminderPermission } from "../../src/lib/notifications";
 import { WEEKDAYS_SHORT } from "../../src/lib/weekdays";
 import { color, space } from "../../src/theme/tokens";
 import type { Category, Weekday } from "../../src/api/types";
+import { errorText } from "../../src/lib/errors";
 
 const CATEGORIES: Category[] = ["École", "Travail", "Maison", "Santé", "Loisirs"];
 
@@ -96,7 +97,7 @@ export default function RecurringTasksOnboardingScreen() {
       useToastStore.getState().show(drafts.length > 1 ? "Tâches récurrentes créées." : "Tâche récurrente créée.");
       router.push("/(onboarding)/notifications");
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "créer les tâches récurrentes"));
     } finally {
       setSaving(false);
     }

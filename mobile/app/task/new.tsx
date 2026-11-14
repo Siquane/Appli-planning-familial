@@ -18,6 +18,7 @@ import { space } from "../../src/theme/tokens";
 import { WEEKDAYS_SHORT } from "../../src/lib/weekdays";
 import { parseDuration, splitDuration } from "../../src/lib/duration";
 import type { Category, Priority, Task, Weekday } from "../../src/api/types";
+import { errorText } from "../../src/lib/errors";
 
 const CATEGORIES: Category[] = ["École", "Travail", "Maison", "Santé", "Loisirs"];
 const DURATIONS = [15, 30, 45, 60, 90, 120];
@@ -157,7 +158,7 @@ export default function TaskFormScreen() {
       }
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "enregistrer la tâche"));
     }
   }
 
