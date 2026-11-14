@@ -24,7 +24,7 @@ const signupSchema = z.object({
   name: z.string().trim().min(1),
   /** Joining an existing family with the code a parent gave. */
   familyCode: z.string().trim().max(40).optional(),
-  /** Required with a family code: one can join from 15 years old (creating a family needs 18). */
+  /** Required to create any account: one must be at least 15 (the digital age of majority in France). */
   age15: z.boolean().optional(),
 });
 
@@ -36,9 +36,10 @@ authRouter.post("/signup", accountLimiter, async (req, res) => {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return res.status(409).json({ error: "Un compte existe déjà avec cet email" });
 
+  if (age15 !== true) return res.status(400).json({ error: "Pour créer un compte, il faut avoir 15 ans ou plus." });
+
   let join: { ownerId: string; role: string } | null = null;
   if (familyCode) {
-    if (age15 !== true) return res.status(400).json({ error: "Pour rejoindre une famille, il faut avoir 15 ans ou plus." });
     try {
       const invite = await findLiveInvite(familyCode);
       join = { ownerId: invite.ownerId, role: invite.role };

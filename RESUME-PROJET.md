@@ -80,7 +80,7 @@ Dernière mise à jour : 13 novembre 2026 (soir, reprise de la branche Premium).
 
 ## Partage de famille : plusieurs comptes autour des mêmes données (14/11/2026)
 
-- Il n'y avait **pas de code famille** avant : un compte = une famille. Maintenant un adulte (18 ans) crée la famille ; d'autres personnes (**dès 15 ans**) la rejoignent avec un **code de 8 caractères valable 7 jours** (ex. `K7F2-9QXA`), depuis « J'ai un code famille » à l'inscription. Le créateur le génère dans Famille → « Comptes de la famille », et choisit le profil :
+- Il n'y avait **pas de code famille** avant : un compte = une famille. Maintenant tout compte, y compris celui qui crée la famille, demande de confirmer avoir **15 ans ou plus** (majorité numérique ; `age15` obligatoire à l'inscription) ; d'autres personnes la rejoignent avec un **code de 8 caractères valable 7 jours** (ex. `K7F2-9QXA`), depuis « J'ai un code famille » à l'inscription. Le créateur le génère dans Famille → « Comptes de la famille », et choisit le profil :
   - **Complet** : tout est partagé, budget et documents compris.
   - **Planning** : tâches, calendrier, repas, recettes, courses et membres partagés ; **budget et documents personnels** (propres à ce compte).
 - Principe : une famille = les données du compte créateur. `requireAuth` (middleware) résout le compte : `req.userId` = id de la famille (toutes les routes marchent telles quelles), `req.accountId` = la personne, `req.privateId` = où vivent son budget et ses documents ; les routeurs budget, catégories, plafonds, récurrentes, épargne, relevés et documents utilisent `privateSpace` (Planning = son propre id). Les pièces jointes de recettes restent à la famille.

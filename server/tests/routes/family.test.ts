@@ -54,6 +54,10 @@ describe("joining a family", () => {
     const code = await invite(a.auth, "full");
     expect((await join(code, { age15: false })).res.status).toBe(400);
     expect((await join(code, { age15: undefined })).res.body.error).toContain("15 ans");
+    // Creating one's own family is no different: 15 is the age for any account.
+    const alone = await request(app).post("/auth/signup").send({ email: "alone@passerelle.test", password: "password123", name: "Sam" });
+    expect(alone.status).toBe(400);
+    expect(alone.body.error).toContain("15 ans");
     const wrong = await join("ZZZZ-ZZZZ");
     expect(wrong.res.status).toBe(400);
     expect(wrong.res.body.code).toBe("invalid_family_code");

@@ -98,7 +98,7 @@ describe("authStore cold-start retries", () => {
       .mockRejectedValueOnce(new TypeError("Network request failed"))
       .mockResolvedValueOnce(jsonResponse(true, 201, { user, accessToken: "access-1", refreshToken: "refresh-1" }));
 
-    const promise = useAuthStore.getState().signUp("claire@passerelle.test", "password123", "Claire Dubois");
+    const promise = useAuthStore.getState().signUp("claire@passerelle.test", "password123", "Claire Dubois", { age15: true });
     await jest.advanceTimersByTimeAsync(5_000);
     await promise;
 
@@ -109,7 +109,7 @@ describe("authStore cold-start retries", () => {
   it("signUp gives up with a clear message once the deadline is reached", async () => {
     (global.fetch as jest.Mock).mockResolvedValue(jsonResponse(false, 502, {}));
 
-    const promise = useAuthStore.getState().signUp("claire@passerelle.test", "password123", "Claire Dubois");
+    const promise = useAuthStore.getState().signUp("claire@passerelle.test", "password123", "Claire Dubois", { age15: true });
     const assertion = expect(promise).rejects.toThrow("Le serveur ne répond pas");
     await jest.advanceTimersByTimeAsync(65_000);
     await assertion;
@@ -119,7 +119,7 @@ describe("authStore cold-start retries", () => {
   it("does not retry a real client error such as an existing account", async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(false, 409, { error: "Un compte existe déjà avec cet email" }));
 
-    await expect(useAuthStore.getState().signUp("claire@passerelle.test", "password123", "Claire Dubois")).rejects.toThrow("Un compte existe déjà");
+    await expect(useAuthStore.getState().signUp("claire@passerelle.test", "password123", "Claire Dubois", { age15: true })).rejects.toThrow("Un compte existe déjà");
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 });
