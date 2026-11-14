@@ -216,11 +216,11 @@ export const WalletIcon = makeIcon(
   16,
 );
 
-// Repas tab: plate, fork and knife
+// Repas tab: a steaming bowl (the original design, in the shared line style).
 export const MealIcon = makeIcon(
   [
-  { kind: "ring", cx: 12, cy: 12, r: 4.2, tint: true },
-  { kind: "path", d: "M3.5 4v4.5a1.5 1.5 0 0 0 3 0V4M5 4v16M20.5 4c-1.7.8-2.6 3-2.6 6h2.6v10" },
+  { kind: "path", d: "M4 12h16a8 8 0 0 1-16 0z", tint: true },
+  { kind: "path", d: "M8.5 8c-.8-1 .8-2 0-3.2M12 8c-.8-1 .8-2 0-3.2M15.5 8c-.8-1 .8-2 0-3.2M9 20.5h6" },
   ],
   16,
 );
