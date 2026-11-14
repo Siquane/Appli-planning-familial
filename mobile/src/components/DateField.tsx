@@ -79,7 +79,7 @@ export function DateField({ label, value, onChange, placeholder = "Choisir une d
               onPress={(e) => e.stopPropagation()}
             >
               <DateTimePicker value={draft} mode="date" display="spinner" maximumDate={new Date()} onChange={handleChange} textColor={color.text} />
-              <Button label="OK" variant="primary" block onPress={confirmIOS} style={{ marginTop: space.sm }} />
+              <Button label="Valider" variant="primary" block onPress={confirmIOS} style={{ marginTop: space.sm }} />
             </Pressable>
           </Pressable>
         </Modal>

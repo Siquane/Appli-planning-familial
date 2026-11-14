@@ -89,7 +89,7 @@ export function TimeField({ label, value, onChange }: Props) {
               onPress={(e) => e.stopPropagation()}
             >
               <DateTimePicker value={draft} mode="time" display="spinner" is24Hour onChange={handleChange} textColor={color.text} />
-              <Button label="OK" variant="primary" block onPress={confirmIOS} style={{ marginTop: space.sm }} />
+              <Button label="Valider" variant="primary" block onPress={confirmIOS} style={{ marginTop: space.sm }} />
             </Pressable>
           </Pressable>
         </Modal>

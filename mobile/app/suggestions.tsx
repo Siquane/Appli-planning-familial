@@ -32,10 +32,10 @@ function AgeSetter({ member }: { member: Member }) {
         {member.name}
       </Text>
       <View style={{ width: 64 }}>
-        <TextField value={value} onChangeText={setValue} placeholder="Âge" keyboardType="number-pad" />
+        <TextField value={value} onChangeText={setValue} placeholder="Âge" accessibilityLabel={`Âge de ${member.name}`} keyboardType="number-pad" />
       </View>
       <Button
-        label="OK"
+        label="Valider"
         variant="ghost"
         disabled={!valid}
         loading={updateMember.isPending}
