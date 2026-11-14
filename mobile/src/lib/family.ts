@@ -67,3 +67,29 @@ export function parseHeirs(details: unknown): HeirChoice[] {
   if (!Array.isArray(heirs)) return [];
   return heirs.filter((h): h is HeirChoice => !!h && typeof h.id === "string" && typeof h.name === "string");
 }
+
+/** What an existing account holds, as the server counts it before joining a family. */
+export type ContentCounts = Partial<Record<"members" | "tasks" | "recipes" | "meals" | "documents" | "expenses" | "shopping" | "savings" | "recurring" | "categories", number>>;
+
+const COUNT_LABELS: [keyof ContentCounts, string, string][] = [
+  ["members", "membre", "membres"],
+  ["tasks", "tâche", "tâches"],
+  ["meals", "repas", "repas"],
+  ["recipes", "recette", "recettes"],
+  ["shopping", "article de courses", "articles de courses"],
+  ["expenses", "dépense", "dépenses"],
+  ["recurring", "dépense récurrente", "dépenses récurrentes"],
+  ["savings", "objectif d'épargne", "objectifs d'épargne"],
+  ["documents", "document", "documents"],
+  ["categories", "catégorie", "catégories"],
+];
+
+/** « 3 tâches, 1 dépense et 2 documents », or null when there is nothing. */
+export function describeContent(counts: ContentCounts | undefined | null): string | null {
+  const parts = COUNT_LABELS.flatMap(([key, one, many]) => {
+    const n = counts?.[key] ?? 0;
+    return n > 0 ? [`${n} ${n > 1 ? many : one}`] : [];
+  });
+  if (parts.length === 0) return null;
+  return parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(", ")} et ${parts[parts.length - 1]}`;
+}

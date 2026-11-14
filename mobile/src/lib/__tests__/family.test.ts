@@ -1,4 +1,4 @@
-import { ROLE_LABEL, inviteValidity, joinedSummary, noticeText, parseHeirs, shareMessage } from "../family";
+import { ROLE_LABEL, describeContent, inviteValidity, joinedSummary, noticeText, parseHeirs, shareMessage } from "../family";
 
 const NOW = new Date("2026-11-14T12:00:00Z");
 const inDays = (n: number) => new Date(NOW.getTime() + n * 86_400_000).toISOString();
@@ -62,5 +62,14 @@ describe("who can take the family over", () => {
     ]);
     expect(parseHeirs(undefined)).toEqual([]);
     expect(parseHeirs({ heirs: "x" })).toEqual([]);
+  });
+});
+
+describe("what an account holds before joining a family", () => {
+  it("lists it in plain words, only what is there", () => {
+    expect(describeContent({ tasks: 3, expenses: 1, documents: 2, meals: 0 })).toBe("3 tâches, 1 dépense et 2 documents");
+    expect(describeContent({ tasks: 1 })).toBe("1 tâche");
+    expect(describeContent({ tasks: 0 })).toBeNull();
+    expect(describeContent(undefined)).toBeNull();
   });
 });

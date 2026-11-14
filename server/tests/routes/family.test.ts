@@ -318,3 +318,70 @@ describe("leaving, removing, deleting", () => {
     expect((await request(app).delete("/auth/me").set(a.auth).send({ password: "password123" })).status).toBe(204);
   });
 });
+
+describe("joining a family from an existing account", () => {
+  const joinNow = (auth: Record<string, string>, body: Record<string, unknown>) => request(app).post("/family/join").set(auth).send(body);
+
+  it("lets an empty account join with a code, with the profile the code carries", async () => {
+    const a = await owner();
+    await addTask(a.auth, "Famille");
+    const b = await owner();
+    const res = await joinNow(b.auth, { code: await invite(a.auth, "planning") });
+    expect(res.status).toBe(200);
+    expect(res.body.user).toMatchObject({ id: b.id, familyId: a.id, familyRole: "planning" });
+    expect(await titles(b.auth)).toEqual(["Famille"]);
+    // The code was theirs to use once; the owner sees the new account.
+    const info = (await request(app).get("/family").set(a.auth)).body;
+    expect(info.accounts).toHaveLength(2);
+  });
+
+  it("refuses a bad, expired or own code, and an account that is already in a family", async () => {
+    const a = await owner();
+    const b = await owner();
+    const wrong = await joinNow(b.auth, { code: "ZZZZ-ZZZZ" });
+    expect(wrong.status).toBe(400);
+    expect(wrong.body.code).toBe("invalid_family_code");
+    const own = await joinNow(a.auth, { code: await invite(a.auth, "full") });
+    expect(own.body.code).toBe("own_code");
+
+    const code = await invite(a.auth, "full");
+    expect((await joinNow(b.auth, { code })).status).toBe(200);
+    const c = await owner();
+    const second = await joinNow(b.auth, { code: await invite(c.auth, "full") });
+    expect(second.status).toBe(400);
+    expect(second.body.code).toBe("already_in_family");
+  });
+
+  it("refuses a creator who already has other accounts in the family", async () => {
+    const a = await owner();
+    await join(await invite(a.auth, "full"));
+    const other = await owner();
+    const res = await joinNow(a.auth, { code: await invite(other.auth, "full") });
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe("family_has_members");
+  });
+
+  it("asks before erasing what the account already holds, then needs the password", async () => {
+    const a = await owner();
+    await addTask(a.auth, "Famille");
+    const b = await owner();
+    await addTask(b.auth, "À moi");
+    await addExpense(b.auth, "Privé");
+    const code = await invite(a.auth, "full");
+
+    const asked = await joinNow(b.auth, { code });
+    expect(asked.status).toBe(409);
+    expect(asked.body).toMatchObject({ code: "account_not_empty", counts: { tasks: 1, expenses: 1 } });
+    expect(await titles(b.auth)).toEqual(["À moi"]);
+
+    expect((await joinNow(b.auth, { code, erase: true })).status).toBe(401);
+    expect((await joinNow(b.auth, { code, erase: true, password: "mauvais" })).status).toBe(401);
+    expect(await titles(b.auth)).toEqual(["À moi"]);
+
+    const done = await joinNow(b.auth, { code, erase: true, password: "password123" });
+    expect(done.status).toBe(200);
+    expect(await titles(b.auth)).toEqual(["Famille"]);
+    expect(await prisma.task.count({ where: { userId: b.id } })).toBe(0);
+    expect(await prisma.expense.count({ where: { userId: b.id } })).toBe(0);
+  });
+});
