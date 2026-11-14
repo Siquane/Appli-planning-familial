@@ -30,7 +30,7 @@ export default function ReplanScreen() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
           <ReshuffleIcon size={18} color={color.accent} />
           <Text tone="muted" size={13} style={{ flex: 1 }}>
-            Passerelle propose de meilleurs créneaux pour vos tâches flexibles, en tenant compte de vos contraintes.
+            Passerelle propose de meilleurs créneaux pour tes tâches flexibles, en tenant compte de tes contraintes.
           </Text>
         </View>
 

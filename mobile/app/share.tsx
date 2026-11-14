@@ -55,7 +55,7 @@ export default function ShareScreen() {
       <TopBar title="Partager mon planning" onBack={() => router.back()} />
       <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <Text tone="muted" size={13}>
-          Les personnes invitées voient les tâches synchronisées de votre planning, sans avoir besoin d'un compte.
+          Les personnes invitées voient les tâches synchronisées de ton planning, sans avoir besoin d'un compte.
         </Text>
 
         {!isLoading && (

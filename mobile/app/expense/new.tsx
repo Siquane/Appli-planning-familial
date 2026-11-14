@@ -105,7 +105,7 @@ export default function ExpenseFormScreen() {
         {existing?.recurringId && (
           <Card>
             <Text size={13} tone="muted">
-              Dépense récurrente : vos changements ne concernent que ce mois-ci. Pour tous les mois, passez par les réglages du Budget.
+              Dépense récurrente : tes changements ne concernent que ce mois-ci. Pour tous les mois, passe par les réglages du Budget.
             </Text>
           </Card>
         )}

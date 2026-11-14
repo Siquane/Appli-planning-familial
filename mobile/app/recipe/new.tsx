@@ -45,7 +45,7 @@ export default function RecipeFormScreen() {
       setSteps(recipe.steps);
       if (recipe.notes) setNotes((n) => (n ? `${n}\n${recipe.notes}` : recipe.notes));
       setImportUrl("");
-      useToastStore.getState().show("Recette importée : vérifiez-la puis enregistrez.");
+      useToastStore.getState().show("Recette importée : vérifie-la puis enregistre.");
     } catch (e) {
       useToastStore.getState().show(e instanceof Error ? e.message : "Import impossible.");
     } finally {

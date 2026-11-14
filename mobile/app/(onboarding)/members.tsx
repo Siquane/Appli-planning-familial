@@ -44,7 +44,7 @@ export default function MembersOnboardingScreen() {
             Qui compose la famille ?
           </Text>
           <Text tone="muted" size={15}>
-            Ajoutez chaque membre — vous pourrez leur assigner des tâches ensuite.
+            Ajoute chaque membre : tu pourras ensuite leur attribuer des tâches.
           </Text>
         </View>
 

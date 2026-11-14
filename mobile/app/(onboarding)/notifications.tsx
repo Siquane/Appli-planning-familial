@@ -29,7 +29,7 @@ export default function NotificationsOnboardingScreen() {
           Restez au courant
         </Text>
         <Text tone="muted" size={15} center style={{ maxWidth: 280 }}>
-          Passerelle vous prévient des changements de planning et des tâches à venir. Vous pourrez ajuster cela dans votre profil.
+          Passerelle te prévient des changements de planning et des tâches à venir. Tu pourras régler ça dans ton profil.
         </Text>
       </View>
       <View style={{ gap: space[4], alignItems: "center", width: "100%" }}>

@@ -117,7 +117,7 @@ export default function DocumentFormScreen() {
 
         {!isValid && (
           <Text tone="muted" size={13} center>
-            {existing ? "Un nom est nécessaire pour enregistrer." : "Choisissez d'abord un fichier."}
+            {existing ? "Un nom est nécessaire pour enregistrer." : "Choisis d'abord un fichier."}
           </Text>
         )}
 

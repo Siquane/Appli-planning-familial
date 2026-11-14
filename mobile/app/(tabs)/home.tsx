@@ -69,7 +69,7 @@ export default function HomeScreen() {
         <Card row style={{ alignItems: "center", backgroundColor: color.accent900 }}>
           <ReshuffleIcon size={16} color={color.accent200} />
           <Text size={13} style={{ flex: 1, marginLeft: space[2] }}>
-            {flexibleCount} tâche{flexibleCount > 1 ? "s" : ""} flexible{flexibleCount > 1 ? "s" : ""} — Passerelle peut réajuster votre semaine.
+            {flexibleCount} tâche{flexibleCount > 1 ? "s" : ""} flexible{flexibleCount > 1 ? "s" : ""} — Passerelle peut réajuster ta semaine.
           </Text>
           <Button label="Replanifier" variant="ghost" onPress={() => router.push("/replan")} />
         </Card>
