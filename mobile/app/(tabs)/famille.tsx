@@ -13,6 +13,7 @@ import { color, space, gutter } from "../../src/theme/tokens";
 const LINKS: { label: string; href: Href; Icon: (p: { size: number; color: string }) => React.JSX.Element }[] = [
   { label: "Documents", href: "/documents", Icon: DocumentIcon },
   { label: "Anniversaires", href: "/birthdays", Icon: GiftIcon },
+  { label: "Comptes de la famille", href: "/family-access", Icon: ProfileIcon },
   { label: "Partager le planning", href: "/share", Icon: ProfileIcon },
 ];
 

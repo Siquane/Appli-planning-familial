@@ -21,6 +21,8 @@ import type {
   MealPlanPreferences,
   MealSlot,
   ProposedMeal,
+  FamilyInfo,
+  FamilyInvite,
   StatementImportRow,
   StatementParse,
   Member,
@@ -88,6 +90,14 @@ export const mealsApi = {
   generate: (data: { slots: MealSlot[]; preferences: MealPlanPreferences; exclude?: string[]; kind: "week" | "reroll" }) =>
     api.post<{ meals: ProposedMeal[]; quota: MealQuota }>("/meals/generate", data),
   saveMany: (meals: MealInput[]) => api.post<{ meals: Meal[] }>("/meals/bulk", { meals }),
+};
+
+export const familyApi = {
+  get: () => api.get<FamilyInfo>("/family"),
+  createInvite: (role: "full" | "planning") => api.post<{ invite: FamilyInvite }>("/family/invite", { role }),
+  revokeInvite: () => api.delete<void>("/family/invite"),
+  removeAccount: (id: string) => api.delete<void>(`/family/accounts/${id}`),
+  leave: () => api.post<void>("/family/leave"),
 };
 
 export const planApi = {

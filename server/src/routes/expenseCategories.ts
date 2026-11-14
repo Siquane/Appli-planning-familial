@@ -1,13 +1,13 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db";
-import { requireAuth } from "../middleware/auth";
+import { privateSpace, requireAuth } from "../middleware/auth";
 import { FALLBACK_CATEGORY, FIXED_EXPENSE_CATEGORIES, isFixedCategoryName } from "../lib/expenseCategories";
 
 // The family's own expense categories, on top of the fixed list.
 
 export const expenseCategoriesRouter = Router();
-expenseCategoriesRouter.use(requireAuth);
+expenseCategoriesRouter.use(requireAuth, privateSpace);
 
 const nameSchema = z.object({ name: z.string().trim().min(1, "Un nom est nécessaire").max(60) });
 

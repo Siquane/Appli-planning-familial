@@ -34,7 +34,7 @@ interface AuthState {
   refreshToken: string | null;
   hydrated: boolean;
   hydrate: () => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string, family?: { code: string; age15: boolean }) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
@@ -153,8 +153,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
-  signUp: async (email, password, name) => {
-    const data = await authRequest("/auth/signup", { email, password, name });
+  signUp: async (email, password, name, family) => {
+    const data = await authRequest("/auth/signup", { email, password, name, ...(family ? { familyCode: family.code, age15: family.age15 } : {}) });
     await persist(data.user, data.accessToken, data.refreshToken);
     set({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
   },

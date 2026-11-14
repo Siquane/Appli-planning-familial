@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { AppState } from "react-native";
 import { router, Tabs } from "expo-router";
 import { CustomTabBar } from "../../src/components/CustomTabBar";
 import { useMembers, useTasks } from "../../src/hooks/useApi";
@@ -18,8 +19,10 @@ export default function TabsLayout() {
   useEffect(() => {
     const route = takeWidgetRoute();
     if (route && route !== "/home") router.navigate(route as never);
-    // Keep the name/initials in step with the server.
+    // Keep the name/initials and the family in step with the server (the owner can remove an account).
     syncUser();
+    const sub = AppState.addEventListener("change", (state) => state === "active" && syncUser());
+    return () => sub.remove();
   }, []);
 
   useEffect(() => {

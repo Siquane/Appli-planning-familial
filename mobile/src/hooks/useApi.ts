@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { planApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
+import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
 import type { MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
 import { useAuthStore } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
 import { buildCategoryOptions } from "../lib/money";
+
+// Planning data is shared with the other accounts of the family: look for their changes every minute while the app is open.
+const SHARED_REFRESH_MS = 60_000;
 
 function useEnabled() {
   return !!useAuthStore((s) => s.accessToken);
@@ -11,7 +14,7 @@ function useEnabled() {
 
 export function useMembers() {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["members"], queryFn: () => membersApi.list().then((r) => r.members), enabled });
+  return useQuery({ queryKey: ["members"], queryFn: () => membersApi.list().then((r) => r.members), enabled, refetchInterval: SHARED_REFRESH_MS });
 }
 
 export function useCreateMember() {
@@ -58,7 +61,7 @@ export function useDeleteMember() {
 
 export function useRecipes() {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["recipes"], queryFn: () => recipesApi.list().then((r) => r.recipes), enabled });
+  return useQuery({ queryKey: ["recipes"], queryFn: () => recipesApi.list().then((r) => r.recipes), enabled, refetchInterval: SHARED_REFRESH_MS });
 }
 
 export function useCreateRecipe() {
@@ -90,7 +93,7 @@ export function useDeleteRecipe() {
 
 export function useMeals() {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["meals"], queryFn: () => mealsApi.list().then((r) => r.meals), enabled });
+  return useQuery({ queryKey: ["meals"], queryFn: () => mealsApi.list().then((r) => r.meals), enabled, refetchInterval: SHARED_REFRESH_MS });
 }
 
 export function useSetMeal() {
@@ -319,7 +322,7 @@ export function useDeleteRecurringExpense() {
 
 export function useShoppingList() {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["shopping"], queryFn: () => shoppingApi.list().then((r) => r.items), enabled });
+  return useQuery({ queryKey: ["shopping"], queryFn: () => shoppingApi.list().then((r) => r.items), enabled, refetchInterval: SHARED_REFRESH_MS });
 }
 
 export function useAddShoppingItem() {
@@ -361,7 +364,7 @@ export function useClearCheckedShopping() {
 
 export function useTasks() {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["tasks"], queryFn: () => tasksApi.list().then((r) => r.tasks), enabled });
+  return useQuery({ queryKey: ["tasks"], queryFn: () => tasksApi.list().then((r) => r.tasks), enabled, refetchInterval: SHARED_REFRESH_MS });
 }
 
 export function useCreateTask() {
@@ -478,4 +481,26 @@ export function useParseStatement() {
 export function useImportStatement() {
   const invalidate = useInvalidateBudget();
   return useMutation({ mutationFn: (rows: StatementImportRow[]) => statementsApi.import(rows), onSuccess: () => invalidate("recurring-expenses") });
+}
+
+
+// Family sharing: the accounts around the same data, and the code to add one.
+export function useFamily() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["family"], queryFn: () => familyApi.get(), enabled });
+}
+
+export function useCreateFamilyInvite() {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (role: "full" | "planning") => familyApi.createInvite(role), onSuccess: () => qc.invalidateQueries({ queryKey: ["family"] }) });
+}
+
+export function useRevokeFamilyInvite() {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: () => familyApi.revokeInvite(), onSuccess: () => qc.invalidateQueries({ queryKey: ["family"] }) });
+}
+
+export function useRemoveFamilyAccount() {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (id: string) => familyApi.removeAccount(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["family"] }) });
 }

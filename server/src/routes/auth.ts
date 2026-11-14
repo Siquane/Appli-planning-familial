@@ -8,6 +8,7 @@ import { generateRefreshToken, hashRefreshToken, signAccessToken, verifyAccessTo
 import { requireAuth } from "../middleware/auth";
 import { sendPasswordResetCode } from "../services/mailer";
 import { accountLimiter, loginLimiter } from "../middleware/rateLimits";
+import { InviteError, findLiveInvite } from "../lib/family";
 
 export const authRouter = Router();
 
@@ -20,19 +21,42 @@ const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
   name: z.string().trim().min(1),
+  /** Joining an existing family with the code a parent gave. */
+  familyCode: z.string().trim().max(40).optional(),
+  /** Required with a family code: one can join from 15 years old (creating a family needs 18). */
+  age15: z.boolean().optional(),
 });
 
 authRouter.post("/signup", accountLimiter, async (req, res) => {
   const parsed = signupSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" });
-  const { email, password, name } = parsed.data;
+  const { email, password, name, familyCode, age15 } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return res.status(409).json({ error: "Un compte existe déjà avec cet email" });
 
+  let join: { ownerId: string; role: string } | null = null;
+  if (familyCode) {
+    if (age15 !== true) return res.status(400).json({ error: "Pour rejoindre une famille, il faut avoir 15 ans ou plus." });
+    try {
+      const invite = await findLiveInvite(familyCode);
+      join = { ownerId: invite.ownerId, role: invite.role };
+    } catch (e) {
+      if (e instanceof InviteError) return res.status(400).json({ error: e.message, code: "invalid_family_code" });
+      throw e;
+    }
+  }
+
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await prisma.user.create({
-    data: { email, passwordHash, name, initials: initialsFor(name), constraints: { create: {} } },
+    data: {
+      email,
+      passwordHash,
+      name,
+      initials: initialsFor(name),
+      constraints: { create: {} },
+      ...(join ? { familyOwnerId: join.ownerId, familyRole: join.role } : {}),
+    },
   });
 
   const tokens = await issueTokens(user.id, user.email);
@@ -161,7 +185,7 @@ authRouter.post("/logout", async (req, res) => {
 });
 
 authRouter.get("/me", requireAuth, async (req, res) => {
-  const user = await prisma.user.findUnique({ where: { id: req.userId } });
+  const user = await prisma.user.findUnique({ where: { id: req.accountId } });
   if (!user) return res.status(404).json({ error: "Not found" });
   res.json({ user: publicUser(user) });
 });
@@ -170,7 +194,7 @@ authRouter.get("/me", requireAuth, async (req, res) => {
 authRouter.patch("/me", requireAuth, async (req, res) => {
   const parsed = z.object({ name: z.string().trim().min(1, "Un prénom est nécessaire").max(80, "Nom trop long") }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
-  const user = await prisma.user.update({ where: { id: req.userId }, data: { name: parsed.data.name, initials: initialsFor(parsed.data.name) } });
+  const user = await prisma.user.update({ where: { id: req.accountId }, data: { name: parsed.data.name, initials: initialsFor(parsed.data.name) } });
   res.json({ user: publicUser(user) });
 });
 
@@ -178,11 +202,20 @@ authRouter.patch("/me", requireAuth, async (req, res) => {
 // required by the Play Store). The password confirms it's really the owner.
 // Every table cascades from User; stored files (R2) are removed first.
 authRouter.delete("/me", requireAuth, loginLimiter, async (req, res) => {
-  const parsed = z.object({ password: z.string().min(1, "Mot de passe requis") }).safeParse(req.body);
+  const parsed = z.object({ password: z.string().min(1, "Mot de passe requis"), confirmFamily: z.boolean().optional() }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
-  const user = await prisma.user.findUnique({ where: { id: req.userId } });
+  const user = await prisma.user.findUnique({ where: { id: req.accountId } });
   if (!user) return res.status(404).json({ error: "Not found" });
   if (!(await bcrypt.compare(parsed.data.password, user.passwordHash))) return res.status(401).json({ error: "Mot de passe incorrect" });
+  // The owner's account IS the family's data: deleting it removes it for everyone who joined.
+  const others = user.familyOwnerId ? 0 : await prisma.user.count({ where: { familyOwnerId: user.id } });
+  if (others > 0 && parsed.data.confirmFamily !== true) {
+    return res.status(409).json({
+      error: `${others} autre${others > 1 ? "s" : ""} compte${others > 1 ? "s" : ""} utilise${others > 1 ? "nt" : ""} cette famille : ${others > 1 ? "ils perdront" : "il perdra"} l'accès au planning partagé. Confirme pour tout supprimer.`,
+      code: "family_has_members",
+      members: others,
+    });
+  }
   const files = await prisma.document.findMany({ where: { userId: user.id }, select: { fileKey: true } });
   await removeObjects(files.map((f) => f.fileKey));
   await prisma.user.delete({ where: { id: user.id } });
@@ -196,8 +229,17 @@ async function issueTokens(userId: string, email: string) {
   return { accessToken, refreshToken };
 }
 
-function publicUser(user: { id: string; email: string; name: string; initials: string }) {
-  return { id: user.id, email: user.email, name: user.name, initials: user.initials };
+function publicUser(user: { id: string; email: string; name: string; initials: string; familyOwnerId: string | null; familyRole: string }) {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    initials: user.initials,
+    /** The family's id (the owner's): what the store identifies the subscription with. */
+    familyId: user.familyOwnerId ?? user.id,
+    /** "owner" | "full" | "planning". */
+    familyRole: user.familyOwnerId ? user.familyRole : "owner",
+  };
 }
 
 // exported for the calendar OAuth callback routes, which authenticate the

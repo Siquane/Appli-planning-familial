@@ -35,7 +35,8 @@ function isActive(plan: Plan | undefined, id: (typeof PACKS)[number]["id"]) {
 export default function PremiumScreen() {
   const { data: plan } = usePlan();
   const both = isActive(plan, "both");
-  const userId = useAuthStore((s) => s.user?.id);
+  // The subscription belongs to the family: every account identifies with the family's id.
+  const userId = useAuthStore((s) => s.user?.familyId ?? s.user?.id);
   const qc = useQueryClient();
   const startTrial = useStartBudgetTrial();
   const billing = isBillingAvailable();

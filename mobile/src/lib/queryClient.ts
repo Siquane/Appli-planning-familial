@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { QueryClient } from "@tanstack/react-query";
+import { AppState } from "react-native";
+import { QueryClient, focusManager } from "@tanstack/react-query";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import type { PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
 
@@ -12,6 +13,11 @@ export const queryClient = new QueryClient({
     queries: { retry: 1, staleTime: 30_000, gcTime: ONE_WEEK },
   },
 });
+
+// On a phone there is no « window focus »: tell React Query when the app comes
+// back to the front, so what the other accounts of the family changed shows up
+// right away instead of waiting for the next minute.
+AppState.addEventListener("change", (state) => focusManager.setFocused(state === "active"));
 
 export const CACHE_STORAGE_KEY = "passerelle-query-cache";
 

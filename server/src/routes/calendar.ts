@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { verifyAccessToken } from "../lib/jwt";
+import { familyIdOf } from "../lib/family";
 import { env, isGoogleConfigured, isMicrosoftConfigured } from "../env";
 import { exchangeGoogleCode, getGoogleAuthUrl } from "../services/googleCalendar";
 import { exchangeMicrosoftCode, getMicrosoftAuthUrl } from "../services/outlookCalendar";
@@ -62,7 +63,8 @@ function requireProviderConfigured(configured: boolean, name: string) {
 
 calendarRouter.get("/google/start", requireProviderConfigured(isGoogleConfigured(), "Google Calendar"), async (req, res) => {
   try {
-    const userId = verifyAccessToken(String(req.query.token ?? "")).sub;
+    // The agenda connection belongs to the family, not to the one account that started it.
+    const userId = await familyIdOf(verifyAccessToken(String(req.query.token ?? "")).sub);
     const state = issueState(userId);
     res.redirect(getGoogleAuthUrl(state));
   } catch {
@@ -89,7 +91,8 @@ calendarRouter.get("/google/callback", async (req, res) => {
 
 calendarRouter.get("/microsoft/start", requireProviderConfigured(isMicrosoftConfigured(), "Outlook"), async (req, res) => {
   try {
-    const userId = verifyAccessToken(String(req.query.token ?? "")).sub;
+    // The agenda connection belongs to the family, not to the one account that started it.
+    const userId = await familyIdOf(verifyAccessToken(String(req.query.token ?? "")).sub);
     const state = issueState(userId);
     res.redirect(await getMicrosoftAuthUrl(state));
   } catch {

@@ -2,7 +2,7 @@ import express, { Router } from "express";
 import type { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "../db";
-import { requireAuth } from "../middleware/auth";
+import { privateSpace, requireAuth } from "../middleware/auth";
 import { statementLimiter } from "../middleware/rateLimits";
 import { requireBudgetPack } from "../lib/plan";
 import { isValidCategory } from "../lib/expenseCategories";
@@ -19,7 +19,7 @@ import { amountCents } from "./expenses";
 //                            the categories they corrected).
 
 export const statementsRouter = Router();
-statementsRouter.use(requireAuth);
+statementsRouter.use(requireAuth, privateSpace);
 
 const DAY_MS = 86_400_000;
 const DUPLICATE_WINDOW_DAYS = 3;

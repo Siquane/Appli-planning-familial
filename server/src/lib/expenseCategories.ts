@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { familyIdOf } from "./family";
 
 // An expense category is either one of these fixed keys or the id of one of
 // the family's ExpenseCategory rows (cuids never collide with these words).
@@ -57,7 +58,9 @@ export async function isValidCategory(userId: string, category: string) {
 }
 
 export async function ownsMember(userId: string, memberId: string) {
-  return !!(await prisma.familyMember.findFirst({ where: { id: memberId, userId }, select: { id: true } }));
+  // Members belong to the family; a « planning » account keeps its budget apart but can still tag a family member.
+  const familyId = await familyIdOf(userId);
+  return !!(await prisma.familyMember.findFirst({ where: { id: memberId, userId: familyId }, select: { id: true } }));
 }
 
 /** French error for an unknown category or member, or null if both are fine. */
