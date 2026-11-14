@@ -57,9 +57,16 @@ function storageOr503(res: import("express").Response) {
   return storage;
 }
 
-async function ownsMember(userId: string, memberId: string) {
-  return !!(await prisma.familyMember.findFirst({ where: { id: memberId, userId }, select: { id: true } }));
+// Members and recipes belong to the family.
+async function ownsMember(familyId: string, memberId: string) {
+  return !!(await prisma.familyMember.findFirst({ where: { id: memberId, userId: familyId }, select: { id: true } }));
 }
+
+/**
+ * Where a document lives: recipe attachments belong to the family (everyone
+ * sees the recipe); the library belongs to the account's private space.
+ */
+const scopeOf = (req: import("express").Request, recipeId: string | null | undefined) => (recipeId ? req.familyId! : req.privateId!);
 
 async function ownsRecipe(userId: string, recipeId: string) {
   return !!(await prisma.recipe.findFirst({ where: { id: recipeId, userId }, select: { id: true } }));
@@ -79,7 +86,7 @@ documentsRouter.get("/", async (req, res) => {
 
   const documents = await prisma.document.findMany({
     where: {
-      userId: req.userId,
+      userId: scopeOf(req, recipeId),
       status: "ready",
       recipeId: recipeId ?? null,
       ...(category ? { category } : {}),
@@ -109,10 +116,10 @@ documentsRouter.post("/", async (req, res) => {
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const d = parsed.data;
-  const userId = req.userId!;
+  const userId = scopeOf(req, d.recipeId);
 
-  if (d.memberId && !(await ownsMember(userId, d.memberId))) return res.status(400).json({ error: "Membre inconnu" });
-  if (d.recipeId && !(await ownsRecipe(userId, d.recipeId))) return res.status(400).json({ error: "Recette inconnue" });
+  if (d.memberId && !(await ownsMember(req.familyId!, d.memberId))) return res.status(400).json({ error: "Membre inconnu" });
+  if (d.recipeId && !(await ownsRecipe(req.familyId!, d.recipeId))) return res.status(400).json({ error: "Recette inconnue" });
 
   const storage = storageOr503(res);
   if (!storage) return;
@@ -158,12 +165,13 @@ documentsRouter.post("/", async (req, res) => {
   });
 });
 
-async function loadOwnedDocument(userId: string, id: string) {
-  return prisma.document.findFirst({ where: { id, userId } });
+/** The account's own documents, plus the family's recipe attachments. */
+async function loadOwnedDocument(req: import("express").Request, id: string) {
+  return prisma.document.findFirst({ where: { id, OR: [{ userId: req.privateId! }, { userId: req.familyId!, recipeId: { not: null } }] } });
 }
 
 documentsRouter.post("/:id/confirm", async (req, res) => {
-  const existing = await loadOwnedDocument(req.userId!, req.params.id);
+  const existing = await loadOwnedDocument(req, req.params.id);
   if (!existing) return res.status(404).json({ error: "Not found" });
   const storage = storageOr503(res);
   if (!storage) return;
@@ -191,16 +199,16 @@ const updateSchema = z.object({
 documentsRouter.patch("/:id", async (req, res) => {
   const parsed = patchSchema(updateSchema).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
-  const existing = await loadOwnedDocument(req.userId!, req.params.id);
+  const existing = await loadOwnedDocument(req, req.params.id);
   if (!existing) return res.status(404).json({ error: "Not found" });
-  if (parsed.data.memberId && !(await ownsMember(req.userId!, parsed.data.memberId))) return res.status(400).json({ error: "Membre inconnu" });
+  if (parsed.data.memberId && !(await ownsMember(req.familyId!, parsed.data.memberId))) return res.status(400).json({ error: "Membre inconnu" });
 
   const document = await prisma.document.update({ where: { id: existing.id }, data: parsed.data });
   res.json({ document: await serializeDocument(document, getStorage()) });
 });
 
 documentsRouter.delete("/:id", async (req, res) => {
-  const existing = await loadOwnedDocument(req.userId!, req.params.id);
+  const existing = await loadOwnedDocument(req, req.params.id);
   if (!existing) return res.status(404).json({ error: "Not found" });
   await removeObjects([existing.fileKey]);
   await prisma.document.delete({ where: { id: existing.id } });

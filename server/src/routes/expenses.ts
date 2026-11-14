@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import type { Expense } from "@prisma/client";
 import { prisma } from "../db";
-import { requireAuth } from "../middleware/auth";
+import { privateSpace, requireAuth } from "../middleware/auth";
 import { checkCategoryAndMember } from "../lib/expenseCategories";
 import { materializeRecurring } from "../lib/recurring";
 import { patchSchema } from "../lib/validation";
@@ -20,7 +20,7 @@ import { FIXED_LABELS } from "../lib/expenseCategories";
 // month through a timezone.
 
 export const expensesRouter = Router();
-expensesRouter.use(requireAuth);
+expensesRouter.use(requireAuth, privateSpace);
 
 export const MAX_AMOUNT_CENTS = 1_000_000_00; // 1 000 000 € — guards against typos
 

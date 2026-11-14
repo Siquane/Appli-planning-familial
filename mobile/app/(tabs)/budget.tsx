@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { MoreLink } from "../../src/components/MoreLink";
+import { PrivateNote } from "../../src/components/PrivateNote";
 import { Pressable, hitSlopFor } from "../../src/components/Touchable";
 import { ScrollView, Share, View } from "react-native";
 import { router } from "expo-router";
@@ -58,6 +59,7 @@ export default function BudgetScreen() {
           </MonthArrow>
         </View>
 
+        <PrivateNote what="budget" />
         {notice && (
           <Pressable onPress={() => router.push("/premium")} accessibilityLabel={notice.text}>
             <Card style={{ gap: space.xs, borderWidth: notice.kind === "ending" ? 1 : 0, borderColor: color.accent400 }}>

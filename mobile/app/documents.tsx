@@ -11,6 +11,7 @@ import { TopBar } from "../src/components/TopBar";
 import { DocumentRow } from "../src/components/DocumentRow";
 import { DocumentIcon, PlusIcon } from "../src/components/icons";
 import { MoreLink } from "../src/components/MoreLink";
+import { PrivateNote } from "../src/components/PrivateNote";
 import { useDocuments, useMembers, usePlan } from "../src/hooks/useApi";
 
 import { categoryLabel, DOCUMENT_CATEGORIES } from "../src/lib/documentUpload";
@@ -33,6 +34,7 @@ export default function DocumentsScreen() {
     <Screen scroll={false} padded={false}>
       <TopBar title="Documents" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: gutter, gap: space.sm }} showsVerticalScrollIndicator={false}>
+        <PrivateNote what="documents" />
         <Button
           label={full ? "Ajouter un document · Passerelle+" : "Ajouter un document"}
           icon={<PlusIcon size={18} color={color.text} />}

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import type { RecurringExpense } from "@prisma/client";
 import { prisma } from "../db";
-import { requireAuth } from "../middleware/auth";
+import { privateSpace, requireAuth } from "../middleware/auth";
 import { checkCategoryAndMember } from "../lib/expenseCategories";
 import { amountCents, currentMonth } from "./expenses";
 import { patchSchema } from "../lib/validation";
@@ -13,7 +13,7 @@ import { patchSchema } from "../lib/validation";
 // past copies are kept as they are.
 
 export const recurringExpensesRouter = Router();
-recurringExpensesRouter.use(requireAuth);
+recurringExpensesRouter.use(requireAuth, privateSpace);
 
 function serialize(r: RecurringExpense) {
   return {

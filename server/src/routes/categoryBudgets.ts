@@ -1,14 +1,14 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db";
-import { requireAuth } from "../middleware/auth";
+import { privateSpace, requireAuth } from "../middleware/auth";
 import { isValidCategory } from "../lib/expenseCategories";
 import { amountCents } from "./expenses";
 
 // Monthly spending cap per category — set once, valid every month.
 
 export const categoryBudgetsRouter = Router();
-categoryBudgetsRouter.use(requireAuth);
+categoryBudgetsRouter.use(requireAuth, privateSpace);
 
 categoryBudgetsRouter.get("/", async (req, res) => {
   const budgets = await prisma.categoryBudget.findMany({ where: { userId: req.userId } });

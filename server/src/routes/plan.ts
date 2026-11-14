@@ -7,9 +7,9 @@ import { BUDGET_TRIAL_DAYS, FREE_DOCUMENT_LIMIT, budgetTrialEnd, getMealQuota, h
 export const planRouter = Router();
 planRouter.use(requireAuth);
 
-async function planOf(userId: string) {
+async function planOf(userId: string, privateId: string) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { budgetUntil: true, mealsUntil: true, budgetTrialStartedAt: true } });
-  const [meals, documentCount] = await Promise.all([getMealQuota(userId), prisma.document.count({ where: { userId } })]);
+  const [meals, documentCount] = await Promise.all([getMealQuota(userId), prisma.document.count({ where: { userId: privateId } })]);
   const now = new Date();
   const budget = hasPack(user, "budget", now);
   const menus = hasPack(user, "meals", now);
@@ -38,7 +38,7 @@ async function planOf(userId: string) {
 }
 
 planRouter.get("/", async (req, res) => {
-  res.json(await planOf(req.userId!));
+  res.json(await planOf(req.userId!, req.privateId!));
 });
 
 // Starts the Budget+ trial. Once per account: asking again, or while a paid
@@ -51,5 +51,5 @@ planRouter.post("/trial/budget", async (req, res) => {
   // updateMany with the condition: two taps at once start it only once.
   const { count } = await prisma.user.updateMany({ where: { id: userId, budgetTrialStartedAt: null }, data: { budgetTrialStartedAt: new Date() } });
   if (count === 0) return res.status(409).json({ error: "L'essai gratuit de Budget+ a déjà été utilisé." });
-  res.status(201).json(await planOf(userId));
+  res.status(201).json(await planOf(userId, req.privateId!));
 });

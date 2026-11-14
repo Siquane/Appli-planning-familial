@@ -78,6 +78,18 @@ Dernière mise à jour : 13 novembre 2026 (soir, reprise de la branche Premium).
 - Famille = membres, documents, anniversaires, partage.
 - Recherche (`/search`), notifications (`/inbox`, pour ne pas entrer en conflit avec l'écran d'accueil `(onboarding)/notifications`) et profil (`/profile`) ne sont plus des onglets : icônes en haut de chaque onglet (`TabHeader` dans `components/PageHeader.tsx`).
 
+## Partage de famille : plusieurs comptes autour des mêmes données (14/11/2026)
+
+- Il n'y avait **pas de code famille** avant : un compte = une famille. Maintenant un adulte (18 ans) crée la famille ; d'autres personnes (**dès 15 ans**) la rejoignent avec un **code de 8 caractères valable 7 jours** (ex. `K7F2-9QXA`), depuis « J'ai un code famille » à l'inscription. Le créateur le génère dans Famille → « Comptes de la famille », et choisit le profil :
+  - **Complet** : tout est partagé, budget et documents compris.
+  - **Planning** : tâches, calendrier, repas, recettes, courses et membres partagés ; **budget et documents personnels** (propres à ce compte).
+- Principe : une famille = les données du compte créateur. `requireAuth` (middleware) résout le compte : `req.userId` = id de la famille (toutes les routes marchent telles quelles), `req.accountId` = la personne, `req.privateId` = où vivent son budget et ses documents ; les routeurs budget, catégories, plafonds, récurrentes, épargne, relevés et documents utilisent `privateSpace` (Planning = son propre id). Les pièces jointes de recettes restent à la famille.
+- **Un seul abonnement par famille** : packs, essai et quotas de menus se lisent chez le créateur (`packDates` résout la famille) ; l'appli identifie RevenueCat avec `user.familyId`. Un compte de la liste `LIFETIME_PREMIUM_EMAILS` qui a rejoint une autre famille profite des packs de celle-ci, pas du sien.
+- Gestion : `GET /family`, `POST/DELETE /family/invite` (créateur), `DELETE /family/accounts/:id` (retirer), `POST /family/leave`. Un compte retiré ou parti redevient sa propre famille, vide. Supprimer le compte créateur demande une confirmation (`409 family_has_members`, puis `confirmFamily: true`) ; les autres comptes restent, sans les données partagées. 6 comptes au plus par famille.
+- Synchronisation entre téléphones : les listes partagées (tâches, repas, courses, recettes, membres) se rafraîchissent toutes les minutes et au retour dans l'appli ; l'utilisateur est resynchronisé à chaque retour au premier plan.
+- Migration `20261114140000_family_sharing`. Politique de confidentialité et page Confidentialité mises à jour (15 ans, profils, suppression) : **la page publiée est à republier**.
+- Pas fait : transférer la famille à un autre adulte, rejoindre depuis un compte existant, notifications « quelqu'un a modifié le planning ».
+
 ## Essai gratuit de Budget+ (14/11/2026)
 
 - **4 semaines (28 jours), une seule fois par compte**, démarré à la demande : bouton « Essayer 4 semaines gratuitement » sur l'écran Passerelle+ (carte Budget+), bandeau « Essaie Budget+… » dans l'onglet Budget, accroches des écrans Épargne, Bilan et Import. Comptes existants compris.

@@ -1,5 +1,6 @@
 import type { Response } from "express";
 import { prisma } from "../db";
+import { familyIdOf } from "./family";
 
 // Free vs the two Premium packs ("Les 2" = both). Everything stays free except:
 //   - documents: 20 free, unlimited with either pack
@@ -47,8 +48,9 @@ export function hasAnyPack(user: PackDates, now = new Date()) {
   return hasPack(user, "budget", now) || hasPack(user, "meals", now);
 }
 
+// Packs and trial belong to the family's owner: any account of the family reads them there.
 async function packDates(userId: string): Promise<PackDates | null> {
-  return prisma.user.findUnique({ where: { id: userId }, select: { budgetUntil: true, mealsUntil: true, budgetTrialStartedAt: true } });
+  return prisma.user.findUnique({ where: { id: await familyIdOf(userId) }, select: { budgetUntil: true, mealsUntil: true, budgetTrialStartedAt: true } });
 }
 
 /** First instant of the current calendar month (UTC). */

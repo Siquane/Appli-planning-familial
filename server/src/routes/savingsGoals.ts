@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import type { SavingsGoal } from "@prisma/client";
 import { prisma } from "../db";
-import { requireAuth } from "../middleware/auth";
+import { privateSpace, requireAuth } from "../middleware/auth";
 import { requireBudgetPack } from "../lib/plan";
 import { patchSchema } from "../lib/validation";
 import { amountCents } from "./expenses";
@@ -12,7 +12,7 @@ import { amountCents } from "./expenses";
 // in the month's budget too; the goal's progress is the sum of those.
 
 export const savingsGoalsRouter = Router();
-savingsGoalsRouter.use(requireAuth);
+savingsGoalsRouter.use(requireAuth, privateSpace);
 
 const dayString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date attendue au format AAAA-MM-JJ");
 

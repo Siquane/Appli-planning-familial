@@ -11,6 +11,7 @@ import { TopBar } from "../src/components/TopBar";
 import { Accordion } from "../src/components/Accordion";
 import { useFoodConsent, useSetFoodConsent } from "../src/hooks/useApi";
 import { deleteAccount } from "../src/lib/account";
+import { ApiError } from "../src/api/client";
 import { useToastStore } from "../src/state/toastStore";
 import { space, gutter } from "../src/theme/tokens";
 import { errorText } from "../src/lib/errors";
@@ -73,7 +74,30 @@ export default function PrivacyScreen() {
               await deleteAccount(password);
               router.replace("/");
             } catch (e) {
-              useToastStore.getState().show(errorText(e, "mettre à jour ce réglage"));
+              if (e instanceof ApiError && e.code === "family_has_members") {
+                // Other accounts use this family: say so and ask again before deleting for everyone.
+                setDeleting(false);
+                Alert.alert("D'autres comptes utilisent cette famille", e.message, [
+                  { text: "Annuler", style: "cancel" },
+                  {
+                    text: "Tout supprimer",
+                    style: "destructive",
+                    onPress: async () => {
+                      setDeleting(true);
+                      try {
+                        await deleteAccount(password, true);
+                        router.replace("/");
+                      } catch (err) {
+                        useToastStore.getState().show(errorText(err, "supprimer le compte"));
+                      } finally {
+                        setDeleting(false);
+                      }
+                    },
+                  },
+                ]);
+                return;
+              }
+              useToastStore.getState().show(errorText(e, "supprimer le compte"));
             } finally {
               setDeleting(false);
             }
@@ -99,6 +123,18 @@ export default function PrivacyScreen() {
           </Section>
           <Section title="Erreurs de l'appli">
             En cas de plantage, un rapport technique est envoyé à Sentry (serveurs en Europe), sans données personnelles.
+          </Section>
+        </Accordion>
+
+        <Accordion title="Partage en famille">
+          <Section title="Qui voit quoi">
+            Avec un code famille, d'autres personnes (dès 15 ans) ont leur propre compte autour de la même famille. Profil Complet : tout est partagé. Profil Planning : le planning, les repas, les courses et les recettes sont partagés ; le budget et les documents restent personnels.
+          </Section>
+          <Section title="Santé et régimes">
+            Les régimes et allergies enregistrés avec ton accord sont visibles de tous les comptes de la famille.
+          </Section>
+          <Section title="Partir ou retirer">
+            Le créateur peut retirer un compte et chacun peut quitter la famille : le compte reste, sans les données partagées. Si le créateur supprime son compte, les données partagées sont effacées après un avertissement.
           </Section>
         </Accordion>
 

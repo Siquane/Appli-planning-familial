@@ -126,6 +126,7 @@
           <li>Les régimes, allergies et aliments à limiter ne sont enregistrés qu'avec votre accord explicite.</li>
           <li>Pour générer des menus, Claude (Anthropic) reçoit les goûts de chacun <strong>sans prénom</strong>.</li>
           <li>Un relevé bancaire importé n'est <strong>jamais enregistré ni envoyé à un tiers</strong> : seules les dépenses que vous cochez sont gardées.</li>
+          <li>Plusieurs personnes peuvent partager une famille avec leur propre compte, grâce à un code. <strong>Vous choisissez ce que chacune voit</strong> : tout, ou le planning seulement.</li>
           <li>Vous pouvez tout modifier, retirer votre accord ou supprimer votre compte depuis l'application.</li>
         </ul>
       </div>
@@ -153,6 +154,7 @@
           <li>Avec votre accord seulement : régime alimentaire, allergies et intolérances, aliments à limiter (voir section 4).</li>
           <li>Tâches, rappels, contraintes horaires, anniversaires, menus, recettes, liste de courses.</li>
           <li>Budget : dépenses, catégories, plafonds, objectifs d'épargne.</li>
+          <li>Si d'autres personnes rejoignent votre famille avec un code : leur adresse e-mail et leur prénom, et le fait qu'elles appartiennent à votre famille (voir section 9).</li>
           <li>Si vous importez un relevé bancaire (offre Budget+) : le PDF est lu par notre serveur le temps de l'analyse puis effacé de la mémoire, sans être enregistré ni transmis à un tiers (Claude compris). Seules les dépenses que vous cochez sont conservées (date, libellé, montant, catégorie), ainsi que, pour chaque commerçant dont vous avez corrigé la catégorie, un nom de commerçant et la catégorie choisie, afin de les reproduire à l'import suivant. Les numéros de compte, IBAN et références du relevé ne sont jamais conservés.</li>
           <li>Documents et photos que vous ajoutez (ils peuvent contenir des informations sensibles : vous choisissez ce que vous y mettez).</li>
         </ul>
@@ -234,6 +236,7 @@
         <ul>
           <li>Vos données sont conservées tant que votre compte existe.</li>
           <li>Les régimes, allergies et aliments à limiter sont effacés dès que vous retirez votre accord.</li>
+          <li>Quand le créateur supprime son compte, les données partagées de la famille sont effacées ; les autres comptes restent, sans ces données, et sont prévenus avant la suppression. Un compte qui en a rejoint un autre efface, en supprimant le sien, ses seules données personnelles.</li>
           <li>Un relevé bancaire PDF n'est pas conservé : il n'existe que le temps de son analyse, en mémoire du serveur.</li>
           <li>À la suppression du compte, toutes vos données et vos fichiers sont effacés immédiatement. Une copie de sécurité de la base, réalisée chaque semaine, est conservée 8 semaines au plus : vos données en disparaissent donc au plus tard 8 semaines après la suppression.</li>
           <li>Les codes de réinitialisation du mot de passe expirent après quelques minutes ; les jetons de connexion expirent automatiquement.</li>
@@ -241,10 +244,13 @@
       </section>
 
       <section id="enfants">
-        <h2>9. Enfants et partage du planning</h2>
+        <h2>9. Âge, famille partagée et partage du planning</h2>
         <ul>
-          <li>Il faut avoir <strong>18 ans</strong> pour créer un compte Passerelle.</li>
-          <li>Les enfants n'ont pas de compte : c'est le parent qui saisit leurs informations, sous sa responsabilité.</li>
+          <li>Il faut avoir <strong>18 ans</strong> pour créer une famille Passerelle.</li>
+          <li><strong>À partir de 15 ans</strong>, on peut rejoindre une famille existante avec un code donné par son créateur, qui en reste responsable ; la personne confirme son âge à l'inscription. Les enfants de moins de 15 ans n'ont pas de compte : c'est le parent qui saisit leurs informations, sous sa responsabilité.</li>
+          <li>Le <strong>code famille</strong> est valable 7 jours et son créateur choisit le profil de celui qui l'utilise : <em>Complet</em> partage tout (planning, repas, budget, documents) ; <em>Planning</em> partage le planning, les repas, les courses, les recettes et la liste des membres, mais garde un budget et des documents personnels, invisibles du reste de la famille.</li>
+          <li>Les comptes d'une même famille voient les données partagées, y compris les régimes et allergies enregistrés avec l'accord donné (section 4). L'abonnement est celui de la famille.</li>
+          <li>Le créateur peut retirer un compte ; chacun peut quitter la famille. Le compte retiré garde ses données personnelles mais n'accède plus aux données partagées.</li>
           <li>Le lien de partage du planning permet à une personne de votre choix de consulter vos tâches partagées, en lecture seule et sans compte. Il affiche les prénoms des membres concernés : ne le transmettez qu'à des personnes de confiance.</li>
         </ul>
       </section>

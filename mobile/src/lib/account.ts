@@ -1,6 +1,7 @@
 import { api } from "../api/client";
 import type { User } from "../api/types";
 import { useAuthStore } from "../state/authStore";
+import { clearQueryCache } from "./queryClient";
 
 /** Change the display name; the « Salut, … » greeting and avatar follow. */
 export async function updateName(name: string): Promise<User> {
@@ -23,7 +24,14 @@ export async function syncUser(): Promise<void> {
  * Delete the account and all its data (password confirms it). Signs out on
  * success so the app returns to the login screen with nothing cached.
  */
-export async function deleteAccount(password: string): Promise<void> {
-  await api.delete<void>("/auth/me", { password });
+export async function deleteAccount(password: string, confirmFamily = false): Promise<void> {
+  await api.delete<void>("/auth/me", { password, ...(confirmFamily ? { confirmFamily: true } : {}) });
   await useAuthStore.getState().signOut();
+}
+
+/** Leave the family this account joined: from now on it is its own family, without the shared data. */
+export async function leaveFamily(): Promise<void> {
+  await api.post<void>("/family/leave");
+  await clearQueryCache();
+  await syncUser();
 }

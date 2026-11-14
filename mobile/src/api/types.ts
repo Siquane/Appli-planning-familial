@@ -1,8 +1,36 @@
+export type FamilyRole = "owner" | "full" | "planning";
+
 export interface User {
   id: string;
   email: string;
   name: string;
   initials: string;
+  /** The family's id (the owner's): what the store identifies the subscription with. Absent in sessions saved by older versions. */
+  familyId?: string;
+  familyRole?: FamilyRole;
+}
+
+export interface FamilyAccount {
+  id: string;
+  name: string;
+  initials: string;
+  role: FamilyRole;
+  isMe: boolean;
+}
+
+export interface FamilyInvite {
+  code: string;
+  role: "full" | "planning";
+  expiresAt: string;
+  expired: boolean;
+}
+
+export interface FamilyInfo {
+  role: FamilyRole;
+  maxAccounts: number;
+  accounts: FamilyAccount[];
+  /** The owner only. */
+  invite: FamilyInvite | null;
 }
 
 export type Tint = "accent" | "neutral" | "accent2";
