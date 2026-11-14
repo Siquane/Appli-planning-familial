@@ -117,7 +117,7 @@ export default function PrivacyScreen() {
           <Text size={13} tone="muted">
             {consentedAt
               ? `Accord donné le ${new Date(consentedAt).toLocaleDateString("fr-FR")}. Les régimes, allergies et aliments à limiter des membres peuvent être enregistrés.`
-              : "Pas d'accord donné : les régimes, allergies et aliments à limiter ne sont pas enregistrés. Tu peux le donner depuis la fiche d'un membre (Famille → membre → Repas)."}
+              : "Pas d'accord donné : les régimes, allergies et aliments à limiter ne sont pas enregistrés. Tu peux le donner depuis la fiche d'un membre (onglet Famille, rubrique Repas)."}
           </Text>
           {consentedAt ? <Button label="Retirer mon accord et effacer ces données" variant="secondary" block loading={setConsent.isPending} onPress={onWithdraw} /> : null}
         </Card>

@@ -9,7 +9,7 @@ import { WeekStrip } from "../../src/components/WeekStrip";
 import { TaskCard } from "../../src/components/TaskCard";
 import { TabHeader } from "../../src/components/PageHeader";
 import { TodayCard } from "../../src/components/TodayCard";
-import { ReshuffleIcon, CalendarIcon, GiftIcon } from "../../src/components/icons";
+import { ReshuffleIcon, CalendarIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
 import { useMembers, useTasks } from "../../src/hooks/useApi";
 import { useAuthStore } from "../../src/state/authStore";
 import { color, space } from "../../src/theme/tokens";
@@ -43,7 +43,11 @@ export default function HomeScreen() {
 
   return (
     <Screen techGrid style={{ gap: space[8] }} refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={color.accent} />}>
-      <TabHeader title="Planning" subtitle={user?.name?.trim() ? `Salut, ${user.name.trim().split(" ")[0]} 👋` : "Salut 👋"} />
+      <TabHeader
+        title="Planning"
+        subtitle={user?.name?.trim() ? `Salut, ${user.name.trim().split(" ")[0]}` : "Salut"}
+        subtitleIcon={<WaveIcon size={15} color={color.accent400} />}
+      />
 
       <TodayCard />
 
@@ -51,10 +55,10 @@ export default function HomeScreen() {
 
       {upcomingBirthday && (
         <Card row style={{ alignItems: "center", backgroundColor: color.accent900 }}>
-          <GiftIcon size={16} color={color.accent200} />
+          {upcomingBirthday.days === 0 ? <PartyIcon size={18} color={color.accent200} /> : <GiftIcon size={16} color={color.accent200} />}
           <Text size={13} style={{ flex: 1, marginLeft: space[2] }}>
             {upcomingBirthday.days === 0
-              ? `C'est l'anniversaire de ${upcomingBirthday.member.name} aujourd'hui 🎉`
+              ? `C'est l'anniversaire de ${upcomingBirthday.member.name} aujourd'hui !`
               : `Anniversaire de ${upcomingBirthday.member.name} dans ${upcomingBirthday.days} jour${upcomingBirthday.days > 1 ? "s" : ""}`}
           </Text>
           <Button label="Voir" variant="ghost" onPress={() => router.push("/birthdays")} />

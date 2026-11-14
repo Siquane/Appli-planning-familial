@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { Text } from "../components/Text";
 import { Card } from "../components/Card";
 import { WeekStrip } from "../components/WeekStrip";
-import { ChevronRightIcon } from "../components/icons";
+import { ChevronRightIcon, SparkleIcon } from "../components/icons";
 import { Button } from "../components/Button";
 import { useMeals, useRecipes } from "../hooks/useApi";
 import { todayWeekday } from "../lib/weekdays";
@@ -22,7 +22,7 @@ export function MealsBody() {
 
   return (
       <View style={{ gap: space[4] }}>
-        <Button label="✨ Générer mes menus" variant="primary" block onPress={() => router.push("/meal/plan")} />
+        <Button label="Générer mes menus" icon={<SparkleIcon size={18} color={color.bg} />} variant="primary" block onPress={() => router.push("/meal/plan")} />
         <WeekStrip selected={selected} onSelect={setSelected} today={today} />
 
         <View style={{ gap: space[2] }}>

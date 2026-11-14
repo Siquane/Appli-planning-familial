@@ -7,7 +7,7 @@ import { Text } from "../src/components/Text";
 import { Card } from "../src/components/Card";
 import { Button } from "../src/components/Button";
 import { TopBar } from "../src/components/TopBar";
-import { ChevronRightIcon, TrashIcon } from "../src/components/icons";
+import { ChevronRightIcon, PlusIcon, TrashIcon } from "../src/components/icons";
 import {
   useCategoryBudgets,
   useCreateExpenseCategory,
@@ -64,7 +64,7 @@ export default function BudgetSettingsScreen() {
               </Card>
             </Pressable>
           ))}
-          <Button label="+ Ajouter une dépense récurrente" variant="secondary" block onPress={() => router.push("/expense/recurring")} />
+          <Button label="Ajouter une dépense récurrente" icon={<PlusIcon size={18} color={color.text} />} variant="secondary" block onPress={() => router.push("/expense/recurring")} />
         </Section>
 
         <Section title="Plafonds mensuels" hint="Valables tous les mois. Laisser vide pour ne pas en mettre.">

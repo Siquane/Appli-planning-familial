@@ -10,6 +10,8 @@ export interface WidgetRow {
   text: string;
   /** Dimmed (past task) or highlighted (next task / over budget). */
   tone?: "faint" | "strong" | "danger";
+  /** Shown at the right end of the row: who the task is for. */
+  aside?: string;
 }
 
 export interface WidgetContent {
@@ -32,7 +34,10 @@ export function summaryContent(s: WidgetSnapshot, now: Date): WidgetContent {
   const n = `${todays.length} tâche${todays.length > 1 ? "s" : ""}`;
   const taskLine = todays.length === 0 ? "Rien de prévu aujourd'hui" : next ? `${next.time} ${next.title}` : `${n} · journée terminée`;
   const dinner = s.dinners.find((d) => d.weekday === today);
-  const rows: WidgetRow[] = [{ text: taskLine, tone: next ? "strong" : undefined }, { text: dinner ? `Ce soir : ${dinner.title}` : "Dîner pas encore prévu" }];
+  const rows: WidgetRow[] = [
+    { text: taskLine, tone: next ? "strong" : undefined, aside: next?.who || undefined },
+    { text: dinner ? `Ce soir : ${dinner.title}` : "Dîner pas encore prévu" },
+  ];
   const b = s.budget && s.budget.month === monthOf(now) ? s.budget : null;
   if (b) {
     const left = b.capCents !== null ? b.capCents - b.spentCents : null;
@@ -61,9 +66,13 @@ export function tasksContent(s: WidgetSnapshot, now: Date, max = 6): WidgetConte
   const nextTask = todays.find((t) => t.time >= time);
   return {
     title: `${WEEKDAYS_FULL[today]} · ${todays.length} tâche${todays.length > 1 ? "s" : ""}`,
-    rows: shown.map((t) => ({ text: `${t.time}  ${t.title}`, tone: t === nextTask ? "strong" : t.time < time ? "faint" : undefined })),
+    rows: shown.map((t) => ({
+      text: `${t.time}  ${t.title}`,
+      tone: t === nextTask ? "strong" : t.time < time ? "faint" : undefined,
+      aside: t.who || undefined,
+    })),
     empty: "Rien de prévu aujourd'hui",
-    example: ["08:30  Déposer les enfants", "17:00  Piscine", "19:30  Devoirs"],
+    example: ["08:30  École · Léa", "17:00  Piscine · Tom", "19:30  Devoirs"],
   };
 }
 
@@ -85,5 +94,5 @@ export function menuContent(s: WidgetSnapshot, now: Date, days = 4): WidgetConte
 export function shoppingContent(s: WidgetSnapshot, max = 7): WidgetContent {
   const rows: WidgetRow[] = s.shopping.slice(0, max).map((label) => ({ text: `•  ${label}` }));
   if (s.shopping.length > max) rows.push({ text: `+ ${s.shopping.length - max} autre${s.shopping.length - max > 1 ? "s" : ""}`, tone: "faint" });
-  return { title: `Courses · ${s.shopping.length} à acheter`, rows, empty: "Liste de courses vide", example: ["•  Lait", "•  Pain", "•  Pommes"] };
+  return { title: `Courses · ${s.shopping.length}`, rows, empty: "Liste de courses vide", example: ["•  Lait", "•  Pain", "•  Pommes"] };
 }

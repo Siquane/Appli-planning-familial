@@ -9,8 +9,8 @@ import { color, glow, space } from "../theme/tokens";
 import { GradientFill } from "./Brand";
 
 // The 4 pillars of Passerelle, two on each side of the « + ».
-// Each is one of the logo's rings (cyan → violet) around the tab's icon; the
-// active ring lights up with a neon halo, like on the logo.
+// Each has its logo colour (cyan → violet); the active one lights up with a
+// neon halo and a small glowing ring underneath.
 const TABS: Record<string, { label: string; tint: string; Icon: (props: { size: number; color: string }) => React.JSX.Element }> = {
   home: { label: "Planning", tint: color.pillar1, Icon: CalendarIcon },
   repas: { label: "Repas", tint: color.pillar2, Icon: MealIcon },
@@ -41,25 +41,31 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
         accessibilityLabel={label}
         accessibilityState={{ selected: isFocused }}
       >
+        {/* No ring: a larger icon, with a neon halo when active (like the logo's rings). */}
         <View
           style={{
-            width: 38,
-            height: 38,
-            borderRadius: 19,
-            borderWidth: 2,
-            borderColor: tint,
-            alignItems: "center",
+            height: 34,
             justifyContent: "center",
-            // Only a faint tint inside the ring, so the icon keeps strong contrast.
-            backgroundColor: isFocused ? `${pillar}0d` : "transparent",
-            boxShadow: isFocused ? `${glow(`${pillar}99`, 8)}, ${glow(`${pillar}40`, 18)}` : undefined,
+            filter: isFocused ? [{ dropShadow: { offsetX: 0, offsetY: 0, standardDeviation: 5, color: `${pillar}aa` } }] : undefined,
           }}
         >
-          <Icon size={19} color={tint} />
+          <Icon size={28} color={tint} />
         </View>
         <Text size={10.5} style={{ color: tint }}>
           {label}
         </Text>
+        {/* A small glowing ring under the active tab, like the logo's rings, so it doesn't rely on colour alone. */}
+        <View
+          style={{
+            width: 8,
+            height: 8,
+            marginTop: 3,
+            borderRadius: 4,
+            borderWidth: 1.5,
+            borderColor: isFocused ? pillar : "transparent",
+            boxShadow: isFocused ? glow(pillar, 6) : undefined,
+          }}
+        />
       </Pressable>
     );
   }

@@ -14,13 +14,15 @@ interface Props {
   disabled?: boolean;
   loading?: boolean;
   icon?: ReactNode;
+  /** Shown after the label (e.g. the sparkle marking a paid feature). */
+  trailing?: ReactNode;
   style?: ViewStyle;
   accessibilityLabel?: string;
 }
 
 // Primary actions are filled with the logo's neon gradient (dark text on top);
 // secondary and ghost buttons stay sober.
-export function Button({ label, onPress, variant = "secondary", block, disabled, loading, icon, style, accessibilityLabel }: Props) {
+export function Button({ label, onPress, variant = "secondary", block, disabled, loading, icon, trailing, style, accessibilityLabel }: Props) {
   const isIcon = variant === "icon";
   return (
     <Pressable
@@ -33,7 +35,7 @@ export function Button({ label, onPress, variant = "secondary", block, disabled,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "center",
-          gap: 6,
+          gap: 9,
           paddingHorizontal: isIcon ? 0 : space[3] * 1.2,
           width: isIcon ? 36 : block ? "100%" : undefined,
           height: isIcon ? 36 : undefined,
@@ -59,6 +61,7 @@ export function Button({ label, onPress, variant = "secondary", block, disabled,
               {label}
             </Text>
           ) : null}
+          {trailing}
         </>
       )}
     </Pressable>

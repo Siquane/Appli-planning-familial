@@ -11,7 +11,7 @@ import { ReminderToggle } from "../../src/components/ReminderToggle";
 import { Card } from "../../src/components/Card";
 import { Button } from "../../src/components/Button";
 import { StepDots } from "../../src/components/StepDots";
-import { TrashIcon, RecurringIcon } from "../../src/components/icons";
+import { PlusIcon, TrashIcon, RecurringIcon } from "../../src/components/icons";
 import { useCreateTask } from "../../src/hooks/useApi";
 import { useToastStore } from "../../src/state/toastStore";
 import { confirmReminderPermission } from "../../src/lib/notifications";
@@ -178,7 +178,7 @@ export default function RecurringTasksOnboardingScreen() {
             }}
           />
 
-          <Button label="+ Ajouter une tâche récurrente" variant="secondary" block onPress={addDraft} disabled={!canAdd} />
+          <Button label="Ajouter une tâche récurrente" icon={<PlusIcon size={18} color={color.text} />} variant="secondary" block onPress={addDraft} disabled={!canAdd} />
         </View>
       </View>
 

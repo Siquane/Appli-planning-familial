@@ -36,14 +36,14 @@ export const color = {
   // The 4 rings of the Passerelle logo, left to right (cyan → violet):
   // one per tab — Planning, Repas, Budget, Famille.
   pillar1: "#22e5ff",
-  pillar2: "#4cc4ff",
-  pillar3: "#7a9cff",
-  pillar4: "#9b5cff",
+  pillar2: "#45a0ff",
+  pillar3: "#737cff",
+  pillar4: "#ad5cff",
 } as const;
 
-// The logo's neon gradient, left to right. Used for primary buttons, the + and
-// the line under each tab title.
-export const gradient = [color.pillar1, color.pillar2, color.pillar4] as const;
+// The logo's neon gradient, left to right (brand colours, independent of the
+// tab tints). Used for primary buttons, the + and the line under each tab header.
+export const gradient = ["#22e5ff", "#3fb8ff", "#9b5cff"] as const;
 
 // A soft neon halo, like the glow around the logo's rings (RN boxShadow).
 export function glow(c: string, blur = 12) {

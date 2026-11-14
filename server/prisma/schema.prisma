@@ -172,6 +172,9 @@ model Meal {
   recipeId  String?
   recipe    Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
   notes     String   @default("")
+  // Shopping list of a generated dish that isn't a family recipe (a recipe
+  // keeps its own ingredients). Cleared when the dish is renamed by hand.
+  ingredients String[] @default([])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

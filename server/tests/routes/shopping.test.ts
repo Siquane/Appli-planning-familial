@@ -42,6 +42,38 @@ describe("shopping list", () => {
     expect((await request(app).post("/shopping/from-menu").set(auth)).body.added).toBe(0);
   });
 
+  it("adds the ingredients of generated dishes and reports dishes without any", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    // Saved from a generated proposal: the dish comes with its ingredients.
+    await request(app)
+      .post("/meals/bulk")
+      .set(auth)
+      .send({ meals: [{ weekday: 0, type: "dîner", title: "Curry de poulet", ingredients: ["400 g de poulet", "Lait de coco"] }] });
+    // Typed by hand: no ingredients.
+    await request(app).post("/meals").set(auth).send({ weekday: 1, type: "dîner", title: "Pizza maison" });
+
+    const res = await request(app).post("/shopping/from-menu").set(auth);
+    expect(res.body.added).toBe(2);
+    expect(res.body.withoutIngredients).toBe(1);
+    expect(res.body.items.map((i: { label: string }) => i.label).sort()).toEqual(["400 g de poulet", "Lait de coco"]);
+  });
+
+  it("keeps a dish's ingredients when only its notes change, drops them when it becomes another dish", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    await request(app)
+      .post("/meals/bulk")
+      .set(auth)
+      .send({ meals: [{ weekday: 0, type: "dîner", title: "Curry de poulet", ingredients: ["400 g de poulet"] }] });
+
+    const noted = await request(app).post("/meals").set(auth).send({ weekday: 0, type: "dîner", title: "Curry de poulet", notes: "Riz à part" });
+    expect(noted.body.meal.ingredients).toEqual(["400 g de poulet"]);
+
+    const renamed = await request(app).post("/meals").set(auth).send({ weekday: 0, type: "dîner", title: "Omelette" });
+    expect(renamed.body.meal.ingredients).toEqual([]);
+  });
+
   it("clears checked items only", async () => {
     const { accessToken } = await signup(app);
     const auth = authHeader(accessToken);

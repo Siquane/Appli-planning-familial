@@ -52,7 +52,7 @@ export default function PremiumScreen() {
       const bought = await buyPackage(userId, pkg, offering, prices);
       if (bought) {
         await qc.invalidateQueries();
-        useToastStore.getState().show("Merci ! Ton pack est actif. ✨");
+        useToastStore.getState().show("Merci ! Ton offre est active.", "sparkle");
       }
     } catch (e) {
       useToastStore.getState().show(e instanceof Error ? e.message : "L'achat n'a pas abouti.");

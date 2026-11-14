@@ -8,7 +8,8 @@ import { Chip } from "../src/components/Chip";
 import { Button } from "../src/components/Button";
 import { TopBar } from "../src/components/TopBar";
 import { DocumentRow } from "../src/components/DocumentRow";
-import { DocumentIcon } from "../src/components/icons";
+import { DocumentIcon, PlusIcon } from "../src/components/icons";
+import { MoreLink } from "../src/components/MoreLink";
 import { useDocuments, useMembers, usePlan } from "../src/hooks/useApi";
 import { Pressable } from "react-native";
 import { categoryLabel, DOCUMENT_CATEGORIES } from "../src/lib/documentUpload";
@@ -32,7 +33,8 @@ export default function DocumentsScreen() {
       <TopBar title="Documents" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: 18, gap: space[2] }} showsVerticalScrollIndicator={false}>
         <Button
-          label={full ? "+ Ajouter un document · Passerelle+" : "+ Ajouter un document"}
+          label={full ? "Ajouter un document · Passerelle+" : "Ajouter un document"}
+          icon={<PlusIcon size={18} color={color.text} />}
           variant="secondary"
           block
           onPress={() => router.push(full ? "/premium" : "/document/new")}
@@ -40,8 +42,9 @@ export default function DocumentsScreen() {
         {docLimit !== null && (
           <Pressable onPress={() => router.push("/premium")}>
             <Text size={11.5} tone={full ? "accent" : "faint"} center>
-              {plan!.documents.used} / {docLimit} documents gratuits{full ? " · illimités avec un pack ›" : ""}
+              {plan!.documents.used} / {docLimit} documents gratuits
             </Text>
+            {full && <MoreLink label="Illimités avec une offre" size={11.5} center />}
           </Pressable>
         )}
 

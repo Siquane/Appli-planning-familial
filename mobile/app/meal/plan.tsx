@@ -11,6 +11,7 @@ import { TextField } from "../../src/components/TextField";
 import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
 import { CloseIcon, ReshuffleIcon } from "../../src/components/icons";
+import { MoreLink } from "../../src/components/MoreLink";
 import { useGenerateMeals, useMeals, usePlan, useSaveMeals } from "../../src/hooks/useApi";
 import { mealQuotaLabel, showApiError } from "../../src/lib/premium";
 import { useSlowHint } from "../../src/hooks/useSlowHint";
@@ -114,7 +115,7 @@ export default function MealPlanScreen() {
   async function onSave() {
     if (!proposal?.length) return;
     try {
-      await save.mutateAsync(proposal.map(({ weekday, type, title, recipeId, notes }) => ({ weekday, type, title, recipeId, notes })));
+      await save.mutateAsync(proposal.map(({ weekday, type, title, recipeId, notes, ingredients }) => ({ weekday, type, title, recipeId, notes, ingredients })));
       useToastStore.getState().show(`${proposal.length} repas ajoutés au menu.`);
       router.back();
     } catch (e) {
@@ -220,7 +221,7 @@ export default function MealPlanScreen() {
       <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <Pressable onPress={() => router.push("/famille")}>
           <Text size={12} tone="faint">
-            Les goûts, régimes et allergies de chaque membre (onglet Famille → un membre → Repas) sont aussi pris en compte.
+            Les goûts, régimes et allergies de chaque membre (onglet Famille, fiche du membre, rubrique Repas) sont aussi pris en compte.
           </Text>
         </Pressable>
         <Question title="Quels jours ?">
@@ -307,8 +308,8 @@ export default function MealPlanScreen() {
           <Pressable onPress={() => router.push("/premium")} disabled={quota.period === "premium"}>
             <Text size={12} tone={weeksLeft > 0 ? "faint" : "accent"} center>
               {mealQuotaLabel(quota)}
-              {quota.period !== "premium" ? " Repas+ : chaque semaine ›" : ""}
             </Text>
+            {quota.period !== "premium" && <MoreLink label="Repas+ : chaque semaine" center />}
           </Pressable>
         )}
         {slow && (

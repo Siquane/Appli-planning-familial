@@ -6,7 +6,7 @@ export const MEAL_TYPES: MealType[] = ["petit-déjeuner", "déjeuner", "goûter"
 
 export const DIET_OPTIONS: { value: MealPlanPreferences["diets"][number]; label: string }[] = [
   { value: "végétarien", label: "Végétarien" },
-  { value: "pescetarien", label: "Pescétarien" },
+  { value: "vegan", label: "Vegan" },
   { value: "sans-porc", label: "Sans porc" },
   { value: "halal", label: "Halal" },
   { value: "sans-gluten", label: "Sans gluten" },
@@ -71,7 +71,10 @@ const KEY = "passerelle.mealPlanPreferences";
 export async function loadPreferences(): Promise<MealPlanPreferences> {
   try {
     const raw = Platform.OS === "web" ? (typeof localStorage !== "undefined" ? localStorage.getItem(KEY) : null) : await SecureStore.getItemAsync(KEY);
-    return raw ? { ...DEFAULT_PREFERENCES, ...(JSON.parse(raw) as Partial<MealPlanPreferences>) } : DEFAULT_PREFERENCES;
+    if (!raw) return DEFAULT_PREFERENCES;
+    const saved = { ...DEFAULT_PREFERENCES, ...(JSON.parse(raw) as Partial<MealPlanPreferences>) };
+    // "Pescétarien" was replaced by "Vegan": keep only the diets still offered.
+    return { ...saved, diets: saved.diets.filter((d) => DIET_OPTIONS.some((o) => o.value === d)) };
   } catch {
     return DEFAULT_PREFERENCES;
   }

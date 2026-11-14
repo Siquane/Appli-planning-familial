@@ -155,7 +155,7 @@ export default function MemberScreen() {
                 <TextField label="Aliments à limiter" value={foodsToLimit} onChangeText={setFoodsToLimit} placeholder="Ex. sucre, sel" multiline />
                 <Pressable onPress={() => router.push("/privacy")}>
                   <Text size={12} tone="faint">
-                    Ton accord peut être retiré à tout moment (Profil → Confidentialité).
+                    Ton accord peut être retiré à tout moment, dans Profil, rubrique Confidentialité.
                   </Text>
                 </Pressable>
               </>
@@ -176,7 +176,7 @@ export default function MemberScreen() {
                 />
                 <Pressable onPress={() => router.push("/privacy")}>
                   <Text size={12} tone="faint">
-                    En savoir plus : Profil → Confidentialité
+                    En savoir plus : Profil, rubrique Confidentialité
                   </Text>
                 </Pressable>
               </>

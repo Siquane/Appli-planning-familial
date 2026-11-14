@@ -74,7 +74,7 @@ export const shoppingApi = {
   add: (label: string) => api.post<{ item: ShoppingItem }>("/shopping", { label }),
   update: (id: string, data: Partial<Pick<ShoppingItem, "label" | "checked">>) => api.patch<{ item: ShoppingItem }>(`/shopping/${id}`, data),
   remove: (id: string) => api.delete<void>(`/shopping/${id}`),
-  fromMenu: () => api.post<{ added: number; items: ShoppingItem[] }>("/shopping/from-menu"),
+  fromMenu: () => api.post<{ added: number; withoutIngredients: number; items: ShoppingItem[] }>("/shopping/from-menu"),
   clearChecked: () => api.delete<{ removed: number; items: ShoppingItem[] }>("/shopping/checked"),
 };
 

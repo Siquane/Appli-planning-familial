@@ -23,15 +23,6 @@ export function GradientFill({ radius = 0, style }: { radius?: number; style?: V
   );
 }
 
-// The thin gradient line under each tab title.
-export function GradientRule({ width = 44 }: { width?: number }) {
-  return (
-    <View style={{ width, height: 2, borderRadius: 1, overflow: "hidden", marginTop: 3 }}>
-      <GradientFill />
-    </View>
-  );
-}
-
 // The Passerelle mark: a footbridge arch resting on 4 rings, one per tab colour.
 export function PasserelleArch({ width = 44 }: { width?: number }) {
   const id = `a${useId().replace(/:/g, "")}`;

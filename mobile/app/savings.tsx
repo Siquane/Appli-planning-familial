@@ -9,7 +9,8 @@ import { TextField } from "../src/components/TextField";
 import { DateField } from "../src/components/DateField";
 import { Button } from "../src/components/Button";
 import { TopBar } from "../src/components/TopBar";
-import { TrashIcon } from "../src/components/icons";
+import { PartyIcon, PiggyBankIcon, TrashIcon } from "../src/components/icons";
+import { MoreLink } from "../src/components/MoreLink";
 import { useCreateSavingsGoal, useDeleteSavingsGoal, usePaySavingsGoal, usePlan, useSavingsGoals } from "../src/hooks/useApi";
 import { formatEuros, monthsLeft, parseAmount, toDayString } from "../src/lib/money";
 import { hasBudgetPack, showApiError } from "../src/lib/premium";
@@ -50,13 +51,17 @@ export default function SavingsScreen() {
       <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
         {!premium && (
           <Pressable onPress={() => router.push("/premium")}>
-            <Card>
-              <Text size={13} weight="medium">
-                Budget+ ✨
-              </Text>
+            <Card style={{ gap: space[1] }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+                <PiggyBankIcon size={22} color={color.pillar3} />
+                <Text size={13} weight="medium">
+                  Budget+
+                </Text>
+              </View>
               <Text size={12} tone="muted">
-                Mets de côté pour les vacances, Noël ou la voiture, et regarde la jauge se remplir. Voir Budget+ ›
+                Mets de côté pour les vacances, Noël ou la voiture, et regarde la jauge se remplir.
               </Text>
+              <MoreLink label="Voir Budget+" />
             </Card>
           </Pressable>
         )}
@@ -107,7 +112,8 @@ function GoalCard({ goal, premium }: { goal: SavingsGoal; premium: boolean }) {
     try {
       await pay.mutateAsync({ id: goal.id, amountCents });
       setAmount("");
-      useToastStore.getState().show(goal.savedCents + amountCents >= goal.targetCents ? `🎉 Objectif « ${goal.name} » atteint !` : "Versement ajouté.");
+      if (goal.savedCents + amountCents >= goal.targetCents) useToastStore.getState().show(`Objectif « ${goal.name} » atteint !`, "party");
+      else useToastStore.getState().show("Versement ajouté.");
     } catch (e) {
       showApiError(e);
     }
@@ -139,13 +145,18 @@ function GoalCard({ goal, premium }: { goal: SavingsGoal; premium: boolean }) {
       <View style={{ height: 8, borderRadius: radius.sm, backgroundColor: color.neutral800, overflow: "hidden" }}>
         <View style={{ height: 8, borderRadius: radius.sm, backgroundColor: color.accent400, width: `${ratio * 100}%` }} />
       </View>
-      <Text size={12} tone={reached ? "accent" : "faint"}>
-        {reached
-          ? "🎉 Objectif atteint !"
-          : months
-            ? `Encore ${formatEuros(left)} · environ ${formatEuros(Math.ceil(left / months))} par mois`
-            : `Encore ${formatEuros(left)}`}
-      </Text>
+      {reached ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: space[1] }}>
+          <PartyIcon size={16} color={color.accent400} />
+          <Text size={12} tone="accent">
+            Objectif atteint !
+          </Text>
+        </View>
+      ) : (
+        <Text size={12} tone="faint">
+          {months ? `Encore ${formatEuros(left)} · environ ${formatEuros(Math.ceil(left / months))} par mois` : `Encore ${formatEuros(left)}`}
+        </Text>
+      )}
       {premium && !reached && (
         <View style={{ flexDirection: "row", gap: space[2], alignItems: "flex-end" }}>
           <View style={{ flex: 1 }}>
