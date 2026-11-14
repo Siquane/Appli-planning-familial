@@ -40,5 +40,6 @@ export function Text({ size = TYPE.body, weight = "regular", tone = "text", mono
     fontFamily: mono ? font.mono : heading ? (weight === "semibold" ? font.headingSemibold : font.heading) : weightFont[weight],
     textAlign: center ? "center" : undefined,
   };
-  return <RNText style={[s, style]} {...rest} />;
+  // The phone's text size setting is honoured, up to 1.4×, so screens don't overflow.
+  return <RNText maxFontSizeMultiplier={1.4} style={[s, style]} {...rest} />;
 }

@@ -242,6 +242,11 @@ export default function TaskFormScreen() {
               </View>
             </View>
           )}
+          {customDuration && parseDuration(customFields.hours, customFields.minutes) === null && (
+            <Text size={11} tone="danger" accessibilityLiveRegion="polite">
+              Entre 5 min et 8 h, minutes de 0 à 59.
+            </Text>
+          )}
         </View>
 
         <View style={{ gap: space[2] }}>
