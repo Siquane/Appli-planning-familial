@@ -8,6 +8,7 @@ import { useSettingsStore } from "../../src/state/settingsStore";
 import { useWidgetSync } from "../../src/widgets/sync";
 import { takeWidgetRoute } from "../../src/widgets/links";
 import { syncUser } from "../../src/lib/account";
+import { FamilyNoticeModal } from "../../src/components/FamilyNoticeModal";
 
 export default function TabsLayout() {
   const { data: tasks } = useTasks();
@@ -44,11 +45,14 @@ export default function TabsLayout() {
   }, [tasks, digestHydrated, eveningDigest]);
 
   return (
+    <>
     <Tabs tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="home" options={{ title: "Planning" }} />
       <Tabs.Screen name="repas" options={{ title: "Repas" }} />
       <Tabs.Screen name="budget" options={{ title: "Budget" }} />
       <Tabs.Screen name="famille" options={{ title: "Famille" }} />
     </Tabs>
+    <FamilyNoticeModal />
+    </>
   );
 }

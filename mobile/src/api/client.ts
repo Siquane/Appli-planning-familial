@@ -12,10 +12,13 @@ export class ApiError extends Error {
   status: number;
   /** Machine-readable reason when the server gives one ("premium_required", "quota_exceeded"…). */
   code?: string;
-  constructor(status: number, message: string, code?: string) {
+  /** The rest of the error body, for the few errors that carry data (e.g. who would take over a family). */
+  details?: Record<string, unknown>;
+  constructor(status: number, message: string, code?: string, details?: Record<string, unknown>) {
     super(message);
     this.status = status;
     this.code = code;
+    this.details = details;
   }
 }
 
@@ -56,7 +59,7 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
   if (res.status === 204) return undefined as T;
 
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, body.error ?? statusMessage(res.status), typeof body.code === "string" ? body.code : undefined);
+  if (!res.ok) throw new ApiError(res.status, body.error ?? statusMessage(res.status), typeof body.code === "string" ? body.code : undefined, body);
   return body as T;
 }
 

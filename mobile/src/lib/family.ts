@@ -1,4 +1,4 @@
-import type { FamilyRole } from "../api/types";
+import type { FamilyNotice, FamilyRole } from "../api/types";
 
 // Words and small rules of the « Comptes de la famille » screen.
 
@@ -30,4 +30,28 @@ export function joinedSummary(role: FamilyRole, ownerName: string | null): strin
   return role === "planning"
     ? `Tu fais partie de ${who} avec le profil Planning : tu partages le planning, et ton budget et tes documents restent à toi.`
     : `Tu fais partie de ${who} avec le profil Complet : tu partages tout, budget et documents compris.`;
+}
+
+/** What a member reads at the next opening after the family changed hands. Gentle, and says what is kept. */
+export function noticeText(notice: FamilyNotice): { title: string; body: string; offers: boolean } {
+  switch (notice.kind) {
+    case "heir":
+      return {
+        title: "Tu gères maintenant la famille",
+        body: `${notice.from} a quitté Passerelle et t'a confié le planning, avec le budget et les documents de la famille. Rien n'a été perdu. Pour que chacun garde les options payantes, pense à prendre ton propre abonnement.`,
+        offers: true,
+      };
+    case "newOwner":
+      return {
+        title: `${notice.heir} gère maintenant la famille`,
+        body: `${notice.from} a quitté Passerelle. Ton compte, ton planning et tes données sont intacts : ${notice.heir} reprend la famille. Les options payantes (Repas+, Budget+) dépendent désormais de son abonnement.`,
+        offers: false,
+      };
+    case "detached":
+      return {
+        title: "Ton compte continue",
+        body: `${notice.from} a quitté Passerelle et personne n'a pu reprendre le planning partagé. Ton compte, ton budget et tes documents personnels sont conservés. Tu peux créer ta propre famille, ou en rejoindre une avec un code.`,
+        offers: false,
+      };
+  }
 }

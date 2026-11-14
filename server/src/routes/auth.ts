@@ -9,6 +9,7 @@ import { requireAuth } from "../middleware/auth";
 import { sendPasswordResetCode } from "../services/mailer";
 import { accountLimiter, loginLimiter } from "../middleware/rateLimits";
 import { InviteError, findLiveInvite } from "../lib/family";
+import { heirCandidates, leaveFamilyBehind } from "../lib/familyHandover";
 
 export const authRouter = Router();
 
@@ -202,19 +203,35 @@ authRouter.patch("/me", requireAuth, async (req, res) => {
 // required by the Play Store). The password confirms it's really the owner.
 // Every table cascades from User; stored files (R2) are removed first.
 authRouter.delete("/me", requireAuth, loginLimiter, async (req, res) => {
-  const parsed = z.object({ password: z.string().min(1, "Mot de passe requis"), confirmFamily: z.boolean().optional() }).safeParse(req.body);
+  const parsed = z.object({ password: z.string().min(1, "Mot de passe requis"), confirmFamily: z.boolean().optional(), heirId: z.string().optional() }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const user = await prisma.user.findUnique({ where: { id: req.accountId } });
   if (!user) return res.status(404).json({ error: "Not found" });
   if (!(await bcrypt.compare(parsed.data.password, user.passwordHash))) return res.status(401).json({ error: "Mot de passe incorrect" });
-  // The owner's account IS the family's data: deleting it removes it for everyone who joined.
-  const others = user.familyOwnerId ? 0 : await prisma.user.count({ where: { familyOwnerId: user.id } });
-  if (others > 0 && parsed.data.confirmFamily !== true) {
-    return res.status(409).json({
-      error: `${others} autre${others > 1 ? "s" : ""} compte${others > 1 ? "s" : ""} utilise${others > 1 ? "nt" : ""} cette famille : ${others > 1 ? "ils perdront" : "il perdra"} l'accès au planning partagé. Confirme pour tout supprimer.`,
-      code: "family_has_members",
-      members: others,
-    });
+  // The owner's account IS the family's data: it moves to another adult of the
+  // family when there is one, so the others keep their planning.
+  const parsedBody = parsed.data;
+  const members = user.familyOwnerId ? [] : await prisma.user.findMany({ where: { familyOwnerId: user.id }, select: { id: true, name: true, familyRole: true } });
+  let heirId: string | null = null;
+  if (members.length > 0) {
+    const heirs = await heirCandidates(user.id);
+    if (parsedBody.heirId && !heirs.some((h) => h.id === parsedBody.heirId)) {
+      return res.status(400).json({ error: "Cette personne ne peut pas reprendre la famille." });
+    }
+    heirId = parsedBody.heirId ?? heirs[0]?.id ?? null;
+    if (parsedBody.confirmFamily !== true) {
+      const heirName = heirs.find((h) => h.id === heirId)?.name;
+      return res.status(409).json({
+        error: heirName
+          ? `${members.length} autre${members.length > 1 ? "s" : ""} compte${members.length > 1 ? "s" : ""} partage${members.length > 1 ? "nt" : ""} cette famille. ${heirName} la reprendra avec son planning, son budget et ses documents, et les autres comptes seront prévenus.`
+          : `${members.length} autre${members.length > 1 ? "s" : ""} compte${members.length > 1 ? "s" : ""} partage${members.length > 1 ? "nt" : ""} le planning de cette famille. Aucun adulte ne peut le reprendre : le planning partagé sera effacé, mais chacun garde son compte, son budget et ses documents personnels.`,
+        code: "family_has_members",
+        members: members.length,
+        heir: heirName ?? null,
+        heirs,
+      });
+    }
+    await leaveFamilyBehind(user.id, user.name, heirId);
   }
   const files = await prisma.document.findMany({ where: { userId: user.id }, select: { fileKey: true } });
   await removeObjects(files.map((f) => f.fileKey));
@@ -229,7 +246,7 @@ async function issueTokens(userId: string, email: string) {
   return { accessToken, refreshToken };
 }
 
-function publicUser(user: { id: string; email: string; name: string; initials: string; familyOwnerId: string | null; familyRole: string }) {
+function publicUser(user: { id: string; email: string; name: string; initials: string; familyOwnerId: string | null; familyRole: string; familyNotice?: string | null }) {
   return {
     id: user.id,
     email: user.email,
@@ -239,6 +256,8 @@ function publicUser(user: { id: string; email: string; name: string; initials: s
     familyId: user.familyOwnerId ?? user.id,
     /** "owner" | "full" | "planning". */
     familyRole: user.familyOwnerId ? user.familyRole : "owner",
+    /** One-time message after the family changed hands (see lib/familyHandover.ts), null otherwise. */
+    familyNotice: parseNotice(user.familyNotice),
   };
 }
 
@@ -246,4 +265,13 @@ function publicUser(user: { id: string; email: string; name: string; initials: s
 // in-flight request via the access token embedded in `state`.
 export function userIdFromAccessToken(token: string): string {
   return verifyAccessToken(token).sub;
+}
+
+function parseNotice(raw: string | null | undefined): unknown {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }

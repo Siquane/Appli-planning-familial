@@ -98,6 +98,7 @@ export const familyApi = {
   revokeInvite: () => api.delete<void>("/family/invite"),
   removeAccount: (id: string) => api.delete<void>(`/family/accounts/${id}`),
   leave: () => api.post<void>("/family/leave"),
+  dismissNotice: () => api.delete<void>("/family/notice"),
 };
 
 export const planApi = {
