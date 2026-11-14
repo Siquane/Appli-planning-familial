@@ -15,6 +15,7 @@ import { documentsRouter } from "./routes/documents";
 import { expensesRouter } from "./routes/expenses";
 import { expenseCategoriesRouter } from "./routes/expenseCategories";
 import { categoryBudgetsRouter } from "./routes/categoryBudgets";
+import { statementsRouter } from "./routes/statements";
 import { recurringExpensesRouter } from "./routes/recurringExpenses";
 import { savingsGoalsRouter } from "./routes/savingsGoals";
 import { planRouter } from "./routes/plan";
@@ -46,6 +47,7 @@ app.use("/expense-categories", expenseCategoriesRouter);
 app.use("/category-budgets", categoryBudgetsRouter);
 app.use("/recurring-expenses", recurringExpensesRouter);
 app.use("/savings-goals", savingsGoalsRouter);
+app.use("/statements", statementsRouter);
 app.use("/plan", planRouter);
 app.use("/billing", billingRouter);
 

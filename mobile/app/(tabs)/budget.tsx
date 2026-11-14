@@ -7,7 +7,7 @@ import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
 import { Button } from "../../src/components/Button";
 import { TabHeader } from "../../src/components/PageHeader";
-import { ChartIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, RecurringIcon, SparkleIcon, TargetIcon, WalletIcon } from "../../src/components/icons";
+import { ChartIcon, ChevronLeftIcon, DocumentIcon, ChevronRightIcon, PlusIcon, RecurringIcon, SparkleIcon, TargetIcon, WalletIcon } from "../../src/components/icons";
 import { useExpenseCategories, useForecast, useMembers, useMonthlyBudget, usePlan } from "../../src/hooks/useApi";
 import { budgetToCsv, categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../../src/lib/money";
 import { color, radius, space, gutter } from "../../src/theme/tokens";
@@ -117,6 +117,14 @@ export default function BudgetScreen() {
             onPress={() => router.push("/savings")}
           />
         </View>
+        <Button
+          label="Importer un relevé"
+          icon={<DocumentIcon size={18} color={color.pillar3} />}
+          trailing={premium ? undefined : <SparkleIcon size={14} color={color.accent400} />}
+          variant="secondary"
+          block
+          onPress={() => router.push("/statement-import")}
+        />
 
         {expenses.length > 0 && (
           <Button

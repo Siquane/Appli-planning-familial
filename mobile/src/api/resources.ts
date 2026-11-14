@@ -21,6 +21,8 @@ import type {
   MealPlanPreferences,
   MealSlot,
   ProposedMeal,
+  StatementImportRow,
+  StatementParse,
   Member,
   MemberInput,
   MonthlyBudget,
@@ -90,6 +92,11 @@ export const mealsApi = {
 
 export const planApi = {
   get: () => api.get<Plan>("/plan"),
+};
+
+export const statementsApi = {
+  parse: (pdf: Blob) => api.upload<StatementParse>("/statements/parse", pdf, "application/pdf"),
+  import: (rows: StatementImportRow[]) => api.post<{ imported: number; recurringCreated: number; rulesLearned: number }>("/statements/import", { rows }),
 };
 
 export const savingsGoalsApi = {

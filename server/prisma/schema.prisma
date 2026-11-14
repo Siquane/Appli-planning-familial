@@ -42,6 +42,7 @@ model User {
   refreshTokens       RefreshToken[]
   mealGenerations     MealGeneration[]
   savingsGoals        SavingsGoal[]
+  importRules         ImportRule[]
   capAlerts           CapAlert[]
 }
 
@@ -243,6 +244,21 @@ model ExpenseCategory {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   createdAt DateTime @default(now())
+}
+
+// What the family decided for a merchant when importing a bank statement
+// (« CARREFOUR CITY » → courses), reused for the next imports. `key` is the
+// merchant name without card numbers or dates (lib/statementParser.ts labelKey);
+// no amount, no account number and no raw bank text is kept.
+model ImportRule {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String
+  category  String
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
 }
 
 // Monthly spending cap for one category, the same every month.
