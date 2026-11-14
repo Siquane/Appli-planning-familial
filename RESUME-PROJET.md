@@ -78,6 +78,16 @@ Dernière mise à jour : 13 novembre 2026 (soir, reprise de la branche Premium).
 - Famille = membres, documents, anniversaires, partage.
 - Recherche (`/search`), notifications (`/inbox`, pour ne pas entrer en conflit avec l'écran d'accueil `(onboarding)/notifications`) et profil (`/profile`) ne sont plus des onglets : icônes en haut de chaque onglet (`TabHeader` dans `components/PageHeader.tsx`).
 
+## Import de relevé bancaire PDF (Budget+, 14/11/2026)
+
+- Budget → « Importer un relevé » (`mobile/app/statement-import.tsx`) : choix d'un PDF, liste des dépenses trouvées avec catégorie proposée, cases à cocher, « Chaque mois » pour créer une dépense récurrente, puis import des lignes cochées.
+- Serveur : `POST /statements/parse` lit le PDF **en mémoire** (bibliothèque `unpdf`, aucun stockage, rien envoyé à Claude) ; `POST /statements/import` enregistre ce qui est coché. Réservé à Budget+, 20 lectures par heure.
+- `server/src/lib/statementParser.ts` lit les colonnes Débit / Crédit d'après la position du texte (testé sur un vrai relevé Crédit Agricole : 96 lignes, totaux identiques à la ligne « Total des opérations », contrôle affiché dans l'appli). Autres banques : repli par signe (`-` = dépense) ; à ajuster avec un exemple de relevé.
+- `statementCategories.ts` : règles de commerçants courants (≈ 83 % des lignes classées sur le relevé d'essai) ; table `ImportRule` : chaque catégorie corrigée est retenue pour le commerçant (clé sans chiffres ni dates, aucun montant).
+- Doublons : une ligne de même montant à ±3 jours d'une dépense existante est décochée (« déjà dans ton budget »). Les entrées d'argent sont ignorées.
+- Politique de confidentialité et page Confidentialité de l'appli mis à jour (le PDF n'est jamais conservé). **À republier** : la page publiée de la politique.
+- Idées suivantes : détection des dérives d'un mois à l'autre, calendrier des prélèvements, import CSV, lecture de plusieurs mois à la fois.
+
 ## Mises à jour de l'appli sans nouvel APK (EAS Update, 13/11/2026)
 
 - `expo-updates` installé, canal `preview`. `runtimeVersion` actuel : **"3"** (lot natif SDK 58 + widgets + Sentry) dans `mobile/app.json`.

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { planApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
-import type { MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
+import { planApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
+import type { MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
 import { useAuthStore } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
 import { buildCategoryOptions } from "../lib/money";
@@ -463,4 +463,14 @@ export function useDisconnectCalendar() {
       qc.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
+}
+
+// Bank statement import: reading changes nothing; importing adds expenses (and maybe monthly ones).
+export function useParseStatement() {
+  return useMutation({ mutationFn: (pdf: Blob) => statementsApi.parse(pdf) });
+}
+
+export function useImportStatement() {
+  const invalidate = useInvalidateBudget();
+  return useMutation({ mutationFn: (rows: StatementImportRow[]) => statementsApi.import(rows), onSuccess: () => invalidate("recurring-expenses") });
 }

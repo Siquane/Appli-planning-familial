@@ -379,3 +379,36 @@ export interface ImportedRecipe {
   steps: string[];
   notes: string;
 }
+
+// Bank statement import (Budget+): what the server read from the PDF.
+export interface StatementRow {
+  id: number;
+  date: string;
+  label: string;
+  detail: string;
+  kind: string;
+  amountCents: number;
+  /** Suggested category. */
+  category: string;
+  source: "learned" | "rule" | "default";
+  /** Already in the budget (same amount, within 3 days). */
+  duplicate: boolean;
+  /** Looks like a monthly expense (direct debit, rent…). */
+  recurringHint: boolean;
+}
+
+export interface StatementParse {
+  rows: StatementRow[];
+  ignoredCredits: { count: number; totalCents: number };
+  /** `ok` null when the statement prints no total. */
+  check: { readDebitsCents: number; expectedDebitsCents: number | null; ok: boolean | null };
+}
+
+export interface StatementImportRow {
+  date: string;
+  label: string;
+  amountCents: number;
+  category: string;
+  recurring: boolean;
+  learn: boolean;
+}

@@ -91,6 +91,9 @@ export default function PrivacyScreen() {
           <Section title="Tes données">
             Compte (e-mail, prénom, mot de passe chiffré), membres de la famille, tâches, recettes, menus, liste de courses, budget, documents, et les préférences repas de chaque membre.
           </Section>
+          <Section title="Relevés bancaires (Budget+)">
+            Le PDF est lu par notre serveur le temps de l'analyse, puis oublié : jamais enregistré, jamais envoyé à Claude ni à une autre entreprise. Seules les dépenses que tu coches sont gardées, avec les catégories que tu corriges pour les retenir au prochain import.
+          </Section>
           <Section title="Où">
             Base de données en Europe (Neon, Francfort), serveur Render, fichiers chez Cloudflare R2 (privés, liens temporaires). Les e-mails de mot de passe oublié passent par Brevo.
           </Section>

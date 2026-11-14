@@ -65,5 +65,7 @@ export const api = {
   post: <T>(path: string, data?: unknown) => request<T>(path, { method: "POST", body: data !== undefined ? JSON.stringify(data) : undefined }),
   patch: <T>(path: string, data?: unknown) => request<T>(path, { method: "PATCH", body: JSON.stringify(data) }),
   put: <T>(path: string, data?: unknown) => request<T>(path, { method: "PUT", body: JSON.stringify(data) }),
+  /** Sends a file's bytes as the request body (used to read a bank statement; the server forgets it right after). */
+  upload: <T>(path: string, body: Blob, contentType: string) => request<T>(path, { method: "POST", body, headers: { "Content-Type": contentType } }),
   delete: <T>(path: string, data?: unknown) => request<T>(path, { method: "DELETE", body: data !== undefined ? JSON.stringify(data) : undefined }),
 };

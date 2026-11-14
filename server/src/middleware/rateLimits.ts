@@ -33,3 +33,14 @@ export const accountLimiter = rateLimit({
   skip,
   message: message(60),
 });
+
+/** Reading a bank statement is heavy: 20 per hour per family. */
+export const statementLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  skip,
+  keyGenerator: (req) => req.userId ?? ipKeyGenerator(req.ip ?? ""),
+  message: { error: "Trop d'imports d'un coup. Réessaie dans une heure." },
+});
