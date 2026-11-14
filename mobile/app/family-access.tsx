@@ -12,8 +12,10 @@ import { Chip } from "../src/components/Chip";
 import { Avatar } from "../src/components/Avatar";
 import { CloseIcon, CopyIcon } from "../src/components/icons";
 import { useCreateFamilyInvite, useFamily, useRemoveFamilyAccount, useRevokeFamilyInvite } from "../src/hooks/useApi";
-import { leaveFamily } from "../src/lib/account";
-import { ROLE_EXPLANATION, ROLE_LABEL, inviteValidity, joinedSummary, shareMessage } from "../src/lib/family";
+import { joinFamily, leaveFamily } from "../src/lib/account";
+import { ApiError } from "../src/api/client";
+import { TextField } from "../src/components/TextField";
+import { ROLE_EXPLANATION, ROLE_LABEL, describeContent, inviteValidity, joinedSummary, shareMessage, type ContentCounts } from "../src/lib/family";
 import { errorText } from "../src/lib/errors";
 import { useAuthStore } from "../src/state/authStore";
 import { useToastStore } from "../src/state/toastStore";
@@ -29,6 +31,11 @@ export default function FamilyAccessScreen() {
   const remove = useRemoveFamilyAccount();
   const user = useAuthStore((s) => s.user);
   const [role, setRole] = useState<"full" | "planning">("planning");
+  // Joining another family from this account.
+  const [joinCode, setJoinCode] = useState("");
+  const [joinPassword, setJoinPassword] = useState("");
+  const [toErase, setToErase] = useState<string | null>(null);
+  const [joining, setJoining] = useState(false);
 
   const isOwner = family?.role === "owner";
   const ownerName = family?.accounts.find((a) => a.role === "owner")?.name ?? null;
@@ -60,6 +67,23 @@ export default function FamilyAccessScreen() {
         onPress: () => remove.mutate(id, { onError: (e) => toast(errorText(e, "retirer ce compte")) }),
       },
     ]);
+  }
+
+  async function onJoin() {
+    setJoining(true);
+    try {
+      await joinFamily(joinCode, toErase ? { password: joinPassword } : undefined);
+      toast("Tu as rejoint la famille.");
+      router.back();
+    } catch (e) {
+      if (e instanceof ApiError && e.code === "account_not_empty") {
+        setToErase(describeContent(e.details?.counts as ContentCounts | undefined) ?? "des informations");
+      } else {
+        toast(errorText(e, "rejoindre la famille"));
+      }
+    } finally {
+      setJoining(false);
+    }
   }
 
   function onLeave() {
@@ -123,6 +147,35 @@ export default function FamilyAccessScreen() {
                 </View>
               ))}
             </Card>
+          </View>
+        )}
+
+        {isOwner && family && family.accounts.length === 1 && (
+          <View style={{ gap: space.sm }}>
+            <Text weight="medium" size={13} tone="muted">
+              Rejoindre une autre famille
+            </Text>
+            <Text size={13} tone="faint">
+              Tu as un code famille ? Ce compte rejoint cette famille et en partage le planning. Tu peux le faire à tout moment, tant que personne d'autre n'est dans ta famille.
+            </Text>
+            <TextField label="Code famille" value={joinCode} onChangeText={(v) => { setJoinCode(v.toUpperCase()); setToErase(null); }} autoCapitalize="characters" autoCorrect={false} placeholder="K7F2-9QXA" maxLength={12} />
+            {toErase ? (
+              <View style={{ gap: space.sm }}>
+                <Text size={13}>
+                  Ton compte contient {toErase}. Pour rejoindre la famille, cela sera effacé définitivement. Saisis ton mot de passe pour confirmer.
+                </Text>
+                <TextField label="Mot de passe" value={joinPassword} onChangeText={setJoinPassword} secureTextEntry />
+              </View>
+            ) : null}
+            <Button
+              label={toErase ? "Effacer et rejoindre la famille" : "Rejoindre la famille"}
+              variant={toErase ? "secondary" : "primary"}
+              block
+              needsNetwork
+              loading={joining}
+              disabled={!joinCode.trim() || (!!toErase && !joinPassword)}
+              onPress={onJoin}
+            />
           </View>
         )}
 

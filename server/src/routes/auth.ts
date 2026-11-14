@@ -247,7 +247,7 @@ async function issueTokens(userId: string, email: string) {
   return { accessToken, refreshToken };
 }
 
-function publicUser(user: { id: string; email: string; name: string; initials: string; familyOwnerId: string | null; familyRole: string; familyNotice?: string | null }) {
+export function publicUser(user: { id: string; email: string; name: string; initials: string; familyOwnerId: string | null; familyRole: string; familyNotice?: string | null }) {
   return {
     id: user.id,
     email: user.email,

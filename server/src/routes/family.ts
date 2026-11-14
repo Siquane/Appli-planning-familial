@@ -2,7 +2,11 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
-import { INVITE_TTL_DAYS, MAX_FAMILY_ACCOUNTS, generateFamilyCode } from "../lib/family";
+import bcrypt from "bcryptjs";
+import { INVITE_TTL_DAYS, InviteError, MAX_FAMILY_ACCOUNTS, findLiveInvite, generateFamilyCode } from "../lib/family";
+import { contentCounts, eraseContent, totalOf } from "../lib/familyJoin";
+import { loginLimiter } from "../middleware/rateLimits";
+import { publicUser } from "./auth";
 
 // The accounts around one family, and the code to add someone.
 
@@ -90,4 +94,50 @@ familyRouter.post("/leave", async (req, res) => {
 familyRouter.delete("/notice", async (req, res) => {
   await prisma.user.update({ where: { id: req.accountId! }, data: { familyNotice: null } });
   res.status(204).end();
+});
+
+// An existing account joins a family with a code. It must not belong to a
+// family already, nor have people in its own; what it holds must be empty, or
+// erased when the person confirms with their password.
+familyRouter.post("/join", loginLimiter, async (req, res) => {
+  const parsed = z.object({ code: z.string().min(1, "Saisis le code famille"), erase: z.boolean().optional(), password: z.string().optional() }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" });
+  const accountId = req.accountId!;
+  const user = await prisma.user.findUnique({ where: { id: accountId } });
+  if (!user) return res.status(404).json({ error: "Not found" });
+  if (user.familyOwnerId) return res.status(400).json({ error: "Tu fais déjà partie d'une famille. Quitte-la d'abord pour en rejoindre une autre.", code: "already_in_family" });
+  const others = await prisma.user.count({ where: { familyOwnerId: accountId } });
+  if (others > 0) {
+    return res.status(409).json({ error: "D'autres comptes partagent déjà ta famille. Retire-les ou confie ta famille avant d'en rejoindre une autre.", code: "family_has_members" });
+  }
+
+  let invite;
+  try {
+    invite = await findLiveInvite(parsed.data.code);
+  } catch (e) {
+    if (e instanceof InviteError) return res.status(400).json({ error: e.message, code: "invalid_family_code" });
+    throw e;
+  }
+  if (invite.ownerId === accountId) return res.status(400).json({ error: "C'est ton propre code famille : il sert à inviter quelqu'un d'autre.", code: "own_code" });
+
+  const counts = await contentCounts(accountId);
+  if (totalOf(counts) > 0) {
+    if (parsed.data.erase !== true) {
+      return res.status(409).json({
+        error: "Ton compte contient déjà des informations (planning, budget ou documents). Pour rejoindre la famille, elles doivent être effacées : confirme avec ton mot de passe.",
+        code: "account_not_empty",
+        counts,
+      });
+    }
+    if (!parsed.data.password || !(await bcrypt.compare(parsed.data.password, user.passwordHash))) {
+      return res.status(401).json({ error: "Mot de passe incorrect" });
+    }
+    await eraseContent(accountId);
+  }
+
+  const joined = await prisma.$transaction(async (tx) => {
+    await tx.familyInvite.deleteMany({ where: { ownerId: accountId } });
+    return tx.user.update({ where: { id: accountId }, data: { familyOwnerId: invite.ownerId, familyRole: invite.role, familyNotice: null } });
+  });
+  res.json({ user: publicUser(joined) });
 });

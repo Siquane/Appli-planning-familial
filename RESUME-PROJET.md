@@ -222,3 +222,9 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - **Réseau** : pas de module natif. Une requête sans réponse marque le téléphone hors connexion (`networkStore`) ; `startOutboxSync` revérifie au retour au premier plan et toutes les 15 s tant que quelque chose attend. Bandeau au-dessus de la barre d'onglets (`OfflineBanner`).
 - **Besoin du réseau** (boutons grisés via `Button needsNetwork`) : menus générés, import de relevé, import de recette par lien, enregistrement de recettes et de documents, achats. Le reste (recettes, documents, famille, comptes…) se lit hors connexion mais ne s'écrit pas.
 
+## Rejoindre une famille depuis un compte déjà créé
+
+- `POST /family/join` `{ code, erase?, password? }` (limiteur de connexion) : un compte qui n'est dans aucune famille et qui n'a aucun autre compte chez lui rejoint la famille du code, avec le profil du code. Refus : déjà dans une famille (`already_in_family`), a d'autres comptes (`family_has_members`, 409), code invalide/expiré/complet (`invalid_family_code`), son propre code (`own_code`).
+- Compte pas vide (membres, tâches, recettes, repas, documents, dépenses, courses, objectifs, catégories) : `409 account_not_empty` avec `counts` ; avec `erase: true` + mot de passe, le contenu est effacé (fichiers compris, `lib/familyJoin.ts`) puis le compte rejoint. Les packs et l'essai du compte ne comptent plus : ceux de la famille s'appliquent.
+- Application : section « Rejoindre une autre famille » dans Famille → Comptes de la famille, visible seulement quand on est seul dans sa famille (`joinFamily` dans `src/lib/account.ts`, `describeContent` dans `src/lib/family.ts`).
+
