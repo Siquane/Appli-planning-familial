@@ -31,7 +31,7 @@ export default function DocumentsScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Documents" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[2] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22, gap: space[2] }} showsVerticalScrollIndicator={false}>
         <Button
           label={full ? "Ajouter un document · Passerelle+" : "Ajouter un document"}
           icon={<PlusIcon size={18} color={color.text} />}

@@ -1,5 +1,5 @@
 import { TextInput, TextInputProps, View } from "react-native";
-import { Text } from "./Text";
+import { Text, scaled } from "./Text";
 import { color, radius, space } from "../theme/tokens";
 
 interface Props extends TextInputProps {
@@ -23,7 +23,7 @@ export function TextField({ label, style, multiline, ...rest }: Props) {
             minHeight: multiline ? 90 : 36,
             paddingVertical: 6,
             paddingHorizontal: 10,
-            fontSize: 14,
+            fontSize: scaled(14),
             color: color.text,
             backgroundColor: color.surface,
             borderWidth: 1,

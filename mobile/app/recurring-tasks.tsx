@@ -17,7 +17,7 @@ export default function RecurringTasksScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Tâches récurrentes" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[2] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22, gap: space[2] }} showsVerticalScrollIndicator={false}>
         <Text tone="muted" size={13} style={{ marginBottom: space[2] }}>
           Tape sur une tâche pour la modifier ou la supprimer.
         </Text>

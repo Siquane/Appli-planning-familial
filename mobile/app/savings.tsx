@@ -48,7 +48,7 @@ export default function SavingsScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Objectifs d'épargne" onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         {!premium && (
           <Pressable onPress={() => router.push("/premium")}>
             <Card style={{ gap: space[1] }}>

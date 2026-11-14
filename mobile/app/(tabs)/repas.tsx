@@ -22,7 +22,7 @@ export default function RepasTab() {
 
   return (
     <Screen scroll={false} padded={false} edges={["top"]}>
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <TabHeader title="Repas" />
         <View style={{ flexDirection: "row", gap: space[1] }}>
           <Chip label="Menu" selected={view === "menu"} onPress={() => setView("menu")} fill />

@@ -88,7 +88,7 @@ export default function RecipeFormScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier la recette" : "Nouvelle recette"} onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         {!existing && (
           <Card style={{ gap: space[2] }}>
             <Text size={13} tone="muted">

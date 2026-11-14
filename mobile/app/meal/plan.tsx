@@ -128,7 +128,7 @@ export default function MealPlanScreen() {
     return (
       <Screen scroll={false} padded={false}>
         <TopBar title="Proposition de menus" onBack={() => setProposal(null)} />
-        <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+        <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
           {/* Same icons as the buttons on each card, so the legend matches. */}
           <View style={{ gap: space[1] }}>
             <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", rowGap: space[1] }}>
@@ -218,7 +218,7 @@ export default function MealPlanScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Générer mes menus" onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <Pressable onPress={() => router.push("/famille")}>
           <Text size={12} tone="faint">
             Les goûts, régimes et allergies de chaque membre (onglet Famille, fiche du membre, rubrique Repas) sont aussi pris en compte.

@@ -36,7 +36,7 @@ export default function BirthdaysScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Anniversaires" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[2] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22, gap: space[2] }} showsVerticalScrollIndicator={false}>
         <Text tone="muted" size={13} style={{ marginBottom: space[2] }}>
           Ajoute la date de naissance de chaque membre pour un rappel automatique le jour J.
         </Text>

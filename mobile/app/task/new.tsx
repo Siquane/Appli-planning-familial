@@ -16,6 +16,7 @@ import { useToastStore } from "../../src/state/toastStore";
 import { confirmReminderPermission } from "../../src/lib/notifications";
 import { space } from "../../src/theme/tokens";
 import { WEEKDAYS_SHORT } from "../../src/lib/weekdays";
+import { parseDuration, splitDuration } from "../../src/lib/duration";
 import type { Category, Priority, Task, Weekday } from "../../src/api/types";
 
 const CATEGORIES: Category[] = ["École", "Travail", "Maison", "Santé", "Loisirs"];
@@ -44,6 +45,26 @@ export default function TaskFormScreen() {
   const [perDayTimes, setPerDayTimes] = useState(false);
   const [dayTimes, setDayTimes] = useState<DayTimes>({});
   const [duration, setDuration] = useState(prefillDuration ? Number(prefillDuration) : 30);
+  // « Autre » : durée libre en heures + minutes.
+  const [customDuration, setCustomDuration] = useState(prefillDuration ? !DURATIONS.includes(Number(prefillDuration)) : false);
+  const [customFields, setCustomFields] = useState(() => splitDuration(prefillDuration ? Number(prefillDuration) : 30));
+
+  function applyDuration(d: number) {
+    setDuration(d);
+    if (!DURATIONS.includes(d)) {
+      setCustomDuration(true);
+      setCustomFields(splitDuration(d));
+    } else {
+      setCustomDuration(false);
+    }
+  }
+
+  function setCustomField(field: "hours" | "minutes", value: string) {
+    const next = { ...customFields, [field]: value.replace(/[^0-9]/g, "") };
+    setCustomFields(next);
+    const parsed = parseDuration(next.hours, next.minutes);
+    if (parsed !== null) setDuration(parsed);
+  }
   const [priority, setPriority] = useState<Priority>("medium");
   const [deadlineWeekday, setDeadlineWeekday] = useState<Weekday | null>(null);
   const [recurring, setRecurring] = useState(prefillRecurring === "1");
@@ -58,7 +79,7 @@ export default function TaskFormScreen() {
     setCategory(existing.category);
     setWeekdays([existing.weekday]);
     setTime(existing.time);
-    setDuration(existing.duration);
+    applyDuration(existing.duration);
     setPriority(existing.priority);
     setDeadlineWeekday(existing.deadlineWeekday);
     setRecurring(existing.recurring);
@@ -80,7 +101,7 @@ export default function TaskFormScreen() {
     setCategory(source.category);
     setWeekdays([source.weekday]);
     setTime(source.time);
-    setDuration(source.duration);
+    applyDuration(source.duration);
     setPriority(source.priority);
     setDeadlineWeekday(source.deadlineWeekday);
     setRecurring(source.recurring);
@@ -113,6 +134,7 @@ export default function TaskFormScreen() {
   if (!title.trim()) missing.push("un titre");
   // Création sur plusieurs jours : une heure par jour si l'interrupteur est activé.
   const times = resolveTimes(weekdays, time, perDayTimes && !existing, dayTimes);
+  if (customDuration && parseDuration(customFields.hours, customFields.minutes) === null) missing.push("une durée entre 5 min et 8 h");
   if (!autoPlacement && !allTimesValid(existing ? { 0: time } : times)) missing.push("une heure valide (HH:MM)");
   const isValid = missing.length === 0;
   const saving = createTask.isPending || updateTask.isPending || autoSlotTask.isPending;
@@ -142,7 +164,7 @@ export default function TaskFormScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier la tâche" : source ? "Dupliquer la tâche" : "Nouvelle tâche"} onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Devoirs de Léo" />
 
         <View style={{ gap: space[2] }}>
@@ -188,11 +210,37 @@ export default function TaskFormScreen() {
           <Text size={13} tone="muted">
             Durée
           </Text>
-          <View style={{ flexDirection: "row", gap: space[1] }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[1] }}>
             {DURATIONS.map((d) => (
-              <Chip key={d} label={d < 60 ? `${d} min` : d % 60 ? `${Math.floor(d / 60)}h${d % 60}` : `${d / 60}h`} selected={duration === d} onPress={() => setDuration(d)} size="sm" fill mono />
+              <Chip
+                key={d}
+                label={d < 60 ? `${d} min` : d % 60 ? `${Math.floor(d / 60)}h${d % 60}` : `${d / 60}h`}
+                selected={!customDuration && duration === d}
+                onPress={() => applyDuration(d)}
+                size="sm"
+                mono
+              />
             ))}
+            <Chip
+              label="Autre"
+              selected={customDuration}
+              onPress={() => {
+                setCustomDuration(true);
+                setCustomFields(splitDuration(duration));
+              }}
+              size="sm"
+            />
           </View>
+          {customDuration && (
+            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: space[2] }}>
+              <View style={{ flex: 1 }}>
+                <TextField label="Heures" value={customFields.hours} onChangeText={(v) => setCustomField("hours", v)} keyboardType="number-pad" maxLength={1} placeholder="0" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <TextField label="Minutes" value={customFields.minutes} onChangeText={(v) => setCustomField("minutes", v)} keyboardType="number-pad" maxLength={2} placeholder="0" />
+              </View>
+            </View>
+          )}
         </View>
 
         <View style={{ gap: space[2] }}>

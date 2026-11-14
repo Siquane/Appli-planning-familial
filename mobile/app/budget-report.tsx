@@ -36,7 +36,7 @@ export default function BudgetReportScreen() {
     return (
       <Screen scroll={false} padded={false}>
         <TopBar title="Bilan du budget" onBack={() => router.back()} />
-        <View style={{ padding: 18 }}>
+        <View style={{ padding: 22 }}>
           <Pressable onPress={() => router.push("/premium")}>
             <Card style={{ gap: space[1] }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
@@ -65,7 +65,7 @@ export default function BudgetReportScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Bilan du budget" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <Card style={{ gap: space[3] }}>
           <Text size={13} tone="muted">
             Dépenses par mois

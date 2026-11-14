@@ -85,7 +85,7 @@ export default function PrivacyScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Confidentialité" onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <Accordion title="Ce que Passerelle enregistre" defaultOpen>
           <Section title="Tes données">
             Compte (e-mail, prénom, mot de passe chiffré), membres de la famille, tâches, recettes, menus, liste de courses, budget, documents, et les préférences repas de chaque membre.

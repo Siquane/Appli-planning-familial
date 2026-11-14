@@ -47,7 +47,7 @@ export function Screen({ children, scroll = true, techGrid, padded = true, style
       <SafeAreaView edges={edges} style={{ flex: 1, backgroundColor: color.bg }}>
         {techGrid && <TechGridOverlay />}
         <KeyboardScrollView
-          contentContainerStyle={[{ flexGrow: 1, padding: padded ? 18 : 0, gap: 20 }, style]}
+          contentContainerStyle={[{ flexGrow: 1, padding: padded ? 22 : 0, gap: 22 }, style]}
           showsVerticalScrollIndicator={false}
         >
           {children}
@@ -62,8 +62,8 @@ export function Screen({ children, scroll = true, techGrid, padded = true, style
       {techGrid && <TechGridOverlay />}
       <Container
         {...(scroll
-          ? { contentContainerStyle: [{ padding: padded ? 18 : 0, gap: 20 }, style], showsVerticalScrollIndicator: false, refreshControl }
-          : { style: [{ flex: 1, padding: padded ? 18 : 0, gap: 20 }, style] })}
+          ? { contentContainerStyle: [{ padding: padded ? 22 : 0, gap: 22 }, style], showsVerticalScrollIndicator: false, refreshControl }
+          : { style: [{ flex: 1, padding: padded ? 22 : 0, gap: 22 }, style] })}
       >
         {children}
       </Container>

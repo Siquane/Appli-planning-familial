@@ -21,7 +21,7 @@ export default function FamilleTab() {
 
   return (
     <Screen scroll={false} padded={false} edges={["top"]}>
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <TabHeader title="Famille" />
 
         <View style={{ gap: space[2] }}>

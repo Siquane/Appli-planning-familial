@@ -78,7 +78,7 @@ export default function PremiumScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Passerelle+" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 18, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <Text size={13} tone="muted">
           Planning, tâches, recettes, menu et budget restent gratuits. Choisis seulement ce qui te sert.
         </Text>
