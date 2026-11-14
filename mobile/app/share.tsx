@@ -60,7 +60,7 @@ export default function ShareScreen() {
 
         {!isLoading && (
           <Card style={{ gap: space[2] }}>
-            <Text size={12} tone="faint">
+            <Text size={13} tone="faint">
               Lien de partage
             </Text>
             <Text size={13} mono numberOfLines={1}>
@@ -86,7 +86,7 @@ export default function ShareScreen() {
           {(data?.sharedWith ?? []).map((p) => (
             <Card key={p.id} row style={{ alignItems: "center" }}>
               <View style={{ flex: 1 }}>
-                <Text size={14}>{p.name}</Text>
+                <Text size={15}>{p.name}</Text>
                 <Text size={11} tone="faint">
                   {p.role}
                 </Text>

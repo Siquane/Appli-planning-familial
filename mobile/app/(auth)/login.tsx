@@ -33,10 +33,10 @@ export default function LoginScreen() {
   return (
     <Screen keyboard style={{ justifyContent: "center", gap: space[6] }}>
       <View style={{ gap: 4 }}>
-        <Text heading weight="semibold" size={26}>
+        <Text heading weight="semibold" size={28}>
           Passerelle
         </Text>
-        <Text tone="muted" size={14}>
+        <Text tone="muted" size={15}>
           Le planning de la famille, sans friction.
         </Text>
       </View>

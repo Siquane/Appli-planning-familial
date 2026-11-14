@@ -29,7 +29,7 @@ export default function FamilleTab() {
           <Text weight="medium" size={13} tone="muted">
             Membres ({members.length})
           </Text>
-          <Text size={12} tone="faint">
+          <Text size={13} tone="faint">
             Touche un membre pour ses goûts, son régime et ses allergies : les menus générés en tiennent compte.
           </Text>
           <Card>
@@ -46,11 +46,11 @@ export default function FamilleTab() {
                 style={{ flexDirection: "row", alignItems: "center", gap: space[2], paddingVertical: 6, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: color.divider }}
               >
                 <Avatar initials={m.initials} bg={m.tint === "neutral" ? color.neutral700 : color.accent800} fg={m.tint === "neutral" ? color.neutral100 : color.accent100} size={30} />
-                <Text size={14} style={{ flex: 1 }}>
+                <Text size={15} style={{ flex: 1 }}>
                   {m.name}
                 </Text>
                 {m.age != null && (
-                  <Text size={12} tone="faint" mono>
+                  <Text size={13} tone="faint" mono>
                     {m.age} ans
                   </Text>
                 )}
@@ -65,7 +65,7 @@ export default function FamilleTab() {
             <Pressable key={label} onPress={() => router.push(href)}>
               <Card row style={{ alignItems: "center" }}>
                 <Icon size={16} color={color.neutral400} />
-                <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
+                <Text size={15} style={{ flex: 1, marginLeft: space[2] }}>
                   {label}
                 </Text>
                 <ChevronRightIcon size={14} color={color.neutral500} />

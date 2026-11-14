@@ -33,7 +33,7 @@ export function Accordion({ title, summary, icon, defaultOpen = false, children 
             {title}
           </Text>
           {!open && summary ? (
-            <Text size={12} tone="faint">
+            <Text size={13} tone="faint">
               {summary}
             </Text>
           ) : null}

@@ -35,7 +35,7 @@ export default function BudgetScreen() {
             <ChevronLeftIcon size={16} color={color.text} />
           </MonthArrow>
           <Pressable style={{ flex: 1 }} onPress={() => setMonth(currentMonth())} disabled={isCurrent}>
-            <Text heading weight="medium" size={16} center>
+            <Text heading weight="medium" size={17} center>
               {monthLabel(month)}
             </Text>
             {!isCurrent && (
@@ -50,17 +50,17 @@ export default function BudgetScreen() {
         </View>
 
         <Card style={{ alignItems: "center", paddingVertical: space[6] }}>
-          <Text size={12} tone="muted">
+          <Text size={13} tone="muted">
             Total du mois
           </Text>
           <Text heading weight="semibold" size={28}>
             {formatEuros(data?.totalCents ?? 0)}
           </Text>
-          <Text size={11.5} tone="faint">
+          <Text size={11} tone="faint">
             {expenses.length} dépense{expenses.length !== 1 ? "s" : ""}
           </Text>
           {overCount > 0 && (
-            <Text size={12} tone="danger" style={{ marginTop: space[2] }}>
+            <Text size={13} tone="danger" style={{ marginTop: space[2] }}>
               {overCount === 1 ? "1 plafond dépassé" : `${overCount} plafonds dépassés`}
             </Text>
           )}
@@ -68,19 +68,19 @@ export default function BudgetScreen() {
 
         {premium && isCurrent && forecast && (
           <Card style={{ gap: space[1] }}>
-            <Text size={12} tone="muted">
+            <Text size={13} tone="muted">
               Prévision de fin de mois
             </Text>
             <Text size={15} weight="medium">
               À ce rythme, environ {formatEuros(roundEuros(forecast.projectedCents))}
             </Text>
             {forecast.upcomingRecurringCents > 0 && (
-              <Text size={12} tone="faint">
+              <Text size={13} tone="faint">
                 Dont {formatEuros(forecast.upcomingRecurringCents)} de dépenses récurrentes encore à venir
               </Text>
             )}
             {forecast.usualCents !== null && (
-              <Text size={12} tone={forecast.projectedCents > forecast.usualCents * 1.05 ? "danger" : "faint"}>
+              <Text size={13} tone={forecast.projectedCents > forecast.usualCents * 1.05 ? "danger" : "faint"}>
                 {forecast.projectedCents > forecast.usualCents * 1.05
                   ? `Au-dessus de d'habitude (${formatEuros(roundEuros(forecast.usualCents))} en moyenne)`
                   : `D'habitude : ${formatEuros(roundEuros(forecast.usualCents))} en moyenne`}
@@ -150,7 +150,7 @@ export default function BudgetScreen() {
                       <Text size={13}>{categoryLabel(options, c.category)}</Text>
                       <Text size={13} weight="medium" tone={over ? "danger" : "text"}>
                         {formatEuros(c.totalCents)}
-                        {c.limitCents !== null && <Text size={12} tone="faint">{` / ${formatEuros(c.limitCents)}`}</Text>}
+                        {c.limitCents !== null && <Text size={13} tone="faint">{` / ${formatEuros(c.limitCents)}`}</Text>}
                       </Text>
                     </View>
                     <View style={{ height: 6, borderRadius: radius.sm, backgroundColor: color.neutral800, overflow: "hidden" }}>
@@ -164,7 +164,7 @@ export default function BudgetScreen() {
                       />
                     </View>
                     {over && (
-                      <Text size={11.5} tone="danger">
+                      <Text size={11} tone="danger">
                         Dépassé de {formatEuros(c.totalCents - c.limitCents!)}
                       </Text>
                     )}
@@ -197,16 +197,16 @@ export default function BudgetScreen() {
                   <Card row style={{ alignItems: "center" }}>
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: space[1] }}>
-                        <Text size={14} weight="medium" numberOfLines={1} style={{ flexShrink: 1 }}>
+                        <Text size={15} weight="medium" numberOfLines={1} style={{ flexShrink: 1 }}>
                           {e.label}
                         </Text>
                         {e.recurringId && <RecurringIcon size={12} color={color.accent400} />}
                       </View>
-                      <Text size={11.5} tone="faint" numberOfLines={1}>
+                      <Text size={11} tone="faint" numberOfLines={1}>
                         {subtitle}
                       </Text>
                     </View>
-                    <Text size={14} weight="medium">
+                    <Text size={15} weight="medium">
                       {formatEuros(e.amountCents)}
                     </Text>
                   </Card>

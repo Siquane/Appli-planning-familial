@@ -35,7 +35,7 @@ export function TaskCard({ task, members }: { task: Task; members: Member[] }) {
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
             <ClockIcon size={9} color={color.neutral500} />
-            <Text size={10.5} tone="faint" mono>
+            <Text size={11} tone="faint" mono>
               {formatDuration(task.duration)}
             </Text>
           </View>
@@ -44,7 +44,7 @@ export function TaskCard({ task, members }: { task: Task; members: Member[] }) {
         <View style={{ flex: 1, gap: 4 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             {task.recurring && <RecurringIcon size={11} color={color.accent400} />}
-            <Text weight="medium" size={14} numberOfLines={1} style={{ flexShrink: 1 }}>
+            <Text weight="medium" size={15} numberOfLines={1} style={{ flexShrink: 1 }}>
               {task.title}
             </Text>
           </View>

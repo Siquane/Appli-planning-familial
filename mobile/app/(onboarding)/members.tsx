@@ -43,7 +43,7 @@ export default function MembersOnboardingScreen() {
           <Text heading weight="semibold" size={22}>
             Qui compose la famille ?
           </Text>
-          <Text tone="muted" size={14}>
+          <Text tone="muted" size={15}>
             Ajoutez chaque membre — vous pourrez leur assigner des tâches ensuite.
           </Text>
         </View>
@@ -61,7 +61,7 @@ export default function MembersOnboardingScreen() {
             return (
               <Card key={m.id} row style={{ alignItems: "center" }}>
                 <Avatar initials={m.initials} bg={t.bg} fg={t.fg} size={32} />
-                <Text weight="medium" size={14} style={{ flex: 1, marginLeft: space[2] }}>
+                <Text weight="medium" size={15} style={{ flex: 1, marginLeft: space[2] }}>
                   {m.name}
                 </Text>
                 <Pressable onPress={() => deleteMember.mutate(m.id)} accessibilityLabel={`Supprimer ${m.name}`}>

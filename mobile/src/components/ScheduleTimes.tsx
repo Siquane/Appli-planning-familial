@@ -62,7 +62,7 @@ export function ScheduleTimes({ weekdays, time, onTimeChange, perDay, onPerDayCh
         <View style={{ gap: space[2] }}>
           {sortWeekdays(weekdays).map((w) => (
             <View key={w} style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
-              <Text size={14} style={{ width: 90 }}>
+              <Text size={15} style={{ width: 90 }}>
                 {WEEKDAYS_FULL[w]}
               </Text>
               <TimeField value={dayTimes[w] ?? time} onChange={(t) => onDayTimesChange({ ...dayTimes, [w]: t })} />

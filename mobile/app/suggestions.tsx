@@ -28,7 +28,7 @@ function AgeSetter({ member }: { member: Member }) {
         fg={member.tint === "neutral" ? color.neutral100 : color.accent100}
         size={28}
       />
-      <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
+      <Text size={15} style={{ flex: 1, marginLeft: space[2] }}>
         {member.name}
       </Text>
       <View style={{ width: 64 }}>
@@ -109,10 +109,10 @@ export default function SuggestionsScreen() {
                   fg={member.tint === "neutral" ? color.neutral100 : color.accent100}
                   size={28}
                 />
-                <Text weight="medium" size={14}>
+                <Text weight="medium" size={15}>
                   {member.name}
                 </Text>
-                <Text tone="faint" size={12} mono>
+                <Text tone="faint" size={13} mono>
                   {bracket ? bracket.label : `${member.age} ans`}
                 </Text>
               </View>
@@ -128,8 +128,8 @@ export default function SuggestionsScreen() {
               {suggestions.map((s) => (
                 <Card key={s.title} row style={{ alignItems: "center" }}>
                   <View style={{ flex: 1 }}>
-                    <Text size={14}>{s.title}</Text>
-                    <Text size={11.5} tone="faint">
+                    <Text size={15}>{s.title}</Text>
+                    <Text size={11} tone="faint">
                       {s.category} · {s.duration} min
                     </Text>
                   </View>

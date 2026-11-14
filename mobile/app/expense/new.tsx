@@ -104,7 +104,7 @@ export default function ExpenseFormScreen() {
       <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {existing?.recurringId && (
           <Card>
-            <Text size={12} tone="muted">
+            <Text size={13} tone="muted">
               Dépense récurrente : vos changements ne concernent que ce mois-ci. Pour tous les mois, passez par les réglages du Budget.
             </Text>
           </Card>
@@ -123,7 +123,7 @@ export default function ExpenseFormScreen() {
         <DateField label="Date" value={date} onChange={setDate} />
 
         {!isValid && (
-          <Text tone="muted" size={12} center>
+          <Text tone="muted" size={13} center>
             {amount && amountCents === null ? "Montant invalide (ex. 42,50)." : "Un montant et un libellé sont nécessaires."}
           </Text>
         )}

@@ -56,12 +56,12 @@ export default function BirthdaysScreen() {
             <Card key={member.id} style={{ gap: space[2] }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
                 <Avatar initials={member.initials} bg={t.bg} fg={t.fg} size={32} />
-                <Text weight="medium" size={14} style={{ flex: 1 }}>
+                <Text weight="medium" size={15} style={{ flex: 1 }}>
                   {member.name}
                 </Text>
                 {member.birthday && (
                   <View style={{ flexDirection: "row", alignItems: "center", gap: space[1] }}>
-                    <Text size={12} tone="accent" mono>
+                    <Text size={13} tone="accent" mono>
                       {daysLabel(daysUntilBirthday(member.birthday))}
                     </Text>
                     {daysUntilBirthday(member.birthday) === 0 && <PartyIcon size={14} color={color.accent400} />}

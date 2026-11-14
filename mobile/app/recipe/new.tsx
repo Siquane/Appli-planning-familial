@@ -121,7 +121,7 @@ export default function RecipeFormScreen() {
         <TextField label="Notes" value={notes} onChangeText={setNotes} multiline placeholder="Astuces, variantes..." />
 
         {!isValid && (
-          <Text tone="muted" size={12} center>
+          <Text tone="muted" size={13} center>
             Un titre est nécessaire pour {existing ? "enregistrer" : "créer la recette"}.
           </Text>
         )}

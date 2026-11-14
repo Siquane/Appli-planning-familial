@@ -101,7 +101,7 @@ export default function ProfileScreen() {
       <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
         <Avatar initials={user?.initials ?? ""} bg={color.accent800} fg={color.accent100} size={56} />
         <View style={{ flex: 1 }}>
-          <Text heading weight="semibold" size={18} tone={hasName ? undefined : "muted"}>
+          <Text heading weight="semibold" size={17} tone={hasName ? undefined : "muted"}>
             {hasName ? user!.name : "Prénom non renseigné"}
           </Text>
           <Text tone="muted" size={13}>
@@ -145,7 +145,7 @@ export default function ProfileScreen() {
               >
                 <CalendarIcon size={16} color={color.neutral400} />
                 <View style={{ flex: 1 }}>
-                  <Text size={13.5}>{p.label}</Text>
+                  <Text size={13}>{p.label}</Text>
                   {connection?.email && (
                     <Text size={11} tone="faint">
                       {connection.email}
@@ -172,7 +172,7 @@ export default function ProfileScreen() {
       <Pressable onPress={() => router.push("/premium")}>
         <Card row style={{ alignItems: "center" }}>
           <SparkleIcon size={20} color={color.accent400} />
-          <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
+          <Text size={15} style={{ flex: 1, marginLeft: space[2] }}>
             {packLabel}
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />
@@ -182,7 +182,7 @@ export default function ProfileScreen() {
       <Pressable onPress={() => router.push("/recurring-tasks")}>
         <Card row style={{ alignItems: "center" }}>
           <RecurringIcon size={16} color={color.neutral400} />
-          <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
+          <Text size={15} style={{ flex: 1, marginLeft: space[2] }}>
             Tâches récurrentes
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />
@@ -191,7 +191,7 @@ export default function ProfileScreen() {
 
       <Pressable onPress={() => router.push("/privacy")}>
         <Card row style={{ alignItems: "center" }}>
-          <Text size={14} style={{ flex: 1 }}>
+          <Text size={15} style={{ flex: 1 }}>
             Confidentialité et données
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />
@@ -200,7 +200,7 @@ export default function ProfileScreen() {
 
       <Pressable onPress={() => router.push("/suggestions")}>
         <Card row style={{ alignItems: "center" }}>
-          <Text size={14} style={{ flex: 1 }}>
+          <Text size={15} style={{ flex: 1 }}>
             Suggestions de tâches selon l'âge
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />

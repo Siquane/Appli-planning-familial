@@ -23,7 +23,7 @@ export function TopBar({ title, onBack, onDuplicate, onEdit, onDelete }: Props) 
       >
         <ChevronLeftIcon size={17} color={color.text} />
       </Pressable>
-      <Text heading weight="medium" size={16} style={{ flex: 1 }}>
+      <Text heading weight="medium" size={17} style={{ flex: 1 }}>
         {title}
       </Text>
       {(onDuplicate || onEdit || onDelete) && (

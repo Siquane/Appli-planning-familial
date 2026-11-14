@@ -188,7 +188,7 @@ export default function TaskFormScreen() {
             ))}
           </View>
           {autoPlacement && (
-            <Text tone="faint" size={12}>
+            <Text tone="faint" size={13}>
               Aucun jour choisi : Passerelle sélectionnera elle-même le meilleur créneau de la semaine selon la priorité, l'échéance et les tâches déjà planifiées.
             </Text>
           )}
@@ -299,7 +299,7 @@ export default function TaskFormScreen() {
         <TextField label="Notes" value={notes} onChangeText={setNotes} multiline placeholder="Détails, lieu, contexte..." />
 
         {!isValid && (
-          <Text tone="muted" size={12} center>
+          <Text tone="muted" size={13} center>
             Pour {existing ? "enregistrer" : "créer la tâche"}, il manque : {missing.join(", ")}.
           </Text>
         )}

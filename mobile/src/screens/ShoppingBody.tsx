@@ -52,7 +52,7 @@ export function ShoppingBody() {
             flex: 1,
             color: color.text,
             fontFamily: font.body,
-            fontSize: scaled(14),
+            fontSize: scaled(15),
             paddingVertical: 10,
             paddingHorizontal: 12,
             borderRadius: radius.md,
@@ -125,7 +125,7 @@ function Row({ label, checked, first, onToggle, onRemove }: { label: string; che
         >
           {checked && <CheckIcon size={14} color={color.bg} />}
         </View>
-        <Text size={14} tone={checked ? "faint" : "text"} style={checked ? { textDecorationLine: "line-through" } : undefined}>
+        <Text size={15} tone={checked ? "faint" : "text"} style={checked ? { textDecorationLine: "line-through" } : undefined}>
           {label}
         </Text>
       </Pressable>

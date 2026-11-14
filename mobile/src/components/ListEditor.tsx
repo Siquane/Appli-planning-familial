@@ -46,7 +46,7 @@ export function ListEditor({ label, placeholder, items, onChange, numbered }: Pr
                   {i + 1}.
                 </Text>
               )}
-              <Text size={14} style={{ flex: 1 }}>
+              <Text size={15} style={{ flex: 1 }}>
                 {item}
               </Text>
               <Pressable onPress={() => remove(i)} accessibilityLabel={`Supprimer la ligne ${i + 1}`}>

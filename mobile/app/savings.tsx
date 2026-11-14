@@ -59,7 +59,7 @@ export default function SavingsScreen() {
                   Budget+
                 </Text>
               </View>
-              <Text size={12} tone="muted">
+              <Text size={13} tone="muted">
                 Mets de côté pour les vacances, Noël ou la voiture, et regarde la jauge se remplir.
               </Text>
               <MoreLink label="Voir Budget+" />
@@ -149,12 +149,12 @@ function GoalCard({ goal, premium }: { goal: SavingsGoal; premium: boolean }) {
       {reached ? (
         <View style={{ flexDirection: "row", alignItems: "center", gap: space[1] }}>
           <PartyIcon size={16} color={color.accent400} />
-          <Text size={12} tone="accent">
+          <Text size={13} tone="accent">
             Objectif atteint !
           </Text>
         </View>
       ) : (
-        <Text size={12} tone="faint">
+        <Text size={13} tone="faint">
           {months ? `Encore ${formatEuros(left)} · environ ${formatEuros(Math.ceil(left / months))} par mois` : `Encore ${formatEuros(left)}`}
         </Text>
       )}

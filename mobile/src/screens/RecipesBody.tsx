@@ -30,10 +30,10 @@ export function RecipesBody() {
             <Card row style={{ alignItems: "center" }}>
               <BookIcon size={14} color={color.accent400} />
               <View style={{ flex: 1, marginLeft: space[2] }}>
-                <Text size={14} weight="medium">
+                <Text size={15} weight="medium">
                   {recipe.title}
                 </Text>
-                <Text size={11.5} tone="faint">
+                <Text size={11} tone="faint">
                   {recipe.ingredients.length} ingrédient{recipe.ingredients.length !== 1 ? "s" : ""} · {recipe.steps.length} étape{recipe.steps.length !== 1 ? "s" : ""}
                 </Text>
               </View>

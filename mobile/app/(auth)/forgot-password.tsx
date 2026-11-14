@@ -51,10 +51,10 @@ export default function ForgotPasswordScreen() {
   return (
     <Screen keyboard style={{ justifyContent: "center", gap: space[6] }}>
       <View style={{ gap: 4 }}>
-        <Text heading weight="semibold" size={26}>
+        <Text heading weight="semibold" size={28}>
           Mot de passe oublié
         </Text>
-        <Text tone="muted" size={14}>
+        <Text tone="muted" size={15}>
           {step === "email" ? "Indique ton e-mail, on t'envoie un code." : info}
         </Text>
       </View>

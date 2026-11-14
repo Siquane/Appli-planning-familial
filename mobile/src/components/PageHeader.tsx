@@ -42,7 +42,7 @@ export function TabHeader({ title, subtitle, subtitleIcon }: { title: string; su
         </View>
         {subtitle ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Text size={12.5} tone="muted" numberOfLines={1} style={{ flexShrink: 1 }}>
+            <Text size={13} tone="muted" numberOfLines={1} style={{ flexShrink: 1 }}>
               {subtitle}
             </Text>
             {subtitleIcon}
@@ -77,7 +77,7 @@ export function BackHeader({ title, right }: { title: string; right?: ReactNode 
       <Pressable hitSlop={hitSlopFor(34)} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Retour" style={{ ...iconButton, width: 34, height: 34 }}>
         <ChevronLeftIcon size={17} color={color.text} />
       </Pressable>
-      <Text heading weight="semibold" size={20} style={{ flex: 1 }} numberOfLines={1}>
+      <Text heading weight="semibold" size={22} style={{ flex: 1 }} numberOfLines={1}>
         {title}
       </Text>
       {right}

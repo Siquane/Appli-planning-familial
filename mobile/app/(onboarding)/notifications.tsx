@@ -28,7 +28,7 @@ export default function NotificationsOnboardingScreen() {
         <Text heading weight="semibold" size={22} center>
           Restez au courant
         </Text>
-        <Text tone="muted" size={14} center style={{ maxWidth: 280 }}>
+        <Text tone="muted" size={15} center style={{ maxWidth: 280 }}>
           Passerelle vous prévient des changements de planning et des tâches à venir. Vous pourrez ajuster cela dans votre profil.
         </Text>
       </View>

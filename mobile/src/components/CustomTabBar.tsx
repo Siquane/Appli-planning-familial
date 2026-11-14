@@ -52,7 +52,7 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
         >
           <Icon size={28} color={tint} />
         </View>
-        <Text size={10.5} style={{ color: tint }}>
+        <Text size={11} style={{ color: tint }}>
           {label}
         </Text>
         {/* A small glowing ring under the active tab, like the logo's rings, so it doesn't rely on colour alone. */}

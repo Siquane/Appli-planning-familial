@@ -40,7 +40,7 @@ export function Chip({ label, selected, onPress, size = "md", mono, squareRadius
       ]}
     >
       <Text
-        size={size === "sm" ? 11.5 : 13}
+        size={size === "sm" ? 11 : 13}
         mono={mono}
         numberOfLines={fill ? 1 : undefined}
         adjustsFontSizeToFit={fill}

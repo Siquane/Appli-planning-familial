@@ -93,12 +93,12 @@ export default function TaskDetailScreen() {
             <Text weight="medium" size={13} tone="muted">
               Notes
             </Text>
-            <Text size={14}>{task.notes}</Text>
+            <Text size={15}>{task.notes}</Text>
           </View>
         ) : null}
 
         {task.synced && (
-          <Text size={12} tone="faint">
+          <Text size={13} tone="faint">
             Synchronisée avec {task.externalProvider === "outlook" ? "Outlook" : task.externalProvider === "apple" ? "Apple Calendar" : "Google Calendar"}
           </Text>
         )}
@@ -111,7 +111,7 @@ function Row({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
       {icon}
-      <Text size={14}>{label}</Text>
+      <Text size={15}>{label}</Text>
     </View>
   );
 }

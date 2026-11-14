@@ -28,7 +28,7 @@ const errorMessage = (e: unknown) => (e instanceof Error ? e.message : "Une erre
 const inputStyle = {
   color: color.text,
   fontFamily: font.body,
-  fontSize: scaled(14),
+  fontSize: scaled(15),
   paddingVertical: 6,
   paddingHorizontal: 10,
   borderRadius: radius.md,
@@ -51,14 +51,14 @@ export default function BudgetSettingsScreen() {
             <Pressable key={r.id} onPress={() => router.push(`/expense/recurring?edit=${r.id}`)}>
               <Card row style={{ alignItems: "center" }}>
                 <View style={{ flex: 1 }}>
-                  <Text size={14} weight="medium" numberOfLines={1}>
+                  <Text size={15} weight="medium" numberOfLines={1}>
                     {r.label}
                   </Text>
-                  <Text size={11.5} tone="faint">
+                  <Text size={11} tone="faint">
                     Le {r.dayOfMonth} du mois · {categoryLabel(options, r.category)}
                   </Text>
                 </View>
-                <Text size={14} weight="medium" style={{ marginRight: space[2] }}>
+                <Text size={15} weight="medium" style={{ marginRight: space[2] }}>
                   {formatEuros(r.amountCents)}
                 </Text>
                 <ChevronRightIcon size={14} color={color.neutral500} />
@@ -99,7 +99,7 @@ function Section({ title, hint, children }: { title: string; hint: string; child
       <Text weight="medium" size={13} tone="muted">
         {title}
       </Text>
-      <Text size={11.5} tone="faint">
+      <Text size={11} tone="faint">
         {hint}
       </Text>
       {children}
@@ -134,7 +134,7 @@ function CapRow({ category, label, limitCents }: { category: string; label: stri
 
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
-      <Text size={14} style={{ flex: 1 }}>
+      <Text size={15} style={{ flex: 1 }}>
         {label}
       </Text>
       <TextInput

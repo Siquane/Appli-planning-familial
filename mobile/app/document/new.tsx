@@ -79,7 +79,7 @@ export default function DocumentFormScreen() {
                   {file.name}
                 </Text>
                 {file.size ? (
-                  <Text size={11.5} tone="faint">
+                  <Text size={11} tone="faint">
                     {formatSize(file.size)}
                   </Text>
                 ) : null}
@@ -116,7 +116,7 @@ export default function DocumentFormScreen() {
         )}
 
         {!isValid && (
-          <Text tone="muted" size={12} center>
+          <Text tone="muted" size={13} center>
             {existing ? "Un nom est nécessaire pour enregistrer." : "Choisissez d'abord un fichier."}
           </Text>
         )}

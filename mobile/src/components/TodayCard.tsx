@@ -37,7 +37,7 @@ function Line({ icon, text, onPress, danger }: { icon: React.ReactNode; text: st
   const content = (
     <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
       {icon}
-      <Text size={13.5} tone={danger ? "danger" : "text"} style={{ flex: 1 }} numberOfLines={1}>
+      <Text size={13} tone={danger ? "danger" : "text"} style={{ flex: 1 }} numberOfLines={1}>
         {text}
       </Text>
     </View>

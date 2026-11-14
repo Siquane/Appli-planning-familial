@@ -38,10 +38,10 @@ export function MealsBody() {
               >
                 <Card row style={{ alignItems: "center" }}>
                   <View style={{ flex: 1 }}>
-                    <Text size={11.5} tone="faint" style={{ textTransform: "capitalize" }}>
+                    <Text size={11} tone="faint" style={{ textTransform: "capitalize" }}>
                       {type}
                     </Text>
-                    <Text size={14} weight="medium" tone={label ? "text" : "muted"}>
+                    <Text size={15} weight="medium" tone={label ? "text" : "muted"}>
                       {label ?? "Ajouter un repas"}
                     </Text>
                   </View>

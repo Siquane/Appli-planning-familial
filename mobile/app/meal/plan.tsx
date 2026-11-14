@@ -144,7 +144,7 @@ export default function MealPlanScreen() {
             </Text>
           </View>
           {quota && quota.period !== "premium" && (
-            <Text size={12} tone="faint">
+            <Text size={13} tone="faint">
               {rerollsLeft > 0 ? `${rerollsLeft} « autre idée » restante${rerollsLeft > 1 ? "s" : ""}.` : "Plus d'« autre idée » disponible."}
             </Text>
           )}
@@ -159,15 +159,15 @@ export default function MealPlanScreen() {
                 return (
                   <Card key={key} row style={{ alignItems: "center", opacity: busy ? 0.5 : 1 }}>
                     <View style={{ flex: 1, gap: 2 }}>
-                      <Text size={11.5} tone="faint" style={{ textTransform: "capitalize" }}>
+                      <Text size={11} tone="faint" style={{ textTransform: "capitalize" }}>
                         {m.type}
                         {m.recipeId ? " · ma recette" : ""}
                       </Text>
-                      <Text size={14} weight="medium">
+                      <Text size={15} weight="medium">
                         {busy ? "Nouvelle idée…" : m.title}
                       </Text>
                       {!busy && m.notes ? (
-                        <Text size={12} tone="muted">
+                        <Text size={13} tone="muted">
                           {m.notes}
                         </Text>
                       ) : null}
@@ -221,7 +221,7 @@ export default function MealPlanScreen() {
       <TopBar title="Générer mes menus" onBack={() => router.back()} />
       <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
         <Pressable onPress={() => router.push("/famille")}>
-          <Text size={12} tone="faint">
+          <Text size={13} tone="faint">
             Les goûts, régimes et allergies de chaque membre (onglet Famille, fiche du membre, rubrique Repas) sont aussi pris en compte.
           </Text>
         </Pressable>
@@ -307,14 +307,14 @@ export default function MealPlanScreen() {
         />
         {quota && (
           <Pressable onPress={() => router.push("/premium")} disabled={quota.period === "premium"}>
-            <Text size={12} tone={weeksLeft > 0 ? "faint" : "accent"} center>
+            <Text size={13} tone={weeksLeft > 0 ? "faint" : "accent"} center>
               {mealQuotaLabel(quota)}
             </Text>
             {quota.period !== "premium" && <MoreLink label="Repas+ : chaque semaine" center />}
           </Pressable>
         )}
         {slow && (
-          <Text size={12} tone="muted" center>
+          <Text size={13} tone="muted" center>
             Claude compose ta semaine, ça prend quelques secondes…
           </Text>
         )}

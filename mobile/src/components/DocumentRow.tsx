@@ -19,10 +19,10 @@ export function DocumentRow({ doc, subtitle, onPress, onLongPress }: { doc: Fami
           </View>
         )}
         <View style={{ flex: 1, marginLeft: space[3] }}>
-          <Text size={14} weight="medium" numberOfLines={1}>
+          <Text size={15} weight="medium" numberOfLines={1}>
             {doc.title}
           </Text>
-          <Text size={11.5} tone="faint" numberOfLines={1}>
+          <Text size={11} tone="faint" numberOfLines={1}>
             {subtitle}
           </Text>
         </View>

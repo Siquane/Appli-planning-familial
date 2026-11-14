@@ -46,7 +46,7 @@ export default function SearchScreen() {
       )}
 
       {!hasQuery && (
-        <Text tone="faint" size={12.5} center>
+        <Text tone="faint" size={13} center>
           Cherche dans le planning, les recettes et leurs ingrédients, les documents, les dépenses du mois et la liste de courses.
         </Text>
       )}
@@ -117,11 +117,11 @@ function Row({ icon, title, subtitle, onPress }: { icon: React.ReactNode; title:
       <Card row style={{ alignItems: "center" }}>
         {icon}
         <View style={{ flex: 1, marginLeft: space[2] }}>
-          <Text size={14} weight="medium" numberOfLines={1}>
+          <Text size={15} weight="medium" numberOfLines={1}>
             {title}
           </Text>
           {subtitle ? (
-            <Text size={11.5} tone="faint">
+            <Text size={11} tone="faint">
               {subtitle}
             </Text>
           ) : null}

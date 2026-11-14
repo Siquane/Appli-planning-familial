@@ -104,7 +104,7 @@ export default function PremiumScreen() {
                         <PiggyBankIcon size={48} color={color.pillar3} />
                       </View>
                     )}
-                    <Text heading weight="semibold" size={20}>
+                    <Text heading weight="semibold" size={22}>
                       {pack.name}
                     </Text>
                   </View>
@@ -112,11 +112,11 @@ export default function PremiumScreen() {
                 <View style={{ alignItems: "flex-end", gap: 2 }}>
                   <Text size={17} weight="medium">
                     {pack.month}
-                    <Text size={14} tone="muted">
+                    <Text size={15} tone="muted">
                       {" / mois"}
                     </Text>
                   </Text>
-                  <Text size={14} tone="faint">
+                  <Text size={15} tone="faint">
                     ou {pack.year} / an
                   </Text>
                 </View>
@@ -135,7 +135,7 @@ export default function PremiumScreen() {
                 ))}
               </View>
               {active && until ? (
-                <Text size={12} tone="accent">
+                <Text size={13} tone="accent">
                   {until.startsWith("2999") ? "Actif" : `Actif · prochaine échéance le ${frenchDate(until)}`}
                 </Text>
               ) : null}
@@ -166,7 +166,7 @@ export default function PremiumScreen() {
         {plan && both ? (
           // Everything is unlocked: no free quota to show.
           <Card style={{ gap: space[1] }}>
-            <Text size={14} weight="medium">
+            <Text size={15} weight="medium">
               Passerelle+ est actif {packUntilLabel(plan.packs.budget.until)}
             </Text>
             <Text size={13} tone="muted">
@@ -211,7 +211,7 @@ export default function PremiumScreen() {
           )
         )}
         {hasAnyPack(plan) && !both && (
-          <Text size={12} tone="faint" center>
+          <Text size={13} tone="faint" center>
             Passerelle+ revient moins cher que Repas+ et Budget+ séparés.
           </Text>
         )}

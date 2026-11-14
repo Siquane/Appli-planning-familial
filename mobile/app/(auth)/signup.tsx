@@ -34,10 +34,10 @@ export default function SignupScreen() {
   return (
     <Screen keyboard style={{ justifyContent: "center", gap: space[6] }}>
       <View style={{ gap: 4 }}>
-        <Text heading weight="semibold" size={26}>
+        <Text heading weight="semibold" size={28}>
           Créer un compte
         </Text>
-        <Text tone="muted" size={14}>
+        <Text tone="muted" size={15}>
           Quelques infos pour démarrer.
         </Text>
       </View>

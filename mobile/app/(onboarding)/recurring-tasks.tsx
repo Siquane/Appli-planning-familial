@@ -109,7 +109,7 @@ export default function RecurringTasksOnboardingScreen() {
           <Text heading weight="semibold" size={22}>
             Vos tâches récurrentes
           </Text>
-          <Text tone="muted" size={14}>
+          <Text tone="muted" size={15}>
             Elles se replaceront automatiquement chaque semaine dans la grille.
           </Text>
         </View>
@@ -120,10 +120,10 @@ export default function RecurringTasksOnboardingScreen() {
               <Card key={d.key} row style={{ alignItems: "center" }}>
                 <RecurringIcon size={13} color={color.accent400} />
                 <View style={{ flex: 1, marginLeft: space[2] }}>
-                  <Text size={14} weight="medium">
+                  <Text size={15} weight="medium">
                     {d.title}
                   </Text>
-                  <Text size={11.5} tone="faint">
+                  <Text size={11} tone="faint">
                     {describeSchedule(d.times)} · {d.category}
                     {d.reminder ? " · Rappel" : ""}
                   </Text>

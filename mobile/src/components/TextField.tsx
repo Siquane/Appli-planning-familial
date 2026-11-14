@@ -23,7 +23,7 @@ export function TextField({ label, style, multiline, ...rest }: Props) {
             minHeight: multiline ? 90 : 44,
             paddingVertical: 6,
             paddingHorizontal: 10,
-            fontSize: scaled(14),
+            fontSize: scaled(15),
             color: color.text,
             backgroundColor: color.surface,
             borderWidth: 1,

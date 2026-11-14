@@ -45,10 +45,10 @@ export default function ReplanScreen() {
         {proposals.map((p) => (
           <Card key={p.taskId} bg={color.accent900} style={{ gap: space[3] }}>
             <View>
-              <Text weight="medium" size={14}>
+              <Text weight="medium" size={15}>
                 {p.title}
               </Text>
-              <Text size={12} tone="faint" mono>
+              <Text size={13} tone="faint" mono>
                 Actuellement : {WEEKDAYS_FULL[p.currentWeekday]} {p.currentTime}
               </Text>
             </View>
@@ -59,7 +59,7 @@ export default function ReplanScreen() {
                     <Text weight="medium" size={13} mono>
                       {WEEKDAYS_FULL[c.weekday]} · {c.time}
                     </Text>
-                    <Text size={11.5} tone="muted">
+                    <Text size={11} tone="muted">
                       {c.reason}
                     </Text>
                   </View>

@@ -60,7 +60,7 @@ export function Button({ label, onPress, variant = "secondary", block, disabled,
         <>
           {icon}
           {label ? (
-            <Text weight="medium" heading size={14} style={{ color: variant === "primary" ? color.bg : variant === "ghost" ? color.accent : color.text }}>
+            <Text weight="medium" heading size={15} style={{ color: variant === "primary" ? color.bg : variant === "ghost" ? color.accent : color.text }}>
               {label}
             </Text>
           ) : null}

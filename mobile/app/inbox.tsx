@@ -34,10 +34,10 @@ export default function NotificationsScreen() {
       <Pressable onPress={() => toggleDigest(!eveningDigest)} accessibilityRole="switch" accessibilityState={{ checked: eveningDigest }}>
         <Card row style={{ alignItems: "center" }}>
           <View style={{ flex: 1 }}>
-            <Text size={14} weight="medium">
+            <Text size={15} weight="medium">
               Récap du soir
             </Text>
-            <Text size={11.5} tone="faint">
+            <Text size={11} tone="faint">
               Chaque soir à {DIGEST_HOUR} h, les tâches du lendemain.
             </Text>
           </View>
@@ -85,7 +85,7 @@ function NotificationGroup({
         <Pressable key={n.id} onPress={() => n.unread && onRead(n.id)}>
           <Card row style={{ alignItems: "center" }}>
             {n.unread && <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: color.accent }} />}
-            <Text size={13.5} style={{ flex: 1, marginLeft: n.unread ? space[2] : 0 }} tone={n.unread ? "text" : "muted"}>
+            <Text size={13} style={{ flex: 1, marginLeft: n.unread ? space[2] : 0 }} tone={n.unread ? "text" : "muted"}>
               {n.title}
             </Text>
           </Card>

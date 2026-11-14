@@ -18,6 +18,10 @@ const toneColor: Record<NonNullable<Props["tone"]>, string> = {
   danger: color.danger,
 };
 
+// Type scale (nominal sizes): 11 caption · 13 secondary · 15 body ·
+// 17 subtitle · 22 tab title · 28 big figures. Stick to these.
+export const TYPE = { caption: 11, small: 13, body: 15, subtitle: 17, title: 22, display: 28 } as const;
+
 // Every text in the app is drawn 10 % larger than its nominal size (rounded
 // to half a pixel), so screens keep their relative hierarchy.
 export const TYPE_SCALE = 1.1;
@@ -29,7 +33,7 @@ const weightFont: Record<NonNullable<Props["weight"]>, string> = {
   semibold: font.bodySemibold,
 };
 
-export function Text({ size = 14, weight = "regular", tone = "text", mono, heading, center, style, ...rest }: Props) {
+export function Text({ size = TYPE.body, weight = "regular", tone = "text", mono, heading, center, style, ...rest }: Props) {
   const s: TextStyle = {
     fontSize: scaled(size),
     color: toneColor[tone],

@@ -44,7 +44,7 @@ export default function ConstraintsOnboardingScreen() {
           <Text heading weight="semibold" size={22}>
             Vos plages protégées
           </Text>
-          <Text tone="muted" size={14}>
+          <Text tone="muted" size={15}>
             Passerelle évite de proposer des tâches pendant ces créneaux (format HH:MM).
           </Text>
         </View>

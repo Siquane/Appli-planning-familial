@@ -41,10 +41,10 @@ export default function RecurringTasksScreen() {
               <Card row style={{ alignItems: "center" }}>
                 <RecurringIcon size={13} color={color.accent400} />
                 <View style={{ flex: 1, marginLeft: space[2] }}>
-                  <Text size={14} weight="medium">
+                  <Text size={15} weight="medium">
                     {task.title}
                   </Text>
-                  <Text size={11.5} tone="faint">
+                  <Text size={11} tone="faint">
                     {WEEKDAYS_SHORT[task.weekday]} · {task.time} · {task.category}
                     {task.reminder ? " · Rappel" : ""}
                     {assignedNames.length > 0 ? ` · ${assignedNames.join(", ")}` : ""}

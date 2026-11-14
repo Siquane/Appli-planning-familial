@@ -103,7 +103,7 @@ export default function RecipeDetailScreen() {
               {recipe.ingredients.map((item, i) => (
                 <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
                   <BulletIcon size={8} color={color.accent400} />
-                  <Text size={14} style={{ flex: 1 }}>
+                  <Text size={15} style={{ flex: 1 }}>
                     {item}
                   </Text>
                 </View>
@@ -119,7 +119,7 @@ export default function RecipeDetailScreen() {
             </Text>
             <Card style={{ gap: space[2] }}>
               {recipe.steps.map((item, i) => (
-                <Text key={i} size={14}>
+                <Text key={i} size={15}>
                   {i + 1}. {item}
                 </Text>
               ))}
@@ -132,7 +132,7 @@ export default function RecipeDetailScreen() {
             <Text weight="medium" size={13} tone="muted">
               Notes
             </Text>
-            <Text size={14}>{recipe.notes}</Text>
+            <Text size={15}>{recipe.notes}</Text>
           </View>
         ) : null}
 
@@ -150,7 +150,7 @@ export default function RecipeDetailScreen() {
             />
           ))}
           {uploadAttachment.isPending ? (
-            <Text size={12} tone="muted">
+            <Text size={13} tone="muted">
               Envoi en cours…
             </Text>
           ) : (

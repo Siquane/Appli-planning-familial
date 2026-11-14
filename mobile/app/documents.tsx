@@ -42,10 +42,10 @@ export default function DocumentsScreen() {
         />
         {docLimit !== null && (
           <Pressable onPress={() => router.push("/premium")}>
-            <Text size={11.5} tone={full ? "accent" : "faint"} center>
+            <Text size={11} tone={full ? "accent" : "faint"} center>
               {plan!.documents.used} / {docLimit} documents gratuits
             </Text>
-            {full && <MoreLink label="Illimités avec une offre" size={11.5} center />}
+            {full && <MoreLink label="Illimités avec une offre" size={11} center />}
           </Pressable>
         )}
 

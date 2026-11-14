@@ -76,7 +76,7 @@ export default function HomeScreen() {
       )}
 
       <View style={{ gap: space[2] }}>
-        <Text weight="medium" size={14} tone="muted">
+        <Text weight="medium" size={15} tone="muted">
           {WEEKDAYS_FULL[selected]}
         </Text>
         {!isLoading && dayTasks.length === 0 && (

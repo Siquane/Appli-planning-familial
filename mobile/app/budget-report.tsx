@@ -46,7 +46,7 @@ export default function BudgetReportScreen() {
                   Budget+
                 </Text>
               </View>
-              <Text size={12} tone="muted">
+              <Text size={13} tone="muted">
                 Tes dépenses sur 6 mois en un coup d'œil, et ce qui a changé d'un mois à l'autre.
               </Text>
               <MoreLink label="Voir Budget+" />
@@ -85,7 +85,7 @@ export default function BudgetReportScreen() {
                     style={{ flex: 1, alignItems: "center", justifyContent: "flex-end", height: "100%" }}
                   >
                     {isSel && (
-                      <Text size={10.5} weight="medium" numberOfLines={1}>
+                      <Text size={11} weight="medium" numberOfLines={1}>
                         {formatEuros(m.totalCents).replace(/,\d\d /, " ")}
                       </Text>
                     )}
@@ -100,7 +100,7 @@ export default function BudgetReportScreen() {
                       }}
                     />
                     <View style={{ height: 1, alignSelf: "stretch", backgroundColor: color.divider }} />
-                    <Text size={10.5} tone={isSel ? "text" : "faint"} style={{ marginTop: 4 }}>
+                    <Text size={11} tone={isSel ? "text" : "faint"} style={{ marginTop: 4 }}>
                       {shortMonthLabel(m.month)}
                     </Text>
                   </Pressable>
@@ -112,14 +112,14 @@ export default function BudgetReportScreen() {
 
         {current && (
           <Card style={{ gap: space[1] }}>
-            <Text size={12} tone="muted" style={{ textTransform: "capitalize" }}>
+            <Text size={13} tone="muted" style={{ textTransform: "capitalize" }}>
               {monthLabel(current.month)}
             </Text>
-            <Text heading weight="semibold" size={24}>
+            <Text heading weight="semibold" size={22}>
               {formatEuros(current.totalCents)}
             </Text>
             {totalDelta !== null && previous!.totalCents > 0 && (
-              <Text size={12} tone={totalDelta > 0 ? "danger" : "accent"}>
+              <Text size={13} tone={totalDelta > 0 ? "danger" : "accent"}>
                 {totalDelta > 0 ? "▲" : "▼"} {formatEuros(Math.abs(totalDelta))} par rapport à {monthLabel(previous!.month)}
               </Text>
             )}
@@ -216,7 +216,7 @@ function ExportSection() {
           <Button label="CSV (tableur)" variant="secondary" style={{ flex: 1 }} onPress={() => onExport("csv")} loading={busy === "csv"} disabled={!!busy} />
           <Button label="PDF" variant="secondary" style={{ flex: 1 }} onPress={() => onExport("pdf")} loading={busy === "pdf"} disabled={!!busy} />
         </View>
-        <Text size={11.5} tone="faint">
+        <Text size={11} tone="faint">
           Pour les impôts, la CAF ou un dossier de prêt : le fichier s'ouvre dans le menu de partage du téléphone.
         </Text>
       </Card>
