@@ -6,7 +6,7 @@ import { Card } from "../src/components/Card";
 import { TopBar } from "../src/components/TopBar";
 import { Avatar } from "../src/components/Avatar";
 import { DateField } from "../src/components/DateField";
-import { GiftIcon } from "../src/components/icons";
+import { GiftIcon, PartyIcon } from "../src/components/icons";
 import { useMembers, useUpdateMember } from "../src/hooks/useApi";
 import { daysUntilBirthday } from "../src/lib/notifications";
 import { color, space } from "../src/theme/tokens";
@@ -17,7 +17,7 @@ function tintColors(m: Member) {
 }
 
 function daysLabel(days: number): string {
-  if (days === 0) return "Aujourd'hui 🎉";
+  if (days === 0) return "Aujourd'hui";
   if (days === 1) return "Demain";
   return `Dans ${days} jours`;
 }
@@ -60,9 +60,12 @@ export default function BirthdaysScreen() {
                   {member.name}
                 </Text>
                 {member.birthday && (
-                  <Text size={12} tone="accent" mono>
-                    {daysLabel(daysUntilBirthday(member.birthday))}
-                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: space[1] }}>
+                    <Text size={12} tone="accent" mono>
+                      {daysLabel(daysUntilBirthday(member.birthday))}
+                    </Text>
+                    {daysUntilBirthday(member.birthday) === 0 && <PartyIcon size={14} color={color.accent400} />}
+                  </View>
                 )}
               </View>
               <DateField

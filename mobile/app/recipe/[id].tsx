@@ -3,6 +3,7 @@ import * as WebBrowser from "expo-web-browser";
 import { router, useLocalSearchParams } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
+import { BulletIcon } from "../../src/components/icons";
 import { Card } from "../../src/components/Card";
 import { TopBar } from "../../src/components/TopBar";
 import { Avatar } from "../../src/components/Avatar";
@@ -100,9 +101,12 @@ export default function RecipeDetailScreen() {
             </Text>
             <Card style={{ gap: space[2] }}>
               {recipe.ingredients.map((item, i) => (
-                <Text key={i} size={14}>
-                  • {item}
-                </Text>
+                <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+                  <BulletIcon size={8} color={color.accent400} />
+                  <Text size={14} style={{ flex: 1 }}>
+                    {item}
+                  </Text>
+                </View>
               ))}
             </Card>
           </View>

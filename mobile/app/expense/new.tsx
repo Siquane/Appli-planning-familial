@@ -59,17 +59,18 @@ export default function ExpenseFormScreen() {
       // Premium: the server raises an alert at 80 % and 100 % of the cap.
       // Everyone else: the local check above, when the cap is crossed.
       const alert = res.alert;
-      useToastStore
-        .getState()
-        .show(
-          alert
-            ? alert.level === 100
-              ? `${saved} ⚠️ Plafond « ${alert.categoryName} » atteint : ${formatEuros(alert.totalCents)} sur ${formatEuros(alert.limitCents)}.`
-              : `${saved} « ${alert.categoryName} » à ${Math.floor((alert.totalCents * 100) / alert.limitCents)} % du plafond : ${formatEuros(alert.totalCents)} sur ${formatEuros(alert.limitCents)}.`
-            : crossed
-              ? `${saved} ⚠️ Plafond « ${categoryLabel(options, category)} » dépassé : ${formatEuros(crossed.totalCents)} / ${formatEuros(crossed.limitCents)}.`
-              : saved,
-        );
+      const warning =
+        alert?.level === 100
+          ? `Plafond « ${alert.categoryName} » atteint : ${formatEuros(alert.totalCents)} sur ${formatEuros(alert.limitCents)}.`
+          : !alert && crossed
+            ? `Plafond « ${categoryLabel(options, category)} » dépassé : ${formatEuros(crossed.totalCents)} / ${formatEuros(crossed.limitCents)}.`
+            : null;
+      if (warning) useToastStore.getState().show(`${saved} ${warning}`, "warning");
+      else if (alert)
+        useToastStore
+          .getState()
+          .show(`${saved} « ${alert.categoryName} » à ${Math.floor((alert.totalCents * 100) / alert.limitCents)} % du plafond : ${formatEuros(alert.totalCents)} sur ${formatEuros(alert.limitCents)}.`);
+      else useToastStore.getState().show(saved);
       router.back();
     } catch (e) {
       useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
@@ -104,7 +105,7 @@ export default function ExpenseFormScreen() {
         {existing?.recurringId && (
           <Card>
             <Text size={12} tone="muted">
-              Dépense récurrente : vos changements ne concernent que ce mois-ci. Pour tous les mois, passez par Budget → Réglages.
+              Dépense récurrente : vos changements ne concernent que ce mois-ci. Pour tous les mois, passez par les réglages du Budget.
             </Text>
           </Card>
         )}

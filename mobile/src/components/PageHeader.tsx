@@ -22,7 +22,7 @@ const iconButton = {
 // Top of each of the 4 tabs: the Passerelle arch and the tab's title, then
 // search, notifications (dot when unread) and the profile avatar — they used
 // to be tabs themselves. A gradient line across the whole screen closes the header.
-export function TabHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+export function TabHeader({ title, subtitle, subtitleIcon }: { title: string; subtitle?: string; subtitleIcon?: ReactNode }) {
   const user = useAuthStore((s) => s.user);
   const { data: notifications = [] } = useNotifications();
   const hasUnread = notifications.some((n) => n.unread);
@@ -40,9 +40,12 @@ export function TabHeader({ title, subtitle }: { title: string; subtitle?: strin
           </View>
         </View>
         {subtitle ? (
-          <Text size={12.5} tone="muted" numberOfLines={1}>
-            {subtitle}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Text size={12.5} tone="muted" numberOfLines={1} style={{ flexShrink: 1 }}>
+              {subtitle}
+            </Text>
+            {subtitleIcon}
+          </View>
         ) : null}
       </View>
       <Pressable onPress={() => router.push("/search")} accessibilityLabel="Rechercher" style={iconButton}>

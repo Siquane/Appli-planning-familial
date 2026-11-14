@@ -6,7 +6,7 @@ import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
 import { Button } from "../../src/components/Button";
 import { TabHeader } from "../../src/components/PageHeader";
-import { ChevronLeftIcon, ChevronRightIcon, RecurringIcon, WalletIcon } from "../../src/components/icons";
+import { ChartIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, RecurringIcon, SparkleIcon, TargetIcon, WalletIcon } from "../../src/components/icons";
 import { useExpenseCategories, useForecast, useMembers, useMonthlyBudget, usePlan } from "../../src/hooks/useApi";
 import { budgetToCsv, categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../../src/lib/money";
 import { color, radius, space } from "../../src/theme/tokens";
@@ -89,12 +89,32 @@ export default function BudgetScreen() {
         )}
 
         <View style={{ flexDirection: "row", gap: space[2] }}>
-          <Button label="+ Ajouter une dépense" variant="secondary" style={{ flex: 1 }} onPress={() => router.push(`/expense/new?month=${month}`)} />
+          <Button
+            label="Ajouter une dépense"
+            icon={<PlusIcon size={16} color={color.text} />}
+            variant="secondary"
+            style={{ flex: 1 }}
+            onPress={() => router.push(`/expense/new?month=${month}`)}
+          />
           <Button label="Réglages" variant="ghost" onPress={() => router.push("/budget-settings")} />
         </View>
         <View style={{ flexDirection: "row", gap: space[2] }}>
-          <Button label={premium ? "📈 Bilan & export" : "📈 Bilan & export ✨"} variant="secondary" style={{ flex: 1 }} onPress={() => router.push("/budget-report")} />
-          <Button label={premium ? "🎯 Épargne" : "🎯 Épargne ✨"} variant="secondary" style={{ flex: 1 }} onPress={() => router.push("/savings")} />
+          <Button
+            label="Bilan & export"
+            icon={<ChartIcon size={17} color={color.pillar3} />}
+            trailing={premium ? undefined : <SparkleIcon size={14} color={color.accent400} />}
+            variant="secondary"
+            style={{ flex: 1 }}
+            onPress={() => router.push("/budget-report")}
+          />
+          <Button
+            label="Épargne"
+            icon={<TargetIcon size={17} color={color.pillar3} />}
+            trailing={premium ? undefined : <SparkleIcon size={14} color={color.accent400} />}
+            variant="secondary"
+            style={{ flex: 1 }}
+            onPress={() => router.push("/savings")}
+          />
         </View>
 
         {expenses.length > 0 && (

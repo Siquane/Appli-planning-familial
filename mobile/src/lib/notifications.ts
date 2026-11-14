@@ -144,7 +144,7 @@ export async function syncBirthdayReminders(members: Member[]): Promise<void> {
       await Notifications.cancelScheduledNotificationAsync(identifier).catch(() => {});
       await Notifications.scheduleNotificationAsync({
         identifier,
-        content: { title: "🎂 Anniversaire", body: `C'est l'anniversaire de ${member.name} aujourd'hui !` },
+        content: { title: "Anniversaire", body: `C'est l'anniversaire de ${member.name} aujourd'hui !` },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
       });
     })

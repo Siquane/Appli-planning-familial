@@ -9,7 +9,7 @@ import { Button } from "../src/components/Button";
 import { TextField } from "../src/components/TextField";
 import { updateName } from "../src/lib/account";
 import { Avatar } from "../src/components/Avatar";
-import { CalendarIcon, ChevronRightIcon, RecurringIcon } from "../src/components/icons";
+import { CalendarIcon, ChevronRightIcon, RecurringIcon, SparkleIcon } from "../src/components/icons";
 import { useCalendarStatus, useDisconnectCalendar, usePlan } from "../src/hooks/useApi";
 import { useAuthStore } from "../src/state/authStore";
 import { useToastStore } from "../src/state/toastStore";
@@ -170,7 +170,7 @@ export default function ProfileScreen() {
 
       <Pressable onPress={() => router.push("/premium")}>
         <Card row style={{ alignItems: "center" }}>
-          <Text size={16}>✨</Text>
+          <SparkleIcon size={20} color={color.accent400} />
           <Text size={14} style={{ flex: 1, marginLeft: space[2] }}>
             {packLabel}
           </Text>

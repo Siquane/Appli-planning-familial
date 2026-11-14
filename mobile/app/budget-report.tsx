@@ -3,6 +3,8 @@ import { Pressable, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../src/components/Screen";
 import { Text } from "../src/components/Text";
+import { PiggyBankIcon } from "../src/components/icons";
+import { MoreLink } from "../src/components/MoreLink";
 import { Card } from "../src/components/Card";
 import { TopBar } from "../src/components/TopBar";
 import { useBudgetReport, useExpenseCategories, usePlan } from "../src/hooks/useApi";
@@ -36,13 +38,17 @@ export default function BudgetReportScreen() {
         <TopBar title="Bilan du budget" onBack={() => router.back()} />
         <View style={{ padding: 18 }}>
           <Pressable onPress={() => router.push("/premium")}>
-            <Card>
-              <Text size={13} weight="medium">
-                Budget+ ✨
-              </Text>
+            <Card style={{ gap: space[1] }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+                <PiggyBankIcon size={22} color={color.pillar3} />
+                <Text size={13} weight="medium">
+                  Budget+
+                </Text>
+              </View>
               <Text size={12} tone="muted">
-                Tes dépenses sur 6 mois en un coup d'œil, et ce qui a changé d'un mois à l'autre. Voir Budget+ ›
+                Tes dépenses sur 6 mois en un coup d'œil, et ce qui a changé d'un mois à l'autre.
               </Text>
+              <MoreLink label="Voir Budget+" />
             </Card>
           </Pressable>
         </View>
