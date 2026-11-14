@@ -10,7 +10,7 @@ import { GradientFill } from "./Brand";
 
 // The 4 pillars of Passerelle, two on each side of the « + ».
 // Each has its logo colour (cyan → violet); the active one lights up with a
-// neon halo and a glowing dot underneath.
+// neon halo and a small glowing ring underneath.
 const TABS: Record<string, { label: string; tint: string; Icon: (props: { size: number; color: string }) => React.JSX.Element }> = {
   home: { label: "Planning", tint: color.pillar1, Icon: CalendarIcon },
   repas: { label: "Repas", tint: color.pillar2, Icon: MealIcon },
@@ -54,13 +54,14 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
         <Text size={10.5} style={{ color: tint }}>
           {label}
         </Text>
-        {/* Glowing dot under the active tab, so it doesn't rely on colour alone. */}
+        {/* A small glowing ring under the active tab, like the logo's rings, so it doesn't rely on colour alone. */}
         <View
           style={{
-            width: 5,
-            height: 5,
-            borderRadius: 2.5,
-            backgroundColor: isFocused ? pillar : "transparent",
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            borderWidth: 1.5,
+            borderColor: isFocused ? pillar : "transparent",
             boxShadow: isFocused ? glow(pillar, 6) : undefined,
           }}
         />
