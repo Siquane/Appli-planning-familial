@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Pressable } from "../src/components/Touchable";
 import { ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../src/components/Screen";
@@ -11,9 +12,9 @@ import { DocumentRow } from "../src/components/DocumentRow";
 import { DocumentIcon, PlusIcon } from "../src/components/icons";
 import { MoreLink } from "../src/components/MoreLink";
 import { useDocuments, useMembers, usePlan } from "../src/hooks/useApi";
-import { Pressable } from "react-native";
+
 import { categoryLabel, DOCUMENT_CATEGORIES } from "../src/lib/documentUpload";
-import { color, space } from "../src/theme/tokens";
+import { color, space, gutter } from "../src/theme/tokens";
 import type { DocumentCategory } from "../src/api/types";
 
 export default function DocumentsScreen() {
@@ -31,7 +32,7 @@ export default function DocumentsScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Documents" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 22, gap: space[2] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: gutter, gap: space.sm }} showsVerticalScrollIndicator={false}>
         <Button
           label={full ? "Ajouter un document · Passerelle+" : "Ajouter un document"}
           icon={<PlusIcon size={18} color={color.text} />}
@@ -41,14 +42,14 @@ export default function DocumentsScreen() {
         />
         {docLimit !== null && (
           <Pressable onPress={() => router.push("/premium")}>
-            <Text size={11.5} tone={full ? "accent" : "faint"} center>
+            <Text size={11} tone={full ? "accent" : "faint"} center>
               {plan!.documents.used} / {docLimit} documents gratuits
             </Text>
-            {full && <MoreLink label="Illimités avec une offre" size={11.5} center />}
+            {full && <MoreLink label="Illimités avec une offre" size={11} center />}
           </Pressable>
         )}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2], paddingVertical: space[1] }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.sm, paddingVertical: space.xs }}>
           <Chip label="Tous" size="sm" selected={category === null} onPress={() => setCategory(null)} />
           {DOCUMENT_CATEGORIES.map((c) => (
             <Chip key={c.value} label={c.label} size="sm" selected={category === c.value} onPress={() => setCategory(category === c.value ? null : c.value)} />
@@ -56,7 +57,7 @@ export default function DocumentsScreen() {
         </ScrollView>
 
         {members.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2], paddingBottom: space[1] }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.sm, paddingBottom: space.xs }}>
             <Chip label="Toute la famille" size="sm" selected={memberId === null} onPress={() => setMemberId(null)} />
             {members.map((m) => (
               <Chip key={m.id} label={m.name} size="sm" selected={memberId === m.id} onPress={() => setMemberId(memberId === m.id ? null : m.id)} />
@@ -65,9 +66,9 @@ export default function DocumentsScreen() {
         )}
 
         {!isLoading && visible.length === 0 && (
-          <Card style={{ alignItems: "center", paddingVertical: space[8] }}>
+          <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
             <DocumentIcon size={22} color={color.neutral600} />
-            <Text tone="muted" size={13} center style={{ marginTop: space[2] }}>
+            <Text tone="muted" size={13} center style={{ marginTop: space.sm }}>
               {filtered ? "Aucun document pour ce filtre." : "Aucun document pour l'instant.\nOrdonnances, assurances, papiers de l'école…"}
             </Text>
           </Card>
@@ -80,7 +81,7 @@ export default function DocumentsScreen() {
           return <DocumentRow key={doc.id} doc={doc} subtitle={subtitle} onPress={() => router.push(`/document/${doc.id}`)} />;
         })}
 
-        <View style={{ height: space[4] }} />
+        <View style={{ height: space.md }} />
       </ScrollView>
     </Screen>
   );

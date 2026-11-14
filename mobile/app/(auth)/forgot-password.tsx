@@ -8,6 +8,7 @@ import { Button } from "../../src/components/Button";
 import { useAuthStore } from "../../src/state/authStore";
 import { useSlowHint } from "../../src/hooks/useSlowHint";
 import { space } from "../../src/theme/tokens";
+import { errorText } from "../../src/lib/errors";
 
 export default function ForgotPasswordScreen() {
   const params = useLocalSearchParams<{ email?: string }>();
@@ -29,7 +30,7 @@ export default function ForgotPasswordScreen() {
     try {
       await action();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Une erreur est survenue");
+      setError(errorText(e, "envoyer la demande"));
     } finally {
       setLoading(false);
     }
@@ -49,19 +50,19 @@ export default function ForgotPasswordScreen() {
     });
 
   return (
-    <Screen keyboard style={{ justifyContent: "center", gap: space[6] }}>
-      <View style={{ gap: 4 }}>
-        <Text heading weight="semibold" size={26}>
+    <Screen keyboard style={{ justifyContent: "center", gap: space.lg }}>
+      <View style={{ gap: space.xs }}>
+        <Text heading weight="semibold" size={28}>
           Mot de passe oublié
         </Text>
-        <Text tone="muted" size={14}>
+        <Text tone="muted" size={15}>
           {step === "email" ? "Indique ton e-mail, on t'envoie un code." : info}
         </Text>
       </View>
 
-      <View style={{ gap: space[3] }}>
+      <View style={{ gap: space.sm }}>
         {step === "email" ? (
-          <TextField label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="vous@exemple.fr" />
+          <TextField label="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="toi@exemple.fr" />
         ) : (
           <>
             <TextField

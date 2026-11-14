@@ -13,7 +13,8 @@ import { TopBar } from "../../src/components/TopBar";
 import { useCreateExpense, useDeleteExpense, useExpenseCategories, useMembers, useMonthlyBudget, useUpdateExpense } from "../../src/hooks/useApi";
 import { capCrossed, categoryLabel, centsToInput, currentMonth, formatEuros, fromDayString, parseAmount, toDayString } from "../../src/lib/money";
 import { useToastStore } from "../../src/state/toastStore";
-import { space } from "../../src/theme/tokens";
+import { space, gutter } from "../../src/theme/tokens";
+import { errorText } from "../../src/lib/errors";
 
 // New expense, or edit/delete with ?edit=<id>&month=<YYYY-MM> (the month the
 // expense was listed under, so it can be found in that month's cache).
@@ -73,7 +74,7 @@ export default function ExpenseFormScreen() {
       else useToastStore.getState().show(saved);
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "enregistrer la dépense"));
     }
   }
 
@@ -101,11 +102,11 @@ export default function ExpenseFormScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier la dépense" : "Nouvelle dépense"} onBack={() => router.back()} onDelete={existing ? onDelete : undefined} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {existing?.recurringId && (
           <Card>
-            <Text size={12} tone="muted">
-              Dépense récurrente : vos changements ne concernent que ce mois-ci. Pour tous les mois, passez par les réglages du Budget.
+            <Text size={13} tone="muted">
+              Dépense récurrente : tes changements ne concernent que ce mois-ci. Pour tous les mois, passe par les réglages du Budget.
             </Text>
           </Card>
         )}
@@ -123,7 +124,7 @@ export default function ExpenseFormScreen() {
         <DateField label="Date" value={date} onChange={setDate} />
 
         {!isValid && (
-          <Text tone="muted" size={12} center>
+          <Text tone="muted" size={13} center>
             {amount && amountCents === null ? "Montant invalide (ex. 42,50)." : "Un montant et un libellé sont nécessaires."}
           </Text>
         )}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Pressable } from "../../src/components/Touchable";
 import { View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../../src/components/Screen";
@@ -9,7 +10,7 @@ import { Card } from "../../src/components/Card";
 import { StepDots } from "../../src/components/StepDots";
 import { Avatar } from "../../src/components/Avatar";
 import { TrashIcon } from "../../src/components/icons";
-import { Pressable } from "react-native";
+
 import { useCreateMember, useDeleteMember, useMembers } from "../../src/hooks/useApi";
 import { color, space } from "../../src/theme/tokens";
 import type { Tint } from "../../src/api/types";
@@ -37,30 +38,30 @@ export default function MembersOnboardingScreen() {
 
   return (
     <Screen keyboard style={{ justifyContent: "space-between", flexGrow: 1 }}>
-      <View style={{ gap: space[6] }}>
-        <View style={{ gap: 4 }}>
+      <View style={{ gap: space.lg }}>
+        <View style={{ gap: space.xs }}>
           <Text heading weight="semibold" size={22}>
             Qui compose la famille ?
           </Text>
-          <Text tone="muted" size={14}>
-            Ajoutez chaque membre — vous pourrez leur assigner des tâches ensuite.
+          <Text tone="muted" size={15}>
+            Ajoute chaque membre : tu pourras ensuite leur attribuer des tâches.
           </Text>
         </View>
 
-        <View style={{ flexDirection: "row", gap: space[2] }}>
+        <View style={{ flexDirection: "row", gap: space.sm }}>
           <View style={{ flex: 1 }}>
             <TextField value={name} onChangeText={setName} placeholder="Prénom" onSubmitEditing={addMember} returnKeyType="done" />
           </View>
           <Button label="Ajouter" variant="secondary" onPress={addMember} disabled={!name.trim()} />
         </View>
 
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           {members.map((m) => {
             const t = TINTS.find((x) => x.tint === m.tint) ?? TINTS[0];
             return (
               <Card key={m.id} row style={{ alignItems: "center" }}>
                 <Avatar initials={m.initials} bg={t.bg} fg={t.fg} size={32} />
-                <Text weight="medium" size={14} style={{ flex: 1, marginLeft: space[2] }}>
+                <Text weight="medium" size={15} style={{ flex: 1, marginLeft: space.sm }}>
                   {m.name}
                 </Text>
                 <Pressable onPress={() => deleteMember.mutate(m.id)} accessibilityLabel={`Supprimer ${m.name}`}>
@@ -72,7 +73,7 @@ export default function MembersOnboardingScreen() {
         </View>
       </View>
 
-      <View style={{ gap: space[4], alignItems: "center" }}>
+      <View style={{ gap: space.md, alignItems: "center" }}>
         <StepDots step={1} total={5} />
         <Button label="Continuer" variant="primary" block onPress={() => router.push("/(onboarding)/constraints")} disabled={members.length === 0} />
       </View>

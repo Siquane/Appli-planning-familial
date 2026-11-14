@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import { useAuthStore } from "../state/authStore";
+import { OFFLINE_MESSAGE, statusMessage } from "../lib/errors";
 
 // EXPO_PUBLIC_API_URL lets a real device/dev-build point at a LAN IP; the
 // Android emulator can't reach the host via "localhost" so it gets the
@@ -31,7 +32,13 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
   };
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  } catch {
+    // No answer at all (offline, server asleep): say so instead of « Network request failed ».
+    throw new ApiError(0, OFFLINE_MESSAGE);
+  }
 
   if (res.status === 401 && !accessToken && !useAuthStore.getState().refreshToken) {
     // No session at all: sign out so the app returns to the login screen.
@@ -43,13 +50,13 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
     const refreshed = await useAuthStore.getState().refresh();
     if (refreshed) return request<T>(path, options, false);
     useAuthStore.getState().signOut();
-    throw new ApiError(401, "Session expirée");
+    throw new ApiError(401, statusMessage(401));
   }
 
   if (res.status === 204) return undefined as T;
 
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, body.error ?? "Une erreur est survenue", typeof body.code === "string" ? body.code : undefined);
+  if (!res.ok) throw new ApiError(res.status, body.error ?? statusMessage(res.status), typeof body.code === "string" ? body.code : undefined);
   return body as T;
 }
 

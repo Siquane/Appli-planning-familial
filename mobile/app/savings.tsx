@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import { Pressable } from "../src/components/Touchable";
+import { Alert, View } from "react-native";
 import { router } from "expo-router";
 import { KeyboardScrollView } from "../src/components/KeyboardScrollView";
 import { Screen } from "../src/components/Screen";
@@ -15,7 +16,7 @@ import { useCreateSavingsGoal, useDeleteSavingsGoal, usePaySavingsGoal, usePlan,
 import { formatEuros, monthsLeft, parseAmount, toDayString } from "../src/lib/money";
 import { hasBudgetPack, showApiError } from "../src/lib/premium";
 import { useToastStore } from "../src/state/toastStore";
-import { color, radius, space } from "../src/theme/tokens";
+import { color, radius, space, gutter } from "../src/theme/tokens";
 import type { SavingsGoal } from "../src/api/types";
 
 // Premium: savings goals. A payment is an « Épargne » expense linked to the
@@ -48,17 +49,17 @@ export default function SavingsScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Objectifs d'épargne" onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         {!premium && (
           <Pressable onPress={() => router.push("/premium")}>
-            <Card style={{ gap: space[1] }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+            <Card style={{ gap: space.xs }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
                 <PiggyBankIcon size={22} color={color.pillar3} />
                 <Text size={13} weight="medium">
                   Budget+
                 </Text>
               </View>
-              <Text size={12} tone="muted">
+              <Text size={13} tone="muted">
                 Mets de côté pour les vacances, Noël ou la voiture, et regarde la jauge se remplir.
               </Text>
               <MoreLink label="Voir Budget+" />
@@ -76,7 +77,7 @@ export default function SavingsScreen() {
           </Text>
         )}
 
-        <View style={{ gap: space[3] }}>
+        <View style={{ gap: space.sm }}>
           <Text size={13} tone="muted" weight="medium">
             Nouvel objectif
           </Text>
@@ -127,7 +128,7 @@ function GoalCard({ goal, premium }: { goal: SavingsGoal; premium: boolean }) {
   }
 
   return (
-    <Card style={{ gap: space[2] }}>
+    <Card style={{ gap: space.sm }}>
       <View style={{ flexDirection: "row", alignItems: "center" }}>
         <Text size={15} weight="medium" style={{ flex: 1 }}>
           {goal.name}
@@ -146,19 +147,19 @@ function GoalCard({ goal, premium }: { goal: SavingsGoal; premium: boolean }) {
         <View style={{ height: 8, borderRadius: radius.sm, backgroundColor: color.accent400, width: `${ratio * 100}%` }} />
       </View>
       {reached ? (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: space[1] }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
           <PartyIcon size={16} color={color.accent400} />
-          <Text size={12} tone="accent">
+          <Text size={13} tone="accent">
             Objectif atteint !
           </Text>
         </View>
       ) : (
-        <Text size={12} tone="faint">
+        <Text size={13} tone="faint">
           {months ? `Encore ${formatEuros(left)} · environ ${formatEuros(Math.ceil(left / months))} par mois` : `Encore ${formatEuros(left)}`}
         </Text>
       )}
       {premium && !reached && (
-        <View style={{ flexDirection: "row", gap: space[2], alignItems: "flex-end" }}>
+        <View style={{ flexDirection: "row", gap: space.sm, alignItems: "flex-end" }}>
           <View style={{ flex: 1 }}>
             <TextField value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder="Montant versé (€)" />
           </View>

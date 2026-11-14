@@ -39,21 +39,21 @@ export default function ConstraintsOnboardingScreen() {
 
   return (
     <Screen keyboard style={{ justifyContent: "space-between", flexGrow: 1 }}>
-      <View style={{ gap: space[6] }}>
-        <View style={{ gap: 4 }}>
+      <View style={{ gap: space.lg }}>
+        <View style={{ gap: space.xs }}>
           <Text heading weight="semibold" size={22}>
             Vos plages protégées
           </Text>
-          <Text tone="muted" size={14}>
+          <Text tone="muted" size={15}>
             Passerelle évite de proposer des tâches pendant ces créneaux (format HH:MM).
           </Text>
         </View>
 
-        <View style={{ gap: space[3] }}>
+        <View style={{ gap: space.sm }}>
           <Text weight="medium" size={13} tone="muted">
             Sommeil
           </Text>
-          <View style={{ flexDirection: "row", gap: space[2] }}>
+          <View style={{ flexDirection: "row", gap: space.sm }}>
             <View style={{ flex: 1 }}>
               <TextField label="Début" value={sleepStart} onChangeText={setSleepStart} placeholder="21:00" />
             </View>
@@ -65,7 +65,7 @@ export default function ConstraintsOnboardingScreen() {
           <Text weight="medium" size={13} tone="muted">
             Pause déjeuner
           </Text>
-          <View style={{ flexDirection: "row", gap: space[2] }}>
+          <View style={{ flexDirection: "row", gap: space.sm }}>
             <View style={{ flex: 1 }}>
               <TextField label="Début" value={lunchStart} onChangeText={setLunchStart} placeholder="12:00" />
             </View>
@@ -77,7 +77,7 @@ export default function ConstraintsOnboardingScreen() {
           <Text weight="medium" size={13} tone="muted">
             Ne pas déranger
           </Text>
-          <View style={{ flexDirection: "row", gap: space[2] }}>
+          <View style={{ flexDirection: "row", gap: space.sm }}>
             <View style={{ flex: 1 }}>
               <TextField label="Début" value={dndStart} onChangeText={setDndStart} placeholder="20:00" />
             </View>
@@ -88,7 +88,7 @@ export default function ConstraintsOnboardingScreen() {
         </View>
       </View>
 
-      <View style={{ gap: space[4], alignItems: "center" }}>
+      <View style={{ gap: space.md, alignItems: "center" }}>
         <StepDots step={2} total={5} />
         <Button label="Continuer" variant="primary" block onPress={onContinue} loading={updateConstraints.isPending} />
       </View>

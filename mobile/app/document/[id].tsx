@@ -10,7 +10,7 @@ import { DocumentIcon } from "../../src/components/icons";
 import { useDeleteDocument, useDocuments, useMembers } from "../../src/hooks/useApi";
 import { categoryLabel, formatSize, isImage } from "../../src/lib/documentUpload";
 import { useToastStore } from "../../src/state/toastStore";
-import { color, radius, space } from "../../src/theme/tokens";
+import { color, radius, space, gutter } from "../../src/theme/tokens";
 
 export default function DocumentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,7 +23,7 @@ export default function DocumentDetailScreen() {
     return (
       <Screen scroll={false}>
         <TopBar title="Document" onBack={() => router.back()} />
-        <Text tone="muted" style={{ padding: 22 }}>
+        <Text tone="muted" style={{ padding: gutter }}>
           Ce document n'existe plus.
         </Text>
       </Screen>
@@ -53,13 +53,13 @@ export default function DocumentDetailScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={doc.title} onBack={() => router.back()} onEdit={() => router.push(`/document/new?edit=${doc.id}`)} onDelete={onDelete} />
-      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         {isImage(doc) && doc.url ? (
           <Image source={{ uri: doc.url }} resizeMode="contain" style={{ width: "100%", aspectRatio: 3 / 4, borderRadius: radius.md, backgroundColor: color.surface }} />
         ) : (
-          <Card style={{ alignItems: "center", paddingVertical: space[8] }}>
+          <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
             <DocumentIcon size={32} color={color.accent400} />
-            <Text size={13} tone="muted" style={{ marginTop: space[2] }}>
+            <Text size={13} tone="muted" style={{ marginTop: space.sm }}>
               {doc.fileName}
             </Text>
           </Card>
@@ -67,7 +67,7 @@ export default function DocumentDetailScreen() {
 
         {doc.url && <Button label="Ouvrir le fichier" variant="primary" block onPress={() => WebBrowser.openBrowserAsync(doc.url!)} />}
 
-        <Card style={{ gap: space[2] }}>
+        <Card style={{ gap: space.sm }}>
           <Row label="Catégorie" value={categoryLabel(doc.category)} />
           {member && <Row label="Concerne" value={member.name} />}
           <Row label="Ajouté le" value={new Date(doc.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} />

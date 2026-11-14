@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { Text } from "./Text";
-import { color, radius } from "../theme/tokens";
+import { color, radius, space } from "../theme/tokens";
 
 type Variant = "accent" | "neutral" | "outline";
 
@@ -18,7 +18,7 @@ export function Tag({ label, variant = "outline", tint }: { label: string; varia
     <View
       style={{
         paddingVertical: 3,
-        paddingHorizontal: 10,
+        paddingHorizontal: space.md,
         borderRadius: radius.md * 0.75,
         backgroundColor: v.bg,
         borderWidth: v.border ? 1 : 0,

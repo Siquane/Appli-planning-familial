@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable } from "./Touchable";
+import { View } from "react-native";
 import { Card } from "./Card";
 import { Text } from "./Text";
 import { ChevronRightIcon } from "./icons";
@@ -18,13 +19,13 @@ interface Props {
 export function Accordion({ title, summary, icon, defaultOpen = false, children }: Props) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <Card style={{ gap: space[4] }}>
+    <Card style={{ gap: space.md }}>
       <Pressable
         onPress={() => setOpen((o) => !o)}
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
         accessibilityLabel={`${title}, ${open ? "replier" : "déplier"}`}
-        style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}
+        style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}
       >
         {icon}
         <View style={{ flex: 1, gap: 2 }}>
@@ -32,7 +33,7 @@ export function Accordion({ title, summary, icon, defaultOpen = false, children 
             {title}
           </Text>
           {!open && summary ? (
-            <Text size={12} tone="faint">
+            <Text size={13} tone="faint">
               {summary}
             </Text>
           ) : null}
@@ -41,7 +42,7 @@ export function Accordion({ title, summary, icon, defaultOpen = false, children 
           <ChevronRightIcon size={14} color={color.neutral500} />
         </View>
       </Pressable>
-      {open ? <View style={{ gap: space[4] }}>{children}</View> : null}
+      {open ? <View style={{ gap: space.md }}>{children}</View> : null}
     </Card>
   );
 }

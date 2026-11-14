@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable } from "../components/Touchable";
+import { View } from "react-native";
 import { router } from "expo-router";
 import { Text } from "../components/Text";
 import { Card } from "../components/Card";
@@ -21,11 +22,11 @@ export function MealsBody() {
   const { data: recipes = [] } = useRecipes();
 
   return (
-      <View style={{ gap: space[4] }}>
+      <View style={{ gap: space.md }}>
         <Button label="Générer mes menus" icon={<SparkleIcon size={18} color={color.bg} />} variant="primary" block onPress={() => router.push("/meal/plan")} />
         <WeekStrip selected={selected} onSelect={setSelected} today={today} />
 
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           {MEAL_TYPES.map((type) => {
             const meal = meals.find((m) => m.weekday === selected && m.type === type);
             const recipe = meal?.recipeId ? recipes.find((r) => r.id === meal.recipeId) : undefined;
@@ -37,10 +38,10 @@ export function MealsBody() {
               >
                 <Card row style={{ alignItems: "center" }}>
                   <View style={{ flex: 1 }}>
-                    <Text size={11.5} tone="faint" style={{ textTransform: "capitalize" }}>
+                    <Text size={11} tone="faint" style={{ textTransform: "capitalize" }}>
                       {type}
                     </Text>
-                    <Text size={14} weight="medium" tone={label ? "text" : "muted"}>
+                    <Text size={15} weight="medium" tone={label ? "text" : "muted"}>
                       {label ?? "Ajouter un repas"}
                     </Text>
                   </View>

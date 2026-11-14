@@ -1,4 +1,5 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
+import { Pressable } from "./Touchable";
 import { router } from "expo-router";
 import { Card } from "./Card";
 import { Text } from "./Text";
@@ -21,7 +22,7 @@ export function TodayCard() {
   const lines = todayLines(s);
 
   return (
-    <Card style={{ gap: space[4], paddingVertical: space[6] }}>
+    <Card style={{ gap: space.md, paddingVertical: space.lg }}>
       <Text weight="medium" size={13} tone="muted">
         Aujourd'hui
       </Text>
@@ -34,9 +35,9 @@ export function TodayCard() {
 
 function Line({ icon, text, onPress, danger }: { icon: React.ReactNode; text: string; onPress?: () => void; danger?: boolean }) {
   const content = (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
       {icon}
-      <Text size={13.5} tone={danger ? "danger" : "text"} style={{ flex: 1 }} numberOfLines={1}>
+      <Text size={13} tone={danger ? "danger" : "text"} style={{ flex: 1 }} numberOfLines={1}>
         {text}
       </Text>
     </View>

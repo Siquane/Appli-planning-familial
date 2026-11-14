@@ -170,7 +170,7 @@ documentsRouter.post("/:id/confirm", async (req, res) => {
 
   if (existing.status !== "ready") {
     const size = await storage.size(existing.fileKey);
-    if (size === null) return res.status(400).json({ error: "Le fichier n'a pas été reçu. Réessayez l'envoi." });
+    if (size === null) return res.status(400).json({ error: "Le fichier n'a pas été reçu. Réessaie l'envoi." });
     if (size > MAX_FILE_SIZE) {
       await removeObjects([existing.fileKey]);
       await prisma.document.delete({ where: { id: existing.id } });

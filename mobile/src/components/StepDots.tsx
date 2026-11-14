@@ -1,9 +1,9 @@
 import { View } from "react-native";
-import { color } from "../theme/tokens";
+import { color, space } from "../theme/tokens";
 
 export function StepDots({ step, total }: { step: number; total: number }) {
   return (
-    <View style={{ flexDirection: "row", gap: 6 }}>
+    <View style={{ flexDirection: "row", gap: space.sm }}>
       {Array.from({ length: total }).map((_, i) => (
         <View
           key={i}

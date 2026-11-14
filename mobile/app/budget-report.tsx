@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable } from "../src/components/Touchable";
+import { ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../src/components/Screen";
 import { Text } from "../src/components/Text";
@@ -15,7 +16,7 @@ import { Chip } from "../src/components/Chip";
 import { Button } from "../src/components/Button";
 import { EXPORT_PERIODS, exportExpenses, type ExportFormat, type ExportPeriod } from "../src/lib/exportExpenses";
 import { useToastStore } from "../src/state/toastStore";
-import { color, radius, space } from "../src/theme/tokens";
+import { color, radius, space, gutter } from "../src/theme/tokens";
 
 const CHART_HEIGHT = 140;
 
@@ -36,16 +37,16 @@ export default function BudgetReportScreen() {
     return (
       <Screen scroll={false} padded={false}>
         <TopBar title="Bilan du budget" onBack={() => router.back()} />
-        <View style={{ padding: 22 }}>
+        <View style={{ padding: gutter }}>
           <Pressable onPress={() => router.push("/premium")}>
-            <Card style={{ gap: space[1] }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+            <Card style={{ gap: space.xs }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
                 <PiggyBankIcon size={22} color={color.pillar3} />
                 <Text size={13} weight="medium">
                   Budget+
                 </Text>
               </View>
-              <Text size={12} tone="muted">
+              <Text size={13} tone="muted">
                 Tes dépenses sur 6 mois en un coup d'œil, et ce qui a changé d'un mois à l'autre.
               </Text>
               <MoreLink label="Voir Budget+" />
@@ -65,8 +66,8 @@ export default function BudgetReportScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Bilan du budget" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
-        <Card style={{ gap: space[3] }}>
+      <ScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
+        <Card style={{ gap: space.sm }}>
           <Text size={13} tone="muted">
             Dépenses par mois
           </Text>
@@ -84,7 +85,7 @@ export default function BudgetReportScreen() {
                     style={{ flex: 1, alignItems: "center", justifyContent: "flex-end", height: "100%" }}
                   >
                     {isSel && (
-                      <Text size={10.5} weight="medium" numberOfLines={1}>
+                      <Text size={11} weight="medium" numberOfLines={1}>
                         {formatEuros(m.totalCents).replace(/,\d\d /, " ")}
                       </Text>
                     )}
@@ -92,14 +93,14 @@ export default function BudgetReportScreen() {
                       style={{
                         width: "62%",
                         height: h,
-                        marginTop: 4,
+                        marginTop: space.xs,
                         borderTopLeftRadius: 4,
                         borderTopRightRadius: 4,
                         backgroundColor: isSel ? color.accent400 : color.neutral600,
                       }}
                     />
                     <View style={{ height: 1, alignSelf: "stretch", backgroundColor: color.divider }} />
-                    <Text size={10.5} tone={isSel ? "text" : "faint"} style={{ marginTop: 4 }}>
+                    <Text size={11} tone={isSel ? "text" : "faint"} style={{ marginTop: space.xs }}>
                       {shortMonthLabel(m.month)}
                     </Text>
                   </Pressable>
@@ -110,15 +111,15 @@ export default function BudgetReportScreen() {
         </Card>
 
         {current && (
-          <Card style={{ gap: space[1] }}>
-            <Text size={12} tone="muted" style={{ textTransform: "capitalize" }}>
+          <Card style={{ gap: space.xs }}>
+            <Text size={13} tone="muted" style={{ textTransform: "capitalize" }}>
               {monthLabel(current.month)}
             </Text>
-            <Text heading weight="semibold" size={24}>
+            <Text heading weight="semibold" size={22}>
               {formatEuros(current.totalCents)}
             </Text>
             {totalDelta !== null && previous!.totalCents > 0 && (
-              <Text size={12} tone={totalDelta > 0 ? "danger" : "accent"}>
+              <Text size={13} tone={totalDelta > 0 ? "danger" : "accent"}>
                 {totalDelta > 0 ? "▲" : "▼"} {formatEuros(Math.abs(totalDelta))} par rapport à {monthLabel(previous!.month)}
               </Text>
             )}
@@ -126,11 +127,11 @@ export default function BudgetReportScreen() {
         )}
 
         {changes.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Ce qui a le plus changé
             </Text>
-            <Card style={{ gap: space[3] }}>
+            <Card style={{ gap: space.sm }}>
               {changes.map((c) => (
                 <View key={c.category} style={{ flexDirection: "row", alignItems: "center" }}>
                   <Text size={13} style={{ flex: 1 }}>
@@ -148,13 +149,13 @@ export default function BudgetReportScreen() {
         )}
 
         {current && current.byCategory.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Répartition du mois
             </Text>
-            <Card style={{ gap: space[3] }}>
+            <Card style={{ gap: space.sm }}>
               {current.byCategory.map((c) => (
-                <View key={c.category} style={{ gap: space[1] }}>
+                <View key={c.category} style={{ gap: space.xs }}>
                   <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                     <Text size={13}>{categoryLabel(options, c.category)}</Text>
                     <Text size={13} weight="medium">
@@ -201,21 +202,21 @@ function ExportSection() {
   }
 
   return (
-    <View style={{ gap: space[2] }}>
+    <View style={{ gap: space.sm }}>
       <Text weight="medium" size={13} tone="muted">
         Exporter les dépenses
       </Text>
-      <Card style={{ gap: space[3] }}>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+      <Card style={{ gap: space.sm }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
           {EXPORT_PERIODS.map((p) => (
             <Chip key={p.id} label={p.label} size="sm" selected={period === p.id} onPress={() => setPeriod(p.id)} />
           ))}
         </View>
-        <View style={{ flexDirection: "row", gap: space[2] }}>
+        <View style={{ flexDirection: "row", gap: space.sm }}>
           <Button label="CSV (tableur)" variant="secondary" style={{ flex: 1 }} onPress={() => onExport("csv")} loading={busy === "csv"} disabled={!!busy} />
           <Button label="PDF" variant="secondary" style={{ flex: 1 }} onPress={() => onExport("pdf")} loading={busy === "pdf"} disabled={!!busy} />
         </View>
-        <Text size={11.5} tone="faint">
+        <Text size={11} tone="faint">
           Pour les impôts, la CAF ou un dossier de prêt : le fichier s'ouvre dans le menu de partage du téléphone.
         </Text>
       </Card>

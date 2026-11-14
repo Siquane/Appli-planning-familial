@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { Text } from "./Text";
-import { color as themeColor } from "../theme/tokens";
+import { color as themeColor, space } from "../theme/tokens";
 
 interface AvatarProps {
   initials: string;
@@ -43,9 +43,9 @@ export interface StackAvatar {
 
 export function AvatarStack({ avatars, size = 24, bgBehind = themeColor.bg }: { avatars: StackAvatar[]; size?: number; bgBehind?: string }) {
   return (
-    <View style={{ flexDirection: "row", paddingLeft: 8 }}>
+    <View style={{ flexDirection: "row", paddingLeft: space.sm }}>
       {avatars.map((a, i) => (
-        <Avatar key={i} initials={a.initials} bg={a.bg} fg={a.fg} size={size} borderColor={bgBehind} style={{ marginLeft: -8 }} />
+        <Avatar key={i} initials={a.initials} bg={a.bg} fg={a.fg} size={size} borderColor={bgBehind} style={{ marginLeft: -space.sm }} />
       ))}
     </View>
   );

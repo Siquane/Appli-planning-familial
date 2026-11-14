@@ -14,10 +14,11 @@ import { TopBar } from "../../src/components/TopBar";
 import { useAutoSlotTask, useCreateTask, useMembers, useTasks, useUpdateTask } from "../../src/hooks/useApi";
 import { useToastStore } from "../../src/state/toastStore";
 import { confirmReminderPermission } from "../../src/lib/notifications";
-import { space } from "../../src/theme/tokens";
+import { space, gutter } from "../../src/theme/tokens";
 import { WEEKDAYS_SHORT } from "../../src/lib/weekdays";
 import { parseDuration, splitDuration } from "../../src/lib/duration";
 import type { Category, Priority, Task, Weekday } from "../../src/api/types";
+import { errorText } from "../../src/lib/errors";
 
 const CATEGORIES: Category[] = ["École", "Travail", "Maison", "Santé", "Loisirs"];
 const DURATIONS = [15, 30, 45, 60, 90, 120];
@@ -157,38 +158,38 @@ export default function TaskFormScreen() {
       }
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "enregistrer la tâche"));
     }
   }
 
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier la tâche" : source ? "Dupliquer la tâche" : "Nouvelle tâche"} onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Devoirs de Léo" />
 
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           <Text size={13} tone="muted">
             Catégorie
           </Text>
-          <View style={{ flexDirection: "row", gap: space[1] }}>
+          <View style={{ flexDirection: "row", gap: space.xs }}>
             {CATEGORIES.map((c) => (
               <Chip key={c} label={c} selected={category === c} onPress={() => setCategory(c)} size="sm" fill />
             ))}
           </View>
         </View>
 
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           <Text size={13} tone="muted">
             Jour{!existing ? " (plusieurs possibles, ou aucun)" : ""}
           </Text>
-          <View style={{ flexDirection: "row", gap: space[1] }}>
+          <View style={{ flexDirection: "row", gap: space.xs }}>
             {WEEKDAYS_SHORT.map((label, i) => (
               <Chip key={label} label={label} selected={weekdays.includes(i as Weekday)} onPress={() => toggleWeekday(i as Weekday)} size="sm" fill />
             ))}
           </View>
           {autoPlacement && (
-            <Text tone="faint" size={12}>
+            <Text tone="faint" size={13}>
               Aucun jour choisi : Passerelle sélectionnera elle-même le meilleur créneau de la semaine selon la priorité, l'échéance et les tâches déjà planifiées.
             </Text>
           )}
@@ -206,11 +207,11 @@ export default function TaskFormScreen() {
           />
         )}
 
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           <Text size={13} tone="muted">
             Durée
           </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[1] }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
             {DURATIONS.map((d) => (
               <Chip
                 key={d}
@@ -232,7 +233,7 @@ export default function TaskFormScreen() {
             />
           </View>
           {customDuration && (
-            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: space[2] }}>
+            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: space.sm }}>
               <View style={{ flex: 1 }}>
                 <TextField label="Heures" value={customFields.hours} onChangeText={(v) => setCustomField("hours", v)} keyboardType="number-pad" maxLength={1} placeholder="0" />
               </View>
@@ -241,24 +242,29 @@ export default function TaskFormScreen() {
               </View>
             </View>
           )}
+          {customDuration && parseDuration(customFields.hours, customFields.minutes) === null && (
+            <Text size={11} tone="danger" accessibilityLiveRegion="polite">
+              Entre 5 min et 8 h, minutes de 0 à 59.
+            </Text>
+          )}
         </View>
 
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           <Text size={13} tone="muted">
             Priorité
           </Text>
-          <View style={{ flexDirection: "row", gap: space[1] }}>
+          <View style={{ flexDirection: "row", gap: space.xs }}>
             {PRIORITIES.map((p) => (
               <Chip key={p.key} label={p.label} selected={priority === p.key} onPress={() => setPriority(p.key)} size="sm" fill />
             ))}
           </View>
         </View>
 
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           <Text size={13} tone="muted">
             Échéance (optionnel)
           </Text>
-          <View style={{ flexDirection: "row", gap: space[1] }}>
+          <View style={{ flexDirection: "row", gap: space.xs }}>
             <Chip label="Aucune" selected={deadlineWeekday === null} onPress={() => setDeadlineWeekday(null)} size="sm" fill />
             {WEEKDAYS_SHORT.map((label, i) => (
               <Chip key={label} label={label} selected={deadlineWeekday === i} onPress={() => setDeadlineWeekday(i as Weekday)} size="sm" fill />
@@ -267,11 +273,11 @@ export default function TaskFormScreen() {
         </View>
 
         {members.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
               Assigné à
             </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
               {members.map((m) => (
                 <Chip key={m.id} label={m.name} selected={memberIds.includes(m.id)} onPress={() => toggleMember(m.id)} size="sm" />
               ))}
@@ -279,7 +285,7 @@ export default function TaskFormScreen() {
           </View>
         )}
 
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
           <Chip label="Récurrente" selected={recurring} onPress={() => setRecurring((v) => !v)} size="sm" />
           {!autoPlacement && (
             <Chip label="Flexible (replanifiable)" selected={flexible} onPress={() => setFlexible((v) => !v)} size="sm" />
@@ -299,7 +305,7 @@ export default function TaskFormScreen() {
         <TextField label="Notes" value={notes} onChangeText={setNotes} multiline placeholder="Détails, lieu, contexte..." />
 
         {!isValid && (
-          <Text tone="muted" size={12} center>
+          <Text tone="muted" size={13} center>
             Pour {existing ? "enregistrer" : "créer la tâche"}, il manque : {missing.join(", ")}.
           </Text>
         )}

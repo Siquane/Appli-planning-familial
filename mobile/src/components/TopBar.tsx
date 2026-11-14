@@ -1,7 +1,8 @@
-import { View, Pressable } from "react-native";
+import { View } from "react-native";
+import { Pressable, hitSlopFor } from "./Touchable";
 import { Text } from "./Text";
 import { ChevronLeftIcon, CopyIcon, EditIcon, TrashIcon } from "./icons";
-import { color, space } from "../theme/tokens";
+import { color, space, gutter } from "../theme/tokens";
 
 interface Props {
   title: string;
@@ -13,8 +14,8 @@ interface Props {
 
 export function TopBar({ title, onBack, onDuplicate, onEdit, onDelete }: Props) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 22, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: color.divider }}>
-      <Pressable
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.md, paddingHorizontal: gutter, paddingVertical: space.md, borderBottomWidth: 1, borderBottomColor: color.divider }}>
+      <Pressable hitSlop={hitSlopFor(34)}
         onPress={onBack}
         accessibilityRole="button"
         accessibilityLabel="Retour"
@@ -22,23 +23,23 @@ export function TopBar({ title, onBack, onDuplicate, onEdit, onDelete }: Props) 
       >
         <ChevronLeftIcon size={17} color={color.text} />
       </Pressable>
-      <Text heading weight="medium" size={16} style={{ flex: 1 }}>
+      <Text heading weight="medium" size={17} style={{ flex: 1 }}>
         {title}
       </Text>
       {(onDuplicate || onEdit || onDelete) && (
-        <View style={{ flexDirection: "row", gap: space[2] }}>
+        <View style={{ flexDirection: "row", gap: space.sm }}>
           {onDuplicate && (
-            <Pressable onPress={onDuplicate} accessibilityLabel="Dupliquer" style={{ width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: color.divider, alignItems: "center", justifyContent: "center" }}>
+            <Pressable hitSlop={hitSlopFor(36)} onPress={onDuplicate} accessibilityLabel="Dupliquer" style={{ width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: color.divider, alignItems: "center", justifyContent: "center" }}>
               <CopyIcon size={16} color={color.text} />
             </Pressable>
           )}
           {onEdit && (
-            <Pressable onPress={onEdit} accessibilityLabel="Modifier" style={{ width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: color.divider, alignItems: "center", justifyContent: "center" }}>
+            <Pressable hitSlop={hitSlopFor(36)} onPress={onEdit} accessibilityLabel="Modifier" style={{ width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: color.divider, alignItems: "center", justifyContent: "center" }}>
               <EditIcon size={16} color={color.text} />
             </Pressable>
           )}
           {onDelete && (
-            <Pressable onPress={onDelete} accessibilityLabel="Supprimer" style={{ width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: color.divider, alignItems: "center", justifyContent: "center" }}>
+            <Pressable hitSlop={hitSlopFor(36)} onPress={onDelete} accessibilityLabel="Supprimer" style={{ width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: color.divider, alignItems: "center", justifyContent: "center" }}>
               <TrashIcon size={16} color={color.text} />
             </Pressable>
           )}

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, ScrollView, Share, View } from "react-native";
+import { Pressable, hitSlopFor } from "../../src/components/Touchable";
+import { ScrollView, Share, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
@@ -9,7 +10,7 @@ import { TabHeader } from "../../src/components/PageHeader";
 import { ChartIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, RecurringIcon, SparkleIcon, TargetIcon, WalletIcon } from "../../src/components/icons";
 import { useExpenseCategories, useForecast, useMembers, useMonthlyBudget, usePlan } from "../../src/hooks/useApi";
 import { budgetToCsv, categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../../src/lib/money";
-import { color, radius, space } from "../../src/theme/tokens";
+import { color, radius, space, gutter } from "../../src/theme/tokens";
 import { hasBudgetPack } from "../../src/lib/premium";
 
 export default function BudgetScreen() {
@@ -27,14 +28,14 @@ export default function BudgetScreen() {
 
   return (
     <Screen scroll={false} padded={false} edges={["top"]}>
-      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <TabHeader title="Budget" />
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <MonthArrow onPress={() => setMonth(shiftMonth(month, -1))} label="Mois précédent">
             <ChevronLeftIcon size={16} color={color.text} />
           </MonthArrow>
           <Pressable style={{ flex: 1 }} onPress={() => setMonth(currentMonth())} disabled={isCurrent}>
-            <Text heading weight="medium" size={16} center>
+            <Text heading weight="medium" size={17} center>
               {monthLabel(month)}
             </Text>
             {!isCurrent && (
@@ -48,38 +49,38 @@ export default function BudgetScreen() {
           </MonthArrow>
         </View>
 
-        <Card style={{ alignItems: "center", paddingVertical: space[6] }}>
-          <Text size={12} tone="muted">
+        <Card style={{ alignItems: "center", paddingVertical: space.lg }}>
+          <Text size={13} tone="muted">
             Total du mois
           </Text>
           <Text heading weight="semibold" size={28}>
             {formatEuros(data?.totalCents ?? 0)}
           </Text>
-          <Text size={11.5} tone="faint">
+          <Text size={11} tone="faint">
             {expenses.length} dépense{expenses.length !== 1 ? "s" : ""}
           </Text>
           {overCount > 0 && (
-            <Text size={12} tone="danger" style={{ marginTop: space[2] }}>
+            <Text size={13} tone="danger" style={{ marginTop: space.sm }}>
               {overCount === 1 ? "1 plafond dépassé" : `${overCount} plafonds dépassés`}
             </Text>
           )}
         </Card>
 
         {premium && isCurrent && forecast && (
-          <Card style={{ gap: space[1] }}>
-            <Text size={12} tone="muted">
+          <Card style={{ gap: space.xs }}>
+            <Text size={13} tone="muted">
               Prévision de fin de mois
             </Text>
             <Text size={15} weight="medium">
               À ce rythme, environ {formatEuros(roundEuros(forecast.projectedCents))}
             </Text>
             {forecast.upcomingRecurringCents > 0 && (
-              <Text size={12} tone="faint">
+              <Text size={13} tone="faint">
                 Dont {formatEuros(forecast.upcomingRecurringCents)} de dépenses récurrentes encore à venir
               </Text>
             )}
             {forecast.usualCents !== null && (
-              <Text size={12} tone={forecast.projectedCents > forecast.usualCents * 1.05 ? "danger" : "faint"}>
+              <Text size={13} tone={forecast.projectedCents > forecast.usualCents * 1.05 ? "danger" : "faint"}>
                 {forecast.projectedCents > forecast.usualCents * 1.05
                   ? `Au-dessus de d'habitude (${formatEuros(roundEuros(forecast.usualCents))} en moyenne)`
                   : `D'habitude : ${formatEuros(roundEuros(forecast.usualCents))} en moyenne`}
@@ -88,7 +89,7 @@ export default function BudgetScreen() {
           </Card>
         )}
 
-        <View style={{ flexDirection: "row", gap: space[2] }}>
+        <View style={{ flexDirection: "row", gap: space.sm }}>
           <Button
             label="Ajouter une dépense"
             icon={<PlusIcon size={18} color={color.text} />}
@@ -98,7 +99,7 @@ export default function BudgetScreen() {
           />
           <Button label="Réglages" variant="ghost" onPress={() => router.push("/budget-settings")} />
         </View>
-        <View style={{ flexDirection: "row", gap: space[2] }}>
+        <View style={{ flexDirection: "row", gap: space.sm }}>
           <Button
             label="Bilan & export"
             icon={<ChartIcon size={17} color={color.pillar3} />}
@@ -134,22 +135,22 @@ export default function BudgetScreen() {
         )}
 
         {byCategory.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Par catégorie
             </Text>
-            <Card style={{ gap: space[4] }}>
+            <Card style={{ gap: space.md }}>
               {byCategory.map((c) => {
                 const over = c.limitCents !== null && c.totalCents > c.limitCents;
                 // With a cap the bar shows how much of it is used; without, it's relative to the biggest category.
                 const ratio = c.limitCents !== null ? c.totalCents / c.limitCents : biggest ? c.totalCents / biggest : 0;
                 return (
-                  <View key={c.category} style={{ gap: space[1] }}>
+                  <View key={c.category} style={{ gap: space.xs }}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                       <Text size={13}>{categoryLabel(options, c.category)}</Text>
                       <Text size={13} weight="medium" tone={over ? "danger" : "text"}>
                         {formatEuros(c.totalCents)}
-                        {c.limitCents !== null && <Text size={12} tone="faint">{` / ${formatEuros(c.limitCents)}`}</Text>}
+                        {c.limitCents !== null && <Text size={13} tone="faint">{` / ${formatEuros(c.limitCents)}`}</Text>}
                       </Text>
                     </View>
                     <View style={{ height: 6, borderRadius: radius.sm, backgroundColor: color.neutral800, overflow: "hidden" }}>
@@ -163,7 +164,7 @@ export default function BudgetScreen() {
                       />
                     </View>
                     {over && (
-                      <Text size={11.5} tone="danger">
+                      <Text size={11} tone="danger">
                         Dépassé de {formatEuros(c.totalCents - c.limitCents!)}
                       </Text>
                     )}
@@ -175,16 +176,16 @@ export default function BudgetScreen() {
         )}
 
         {!isLoading && expenses.length === 0 && (
-          <Card style={{ alignItems: "center", paddingVertical: space[8] }}>
+          <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
             <WalletIcon size={22} color={color.neutral600} />
-            <Text tone="muted" size={13} center style={{ marginTop: space[2] }}>
+            <Text tone="muted" size={13} center style={{ marginTop: space.sm }}>
               Aucune dépense ce mois-ci.
             </Text>
           </Card>
         )}
 
         {expenses.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Dépenses
             </Text>
@@ -195,17 +196,17 @@ export default function BudgetScreen() {
                 <Pressable key={e.id} onPress={() => router.push(`/expense/new?edit=${e.id}&month=${month}`)}>
                   <Card row style={{ alignItems: "center" }}>
                     <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: space[1] }}>
-                        <Text size={14} weight="medium" numberOfLines={1} style={{ flexShrink: 1 }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
+                        <Text size={15} weight="medium" numberOfLines={1} style={{ flexShrink: 1 }}>
                           {e.label}
                         </Text>
                         {e.recurringId && <RecurringIcon size={12} color={color.accent400} />}
                       </View>
-                      <Text size={11.5} tone="faint" numberOfLines={1}>
+                      <Text size={11} tone="faint" numberOfLines={1}>
                         {subtitle}
                       </Text>
                     </View>
-                    <Text size={14} weight="medium">
+                    <Text size={15} weight="medium">
                       {formatEuros(e.amountCents)}
                     </Text>
                   </Card>
@@ -221,7 +222,7 @@ export default function BudgetScreen() {
 
 function MonthArrow({ onPress, label, children }: { onPress: () => void; label: string; children: React.ReactNode }) {
   return (
-    <Pressable
+    <Pressable hitSlop={hitSlopFor(34)}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}

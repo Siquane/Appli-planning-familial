@@ -33,12 +33,12 @@ export function QuickAddSheet({ visible, onClose }: { visible: boolean; onClose:
             backgroundColor: color.surface,
             borderTopLeftRadius: radius.lg,
             borderTopRightRadius: radius.lg,
-            padding: space[4],
-            paddingBottom: (insets.bottom || 10) + space[4],
-            gap: space[1],
+            padding: space.md,
+            paddingBottom: (insets.bottom || 10) + space.md,
+            gap: space.xs,
           }}
         >
-          <Text heading weight="semibold" size={16} style={{ marginBottom: space[2] }}>
+          <Text heading weight="semibold" size={17} style={{ marginBottom: space.sm }}>
             Ajouter
           </Text>
           {QUICK_ADD_ITEMS.map(({ label, hint, href, Icon }) => (
@@ -50,9 +50,9 @@ export function QuickAddSheet({ visible, onClose }: { visible: boolean; onClose:
               style={({ pressed }) => ({
                 flexDirection: "row",
                 alignItems: "center",
-                gap: space[3],
-                paddingVertical: space[3],
-                paddingHorizontal: space[2],
+                gap: space.sm,
+                paddingVertical: space.sm,
+                paddingHorizontal: space.sm,
                 borderRadius: radius.md,
                 backgroundColor: pressed ? color.neutral900 : "transparent",
               })}
@@ -64,7 +64,7 @@ export function QuickAddSheet({ visible, onClose }: { visible: boolean; onClose:
                 <Text size={15} weight="medium">
                   {label}
                 </Text>
-                <Text size={11.5} tone="faint">
+                <Text size={11} tone="faint">
                   {hint}
                 </Text>
               </View>

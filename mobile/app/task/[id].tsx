@@ -9,7 +9,7 @@ import { Avatar } from "../../src/components/Avatar";
 import { CalendarIcon, ClockIcon, DeadlineIcon } from "../../src/components/icons";
 import { useDeleteTask, useMembers, useTasks } from "../../src/hooks/useApi";
 import { useToastStore } from "../../src/state/toastStore";
-import { color, space } from "../../src/theme/tokens";
+import { color, space, gutter } from "../../src/theme/tokens";
 import { categoryColor, formatDuration, priorityLabel, WEEKDAYS_FULL } from "../../src/lib/weekdays";
 
 export default function TaskDetailScreen() {
@@ -23,7 +23,7 @@ export default function TaskDetailScreen() {
     return (
       <Screen scroll={false}>
         <TopBar title="Tâche" onBack={() => router.back()} />
-        <Text tone="muted" style={{ padding: 22 }}>
+        <Text tone="muted" style={{ padding: gutter }}>
           Cette tâche n'existe plus.
         </Text>
       </Screen>
@@ -53,8 +53,8 @@ export default function TaskDetailScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={task.title} onBack={() => router.back()} onDuplicate={() => router.push(`/task/new?duplicate=${task.id}`)} onEdit={() => router.push(`/task/new?edit=${task.id}`)} onDelete={onDelete} />
-      <View style={{ padding: 22, gap: space[4] }}>
-        <View style={{ flexDirection: "row", gap: space[2] }}>
+      <View style={{ padding: gutter, gap: space.md }}>
+        <View style={{ flexDirection: "row", gap: space.sm }}>
           <Tag label={task.category} tint={categoryColor(task.category)} />
           {task.priority === "high" && <Tag label={priorityLabel(task.priority)} variant="outline" />}
           {task.recurring && <Tag label="Récurrente" variant="neutral" />}
@@ -62,7 +62,7 @@ export default function TaskDetailScreen() {
           {task.flexible && <Tag label="Flexible" variant="neutral" />}
         </View>
 
-        <Card style={{ gap: space[3] }}>
+        <Card style={{ gap: space.sm }}>
           <Row icon={<CalendarIcon size={16} color={color.neutral400} />} label={WEEKDAYS_FULL[task.weekday]} />
           <Row icon={<ClockIcon size={16} color={color.neutral400} />} label={`${task.time} · ${formatDuration(task.duration)}`} />
           {task.deadlineWeekday !== null && (
@@ -71,13 +71,13 @@ export default function TaskDetailScreen() {
         </Card>
 
         {assigned.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Assigné à
             </Text>
-            <View style={{ flexDirection: "row", gap: space[2] }}>
+            <View style={{ flexDirection: "row", gap: space.sm }}>
               {assigned.map((m) => (
-                <View key={m.id} style={{ alignItems: "center", gap: 4 }}>
+                <View key={m.id} style={{ alignItems: "center", gap: space.xs }}>
                   <Avatar initials={m.initials} bg={m.tint === "neutral" ? color.neutral700 : color.accent800} fg={m.tint === "neutral" ? color.neutral100 : color.accent100} size={32} />
                   <Text size={11} tone="muted">
                     {m.name}
@@ -89,16 +89,16 @@ export default function TaskDetailScreen() {
         )}
 
         {task.notes ? (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Notes
             </Text>
-            <Text size={14}>{task.notes}</Text>
+            <Text size={15}>{task.notes}</Text>
           </View>
         ) : null}
 
         {task.synced && (
-          <Text size={12} tone="faint">
+          <Text size={13} tone="faint">
             Synchronisée avec {task.externalProvider === "outlook" ? "Outlook" : task.externalProvider === "apple" ? "Apple Calendar" : "Google Calendar"}
           </Text>
         )}
@@ -109,9 +109,9 @@ export default function TaskDetailScreen() {
 
 function Row({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
       {icon}
-      <Text size={14}>{label}</Text>
+      <Text size={15}>{label}</Text>
     </View>
   );
 }

@@ -1,5 +1,7 @@
+import { errorText } from "../src/lib/errors";
 import { useState } from "react";
-import { Alert, Pressable, TextInput, View } from "react-native";
+import { Pressable, hitSlopFor } from "../src/components/Touchable";
+import { Alert, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { KeyboardScrollView } from "../src/components/KeyboardScrollView";
 import { Screen } from "../src/components/Screen";
@@ -19,17 +21,17 @@ import {
 } from "../src/hooks/useApi";
 import { categoryLabel, centsToInput, formatEuros, parseAmount } from "../src/lib/money";
 import { useToastStore } from "../src/state/toastStore";
-import { color, font, radius, space } from "../src/theme/tokens";
+import { color, font, radius, space, gutter } from "../src/theme/tokens";
 
 const toast = (m: string) => useToastStore.getState().show(m);
-const errorMessage = (e: unknown) => (e instanceof Error ? e.message : "Une erreur est survenue.");
+const errorMessage = (e: unknown) => (errorText(e, "enregistrer le réglage"));
 
 const inputStyle = {
   color: color.text,
   fontFamily: font.body,
-  fontSize: scaled(14),
-  paddingVertical: 6,
-  paddingHorizontal: 10,
+  fontSize: scaled(15),
+  paddingVertical: space.sm,
+  paddingHorizontal: space.md,
   borderRadius: radius.md,
   backgroundColor: color.bg,
   borderWidth: 1,
@@ -44,20 +46,20 @@ export default function BudgetSettingsScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Réglages du budget" onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[6] }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.lg }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Section title="Dépenses récurrentes" hint="Loyer, abonnements… ajoutés chaque mois au jour choisi.">
           {recurring.map((r) => (
             <Pressable key={r.id} onPress={() => router.push(`/expense/recurring?edit=${r.id}`)}>
               <Card row style={{ alignItems: "center" }}>
                 <View style={{ flex: 1 }}>
-                  <Text size={14} weight="medium" numberOfLines={1}>
+                  <Text size={15} weight="medium" numberOfLines={1}>
                     {r.label}
                   </Text>
-                  <Text size={11.5} tone="faint">
+                  <Text size={11} tone="faint">
                     Le {r.dayOfMonth} du mois · {categoryLabel(options, r.category)}
                   </Text>
                 </View>
-                <Text size={14} weight="medium" style={{ marginRight: space[2] }}>
+                <Text size={15} weight="medium" style={{ marginRight: space.sm }}>
                   {formatEuros(r.amountCents)}
                 </Text>
                 <ChevronRightIcon size={14} color={color.neutral500} />
@@ -68,7 +70,7 @@ export default function BudgetSettingsScreen() {
         </Section>
 
         <Section title="Plafonds mensuels" hint="Valables tous les mois. Laisser vide pour ne pas en mettre.">
-          <Card style={{ gap: space[3] }}>
+          <Card style={{ gap: space.sm }}>
             {options.map((o) => {
               const limit = budgets.find((b) => b.category === o.value)?.limitCents ?? null;
               // Keyed on the saved value so the field resets when the server answers.
@@ -79,7 +81,7 @@ export default function BudgetSettingsScreen() {
 
         <Section title="Mes catégories" hint="En plus des catégories de base. En supprimer une range ses dépenses dans « Divers ».">
           {custom.length > 0 && (
-            <Card style={{ gap: space[3] }}>
+            <Card style={{ gap: space.sm }}>
               {custom.map((c) => (
                 <CustomCategoryRow key={`${c.id}:${c.name}`} id={c.id} name={c.name} />
               ))}
@@ -94,11 +96,11 @@ export default function BudgetSettingsScreen() {
 
 function Section({ title, hint, children }: { title: string; hint: string; children: React.ReactNode }) {
   return (
-    <View style={{ gap: space[2] }}>
+    <View style={{ gap: space.sm }}>
       <Text weight="medium" size={13} tone="muted">
         {title}
       </Text>
-      <Text size={11.5} tone="faint">
+      <Text size={11} tone="faint">
         {hint}
       </Text>
       {children}
@@ -132,8 +134,8 @@ function CapRow({ category, label, limitCents }: { category: string; label: stri
   }
 
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
-      <Text size={14} style={{ flex: 1 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+      <Text size={15} style={{ flex: 1 }}>
         {label}
       </Text>
       <TextInput
@@ -172,9 +174,9 @@ function CustomCategoryRow({ id, name }: { id: string; name: string }) {
   }
 
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
       <TextInput value={text} onChangeText={setText} onEndEditing={save} style={[inputStyle, { flex: 1 }]} accessibilityLabel={`Renommer ${name}`} />
-      <Pressable onPress={onDelete} accessibilityLabel={`Supprimer ${name}`} style={{ padding: 6 }}>
+      <Pressable hitSlop={hitSlopFor(26)} onPress={onDelete} accessibilityLabel={`Supprimer ${name}`} style={{ padding: space.sm }}>
         <TrashIcon size={16} color={color.neutral400} />
       </Pressable>
     </View>
@@ -197,7 +199,7 @@ function AddCategory() {
   }
 
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
       <TextInput
         value={name}
         onChangeText={setName}

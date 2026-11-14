@@ -9,7 +9,7 @@ import { DateField } from "../src/components/DateField";
 import { GiftIcon, PartyIcon } from "../src/components/icons";
 import { useMembers, useUpdateMember } from "../src/hooks/useApi";
 import { daysUntilBirthday } from "../src/lib/notifications";
-import { color, space } from "../src/theme/tokens";
+import { color, space, gutter } from "../src/theme/tokens";
 import type { Member } from "../src/api/types";
 
 function tintColors(m: Member) {
@@ -36,15 +36,15 @@ export default function BirthdaysScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Anniversaires" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 22, gap: space[2] }} showsVerticalScrollIndicator={false}>
-        <Text tone="muted" size={13} style={{ marginBottom: space[2] }}>
+      <ScrollView contentContainerStyle={{ padding: gutter, gap: space.sm }} showsVerticalScrollIndicator={false}>
+        <Text tone="muted" size={13} style={{ marginBottom: space.sm }}>
           Ajoute la date de naissance de chaque membre pour un rappel automatique le jour J.
         </Text>
 
         {sorted.length === 0 && (
-          <Card style={{ alignItems: "center", paddingVertical: space[8] }}>
+          <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
             <GiftIcon size={22} color={color.neutral600} />
-            <Text tone="muted" size={13} center style={{ marginTop: space[2] }}>
+            <Text tone="muted" size={13} center style={{ marginTop: space.sm }}>
               Ajoute d'abord des membres dans ton profil.
             </Text>
           </Card>
@@ -53,15 +53,15 @@ export default function BirthdaysScreen() {
         {sorted.map((member) => {
           const t = tintColors(member);
           return (
-            <Card key={member.id} style={{ gap: space[2] }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+            <Card key={member.id} style={{ gap: space.sm }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
                 <Avatar initials={member.initials} bg={t.bg} fg={t.fg} size={32} />
-                <Text weight="medium" size={14} style={{ flex: 1 }}>
+                <Text weight="medium" size={15} style={{ flex: 1 }}>
                   {member.name}
                 </Text>
                 {member.birthday && (
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: space[1] }}>
-                    <Text size={12} tone="accent" mono>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
+                    <Text size={13} tone="accent" mono>
                       {daysLabel(daysUntilBirthday(member.birthday))}
                     </Text>
                     {daysUntilBirthday(member.birthday) === 0 && <PartyIcon size={14} color={color.accent400} />}

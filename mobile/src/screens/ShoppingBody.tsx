@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, hitSlopFor } from "../components/Touchable";
+import { TextInput, View } from "react-native";
 import { Text, scaled } from "../components/Text";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
@@ -8,9 +9,9 @@ import { useAddShoppingItem, useClearCheckedShopping, useDeleteShoppingItem, use
 import { useToastStore } from "../state/toastStore";
 import { fromMenuMessage } from "../lib/shopping";
 import { color, font, radius, space } from "../theme/tokens";
+import { errorText } from "../lib/errors";
 
 const toast = (m: string) => useToastStore.getState().show(m);
-
 
 /** Shopping list, shown in the « Repas » tab. */
 export function ShoppingBody() {
@@ -28,19 +29,19 @@ export function ShoppingBody() {
   function onAdd() {
     const value = label.trim();
     if (!value) return;
-    add.mutate(value, { onSuccess: () => setLabel(""), onError: (e) => toast(e instanceof Error ? e.message : "Une erreur est survenue.") });
+    add.mutate(value, { onSuccess: () => setLabel(""), onError: (e) => toast(errorText(e, "mettre à jour la liste")) });
   }
 
   function onFromMenu() {
     fromMenu.mutate(undefined, {
       onSuccess: (r) => toast(fromMenuMessage(r.added, r.withoutIngredients)),
-      onError: (e) => toast(e instanceof Error ? e.message : "Une erreur est survenue."),
+      onError: (e) => toast(errorText(e, "mettre à jour la liste")),
     });
   }
 
   return (
-    <View style={{ gap: space[3] }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+    <View style={{ gap: space.sm }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
         <TextInput
           value={label}
           onChangeText={setLabel}
@@ -52,9 +53,9 @@ export function ShoppingBody() {
             flex: 1,
             color: color.text,
             fontFamily: font.body,
-            fontSize: scaled(14),
-            paddingVertical: 10,
-            paddingHorizontal: 12,
+            fontSize: scaled(15),
+            paddingVertical: space.md,
+            paddingHorizontal: space.md,
             borderRadius: radius.md,
             backgroundColor: color.surface,
             borderWidth: 1,
@@ -67,7 +68,7 @@ export function ShoppingBody() {
       <Button label="Générer depuis le menu de la semaine" variant="ghost" block onPress={onFromMenu} loading={fromMenu.isPending} />
 
       {!isLoading && items.length === 0 && (
-        <Card style={{ alignItems: "center", paddingVertical: space[6] }}>
+        <Card style={{ alignItems: "center", paddingVertical: space.lg }}>
           <Text tone="muted" size={13} center>
             La liste est vide. Ajoutez des articles ou générez-la depuis le menu.
           </Text>
@@ -83,7 +84,7 @@ export function ShoppingBody() {
       )}
 
       {inBasket.length > 0 && (
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text size={13} tone="muted" style={{ flex: 1 }}>
               Dans le panier ({inBasket.length})
@@ -103,13 +104,13 @@ export function ShoppingBody() {
 
 function Row({ label, checked, first, onToggle, onRemove }: { label: string; checked: boolean; first: boolean; onToggle: () => void; onRemove: () => void }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: first ? 0 : 1, borderTopColor: color.divider }}>
+    <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: space.sm, borderTopWidth: first ? 0 : 1, borderTopColor: color.divider }}>
       <Pressable
         onPress={onToggle}
         accessibilityRole="checkbox"
         accessibilityState={{ checked }}
         accessibilityLabel={label}
-        style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: space[3] }}
+        style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: space.sm }}
       >
         <View
           style={{
@@ -125,11 +126,11 @@ function Row({ label, checked, first, onToggle, onRemove }: { label: string; che
         >
           {checked && <CheckIcon size={14} color={color.bg} />}
         </View>
-        <Text size={14} tone={checked ? "faint" : "text"} style={checked ? { textDecorationLine: "line-through" } : undefined}>
+        <Text size={15} tone={checked ? "faint" : "text"} style={checked ? { textDecorationLine: "line-through" } : undefined}>
           {label}
         </Text>
       </Pressable>
-      <Pressable onPress={onRemove} accessibilityLabel={`Retirer ${label}`} style={{ padding: 6 }}>
+      <Pressable hitSlop={hitSlopFor(26)} onPress={onRemove} accessibilityLabel={`Retirer ${label}`} style={{ padding: space.sm }}>
         <CloseIcon size={14} color={color.neutral500} />
       </Pressable>
     </View>

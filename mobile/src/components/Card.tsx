@@ -13,14 +13,14 @@ interface Props extends ViewProps {
 // The Nocturne .card surface plus Passerelle's cyan "reticle" corner accents,
 // applied to every card per the design decision ("bracket_accent: Sur
 // toutes les cartes").
-export function Card({ row, gap = space[2], padded = true, bracket = true, bg = color.surface, style, children, ...rest }: Props) {
+export function Card({ row, gap = space.sm, padded = true, bracket = true, bg = color.surface, style, children, ...rest }: Props) {
   return (
     <View
       style={[
         {
           flexDirection: row ? "row" : "column",
           gap,
-          padding: padded ? space[3] : 0,
+          padding: padded ? space.sm : 0,
           borderRadius: radius.md,
           backgroundColor: bg,
         },

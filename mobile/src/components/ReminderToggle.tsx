@@ -1,4 +1,5 @@
-import { Pressable, Switch, View } from "react-native";
+import { Switch, View } from "react-native";
+import { Pressable } from "./Touchable";
 import { Card } from "./Card";
 import { Text } from "./Text";
 import { BellIcon } from "./icons";
@@ -28,11 +29,11 @@ export function ReminderToggle({ value, onChange }: Props) {
         >
           <BellIcon size={18} color={value ? color.accent200 : color.neutral400} />
         </View>
-        <View style={{ flex: 1, marginLeft: space[2] }}>
-          <Text size={14} weight="medium">
+        <View style={{ flex: 1, marginLeft: space.sm }}>
+          <Text size={15} weight="medium">
             Rappel
           </Text>
-          <Text size={11.5} tone={value ? "accent" : "faint"}>
+          <Text size={11} tone={value ? "accent" : "faint"}>
             {value ? "Activé : une notification avant la tâche" : "Recevoir une notification avant la tâche"}
           </Text>
         </View>

@@ -8,7 +8,7 @@ import { TopBar } from "../src/components/TopBar";
 import { ReshuffleIcon } from "../src/components/icons";
 import { useReplanProposals, useUpdateTask } from "../src/hooks/useApi";
 import { useToastStore } from "../src/state/toastStore";
-import { color, space } from "../src/theme/tokens";
+import { color, space, gutter } from "../src/theme/tokens";
 import { WEEKDAYS_FULL } from "../src/lib/weekdays";
 import type { ReplanCandidate } from "../src/api/types";
 
@@ -26,16 +26,16 @@ export default function ReplanScreen() {
   return (
     <Screen scroll={false} padded={false} techGrid>
       <TopBar title="Replanifier ma semaine" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+      <ScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
           <ReshuffleIcon size={18} color={color.accent} />
           <Text tone="muted" size={13} style={{ flex: 1 }}>
-            Passerelle propose de meilleurs créneaux pour vos tâches flexibles, en tenant compte de vos contraintes.
+            Passerelle propose de meilleurs créneaux pour tes tâches flexibles, en tenant compte de tes contraintes.
           </Text>
         </View>
 
         {!isLoading && proposals.length === 0 && (
-          <Card style={{ alignItems: "center", paddingVertical: space[8] }}>
+          <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
             <Text tone="muted" size={13} center>
               Aucune tâche flexible à réajuster pour l'instant.
             </Text>
@@ -43,23 +43,23 @@ export default function ReplanScreen() {
         )}
 
         {proposals.map((p) => (
-          <Card key={p.taskId} bg={color.accent900} style={{ gap: space[3] }}>
+          <Card key={p.taskId} bg={color.accent900} style={{ gap: space.sm }}>
             <View>
-              <Text weight="medium" size={14}>
+              <Text weight="medium" size={15}>
                 {p.title}
               </Text>
-              <Text size={12} tone="faint" mono>
+              <Text size={13} tone="faint" mono>
                 Actuellement : {WEEKDAYS_FULL[p.currentWeekday]} {p.currentTime}
               </Text>
             </View>
-            <View style={{ gap: space[2] }}>
+            <View style={{ gap: space.sm }}>
               {p.candidates.map((c, i) => (
                 <Card key={i} row style={{ alignItems: "center" }} bracket={false}>
                   <View style={{ flex: 1 }}>
                     <Text weight="medium" size={13} mono>
                       {WEEKDAYS_FULL[c.weekday]} · {c.time}
                     </Text>
-                    <Text size={11.5} tone="muted">
+                    <Text size={11} tone="muted">
                       {c.reason}
                     </Text>
                   </View>

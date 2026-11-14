@@ -14,11 +14,11 @@ interface Props {
 
 export function ChipPicker({ label, options, selected, onSelect, optional }: Props) {
   return (
-    <View style={{ gap: space[2] }}>
+    <View style={{ gap: space.sm }}>
       <Text size={13} tone="muted">
         {label}
       </Text>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
         {options.map((o) => (
           <Chip
             key={o.value}

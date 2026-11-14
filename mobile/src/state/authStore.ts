@@ -5,6 +5,7 @@ import { API_URL } from "../api/client";
 import type { User } from "../api/types";
 import { clearQueryCache } from "../lib/queryClient";
 import { refreshWidgets } from "../widgets/refresh";
+import { statusMessage } from "../lib/errors";
 
 const ACCESS_KEY = "passerelle.accessToken";
 const REFRESH_KEY = "passerelle.refreshToken";
@@ -100,7 +101,7 @@ async function postWithRetry(path: string, body: unknown): Promise<Record<string
     }
 
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(typeof data.error === "string" ? data.error : "Une erreur est survenue");
+    if (!res.ok) throw new Error(typeof data.error === "string" ? data.error : statusMessage(res.status));
     return data;
   }
 }

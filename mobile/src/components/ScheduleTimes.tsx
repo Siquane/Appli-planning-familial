@@ -1,4 +1,5 @@
-import { Pressable, Switch, View } from "react-native";
+import { Switch, View } from "react-native";
+import { Pressable } from "./Touchable";
 import { Text } from "./Text";
 import { TimeField } from "./TimeField";
 import { sortWeekdays, type DayTimes } from "../lib/dayTimes";
@@ -33,7 +34,7 @@ export function ScheduleTimes({ weekdays, time, onTimeChange, perDay, onPerDayCh
   }
 
   return (
-    <View style={{ gap: space[3] }}>
+    <View style={{ gap: space.sm }}>
       {!showPerDay && <TimeField label="Heure" value={time} onChange={onTimeChange} />}
 
       {several && (
@@ -42,7 +43,7 @@ export function ScheduleTimes({ weekdays, time, onTimeChange, perDay, onPerDayCh
           accessibilityRole="switch"
           accessibilityState={{ checked: perDay }}
           accessibilityLabel="Heure différente selon le jour"
-          style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}
+          style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}
         >
           <Text size={13} style={{ flex: 1 }}>
             Heure différente selon le jour
@@ -58,10 +59,10 @@ export function ScheduleTimes({ weekdays, time, onTimeChange, perDay, onPerDayCh
       )}
 
       {showPerDay && (
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           {sortWeekdays(weekdays).map((w) => (
-            <View key={w} style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
-              <Text size={14} style={{ width: 90 }}>
+            <View key={w} style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+              <Text size={15} style={{ width: 90 }}>
                 {WEEKDAYS_FULL[w]}
               </Text>
               <TimeField value={dayTimes[w] ?? time} onChange={(t) => onDayTimesChange({ ...dayTimes, [w]: t })} />

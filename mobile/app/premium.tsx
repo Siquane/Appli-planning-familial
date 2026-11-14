@@ -10,7 +10,7 @@ import { TopBar } from "../src/components/TopBar";
 import { CheckIcon, PiggyBankIcon, ToqueIcon } from "../src/components/icons";
 import { usePlan } from "../src/hooks/useApi";
 import { PACKS, hasAnyPack, mealQuotaLabel, packUntilLabel } from "../src/lib/premium";
-import { color, space } from "../src/theme/tokens";
+import { color, space, gutter } from "../src/theme/tokens";
 import { Button } from "../src/components/Button";
 import { useAuthStore } from "../src/state/authStore";
 import { useToastStore } from "../src/state/toastStore";
@@ -78,7 +78,7 @@ export default function PremiumScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Passerelle+" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <Text size={13} tone="muted">
           Planning, tâches, recettes, menu et budget restent gratuits. Choisis seulement ce qui te sert.
         </Text>
@@ -88,9 +88,9 @@ export default function PremiumScreen() {
           const active = pack.id === "both" ? both : !both && isActive(plan, pack.id);
           const until = pack.id === "both" ? plan?.packs.budget.until : pack.id === "budget" ? plan?.packs.budget.until : plan?.packs.meals.until;
           return (
-            <Card key={pack.id} style={{ gap: space[6], borderWidth: active ? 1 : 0, borderColor: color.accent400 }}>
+            <Card key={pack.id} style={{ gap: space.lg, borderWidth: active ? 1 : 0, borderColor: color.accent400 }}>
               {/* Left: icon(s) with the name under them. Right: the price, centred on that block. */}
-              <View style={{ flexDirection: "row", alignItems: "center", gap: space[3], paddingHorizontal: space[8] }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm, paddingHorizontal: space.xl }}>
                 <View style={{ flex: 1, alignItems: "flex-start" }}>
                   {/* Icon centred over the offer's name */}
                   <View style={{ alignItems: "center", gap: 2 }}>
@@ -104,7 +104,7 @@ export default function PremiumScreen() {
                         <PiggyBankIcon size={48} color={color.pillar3} />
                       </View>
                     )}
-                    <Text heading weight="semibold" size={20}>
+                    <Text heading weight="semibold" size={22}>
                       {pack.name}
                     </Text>
                   </View>
@@ -112,11 +112,11 @@ export default function PremiumScreen() {
                 <View style={{ alignItems: "flex-end", gap: 2 }}>
                   <Text size={17} weight="medium">
                     {pack.month}
-                    <Text size={14} tone="muted">
+                    <Text size={15} tone="muted">
                       {" / mois"}
                     </Text>
                   </Text>
-                  <Text size={14} tone="faint">
+                  <Text size={15} tone="faint">
                     ou {pack.year} / an
                   </Text>
                 </View>
@@ -124,7 +124,7 @@ export default function PremiumScreen() {
               {/* Features packed together, set apart from the header and the buttons. */}
               <View style={{ gap: 2 }}>
                 {pack.features.map((f) => (
-                  <View key={f} style={{ flexDirection: "row", gap: space[2] }}>
+                  <View key={f} style={{ flexDirection: "row", gap: space.sm }}>
                     <View style={{ paddingTop: 2 }}>
                       <CheckIcon size={16} color={color.accent400} />
                     </View>
@@ -135,12 +135,12 @@ export default function PremiumScreen() {
                 ))}
               </View>
               {active && until ? (
-                <Text size={12} tone="accent">
+                <Text size={13} tone="accent">
                   {until.startsWith("2999") ? "Actif" : `Actif · prochaine échéance le ${frenchDate(until)}`}
                 </Text>
               ) : null}
               {billing && !active && !(pack.id !== "both" && both) && (
-                <View style={{ flexDirection: "row", gap: space[2], marginTop: space[1] }}>
+                <View style={{ flexDirection: "row", gap: space.sm, marginTop: space.xs }}>
                   {(["monthly", "annual"] as const).map((period) => {
                     const pkg = prices[pack.id]?.[period];
                     if (!pkg) return null;
@@ -165,8 +165,8 @@ export default function PremiumScreen() {
 
         {plan && both ? (
           // Everything is unlocked: no free quota to show.
-          <Card style={{ gap: space[1] }}>
-            <Text size={14} weight="medium">
+          <Card style={{ gap: space.xs }}>
+            <Text size={15} weight="medium">
               Passerelle+ est actif {packUntilLabel(plan.packs.budget.until)}
             </Text>
             <Text size={13} tone="muted">
@@ -174,11 +174,11 @@ export default function PremiumScreen() {
             </Text>
           </Card>
         ) : plan ? (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
               Ce qu'il te reste en gratuit
             </Text>
-            <Card style={{ gap: space[1] }}>
+            <Card style={{ gap: space.xs }}>
               {!plan.packs.meals.active && <Text size={13}>{mealQuotaLabel(plan.meals)}</Text>}
               {plan.documents.limit !== null ? (
                 <Text size={13}>
@@ -192,7 +192,7 @@ export default function PremiumScreen() {
         ) : null}
 
         {billing ? (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Button label="Restaurer mes achats" variant="ghost" block onPress={onRestore} loading={busy === "restore"} disabled={!!busy} />
             {hasAnyPack(plan) && (
               <Button label="Gérer ou résilier mon abonnement" variant="ghost" block onPress={() => Linking.openURL(MANAGE_SUBSCRIPTIONS_URL)} />
@@ -211,7 +211,7 @@ export default function PremiumScreen() {
           )
         )}
         {hasAnyPack(plan) && !both && (
-          <Text size={12} tone="faint" center>
+          <Text size={13} tone="faint" center>
             Passerelle+ revient moins cher que Repas+ et Budget+ séparés.
           </Text>
         )}

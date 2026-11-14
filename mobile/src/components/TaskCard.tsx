@@ -1,4 +1,5 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
+import { Pressable } from "./Touchable";
 import { router } from "expo-router";
 import { Text } from "./Text";
 import { Card } from "./Card";
@@ -34,20 +35,20 @@ export function TaskCard({ task, members }: { task: Task; members: Member[] }) {
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
             <ClockIcon size={9} color={color.neutral500} />
-            <Text size={10.5} tone="faint" mono>
+            <Text size={11} tone="faint" mono>
               {formatDuration(task.duration)}
             </Text>
           </View>
         </View>
 
-        <View style={{ flex: 1, gap: 4 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+        <View style={{ flex: 1, gap: space.xs }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
             {task.recurring && <RecurringIcon size={11} color={color.accent400} />}
-            <Text weight="medium" size={14} numberOfLines={1} style={{ flexShrink: 1 }}>
+            <Text weight="medium" size={15} numberOfLines={1} style={{ flexShrink: 1 }}>
               {task.title}
             </Text>
           </View>
-          <View style={{ flexDirection: "row", gap: space[2], alignItems: "center" }}>
+          <View style={{ flexDirection: "row", gap: space.sm, alignItems: "center" }}>
             <Tag label={task.category} tint={categoryColor(task.category)} />
             {task.priority === "high" && <Tag label="Priorité haute" variant="outline" />}
           </View>

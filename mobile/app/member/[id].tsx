@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable } from "../../src/components/Touchable";
+import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
 import { Screen } from "../../src/components/Screen";
@@ -15,8 +16,9 @@ import { MealIcon } from "../../src/components/icons";
 import { useFoodConsent, useMembers, useSetFoodConsent, useUpdateMember } from "../../src/hooks/useApi";
 import { APPETITE_OPTIONS, CANTEEN_DAY_OPTIONS, MEMBER_DIET_OPTIONS, foodSummary, toggle } from "../../src/lib/memberFood";
 import { useToastStore } from "../../src/state/toastStore";
-import { color, space } from "../../src/theme/tokens";
+import { color, space, gutter } from "../../src/theme/tokens";
 import type { Appetite, MemberDiet } from "../../src/api/types";
+import { errorText } from "../../src/lib/errors";
 
 // A family member's page: name, age and the « Repas » preferences that tailor
 // generated menus. Diets, allergies and foods to limit are health-related
@@ -88,19 +90,19 @@ export default function MemberScreen() {
       useToastStore.getState().show("Fiche enregistrée.");
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "enregistrer la fiche"));
     }
   }
 
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={member.name} onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
-        <Card style={{ gap: space[4] }}>
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
+        <Card style={{ gap: space.md }}>
           <TextField label="Prénom" value={name} onChangeText={setName} />
           <TextField label="Âge (facultatif)" value={age} onChangeText={setAge} keyboardType="number-pad" placeholder="Ex. 8" />
           {ageInvalid ? (
-            <Text size={12} tone="danger">
+            <Text size={13} tone="danger">
               Âge entre 0 et 120 ans.
             </Text>
           ) : null}
@@ -111,7 +113,7 @@ export default function MemberScreen() {
           summary={foodSummary({ favoriteFoods, dislikedFoods, appetite, canteenDays, foodNotes, diets, allergies, foodsToLimit })}
           icon={<MealIcon size={16} color={color.neutral400} />}
         >
-          <Text size={12} tone="faint">
+          <Text size={13} tone="faint">
             Sert à adapter les menus générés. Claude reçoit ces infos sans le prénom (« Enfant 1 », « Adulte 2 »).
           </Text>
           <TextField label="Plats préférés" value={favoriteFoods} onChangeText={setFavoriteFoods} placeholder="Ex. lasagnes, crêpes, poulet rôti" multiline />
@@ -123,11 +125,11 @@ export default function MemberScreen() {
             onSelect={(v) => setAppetite(v as Appetite | null)}
             optional
           />
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
               Déjeune à la cantine
             </Text>
-            <View style={{ flexDirection: "row", gap: space[2] }}>
+            <View style={{ flexDirection: "row", gap: space.sm }}>
               {CANTEEN_DAY_OPTIONS.map((d) => (
                 <Chip key={d.value} label={d.label} size="sm" fill selected={canteenDays.includes(d.value)} onPress={() => setCanteenDays((c) => toggle(c, d.value))} />
               ))}
@@ -135,17 +137,17 @@ export default function MemberScreen() {
           </View>
           <TextField label="Notes" value={foodNotes} onChangeText={setFoodNotes} placeholder="Ex. mange lentement, aime aider en cuisine" multiline />
 
-          <View style={{ gap: space[3], borderTopWidth: 1, borderTopColor: color.divider, paddingTop: space[4] }}>
-            <Text size={14} weight="medium">
+          <View style={{ gap: space.sm, borderTopWidth: 1, borderTopColor: color.divider, paddingTop: space.md }}>
+            <Text size={15} weight="medium">
               Santé et régime
             </Text>
             {consented ? (
               <>
-                <View style={{ gap: space[2] }}>
+                <View style={{ gap: space.sm }}>
                   <Text size={13} tone="muted">
                     Régime alimentaire
                   </Text>
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
                     {MEMBER_DIET_OPTIONS.map((o) => (
                       <Chip key={o.value} label={o.label} size="sm" selected={diets.includes(o.value)} onPress={() => setDiets((d) => toggle(d, o.value))} />
                     ))}
@@ -154,7 +156,7 @@ export default function MemberScreen() {
                 <TextField label="Allergies / intolérances" value={allergies} onChangeText={setAllergies} placeholder="Ex. arachides, lactose" multiline />
                 <TextField label="Aliments à limiter" value={foodsToLimit} onChangeText={setFoodsToLimit} placeholder="Ex. sucre, sel" multiline />
                 <Pressable onPress={() => router.push("/privacy")}>
-                  <Text size={12} tone="faint">
+                  <Text size={13} tone="faint">
                     Ton accord peut être retiré à tout moment, dans Profil, rubrique Confidentialité.
                   </Text>
                 </Pressable>
@@ -164,7 +166,7 @@ export default function MemberScreen() {
                 <Text size={13} tone="muted">
                   Le régime, les allergies et les aliments à limiter sont des données de santé (ou peuvent révéler une religion). Pour les enregistrer, Passerelle a besoin de ton accord explicite, valable pour toute la famille.
                 </Text>
-                <Text size={12} tone="faint">
+                <Text size={13} tone="faint">
                   Elles servent uniquement à adapter les menus, sont transmises à Claude (Anthropic) sans prénom au moment de générer, et sont effacées si tu retires ton accord.
                 </Text>
                 <Button
@@ -175,7 +177,7 @@ export default function MemberScreen() {
                   onPress={() => setConsent.mutate(true)}
                 />
                 <Pressable onPress={() => router.push("/privacy")}>
-                  <Text size={12} tone="faint">
+                  <Text size={13} tone="faint">
                     En savoir plus : Profil, rubrique Confidentialité
                   </Text>
                 </Pressable>

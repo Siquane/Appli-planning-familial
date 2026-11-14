@@ -11,10 +11,11 @@ import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
 import { useCreateRecipe, useMembers, useRecipes, useUpdateRecipe } from "../../src/hooks/useApi";
 import { useToastStore } from "../../src/state/toastStore";
-import { space } from "../../src/theme/tokens";
+import { space, gutter } from "../../src/theme/tokens";
 import type { Recipe } from "../../src/api/types";
 import { recipesApi } from "../../src/api/resources";
 import { Card } from "../../src/components/Card";
+import { errorText } from "../../src/lib/errors";
 
 export default function RecipeFormScreen() {
   const { edit } = useLocalSearchParams<{ edit?: string }>();
@@ -45,7 +46,7 @@ export default function RecipeFormScreen() {
       setSteps(recipe.steps);
       if (recipe.notes) setNotes((n) => (n ? `${n}\n${recipe.notes}` : recipe.notes));
       setImportUrl("");
-      useToastStore.getState().show("Recette importée : vérifiez-la puis enregistrez.");
+      useToastStore.getState().show("Recette importée : vérifie-la puis enregistre.");
     } catch (e) {
       useToastStore.getState().show(e instanceof Error ? e.message : "Import impossible.");
     } finally {
@@ -81,16 +82,16 @@ export default function RecipeFormScreen() {
       }
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "enregistrer la recette"));
     }
   }
 
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier la recette" : "Nouvelle recette"} onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         {!existing && (
-          <Card style={{ gap: space[2] }}>
+          <Card style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
               Importer depuis un site de recettes (optionnel)
             </Text>
@@ -106,11 +107,11 @@ export default function RecipeFormScreen() {
         <ListEditor label="Étapes" placeholder="Ex. Couper les courgettes en rondelles" items={steps} onChange={setSteps} numbered />
 
         {members.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
               Qui aime ce plat ? (optionnel)
             </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
               {members.map((m) => (
                 <Chip key={m.id} label={m.name} selected={memberIds.includes(m.id)} onPress={() => toggleMember(m.id)} size="sm" />
               ))}
@@ -121,7 +122,7 @@ export default function RecipeFormScreen() {
         <TextField label="Notes" value={notes} onChangeText={setNotes} multiline placeholder="Astuces, variantes..." />
 
         {!isValid && (
-          <Text tone="muted" size={12} center>
+          <Text tone="muted" size={13} center>
             Un titre est nécessaire pour {existing ? "enregistrer" : "créer la recette"}.
           </Text>
         )}

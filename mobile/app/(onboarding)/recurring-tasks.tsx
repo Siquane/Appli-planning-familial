@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable } from "../../src/components/Touchable";
+import { View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
@@ -18,6 +19,7 @@ import { confirmReminderPermission } from "../../src/lib/notifications";
 import { WEEKDAYS_SHORT } from "../../src/lib/weekdays";
 import { color, space } from "../../src/theme/tokens";
 import type { Category, Weekday } from "../../src/api/types";
+import { errorText } from "../../src/lib/errors";
 
 const CATEGORIES: Category[] = ["École", "Travail", "Maison", "Santé", "Loisirs"];
 
@@ -95,7 +97,7 @@ export default function RecurringTasksOnboardingScreen() {
       useToastStore.getState().show(drafts.length > 1 ? "Tâches récurrentes créées." : "Tâche récurrente créée.");
       router.push("/(onboarding)/notifications");
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "créer les tâches récurrentes"));
     } finally {
       setSaving(false);
     }
@@ -103,26 +105,26 @@ export default function RecurringTasksOnboardingScreen() {
 
   return (
     <Screen keyboard style={{ justifyContent: "space-between", flexGrow: 1 }}>
-      <View style={{ gap: space[6] }}>
-        <View style={{ gap: 4 }}>
+      <View style={{ gap: space.lg }}>
+        <View style={{ gap: space.xs }}>
           <Text heading weight="semibold" size={22}>
             Vos tâches récurrentes
           </Text>
-          <Text tone="muted" size={14}>
+          <Text tone="muted" size={15}>
             Elles se replaceront automatiquement chaque semaine dans la grille.
           </Text>
         </View>
 
         {drafts.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             {drafts.map((d) => (
               <Card key={d.key} row style={{ alignItems: "center" }}>
                 <RecurringIcon size={13} color={color.accent400} />
-                <View style={{ flex: 1, marginLeft: space[2] }}>
-                  <Text size={14} weight="medium">
+                <View style={{ flex: 1, marginLeft: space.sm }}>
+                  <Text size={15} weight="medium">
                     {d.title}
                   </Text>
-                  <Text size={11.5} tone="faint">
+                  <Text size={11} tone="faint">
                     {describeSchedule(d.times)} · {d.category}
                     {d.reminder ? " · Rappel" : ""}
                   </Text>
@@ -135,14 +137,14 @@ export default function RecurringTasksOnboardingScreen() {
           </View>
         )}
 
-        <View style={{ gap: space[3] }}>
+        <View style={{ gap: space.sm }}>
           <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Piano, Devoirs, Sport..." />
 
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
               Jours
             </Text>
-            <View style={{ flexDirection: "row", gap: space[1] }}>
+            <View style={{ flexDirection: "row", gap: space.xs }}>
               {WEEKDAYS_SHORT.map((label, i) => (
                 <Chip key={label} label={label} selected={weekdays.includes(i as Weekday)} onPress={() => toggleWeekday(i as Weekday)} size="sm" fill />
               ))}
@@ -159,11 +161,11 @@ export default function RecurringTasksOnboardingScreen() {
             onDayTimesChange={setDayTimes}
           />
 
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
               Catégorie
             </Text>
-            <View style={{ flexDirection: "row", gap: space[1] }}>
+            <View style={{ flexDirection: "row", gap: space.xs }}>
               {CATEGORIES.map((c) => (
                 <Chip key={c} label={c} selected={category === c} onPress={() => setCategory(c)} size="sm" fill />
               ))}
@@ -182,7 +184,7 @@ export default function RecurringTasksOnboardingScreen() {
         </View>
       </View>
 
-      <View style={{ gap: space[3], alignItems: "center" }}>
+      <View style={{ gap: space.sm, alignItems: "center" }}>
         <StepDots step={3} total={5} />
         <Button label="Continuer" variant="primary" block onPress={onContinue} loading={saving} />
         <Button label="Plus tard" variant="ghost" block onPress={() => router.push("/(onboarding)/notifications")} />

@@ -21,18 +21,18 @@ export default function NotificationsOnboardingScreen() {
   return (
     <Screen scroll={false} style={{ justifyContent: "space-between" }}>
       <View />
-      <View style={{ alignItems: "center", gap: space[4] }}>
+      <View style={{ alignItems: "center", gap: space.md }}>
         <View style={{ width: 64, height: 64, borderRadius: 16, backgroundColor: color.accent800, alignItems: "center", justifyContent: "center" }}>
           <BellIcon size={30} color={color.accent200} />
         </View>
         <Text heading weight="semibold" size={22} center>
           Restez au courant
         </Text>
-        <Text tone="muted" size={14} center style={{ maxWidth: 280 }}>
-          Passerelle vous prévient des changements de planning et des tâches à venir. Vous pourrez ajuster cela dans votre profil.
+        <Text tone="muted" size={15} center style={{ maxWidth: 280 }}>
+          Passerelle te prévient des changements de planning et des tâches à venir. Tu pourras régler ça dans ton profil.
         </Text>
       </View>
-      <View style={{ gap: space[4], alignItems: "center", width: "100%" }}>
+      <View style={{ gap: space.md, alignItems: "center", width: "100%" }}>
         <StepDots step={4} total={5} />
         <Button label="Terminer" variant="primary" block onPress={finish} />
       </View>

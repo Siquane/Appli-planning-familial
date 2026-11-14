@@ -102,7 +102,7 @@ export async function uploadPickedFile(file: PickedFile, data: DocumentInput): P
   const put = await fetch(ticket.upload.url, { method: ticket.upload.method, headers: ticket.upload.headers, body: blob });
   if (!put.ok) {
     await documentsApi.remove(ticket.document.id).catch(() => {});
-    throw new UploadError("L'envoi du fichier a échoué. Vérifiez votre connexion et réessayez.");
+    throw new UploadError("L'envoi du fichier a échoué. Vérifie ta connexion et réessaie.");
   }
   const { document } = await documentsApi.confirm(ticket.document.id);
   return document;

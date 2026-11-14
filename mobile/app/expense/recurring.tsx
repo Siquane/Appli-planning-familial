@@ -1,3 +1,4 @@
+import { errorText } from "../../src/lib/errors";
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -19,7 +20,7 @@ import {
 } from "../../src/hooks/useApi";
 import { centsToInput, parseAmount } from "../../src/lib/money";
 import { useToastStore } from "../../src/state/toastStore";
-import { space } from "../../src/theme/tokens";
+import { space, gutter } from "../../src/theme/tokens";
 
 /** "5" -> 5, anything outside 1–31 -> null. */
 function parseDay(input: string) {
@@ -72,7 +73,7 @@ export default function RecurringExpenseFormScreen() {
       }
       router.back();
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Une erreur est survenue.");
+      useToastStore.getState().show(errorText(e, "enregistrer la dépense récurrente"));
     }
   }
 
@@ -104,9 +105,9 @@ export default function RecurringExpenseFormScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Dépense récurrente" : "Nouvelle dépense récurrente"} onBack={() => router.back()} onDelete={existing ? onDelete : undefined} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Card>
-          <Text size={12} tone="muted">
+          <Text size={13} tone="muted">
             Ajoutée automatiquement chaque mois, à partir de ce mois-ci. Un jour 29, 30 ou 31 passe au dernier jour des mois plus courts.
             {existing ? " Les changements s'appliquent aux mois pas encore ajoutés." : ""}
           </Text>
@@ -125,7 +126,7 @@ export default function RecurringExpenseFormScreen() {
         )}
 
         {hint && (
-          <Text tone="muted" size={12} center>
+          <Text tone="muted" size={13} center>
             {hint}
           </Text>
         )}

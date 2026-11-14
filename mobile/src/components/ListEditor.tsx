@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable } from "./Touchable";
+import { View } from "react-native";
 import { Text } from "./Text";
 import { TextField } from "./TextField";
 import { Button } from "./Button";
@@ -31,21 +32,21 @@ export function ListEditor({ label, placeholder, items, onChange, numbered }: Pr
   }
 
   return (
-    <View style={{ gap: space[2] }}>
+    <View style={{ gap: space.sm }}>
       <Text size={13} tone="muted">
         {label}
       </Text>
 
       {items.length > 0 && (
-        <View style={{ gap: space[1] }}>
+        <View style={{ gap: space.xs }}>
           {items.map((item, i) => (
-            <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+            <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
               {numbered && (
                 <Text size={13} tone="faint" mono>
                   {i + 1}.
                 </Text>
               )}
-              <Text size={14} style={{ flex: 1 }}>
+              <Text size={15} style={{ flex: 1 }}>
                 {item}
               </Text>
               <Pressable onPress={() => remove(i)} accessibilityLabel={`Supprimer la ligne ${i + 1}`}>
@@ -56,7 +57,7 @@ export function ListEditor({ label, placeholder, items, onChange, numbered }: Pr
         </View>
       )}
 
-      <View style={{ flexDirection: "row", gap: space[2] }}>
+      <View style={{ flexDirection: "row", gap: space.sm }}>
         <View style={{ flex: 1 }}>
           <TextField value={draft} onChangeText={setDraft} placeholder={placeholder} onSubmitEditing={add} returnKeyType="done" />
         </View>

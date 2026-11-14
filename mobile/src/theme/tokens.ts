@@ -52,7 +52,9 @@ export function glow(c: string, blur = 12) {
 
 export const radius = { sm: 4, md: 8, lg: 14 } as const;
 
-export const space = { 1: 3, 2: 6, 3: 8, 4: 11, 6: 17, 8: 22 } as const;
+// Spacing scale, in steps of 4. `gutter` is the side margin of every screen.
+export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
+export const gutter = 22;
 
 // React Native has no box-shadow; these translate the token *intent*
 // (a hairline ring + ambient darkness, no flood) into elevation/shadow props

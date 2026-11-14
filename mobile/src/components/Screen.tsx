@@ -1,7 +1,7 @@
 import { ReactElement, ReactNode } from "react";
 import { RefreshControlProps, ScrollView, View, ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { color } from "../theme/tokens";
+import { color, gutter } from "../theme/tokens";
 import { KeyboardScrollView } from "./KeyboardScrollView";
 
 // Nocturne's "tech-grid" background — a faint cyan grid, applied on Home and
@@ -47,7 +47,7 @@ export function Screen({ children, scroll = true, techGrid, padded = true, style
       <SafeAreaView edges={edges} style={{ flex: 1, backgroundColor: color.bg }}>
         {techGrid && <TechGridOverlay />}
         <KeyboardScrollView
-          contentContainerStyle={[{ flexGrow: 1, padding: padded ? 22 : 0, gap: 22 }, style]}
+          contentContainerStyle={[{ flexGrow: 1, padding: padded ? gutter : 0, gap: gutter }, style]}
           showsVerticalScrollIndicator={false}
         >
           {children}
@@ -62,8 +62,8 @@ export function Screen({ children, scroll = true, techGrid, padded = true, style
       {techGrid && <TechGridOverlay />}
       <Container
         {...(scroll
-          ? { contentContainerStyle: [{ padding: padded ? 22 : 0, gap: 22 }, style], showsVerticalScrollIndicator: false, refreshControl }
-          : { style: [{ flex: 1, padding: padded ? 22 : 0, gap: 22 }, style] })}
+          ? { contentContainerStyle: [{ padding: padded ? gutter : 0, gap: gutter }, style], showsVerticalScrollIndicator: false, refreshControl }
+          : { style: [{ flex: 1, padding: padded ? gutter : 0, gap: gutter }, style] })}
       >
         {children}
       </Container>

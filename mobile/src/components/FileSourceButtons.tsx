@@ -24,7 +24,7 @@ export function FileSourceButtons({ onPicked, disabled }: { onPicked: (file: Pic
   }
 
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2], opacity: disabled ? 0.5 : 1 }}>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm, opacity: disabled ? 0.5 : 1 }}>
       {SOURCES.map((s) => (
         <Chip key={s.source} label={s.label} size="sm" onPress={() => choose(s.source)} />
       ))}

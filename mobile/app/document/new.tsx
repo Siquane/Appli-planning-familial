@@ -15,7 +15,7 @@ import { useDocuments, useMembers, useUpdateDocument, useUploadDocument } from "
 import { DOCUMENT_CATEGORIES, formatSize, type PickedFile } from "../../src/lib/documentUpload";
 import { useToastStore } from "../../src/state/toastStore";
 import { showApiError } from "../../src/lib/premium";
-import { color, space } from "../../src/theme/tokens";
+import { color, space, gutter } from "../../src/theme/tokens";
 import type { DocumentCategory } from "../../src/api/types";
 
 // Add a document to the family library, or (with ?edit=<id>) rename and
@@ -66,20 +66,20 @@ export default function DocumentFormScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier le document" : "Nouveau document"} onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         {!existing && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
               Fichier (photo ou PDF, 5 Mo max.)
             </Text>
             {file && (
               <Card row style={{ alignItems: "center" }}>
                 <DocumentIcon size={16} color={color.accent400} />
-                <Text size={13} numberOfLines={1} style={{ flex: 1, marginLeft: space[2] }}>
+                <Text size={13} numberOfLines={1} style={{ flex: 1, marginLeft: space.sm }}>
                   {file.name}
                 </Text>
                 {file.size ? (
-                  <Text size={11.5} tone="faint">
+                  <Text size={11} tone="faint">
                     {formatSize(file.size)}
                   </Text>
                 ) : null}
@@ -91,11 +91,11 @@ export default function DocumentFormScreen() {
 
         <TextField label="Nom" value={title} onChangeText={setTitle} placeholder="Ex. Ordonnance pédiatre" />
 
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           <Text size={13} tone="muted">
             Catégorie
           </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
             {DOCUMENT_CATEGORIES.map((c) => (
               <Chip key={c.value} label={c.label} size="sm" selected={category === c.value} onPress={() => setCategory(c.value)} />
             ))}
@@ -103,11 +103,11 @@ export default function DocumentFormScreen() {
         </View>
 
         {members.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
               Concerne (optionnel)
             </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
               {members.map((m) => (
                 <Chip key={m.id} label={m.name} size="sm" selected={memberId === m.id} onPress={() => setMemberId(memberId === m.id ? null : m.id)} />
               ))}
@@ -116,8 +116,8 @@ export default function DocumentFormScreen() {
         )}
 
         {!isValid && (
-          <Text tone="muted" size={12} center>
-            {existing ? "Un nom est nécessaire pour enregistrer." : "Choisissez d'abord un fichier."}
+          <Text tone="muted" size={13} center>
+            {existing ? "Un nom est nécessaire pour enregistrer." : "Choisis d'abord un fichier."}
           </Text>
         )}
 
