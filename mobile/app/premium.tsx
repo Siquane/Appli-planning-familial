@@ -157,7 +157,7 @@ export default function PremiumScreen() {
                 </Text>
               ) : null}
               {trial?.available && !active ? (
-                <Button label={`Essayer ${trial.days / 7} semaines gratuitement`} icon={<SparkleIcon size={18} color={color.bg} />} variant="primary" block loading={startTrial.isPending} onPress={onTrial} />
+                <Button label={`Essayer ${trial.days / 7} semaines gratuitement`} icon={<SparkleIcon size={18} color={color.bg} />} variant="primary" block loading={startTrial.isPending} onPress={onTrial} needsNetwork />
               ) : null}
               {active && until ? (
                 <Text size={13} tone="accent">
@@ -178,6 +178,7 @@ export default function PremiumScreen() {
                         style={{ flex: 1 }}
                         onPress={() => onBuy(key, pack.id, pkg)}
                         loading={busy === key}
+                        needsNetwork
                         disabled={!!busy}
                       />
                     );
@@ -218,7 +219,7 @@ export default function PremiumScreen() {
 
         {billing ? (
           <View style={{ gap: space.sm }}>
-            <Button label="Restaurer mes achats" variant="ghost" block onPress={onRestore} loading={busy === "restore"} disabled={!!busy} />
+            <Button label="Restaurer mes achats" variant="ghost" block onPress={onRestore} loading={busy === "restore"} disabled={!!busy} needsNetwork />
             {hasPaidPack(plan) && (
               <Button label="Gérer ou résilier mon abonnement" variant="ghost" block onPress={() => Linking.openURL(MANAGE_SUBSCRIPTIONS_URL)} />
             )}

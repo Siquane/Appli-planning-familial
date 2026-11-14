@@ -213,3 +213,12 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 
 - Les abonnements s'appellent **Repas+** (ex-pack Menus), **Budget+** (ex-pack Budget) et **Passerelle+** (les deux, ex-« Les 2 ») ; l'écran s'intitule « Passerelle+ ». Icônes : toque (`ToqueIcon`) pour Repas+, tirelire (`PiggyBankIcon`) pour Budget+. Les identifiants techniques ne changent pas (`budget`, `meals`, `both`, champs `budgetUntil`/`mealsUntil`).
 - Politique de confidentialité : `docs/politique-confidentialite.html`, publiée sur https://claude.ai/artifact/6q5yK3yYE2SmCnZAMqDxmv (à rendre publique par l'utilisatrice, menu Partager). Responsable : Anaïs Guyon, contact Siquane.lab@gmail.com. Lien dans Profil → Confidentialité.
+
+## Fonctionnement sans connexion
+
+- **Lecture** : les dernières données restent sur le téléphone (cache React Query persisté, `src/lib/queryClient.ts`). Une coupure réseau ne déconnecte plus : si le serveur est injoignable pendant le renouvellement de session, la session est gardée (`UnreachableError`).
+- **Écriture** : tâches, courses, repas et dépenses (création, modification, suppression) passent par `src/lib/offlineApi.ts` → `writeOrQueue` (`src/lib/outbox.ts`). Sans réponse du serveur, l'écran est mis à jour tout de suite (`offlinePatches.ts`), le changement est gardé dans une file sur le téléphone (`outboxStore`, `outboxQueue.ts`) et envoyé dans l'ordre au retour du réseau. Un élément créé hors connexion a un id temporaire `tmp_…` remplacé par le vrai id dès que le serveur répond ; créer puis supprimer hors connexion n'envoie rien.
+- **Conflits** : le dernier changement arrivé l'emporte ; les ajouts sont tous gardés. Un changement que le serveur refuse (déjà supprimé ailleurs) est abandonné avec un message.
+- **Réseau** : pas de module natif. Une requête sans réponse marque le téléphone hors connexion (`networkStore`) ; `startOutboxSync` revérifie au retour au premier plan et toutes les 15 s tant que quelque chose attend. Bandeau au-dessus de la barre d'onglets (`OfflineBanner`).
+- **Besoin du réseau** (boutons grisés via `Button needsNetwork`) : menus générés, import de relevé, import de recette par lien, enregistrement de recettes et de documents, achats. Le reste (recettes, documents, famille, comptes…) se lit hors connexion mais ne s'écrit pas.
+

@@ -121,7 +121,7 @@ export default function DocumentFormScreen() {
           </Text>
         )}
 
-        <Button label={existing ? "Enregistrer" : "Ajouter le document"} variant="primary" block onPress={onSave} disabled={!isValid} loading={saving} />
+        <Button label={existing ? "Enregistrer" : "Ajouter le document"} variant="primary" block onPress={onSave} disabled={!isValid} loading={saving} needsNetwork />
       </KeyboardScrollView>
     </Screen>
   );

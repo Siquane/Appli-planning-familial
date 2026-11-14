@@ -4,6 +4,7 @@ import { Text } from "./Text";
 import { color, glow, radius, space } from "../theme/tokens";
 import { GradientFill } from "./Brand";
 import { hitSlopFor } from "./Touchable";
+import { useIsOnline } from "../state/networkStore";
 
 type Variant = "primary" | "secondary" | "ghost" | "icon";
 
@@ -19,12 +20,16 @@ interface Props {
   trailing?: ReactNode;
   style?: ViewStyle;
   accessibilityLabel?: string;
+  /** The action needs the internet (menus from Claude, statement import, purchases…): disabled while the phone is offline. */
+  needsNetwork?: boolean;
 }
 
 // Primary actions are filled with the logo's neon gradient (dark text on top);
 // secondary and ghost buttons stay sober.
-export function Button({ label, onPress, variant = "secondary", block, disabled, loading, icon, trailing, style, accessibilityLabel }: Props) {
+export function Button({ label, onPress, variant = "secondary", block, disabled, loading, icon, trailing, style, accessibilityLabel, needsNetwork }: Props) {
   const isIcon = variant === "icon";
+  const online = useIsOnline();
+  if (needsNetwork && !online) disabled = true;
   return (
     <Pressable
       onPress={disabled || loading ? undefined : onPress}

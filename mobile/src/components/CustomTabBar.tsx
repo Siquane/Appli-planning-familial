@@ -1,3 +1,4 @@
+import { OfflineBanner } from "./OfflineBanner";
 import { useState } from "react";
 import { Pressable } from "./Touchable";
 import { View } from "react-native";
@@ -72,42 +73,45 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
   }
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingBottom: (insets.bottom || 10) + space.md,
-        paddingTop: space.md,
-        paddingHorizontal: gutter,
-        borderTopWidth: 1,
-        borderTopColor: color.divider,
-        backgroundColor: color.bg,
-      }}
-    >
-      {left.map(renderTab)}
-
-      <Pressable
-        onPress={() => setQuickAdd(true)}
-        accessibilityLabel="Ajouter"
+    <View>
+      <OfflineBanner />
+      <View
         style={{
-          width: 52,
-          height: 52,
-          borderRadius: 26,
-          padding: 2,
-          marginHorizontal: space.sm,
-          marginTop: -24,
-          boxShadow: glow("rgba(76,196,255,0.5)", 18),
+          flexDirection: "row",
+          alignItems: "center",
+          paddingBottom: (insets.bottom || 10) + space.md,
+          paddingTop: space.md,
+          paddingHorizontal: gutter,
+          borderTopWidth: 1,
+          borderTopColor: color.divider,
+          backgroundColor: color.bg,
         }}
       >
-        <GradientFill radius={26} />
-        <View style={{ flex: 1, borderRadius: 24, backgroundColor: color.bg, alignItems: "center", justifyContent: "center" }}>
-          <PlusIcon size={22} color={color.pillar2} />
-        </View>
-      </Pressable>
+        {left.map(renderTab)}
 
-      {right.map(renderTab)}
+        <Pressable
+          onPress={() => setQuickAdd(true)}
+          accessibilityLabel="Ajouter"
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: 26,
+            padding: 2,
+            marginHorizontal: space.sm,
+            marginTop: -24,
+            boxShadow: glow("rgba(76,196,255,0.5)", 18),
+          }}
+        >
+          <GradientFill radius={26} />
+          <View style={{ flex: 1, borderRadius: 24, backgroundColor: color.bg, alignItems: "center", justifyContent: "center" }}>
+            <PlusIcon size={22} color={color.pillar2} />
+          </View>
+        </Pressable>
 
-      <QuickAddSheet visible={quickAdd} onClose={() => setQuickAdd(false)} />
+        {right.map(renderTab)}
+
+        <QuickAddSheet visible={quickAdd} onClose={() => setQuickAdd(false)} />
+      </View>
     </View>
   );
 }
