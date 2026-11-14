@@ -15,6 +15,10 @@ const ROW_COLOR: Record<string, Hex> = {
   normal: color.neutral300 as Hex,
 };
 
+// Sizes stay readable down to a 2 × 2 widget: long lines are cut with « … ».
+const TITLE_SIZE = 15;
+const ROW_SIZE = 16;
+
 export function WidgetCard({ content, accent, uri }: { content: WidgetContent; accent: string; uri: string }) {
   const empty = content.rows.length === 0;
   return (
@@ -30,20 +34,38 @@ export function WidgetCard({ content, accent, uri }: { content: WidgetContent; a
         borderColor: (color.neutral900 as Hex) ?? "#292b31",
         padding: 14,
         flexDirection: "column",
-        flexGap: 6,
+        flexGap: 7,
       }}
     >
-      <TextWidget text={content.title} maxLines={1} truncate="END" style={{ fontSize: 13, fontWeight: "600", color: accent as Hex }} />
-      {content.rows.map((r, i) => (
-        <TextWidget key={i} text={r.text} maxLines={1} truncate="END" style={{ fontSize: 14, color: ROW_COLOR[r.tone ?? "normal"], fontWeight: r.tone === "strong" ? "600" : "400" }} />
-      ))}
-      {empty && <TextWidget text={content.empty ?? ""} maxLines={1} truncate="END" style={{ fontSize: 14, color: ROW_COLOR.normal }} />}
+      <TextWidget
+        text={content.title}
+        maxLines={1}
+        truncate="END"
+        style={{ width: "match_parent", textAlign: "center", fontSize: TITLE_SIZE, fontWeight: "700", color: accent as Hex, marginBottom: 2 }}
+      />
+      {content.rows.map((r, i) => {
+        const tone = ROW_COLOR[r.tone ?? "normal"];
+        const weight = r.tone === "strong" ? "600" : "400";
+        if (!r.aside) {
+          return <TextWidget key={i} text={r.text} maxLines={1} truncate="END" style={{ fontSize: ROW_SIZE, color: tone, fontWeight: weight }} />;
+        }
+        // Task on the left, who it's for on the right.
+        return (
+          <FlexWidget key={i} style={{ width: "match_parent", flexDirection: "row", alignItems: "center", flexGap: 8 }}>
+            <FlexWidget style={{ flex: 1 }}>
+              <TextWidget text={r.text} maxLines={1} truncate="END" style={{ fontSize: ROW_SIZE, color: tone, fontWeight: weight }} />
+            </FlexWidget>
+            <TextWidget text={r.aside} maxLines={1} truncate="END" style={{ fontSize: ROW_SIZE - 2, color: accent as Hex, fontWeight: "500" }} />
+          </FlexWidget>
+        );
+      })}
+      {empty && <TextWidget text={content.empty ?? ""} maxLines={1} truncate="END" style={{ width: "match_parent", textAlign: "center", fontSize: ROW_SIZE, color: ROW_COLOR.normal }} />}
       {empty && content.example && content.example.length > 0 && (
-        <TextWidget text="Exemple — appuie pour remplir" maxLines={1} style={{ fontSize: 11, color: ROW_COLOR.faint, fontStyle: "italic" }} />
+        <TextWidget text="Exemple — appuie pour remplir" maxLines={1} style={{ width: "match_parent", textAlign: "center", fontSize: 12, color: ROW_COLOR.faint, fontStyle: "italic" }} />
       )}
       {empty &&
         content.example?.map((text, i) => (
-          <TextWidget key={`ex${i}`} text={text} maxLines={1} truncate="END" style={{ fontSize: 13, color: ROW_COLOR.faint, fontStyle: "italic" }} />
+          <TextWidget key={`ex${i}`} text={text} maxLines={1} truncate="END" style={{ fontSize: ROW_SIZE - 1, color: ROW_COLOR.faint, fontStyle: "italic" }} />
         ))}
     </FlexWidget>
   );

@@ -1,7 +1,7 @@
-import { buildSnapshot, type WidgetSnapshot } from "../snapshot";
+import { buildSnapshot, whoLabel, type WidgetSnapshot } from "../snapshot";
 import { formatEuros } from "../../lib/money";
 import { menuContent, shoppingContent, summaryContent, tasksContent } from "../content";
-import type { Meal, MonthlyBudget, Recipe, ShoppingItem, Task } from "../../api/types";
+import type { Meal, Member, MonthlyBudget, Recipe, ShoppingItem, Task } from "../../api/types";
 
 jest.mock("@react-native-async-storage/async-storage", () => ({}));
 
@@ -21,7 +21,7 @@ describe("buildSnapshot", () => {
     const recipes = [{ id: "r1", title: "Gratin" }] as Recipe[];
     const budget = { month: "2026-11", totalCents: 5000, byCategory: [{ category: "a", totalCents: 5000, limitCents: 20000 }, { category: "b", totalCents: 0, limitCents: null }], expenses: [] } as unknown as MonthlyBudget;
     const shopping = [{ label: "Lait", checked: false }, { label: "Pain", checked: true }] as ShoppingItem[];
-    const s = buildSnapshot([task("Piscine", "17:00", 2)], meals, recipes, budget, shopping, now);
+    const s = buildSnapshot([task("Piscine", "17:00", 2)], meals, recipes, budget, shopping, [], now);
     expect(s.dinners).toEqual([{ weekday: 2, title: "Gratin" }, { weekday: 3, title: "Pizza" }]);
     expect(s.shopping).toEqual(["Lait"]);
     expect(s.budget).toEqual({ month: "2026-11", spentCents: 5000, capCents: 20000 });
@@ -62,7 +62,7 @@ describe("menuContent / shoppingContent", () => {
 
   it("counts what's left to buy and folds the overflow", () => {
     const c = shoppingContent(snap({ shopping: ["a", "b", "c", "d"] }), 2);
-    expect(c.title).toBe("Courses · 4 à acheter");
+    expect(c.title).toBe("Courses · 4");
     expect(c.rows.map((r) => r.text)).toEqual(["•  a", "•  b", "+ 2 autres"]);
   });
 });
@@ -74,5 +74,24 @@ describe("empty widgets", () => {
       expect(c.empty).toBeTruthy();
       expect(c.example?.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("who is on a task", () => {
+  const members = [
+    { id: "a", name: "Léa Martin" },
+    { id: "b", name: "Tom" },
+    { id: "c", name: "Zoé" },
+  ] as Member[];
+
+  it("lists first names in family order, shortened past two", () => {
+    expect(whoLabel([], members)).toBe("");
+    expect(whoLabel(["b", "a"], members)).toBe("Léa, Tom");
+    expect(whoLabel(["a", "b", "c"], members)).toBe("Léa +2");
+  });
+
+  it("shows them next to the day's tasks", () => {
+    const c = tasksContent(snap({ tasks: [{ title: "Piscine", time: "17:00", weekday: 2, who: "Tom" }, { title: "Courses", time: "18:00", weekday: 2 }] }), now);
+    expect(c.rows.map((r) => r.aside)).toEqual(["Tom", undefined]);
   });
 });

@@ -13,7 +13,7 @@ export function RecipesBody() {
 
   return (
     <View style={{ gap: space[2] }}>
-        <Button label="Nouvelle recette" icon={<PlusIcon size={16} color={color.text} />} variant="secondary" block onPress={() => router.push("/recipe/new")} />
+        <Button label="Nouvelle recette" icon={<PlusIcon size={18} color={color.text} />} variant="secondary" block onPress={() => router.push("/recipe/new")} />
 
         {recipes.length === 0 && (
           <Card style={{ alignItems: "center", paddingVertical: space[8] }}>

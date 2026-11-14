@@ -34,7 +34,7 @@ export default function DocumentsScreen() {
       <ScrollView contentContainerStyle={{ padding: 18, gap: space[2] }} showsVerticalScrollIndicator={false}>
         <Button
           label={full ? "Ajouter un document · Passerelle+" : "Ajouter un document"}
-          icon={<PlusIcon size={16} color={color.text} />}
+          icon={<PlusIcon size={18} color={color.text} />}
           variant="secondary"
           block
           onPress={() => router.push(full ? "/premium" : "/document/new")}

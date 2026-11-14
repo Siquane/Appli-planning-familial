@@ -91,7 +91,7 @@ export default function BudgetScreen() {
         <View style={{ flexDirection: "row", gap: space[2] }}>
           <Button
             label="Ajouter une dépense"
-            icon={<PlusIcon size={16} color={color.text} />}
+            icon={<PlusIcon size={18} color={color.text} />}
             variant="secondary"
             style={{ flex: 1 }}
             onPress={() => router.push(`/expense/new?month=${month}`)}

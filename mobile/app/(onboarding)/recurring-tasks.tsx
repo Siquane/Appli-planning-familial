@@ -178,7 +178,7 @@ export default function RecurringTasksOnboardingScreen() {
             }}
           />
 
-          <Button label="Ajouter une tâche récurrente" icon={<PlusIcon size={16} color={color.text} />} variant="secondary" block onPress={addDraft} disabled={!canAdd} />
+          <Button label="Ajouter une tâche récurrente" icon={<PlusIcon size={18} color={color.text} />} variant="secondary" block onPress={addDraft} disabled={!canAdd} />
         </View>
       </View>
 

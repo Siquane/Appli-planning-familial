@@ -64,7 +64,7 @@ export default function BudgetSettingsScreen() {
               </Card>
             </Pressable>
           ))}
-          <Button label="Ajouter une dépense récurrente" icon={<PlusIcon size={16} color={color.text} />} variant="secondary" block onPress={() => router.push("/expense/recurring")} />
+          <Button label="Ajouter une dépense récurrente" icon={<PlusIcon size={18} color={color.text} />} variant="secondary" block onPress={() => router.push("/expense/recurring")} />
         </Section>
 
         <Section title="Plafonds mensuels" hint="Valables tous les mois. Laisser vide pour ne pas en mettre.">
