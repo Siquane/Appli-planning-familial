@@ -30,7 +30,7 @@ export interface Member {
 }
 
 export type Appetite = "petit" | "moyen" | "gros";
-export type MemberDiet = "végétarien" | "pescetarien" | "sans-porc" | "halal" | "casher" | "sans-gluten" | "sans-lactose";
+export type MemberDiet = "végétarien" | "vegan" | "sans-porc" | "halal" | "casher" | "sans-gluten" | "sans-lactose";
 
 export type MemberInput = Partial<{
   name: string;
@@ -157,6 +157,8 @@ export interface Meal {
   title: string;
   recipeId: string | null;
   notes: string;
+  /** Shopping list of a generated dish; empty for a family recipe (it has its own). */
+  ingredients: string[];
 }
 
 export type MealInput = {
@@ -165,9 +167,10 @@ export type MealInput = {
   title?: string;
   recipeId?: string | null;
   notes?: string;
+  ingredients?: string[];
 };
 
-export type MealDiet = "végétarien" | "pescetarien" | "sans-porc" | "halal" | "sans-gluten" | "sans-lactose";
+export type MealDiet = "végétarien" | "vegan" | "sans-porc" | "halal" | "sans-gluten" | "sans-lactose";
 export type CookTime = "express" | "normal" | "élaboré";
 export type RecipeUsage = "souvent" | "parfois" | "jamais";
 
@@ -194,6 +197,7 @@ export interface ProposedMeal extends MealSlot {
   title: string;
   recipeId: string | null;
   notes: string;
+  ingredients: string[];
 }
 
 export interface MealQuota {

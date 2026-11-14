@@ -7,8 +7,8 @@ describe("sanitizeProposal", () => {
   it("keeps one meal per requested slot, drops extras and unknown recipe ids, and sorts the week", () => {
     const out = sanitizeProposal(
       [
-        { weekday: 3, type: "dîner", title: "Curry", recipeId: "inventé", notes: "" },
-        { weekday: 1, type: "dîner", title: "lasagnes", recipeId: "r1", notes: " Doubler les portions " },
+        { weekday: 3, type: "dîner", title: "Curry", recipeId: "inventé", notes: "", ingredients: [" 400 g de poulet ", "Lait de coco", "lait de coco", ""] },
+        { weekday: 1, type: "dîner", title: "lasagnes", recipeId: "r1", notes: " Doubler les portions ", ingredients: ["pâtes"] },
         { weekday: 1, type: "dîner", title: "Doublon", recipeId: null, notes: "" },
         { weekday: 5, type: "dîner", title: "Pas demandé", recipeId: null, notes: "" },
         { weekday: 2, type: "déjeuner", title: "   ", recipeId: null, notes: "" },
@@ -21,8 +21,10 @@ describe("sanitizeProposal", () => {
       recipes,
     );
     expect(out).toEqual([
-      { weekday: 1, type: "dîner", title: "Lasagnes de Mamie", recipeId: "r1", notes: "Doubler les portions" },
-      { weekday: 3, type: "dîner", title: "Curry", recipeId: null, notes: "" },
+      // A family recipe keeps its own ingredients: Claude's list is dropped.
+      { weekday: 1, type: "dîner", title: "Lasagnes de Mamie", recipeId: "r1", notes: "Doubler les portions", ingredients: [] },
+      // Trimmed, without blanks or duplicates.
+      { weekday: 3, type: "dîner", title: "Curry", recipeId: null, notes: "", ingredients: ["400 g de poulet", "Lait de coco"] },
     ]);
   });
 });

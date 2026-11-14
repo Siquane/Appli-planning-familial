@@ -114,7 +114,7 @@ export default function MealPlanScreen() {
   async function onSave() {
     if (!proposal?.length) return;
     try {
-      await save.mutateAsync(proposal.map(({ weekday, type, title, recipeId, notes }) => ({ weekday, type, title, recipeId, notes })));
+      await save.mutateAsync(proposal.map(({ weekday, type, title, recipeId, notes, ingredients }) => ({ weekday, type, title, recipeId, notes, ingredients })));
       useToastStore.getState().show(`${proposal.length} repas ajoutés au menu.`);
       router.back();
     } catch (e) {

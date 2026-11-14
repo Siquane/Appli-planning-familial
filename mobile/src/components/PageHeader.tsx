@@ -3,7 +3,7 @@ import { Pressable, View } from "react-native";
 import { router } from "expo-router";
 import { Text } from "./Text";
 import { Avatar } from "./Avatar";
-import { GradientRule, PasserelleArch } from "./Brand";
+import { GradientFill, PasserelleArch } from "./Brand";
 import { BellIcon, ChevronLeftIcon, SearchIcon } from "./icons";
 import { useNotifications } from "../hooks/useApi";
 import { useAuthStore } from "../state/authStore";
@@ -19,15 +19,16 @@ const iconButton = {
   justifyContent: "center",
 } as const;
 
-// Top of each of the 4 tabs: the Passerelle arch and the tab's title with a
-// gradient line under it, then search, notifications
-// (dot when unread) and the profile avatar — they used to be tabs themselves.
+// Top of each of the 4 tabs: the Passerelle arch and the tab's title, then
+// search, notifications (dot when unread) and the profile avatar — they used
+// to be tabs themselves. A gradient line across the whole screen closes the header.
 export function TabHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   const user = useAuthStore((s) => s.user);
   const { data: notifications = [] } = useNotifications();
   const hasUnread = notifications.some((n) => n.unread);
 
   return (
+    <View style={{ gap: space[4] }}>
     <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
       <View style={{ flex: 1 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
@@ -36,7 +37,6 @@ export function TabHeader({ title, subtitle }: { title: string; subtitle?: strin
             <Text heading weight="semibold" size={22} numberOfLines={1}>
               {title}
             </Text>
-            <GradientRule />
           </View>
         </View>
         {subtitle ? (
@@ -57,6 +57,11 @@ export function TabHeader({ title, subtitle }: { title: string; subtitle?: strin
       <Pressable onPress={() => router.push("/profile")} accessibilityLabel="Mon profil">
         <Avatar initials={user?.initials ?? ""} bg={color.accent800} fg={color.accent100} size={36} />
       </Pressable>
+    </View>
+    {/* Edge to edge: cancels the 18 px side padding of the tab screens. */}
+    <View style={{ height: 2, marginHorizontal: -18 }}>
+      <GradientFill />
+    </View>
     </View>
   );
 }

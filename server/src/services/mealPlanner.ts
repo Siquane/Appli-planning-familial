@@ -11,7 +11,7 @@ import { env } from "../env";
 export const MEAL_TYPES = ["petit-déjeuner", "déjeuner", "goûter", "dîner"] as const;
 export type MealType = (typeof MEAL_TYPES)[number];
 
-export const DIETS = ["végétarien", "pescetarien", "sans-porc", "halal", "sans-gluten", "sans-lactose"] as const;
+export const DIETS = ["végétarien", "vegan", "sans-porc", "halal", "sans-gluten", "sans-lactose"] as const;
 export const COOK_TIMES = ["express", "normal", "élaboré"] as const;
 export const RECIPE_USAGE = ["souvent", "parfois", "jamais"] as const;
 
@@ -121,6 +121,7 @@ export interface ProposedMeal {
   title: string;
   recipeId: string | null;
   notes: string;
+  ingredients: string[];
 }
 
 const ProposalSchema = z4.object({
@@ -131,6 +132,9 @@ const ProposalSchema = z4.object({
       title: z4.string().describe("Nom du plat, court, en français"),
       recipeId: z4.string().nullable().describe("id d'une recette de la famille si le plat en vient, sinon null"),
       notes: z4.string().describe("Une astuce pratique sur le plat (accompagnement, à préparer la veille, variante pour un membre désigné par son libellé), ou chaîne vide"),
+      ingredients: z4
+        .array(z4.string())
+        .describe("Ingrédients à acheter pour ce plat pour toute la famille, un par élément avec une quantité approximative (« 4 courgettes », « 200 g de lardons ») ; liste vide si recipeId est renseigné"),
     }),
   ),
 });
@@ -148,6 +152,7 @@ Règles :
 - Tiens compte de chaque membre de la famille : les allergies et régimes individuels sont stricts pour les plats qu'il ou elle mange ; privilégie ses plats préférés et évite ce qu'il ou elle n'aime pas, ou propose une variante simple dans la note (« sauce à part pour Enfant 1 »). Un membre qui déjeune à la cantine un jour donné n'est pas concerné par le déjeuner de ce jour-là.
 - Quand tu reprends une recette de la famille, mets son id dans recipeId et son titre exact dans title. Sinon recipeId = null.
 - Titres courts (« Gratin de courgettes », pas une phrase).
+- Ingrédients : pour chaque plat qui n'est pas une recette de la famille, la liste de courses du plat pour toute la famille, avec des quantités approximatives (« 4 courgettes », « 200 g de lardons », « 1 baguette »). Sans les basiques du placard (sel, poivre, huile, eau). Liste vide quand recipeId est renseigné : la recette a déjà ses ingrédients.
 - Notes : une astuce pratique sur le plat (accompagnement, à préparer la veille…), une ligne au plus, ou vide. Pour parler d'un membre, utilise uniquement son libellé (« Enfant 1 », « Adulte 2 ») ; ne devine jamais son genre (« les garçons », « les filles ») ni des goûts qui ne sont pas indiqués.`;
 
 function describePreferences(p: PlannerPreferences): string {
@@ -199,7 +204,7 @@ ${slots}`;
  * really belong to the family. Slots the model skipped are simply absent.
  */
 export function sanitizeProposal(
-  raw: { weekday: number; type: string; title: string; recipeId: string | null; notes: string }[],
+  raw: { weekday: number; type: string; title: string; recipeId: string | null; notes: string; ingredients?: string[] }[],
   slots: Slot[],
   recipes: { id: string; title: string }[],
 ): ProposedMeal[] {
@@ -220,9 +225,26 @@ export function sanitizeProposal(
       title,
       recipeId: recipe?.id ?? null,
       notes: m.notes.trim(),
+      // A family recipe keeps its own ingredients; otherwise keep Claude's list, tidied.
+      ingredients: recipe ? [] : cleanIngredients(m.ingredients ?? []),
     });
   }
   return out.sort((a, b) => a.weekday - b.weekday || MEAL_TYPES.indexOf(a.type) - MEAL_TYPES.indexOf(b.type));
+}
+
+/** Trimmed, non-empty, deduplicated, bounded (same limits as the /meals routes). */
+export function cleanIngredients(list: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of list) {
+    const item = raw.trim().replace(/\s+/g, " ").slice(0, 120);
+    const key = item.toLocaleLowerCase("fr");
+    if (!item || seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+    if (out.length === 40) break;
+  }
+  return out;
 }
 
 export class MealPlannerError extends Error {}

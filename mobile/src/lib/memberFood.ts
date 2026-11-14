@@ -5,7 +5,7 @@ import type { Appetite, Member, MemberDiet } from "../api/types";
 
 export const MEMBER_DIET_OPTIONS: { value: MemberDiet; label: string }[] = [
   { value: "végétarien", label: "Végétarien" },
-  { value: "pescetarien", label: "Pescétarien" },
+  { value: "vegan", label: "Vegan" },
   { value: "sans-porc", label: "Sans porc" },
   { value: "halal", label: "Halal" },
   { value: "casher", label: "Casher" },

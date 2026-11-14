@@ -12,7 +12,7 @@ membersRouter.get("/", async (req, res) => {
   res.json({ members });
 });
 
-export const MEMBER_DIETS = ["végétarien", "pescetarien", "sans-porc", "halal", "casher", "sans-gluten", "sans-lactose"] as const;
+export const MEMBER_DIETS = ["végétarien", "vegan", "sans-porc", "halal", "casher", "sans-gluten", "sans-lactose"] as const;
 const text = z.string().trim().max(500);
 
 const memberSchema = z.object({

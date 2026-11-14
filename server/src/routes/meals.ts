@@ -20,6 +20,7 @@ function serializeMeal(meal: Meal) {
     title: meal.title,
     recipeId: meal.recipeId,
     notes: meal.notes,
+    ingredients: meal.ingredients,
   };
 }
 
@@ -34,6 +35,7 @@ const mealSchema = z.object({
   title: z.string().default(""),
   recipeId: z.string().nullable().optional(),
   notes: z.string().default(""),
+  ingredients: z.array(z.string().trim().min(1).max(120)).max(40).optional(),
 });
 
 // Upsert: one meal per (weekday, type) slot — setting a slot that already
@@ -48,10 +50,16 @@ mealsRouter.post("/", async (req, res) => {
     if (!recipe) return res.status(400).json({ error: "Recette introuvable" });
   }
 
+  // Without a new list, ingredients follow the dish: kept while its title is
+  // unchanged (only the notes were edited), dropped when it becomes another dish.
+  const slot = { userId_weekday_type: { userId: req.userId!, weekday: d.weekday, type: d.type } };
+  const current = d.ingredients ? null : await prisma.meal.findUnique({ where: slot, select: { title: true, ingredients: true } });
+  const ingredients = d.ingredients ?? (current && current.title === d.title ? current.ingredients : []);
+
   const meal = await prisma.meal.upsert({
-    where: { userId_weekday_type: { userId: req.userId!, weekday: d.weekday, type: d.type } },
-    update: { title: d.title, recipeId: d.recipeId ?? null, notes: d.notes },
-    create: { userId: req.userId!, weekday: d.weekday, type: d.type, title: d.title, recipeId: d.recipeId ?? null, notes: d.notes },
+    where: slot,
+    update: { title: d.title, recipeId: d.recipeId ?? null, notes: d.notes, ingredients },
+    create: { userId: req.userId!, weekday: d.weekday, type: d.type, title: d.title, recipeId: d.recipeId ?? null, notes: d.notes, ingredients },
   });
   res.status(201).json({ meal: serializeMeal(meal) });
 });
@@ -149,8 +157,8 @@ mealsRouter.post("/bulk", async (req, res) => {
     items.map((d) =>
       prisma.meal.upsert({
         where: { userId_weekday_type: { userId: req.userId!, weekday: d.weekday, type: d.type } },
-        update: { title: d.title, recipeId: d.recipeId ?? null, notes: d.notes },
-        create: { userId: req.userId!, weekday: d.weekday, type: d.type, title: d.title, recipeId: d.recipeId ?? null, notes: d.notes },
+        update: { title: d.title, recipeId: d.recipeId ?? null, notes: d.notes, ingredients: d.ingredients ?? [] },
+        create: { userId: req.userId!, weekday: d.weekday, type: d.type, title: d.title, recipeId: d.recipeId ?? null, notes: d.notes, ingredients: d.ingredients ?? [] },
       }),
     ),
   );

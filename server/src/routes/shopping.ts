@@ -41,20 +41,26 @@ shoppingRouter.post("/", async (req, res) => {
   res.status(201).json({ item: serialize(item) });
 });
 
-// Adds the ingredients of the recipes planned this week that aren't on the
-// list yet (unchecked or checked). Hand-typed items are never touched.
+// Adds the ingredients of this week's menu that aren't on the list yet
+// (unchecked or checked): a family recipe's own ingredients, or the list Claude
+// gave with a generated dish. Hand-typed items are never touched.
+// `withoutIngredients` counts the planned dishes that have neither (typed by
+// hand, or generated before dishes came with their ingredients).
 shoppingRouter.post("/from-menu", async (req, res) => {
   const userId = req.userId!;
   const meals = await prisma.meal.findMany({
-    where: { userId, recipeId: { not: null } },
+    where: { userId },
     include: { recipe: { select: { ingredients: true } } },
   });
   const existing = await prisma.shoppingItem.findMany({ where: { userId }, select: { label: true } });
   const known = new Set(existing.map((i) => normalizeLabel(i.label)));
 
   const toAdd: string[] = [];
+  let withoutIngredients = 0;
   for (const meal of meals) {
-    for (const ingredient of meal.recipe?.ingredients ?? []) {
+    const ingredients = meal.recipe ? meal.recipe.ingredients : meal.ingredients;
+    if (ingredients.length === 0 && (meal.title.trim() || meal.recipe)) withoutIngredients++;
+    for (const ingredient of ingredients) {
       const key = normalizeLabel(ingredient);
       if (!key || known.has(key)) continue;
       known.add(key);
@@ -64,7 +70,7 @@ shoppingRouter.post("/from-menu", async (req, res) => {
   if (toAdd.length > 0) {
     await prisma.shoppingItem.createMany({ data: toAdd.map((label) => ({ userId, label, fromMenu: true })) });
   }
-  res.json({ added: toAdd.length, items: await list(userId) });
+  res.json({ added: toAdd.length, withoutIngredients, items: await list(userId) });
 });
 
 // Empties the basket: removes every checked item.

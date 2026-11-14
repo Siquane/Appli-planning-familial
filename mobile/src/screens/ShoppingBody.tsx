@@ -6,9 +6,11 @@ import { Button } from "../components/Button";
 import { CheckIcon, CloseIcon } from "../components/icons";
 import { useAddShoppingItem, useClearCheckedShopping, useDeleteShoppingItem, useShoppingFromMenu, useShoppingList, useToggleShoppingItem } from "../hooks/useApi";
 import { useToastStore } from "../state/toastStore";
+import { fromMenuMessage } from "../lib/shopping";
 import { color, font, radius, space } from "../theme/tokens";
 
 const toast = (m: string) => useToastStore.getState().show(m);
+
 
 /** Shopping list, shown in the « Repas » tab. */
 export function ShoppingBody() {
@@ -31,7 +33,7 @@ export function ShoppingBody() {
 
   function onFromMenu() {
     fromMenu.mutate(undefined, {
-      onSuccess: (r) => toast(r.added === 0 ? "Tout le menu est déjà dans la liste." : `${r.added} ingrédient${r.added > 1 ? "s" : ""} ajouté${r.added > 1 ? "s" : ""} depuis le menu.`),
+      onSuccess: (r) => toast(fromMenuMessage(r.added, r.withoutIngredients)),
       onError: (e) => toast(e instanceof Error ? e.message : "Une erreur est survenue."),
     });
   }
