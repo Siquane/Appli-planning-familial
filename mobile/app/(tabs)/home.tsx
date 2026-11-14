@@ -46,7 +46,7 @@ export default function HomeScreen() {
       <TabHeader
         title="Planning"
         subtitle={user?.name?.trim() ? `Salut, ${user.name.trim().split(" ")[0]}` : "Salut"}
-        subtitleIcon={<WaveIcon size={15} color={color.accent400} />}
+        subtitleIcon={<WaveIcon size={20} color={color.accent400} />}
       />
 
       <TodayCard />
