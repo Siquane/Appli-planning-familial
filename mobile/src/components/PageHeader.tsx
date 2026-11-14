@@ -40,14 +40,6 @@ export function TabHeader({ title, subtitle, subtitleIcon }: { title: string; su
             </Text>
           </View>
         </View>
-        {subtitle ? (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
-            <Text size={13} tone="muted" numberOfLines={1} style={{ flexShrink: 1 }}>
-              {subtitle}
-            </Text>
-            {subtitleIcon}
-          </View>
-        ) : null}
       </View>
       <Pressable hitSlop={hitSlopFor(36)} onPress={() => router.push("/search")} accessibilityLabel="Rechercher" style={iconButton}>
         <SearchIcon size={18} color={color.text} />
@@ -66,6 +58,15 @@ export function TabHeader({ title, subtitle, subtitleIcon }: { title: string; su
     <View style={{ height: 2, marginHorizontal: -gutter }}>
       <GradientFill />
     </View>
+    {/* Greeting under the line, centred. */}
+    {subtitle ? (
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: space.sm }}>
+        <Text heading weight="medium" size={17} numberOfLines={1} style={{ flexShrink: 1 }}>
+          {subtitle}
+        </Text>
+        {subtitleIcon}
+      </View>
+    ) : null}
     </View>
   );
 }
