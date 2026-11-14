@@ -45,7 +45,7 @@ export default function SignupScreen() {
 
       <View style={{ gap: space[3] }}>
         <TextField label="Nom" value={name} onChangeText={setName} placeholder="Claire Dubois" />
-        <TextField label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="vous@exemple.fr" />
+        <TextField label="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="toi@exemple.fr" />
         <TextField label="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry placeholder="8 caractères minimum" />
         {error && (
           <Text tone="danger" size={13}>

@@ -62,7 +62,7 @@ export default function ForgotPasswordScreen() {
 
       <View style={{ gap: space[3] }}>
         {step === "email" ? (
-          <TextField label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="vous@exemple.fr" />
+          <TextField label="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="toi@exemple.fr" />
         ) : (
           <>
             <TextField

@@ -43,7 +43,7 @@ export default function LoginScreen() {
       </View>
 
       <View style={{ gap: space[3] }}>
-        <TextField label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="vous@exemple.fr" />
+        <TextField label="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="toi@exemple.fr" />
         <TextField label="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
         <View style={{ alignItems: "flex-end" }}>
           <Link href={{ pathname: "/(auth)/forgot-password", params: email.trim() ? { email: email.trim() } : {} }}>
