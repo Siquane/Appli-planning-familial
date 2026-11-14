@@ -15,7 +15,7 @@ export function TextField({ label, style, multiline, error, onFocus, onBlur, ...
   const [focused, setFocused] = useState(false);
   const borderColor = error ? color.danger : focused ? color.accent600 : color.divider;
   return (
-    <View style={{ gap: space[2] }}>
+    <View style={{ gap: space.sm }}>
       {label ? (
         <Text size={13} tone="muted">
           {label}
@@ -38,8 +38,8 @@ export function TextField({ label, style, multiline, error, onFocus, onBlur, ...
         style={[
           {
             minHeight: multiline ? 90 : 44,
-            paddingVertical: 6,
-            paddingHorizontal: 10,
+            paddingVertical: space.sm,
+            paddingHorizontal: space.md,
             fontSize: scaled(15),
             color: color.text,
             backgroundColor: color.surface,

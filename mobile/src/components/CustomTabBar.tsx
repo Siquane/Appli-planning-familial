@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CalendarIcon, MealIcon, WalletIcon, ProfileIcon, PlusIcon } from "./icons";
 import { Text } from "./Text";
 import { QuickAddSheet } from "./QuickAddSheet";
-import { color, glow, space } from "../theme/tokens";
+import { color, glow, space, gutter } from "../theme/tokens";
 import { GradientFill } from "./Brand";
 
 // The 4 pillars of Passerelle, two on each side of the « + ».
@@ -37,7 +37,7 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
       <Pressable
         key={route.key}
         onPress={() => navigateToTab(route.key)}
-        style={{ flex: 1, alignItems: "center", gap: 4 }}
+        style={{ flex: 1, alignItems: "center", gap: space.xs }}
         accessibilityRole="tab"
         accessibilityLabel={label}
         accessibilityState={{ selected: isFocused }}
@@ -76,9 +76,9 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
       style={{
         flexDirection: "row",
         alignItems: "center",
-        paddingBottom: (insets.bottom || 10) + space[4],
-        paddingTop: 10,
-        paddingHorizontal: 22,
+        paddingBottom: (insets.bottom || 10) + space.md,
+        paddingTop: space.md,
+        paddingHorizontal: gutter,
         borderTopWidth: 1,
         borderTopColor: color.divider,
         backgroundColor: color.bg,
@@ -94,7 +94,7 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
           height: 52,
           borderRadius: 26,
           padding: 2,
-          marginHorizontal: space[3],
+          marginHorizontal: space.sm,
           marginTop: -24,
           boxShadow: glow("rgba(76,196,255,0.5)", 18),
         }}

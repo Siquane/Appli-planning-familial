@@ -1,13 +1,13 @@
 import { View } from "react-native";
 import { Pressable } from "./Touchable";
 import { Text } from "./Text";
-import { color, radius } from "../theme/tokens";
+import { color, radius, space } from "../theme/tokens";
 import { WEEKDAYS_FULL, WEEKDAYS_SHORT } from "../lib/weekdays";
 import type { Weekday } from "../api/types";
 
 export function WeekStrip({ selected, onSelect, today }: { selected: Weekday; onSelect: (w: Weekday) => void; today: Weekday }) {
   return (
-    <View style={{ flexDirection: "row", gap: 6 }}>
+    <View style={{ flexDirection: "row", gap: space.sm }}>
       {WEEKDAYS_SHORT.map((label, i) => {
         const w = i as Weekday;
         const isSelected = w === selected;
@@ -22,10 +22,10 @@ export function WeekStrip({ selected, onSelect, today }: { selected: Weekday; on
               // All 7 days share the row, whatever the phone's text size.
               flex: 1,
               minWidth: 0,
-              paddingVertical: 12,
+              paddingVertical: space.md,
               borderRadius: radius.md,
               alignItems: "center",
-              gap: 4,
+              gap: space.xs,
               backgroundColor: isSelected ? color.accent800 : color.surface,
             }}
           >

@@ -11,7 +11,7 @@ export default function WelcomeScreen() {
   return (
     <Screen scroll={false} style={{ justifyContent: "space-between" }}>
       <View />
-      <View style={{ alignItems: "center", gap: space[4] }}>
+      <View style={{ alignItems: "center", gap: space.md }}>
         <View style={{ width: 64, height: 64, borderRadius: 16, backgroundColor: color.accent800, alignItems: "center", justifyContent: "center" }}>
           <CalendarIcon size={30} color={color.accent200} />
         </View>
@@ -22,7 +22,7 @@ export default function WelcomeScreen() {
           Organisez le planning de toute la famille en quelques minutes : membres, contraintes, synchronisation.
         </Text>
       </View>
-      <View style={{ gap: space[4], alignItems: "center" }}>
+      <View style={{ gap: space.md, alignItems: "center" }}>
         <StepDots step={0} total={5} />
         <Button label="Commencer" variant="primary" block onPress={() => router.push("/(onboarding)/members")} />
       </View>

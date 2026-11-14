@@ -22,7 +22,7 @@ export function TodayCard() {
   const lines = todayLines(s);
 
   return (
-    <Card style={{ gap: space[4], paddingVertical: space[6] }}>
+    <Card style={{ gap: space.md, paddingVertical: space.lg }}>
       <Text weight="medium" size={13} tone="muted">
         Aujourd'hui
       </Text>
@@ -35,7 +35,7 @@ export function TodayCard() {
 
 function Line({ icon, text, onPress, danger }: { icon: React.ReactNode; text: string; onPress?: () => void; danger?: boolean }) {
   const content = (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
       {icon}
       <Text size={13} tone={danger ? "danger" : "text"} style={{ flex: 1 }} numberOfLines={1}>
         {text}

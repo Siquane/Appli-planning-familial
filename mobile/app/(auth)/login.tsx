@@ -32,8 +32,8 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen keyboard style={{ justifyContent: "center", gap: space[6] }}>
-      <View style={{ gap: 4 }}>
+    <Screen keyboard style={{ justifyContent: "center", gap: space.lg }}>
+      <View style={{ gap: space.xs }}>
         <Text heading weight="semibold" size={28}>
           Passerelle
         </Text>
@@ -42,7 +42,7 @@ export default function LoginScreen() {
         </Text>
       </View>
 
-      <View style={{ gap: space[3] }}>
+      <View style={{ gap: space.sm }}>
         <TextField label="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="toi@exemple.fr" />
         <TextField label="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
         <View style={{ alignItems: "flex-end" }}>
@@ -65,7 +65,7 @@ export default function LoginScreen() {
         )}
       </View>
 
-      <View style={{ flexDirection: "row", justifyContent: "center", gap: 6 }}>
+      <View style={{ flexDirection: "row", justifyContent: "center", gap: space.sm }}>
         <Text tone="muted" size={13}>
           Pas encore de compte ?
         </Text>

@@ -13,7 +13,7 @@ import { TopBar } from "../../src/components/TopBar";
 import { useCreateExpense, useDeleteExpense, useExpenseCategories, useMembers, useMonthlyBudget, useUpdateExpense } from "../../src/hooks/useApi";
 import { capCrossed, categoryLabel, centsToInput, currentMonth, formatEuros, fromDayString, parseAmount, toDayString } from "../../src/lib/money";
 import { useToastStore } from "../../src/state/toastStore";
-import { space } from "../../src/theme/tokens";
+import { space, gutter } from "../../src/theme/tokens";
 import { errorText } from "../../src/lib/errors";
 
 // New expense, or edit/delete with ?edit=<id>&month=<YYYY-MM> (the month the
@@ -102,7 +102,7 @@ export default function ExpenseFormScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier la dépense" : "Nouvelle dépense"} onBack={() => router.back()} onDelete={existing ? onDelete : undefined} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {existing?.recurringId && (
           <Card>
             <Text size={13} tone="muted">

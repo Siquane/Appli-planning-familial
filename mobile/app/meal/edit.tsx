@@ -11,7 +11,7 @@ import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
 import { useDeleteMeal, useMeals, useRecipes, useSetMeal } from "../../src/hooks/useApi";
 import { useToastStore } from "../../src/state/toastStore";
-import { space } from "../../src/theme/tokens";
+import { space, gutter } from "../../src/theme/tokens";
 import { WEEKDAYS_FULL } from "../../src/lib/weekdays";
 import type { MealType, Weekday } from "../../src/api/types";
 
@@ -62,15 +62,15 @@ export default function MealEditScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={`${type} · ${WEEKDAYS_FULL[weekday]}`} onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Pâtes bolognaise" />
 
         {recipes.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
               Lier une recette (optionnel)
             </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
               <Chip label="Aucune" selected={recipeId === null} onPress={() => setRecipeId(null)} size="sm" />
               {recipes.map((r) => (
                 <Chip key={r.id} label={r.title} selected={recipeId === r.id} onPress={() => setRecipeId(r.id)} size="sm" />

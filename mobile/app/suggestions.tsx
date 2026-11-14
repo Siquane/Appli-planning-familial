@@ -11,7 +11,7 @@ import { TextField } from "../src/components/TextField";
 import { Avatar } from "../src/components/Avatar";
 import { useMembers, useTasks, useUpdateMember } from "../src/hooks/useApi";
 import { AGE_BRACKETS, bracketForAge, transversalTasksForAge } from "../src/lib/ageTasks";
-import { color, space } from "../src/theme/tokens";
+import { color, space, gutter } from "../src/theme/tokens";
 import type { Member } from "../src/api/types";
 
 function AgeSetter({ member }: { member: Member }) {
@@ -28,7 +28,7 @@ function AgeSetter({ member }: { member: Member }) {
         fg={member.tint === "neutral" ? color.neutral100 : color.accent100}
         size={28}
       />
-      <Text size={15} style={{ flex: 1, marginLeft: space[2] }}>
+      <Text size={15} style={{ flex: 1, marginLeft: space.sm }}>
         {member.name}
       </Text>
       <View style={{ width: 64 }}>
@@ -65,13 +65,13 @@ export default function SuggestionsScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Suggestions selon l'âge" onBack={fromOnboarding ? goHome : () => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <Text tone="muted" size={13}>
           Des tâches récurrentes courantes pour l'âge de chaque membre — appuie sur une suggestion pour la créer, tu choisiras ensuite le jour et l'heure.
         </Text>
 
         {withAge.length === 0 && withoutAge.length === 0 && (
-          <Card style={{ alignItems: "center", paddingVertical: space[8] }}>
+          <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
             <Text tone="muted" size={13} center>
               Ajoute un membre de la famille pour voir des suggestions.
             </Text>
@@ -79,7 +79,7 @@ export default function SuggestionsScreen() {
         )}
 
         {withoutAge.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Renseigne l'âge pour voir des suggestions
             </Text>
@@ -101,8 +101,8 @@ export default function SuggestionsScreen() {
           const suggestions = combined.filter((t) => !existingTitles.has(t.title.toLowerCase()));
 
           return (
-            <View key={member.id} style={{ gap: space[2] }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+            <View key={member.id} style={{ gap: space.sm }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
                 <Avatar
                   initials={member.initials}
                   bg={member.tint === "neutral" ? color.neutral700 : color.accent800}
@@ -140,13 +140,13 @@ export default function SuggestionsScreen() {
           );
         })}
 
-        <Text tone="faint" size={11} style={{ marginTop: space[2] }}>
+        <Text tone="faint" size={11} style={{ marginTop: space.sm }}>
           Repères tirés de guides parentaux courants (Naître et grandir, GoHenry…) — à ajuster selon ta famille. Tranches disponibles :{" "}
           {AGE_BRACKETS.map((b) => b.label).join(", ")}.
         </Text>
 
         {fromOnboarding && (
-          <Button label="Continuer vers l'accueil" variant="primary" block onPress={goHome} style={{ marginTop: space[2] }} />
+          <Button label="Continuer vers l'accueil" variant="primary" block onPress={goHome} style={{ marginTop: space.sm }} />
         )}
       </KeyboardScrollView>
     </Screen>

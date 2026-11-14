@@ -50,8 +50,8 @@ export default function ForgotPasswordScreen() {
     });
 
   return (
-    <Screen keyboard style={{ justifyContent: "center", gap: space[6] }}>
-      <View style={{ gap: 4 }}>
+    <Screen keyboard style={{ justifyContent: "center", gap: space.lg }}>
+      <View style={{ gap: space.xs }}>
         <Text heading weight="semibold" size={28}>
           Mot de passe oublié
         </Text>
@@ -60,7 +60,7 @@ export default function ForgotPasswordScreen() {
         </Text>
       </View>
 
-      <View style={{ gap: space[3] }}>
+      <View style={{ gap: space.sm }}>
         {step === "email" ? (
           <TextField label="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="toi@exemple.fr" />
         ) : (

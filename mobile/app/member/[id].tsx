@@ -16,7 +16,7 @@ import { MealIcon } from "../../src/components/icons";
 import { useFoodConsent, useMembers, useSetFoodConsent, useUpdateMember } from "../../src/hooks/useApi";
 import { APPETITE_OPTIONS, CANTEEN_DAY_OPTIONS, MEMBER_DIET_OPTIONS, foodSummary, toggle } from "../../src/lib/memberFood";
 import { useToastStore } from "../../src/state/toastStore";
-import { color, space } from "../../src/theme/tokens";
+import { color, space, gutter } from "../../src/theme/tokens";
 import type { Appetite, MemberDiet } from "../../src/api/types";
 import { errorText } from "../../src/lib/errors";
 
@@ -97,8 +97,8 @@ export default function MemberScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={member.name} onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
-        <Card style={{ gap: space[4] }}>
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
+        <Card style={{ gap: space.md }}>
           <TextField label="Prénom" value={name} onChangeText={setName} />
           <TextField label="Âge (facultatif)" value={age} onChangeText={setAge} keyboardType="number-pad" placeholder="Ex. 8" />
           {ageInvalid ? (
@@ -125,11 +125,11 @@ export default function MemberScreen() {
             onSelect={(v) => setAppetite(v as Appetite | null)}
             optional
           />
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
               Déjeune à la cantine
             </Text>
-            <View style={{ flexDirection: "row", gap: space[2] }}>
+            <View style={{ flexDirection: "row", gap: space.sm }}>
               {CANTEEN_DAY_OPTIONS.map((d) => (
                 <Chip key={d.value} label={d.label} size="sm" fill selected={canteenDays.includes(d.value)} onPress={() => setCanteenDays((c) => toggle(c, d.value))} />
               ))}
@@ -137,17 +137,17 @@ export default function MemberScreen() {
           </View>
           <TextField label="Notes" value={foodNotes} onChangeText={setFoodNotes} placeholder="Ex. mange lentement, aime aider en cuisine" multiline />
 
-          <View style={{ gap: space[3], borderTopWidth: 1, borderTopColor: color.divider, paddingTop: space[4] }}>
+          <View style={{ gap: space.sm, borderTopWidth: 1, borderTopColor: color.divider, paddingTop: space.md }}>
             <Text size={15} weight="medium">
               Santé et régime
             </Text>
             {consented ? (
               <>
-                <View style={{ gap: space[2] }}>
+                <View style={{ gap: space.sm }}>
                   <Text size={13} tone="muted">
                     Régime alimentaire
                   </Text>
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
                     {MEMBER_DIET_OPTIONS.map((o) => (
                       <Chip key={o.value} label={o.label} size="sm" selected={diets.includes(o.value)} onPress={() => setDiets((d) => toggle(d, o.value))} />
                     ))}

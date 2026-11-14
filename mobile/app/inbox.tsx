@@ -51,7 +51,7 @@ export default function NotificationsScreen() {
       </Pressable>
 
       {notifications.length === 0 ? (
-        <Card style={{ alignItems: "center", paddingVertical: space[8] }}>
+        <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
           <BellIcon size={26} color={color.neutral600} />
           <Text tone="muted" size={13} center>
             Aucune notification pour le moment.
@@ -77,7 +77,7 @@ function NotificationGroup({
   onRead: (id: string) => void;
 }) {
   return (
-    <View style={{ gap: space[2] }}>
+    <View style={{ gap: space.sm }}>
       <Text weight="medium" size={13} tone="muted">
         {title}
       </Text>
@@ -85,7 +85,7 @@ function NotificationGroup({
         <Pressable key={n.id} onPress={() => n.unread && onRead(n.id)}>
           <Card row style={{ alignItems: "center" }}>
             {n.unread && <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: color.accent }} />}
-            <Text size={13} style={{ flex: 1, marginLeft: n.unread ? space[2] : 0 }} tone={n.unread ? "text" : "muted"}>
+            <Text size={13} style={{ flex: 1, marginLeft: n.unread ? space.sm : 0 }} tone={n.unread ? "text" : "muted"}>
               {n.title}
             </Text>
           </Card>

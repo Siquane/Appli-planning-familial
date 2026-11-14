@@ -18,7 +18,7 @@ export function DocumentRow({ doc, subtitle, onPress, onLongPress }: { doc: Fami
             <DocumentIcon size={18} color={color.accent400} />
           </View>
         )}
-        <View style={{ flex: 1, marginLeft: space[3] }}>
+        <View style={{ flex: 1, marginLeft: space.sm }}>
           <Text size={15} weight="medium" numberOfLines={1}>
             {doc.title}
           </Text>

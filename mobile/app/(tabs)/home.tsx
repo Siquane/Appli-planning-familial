@@ -42,7 +42,7 @@ export default function HomeScreen() {
   }, [members]);
 
   return (
-    <Screen techGrid style={{ gap: space[8] }} refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={color.accent} />}>
+    <Screen techGrid style={{ gap: space.xl }} refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={color.accent} />}>
       <TabHeader
         title="Planning"
         subtitle={user?.name?.trim() ? `Salut, ${user.name.trim().split(" ")[0]}` : "Salut"}
@@ -56,7 +56,7 @@ export default function HomeScreen() {
       {upcomingBirthday && (
         <Card row style={{ alignItems: "center", backgroundColor: color.accent900 }}>
           {upcomingBirthday.days === 0 ? <PartyIcon size={18} color={color.accent200} /> : <GiftIcon size={16} color={color.accent200} />}
-          <Text size={13} style={{ flex: 1, marginLeft: space[2] }}>
+          <Text size={13} style={{ flex: 1, marginLeft: space.sm }}>
             {upcomingBirthday.days === 0
               ? `C'est l'anniversaire de ${upcomingBirthday.member.name} aujourd'hui !`
               : `Anniversaire de ${upcomingBirthday.member.name} dans ${upcomingBirthday.days} jour${upcomingBirthday.days > 1 ? "s" : ""}`}
@@ -68,19 +68,19 @@ export default function HomeScreen() {
       {flexibleCount > 0 && (
         <Card row style={{ alignItems: "center", backgroundColor: color.accent900 }}>
           <ReshuffleIcon size={16} color={color.accent200} />
-          <Text size={13} style={{ flex: 1, marginLeft: space[2] }}>
+          <Text size={13} style={{ flex: 1, marginLeft: space.sm }}>
             {flexibleCount} tâche{flexibleCount > 1 ? "s" : ""} flexible{flexibleCount > 1 ? "s" : ""} — Passerelle peut réajuster ta semaine.
           </Text>
           <Button label="Replanifier" variant="ghost" onPress={() => router.push("/replan")} />
         </Card>
       )}
 
-      <View style={{ gap: space[2] }}>
+      <View style={{ gap: space.sm }}>
         <Text weight="medium" size={15} tone="muted">
           {WEEKDAYS_FULL[selected]}
         </Text>
         {!isLoading && dayTasks.length === 0 && (
-          <Card style={{ alignItems: "center", paddingVertical: space[6] }}>
+          <Card style={{ alignItems: "center", paddingVertical: space.lg }}>
             <CalendarIcon size={26} color={color.neutral600} />
             <Text tone="muted" size={13} center>
               Rien de prévu ce jour-là.

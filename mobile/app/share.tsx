@@ -13,7 +13,7 @@ import { TrashIcon } from "../src/components/icons";
 import { useInvitePerson, useRemoveSharedPerson, useShare } from "../src/hooks/useApi";
 import { useToastStore } from "../src/state/toastStore";
 import { API_URL } from "../src/api/client";
-import { color, space } from "../src/theme/tokens";
+import { color, space, gutter } from "../src/theme/tokens";
 
 // EXPO_PUBLIC_SHARE_URL can override this once a nicer custom domain is
 // secured for the app; until then the link points at the real backend route
@@ -53,13 +53,13 @@ export default function ShareScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Partager mon planning" onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <Text tone="muted" size={13}>
           Les personnes invitées voient les tâches synchronisées de ton planning, sans avoir besoin d'un compte.
         </Text>
 
         {!isLoading && (
-          <Card style={{ gap: space[2] }}>
+          <Card style={{ gap: space.sm }}>
             <Text size={13} tone="faint">
               Lien de partage
             </Text>
@@ -70,11 +70,11 @@ export default function ShareScreen() {
           </Card>
         )}
 
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           <Text weight="medium" size={13} tone="muted">
             Inviter quelqu'un
           </Text>
-          <View style={{ flexDirection: "row", gap: space[2] }}>
+          <View style={{ flexDirection: "row", gap: space.sm }}>
             <View style={{ flex: 1 }}>
               <TextField value={name} onChangeText={setName} placeholder="Nom" onSubmitEditing={onInvite} returnKeyType="done" />
             </View>
@@ -82,7 +82,7 @@ export default function ShareScreen() {
           </View>
         </View>
 
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           {(data?.sharedWith ?? []).map((p) => (
             <Card key={p.id} row style={{ alignItems: "center" }}>
               <View style={{ flex: 1 }}>

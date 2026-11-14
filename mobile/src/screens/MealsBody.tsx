@@ -22,11 +22,11 @@ export function MealsBody() {
   const { data: recipes = [] } = useRecipes();
 
   return (
-      <View style={{ gap: space[4] }}>
+      <View style={{ gap: space.md }}>
         <Button label="Générer mes menus" icon={<SparkleIcon size={18} color={color.bg} />} variant="primary" block onPress={() => router.push("/meal/plan")} />
         <WeekStrip selected={selected} onSelect={setSelected} today={today} />
 
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           {MEAL_TYPES.map((type) => {
             const meal = meals.find((m) => m.weekday === selected && m.type === type);
             const recipe = meal?.recipeId ? recipes.find((r) => r.id === meal.recipeId) : undefined;

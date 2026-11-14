@@ -13,7 +13,7 @@ import { useDeleteDocument, useDeleteRecipe, useDocuments, useMembers, useRecipe
 import { formatSize, type PickedFile } from "../../src/lib/documentUpload";
 import type { FamilyDocument } from "../../src/api/types";
 import { useToastStore } from "../../src/state/toastStore";
-import { color, space } from "../../src/theme/tokens";
+import { color, space, gutter } from "../../src/theme/tokens";
 import { errorText } from "../../src/lib/errors";
 
 export default function RecipeDetailScreen() {
@@ -30,7 +30,7 @@ export default function RecipeDetailScreen() {
     return (
       <Screen scroll={false}>
         <TopBar title="Recette" onBack={() => router.back()} />
-        <Text tone="muted" style={{ padding: 22 }}>
+        <Text tone="muted" style={{ padding: gutter }}>
           Cette recette n'existe plus.
         </Text>
       </Screen>
@@ -76,15 +76,15 @@ export default function RecipeDetailScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={recipe.title} onBack={() => router.back()} onEdit={() => router.push(`/recipe/new?edit=${recipe.id}`)} onDelete={onDelete} />
-      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         {fans.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Qui aime ce plat
             </Text>
-            <View style={{ flexDirection: "row", gap: space[2] }}>
+            <View style={{ flexDirection: "row", gap: space.sm }}>
               {fans.map((m) => (
-                <View key={m.id} style={{ alignItems: "center", gap: 4 }}>
+                <View key={m.id} style={{ alignItems: "center", gap: space.xs }}>
                   <Avatar initials={m.initials} bg={m.tint === "neutral" ? color.neutral700 : color.accent800} fg={m.tint === "neutral" ? color.neutral100 : color.accent100} size={32} />
                   <Text size={11} tone="muted">
                     {m.name}
@@ -96,13 +96,13 @@ export default function RecipeDetailScreen() {
         )}
 
         {recipe.ingredients.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Ingrédients
             </Text>
-            <Card style={{ gap: space[2] }}>
+            <Card style={{ gap: space.sm }}>
               {recipe.ingredients.map((item, i) => (
-                <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+                <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
                   <BulletIcon size={8} color={color.accent400} />
                   <Text size={15} style={{ flex: 1 }}>
                     {item}
@@ -114,11 +114,11 @@ export default function RecipeDetailScreen() {
         )}
 
         {recipe.steps.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Étapes
             </Text>
-            <Card style={{ gap: space[2] }}>
+            <Card style={{ gap: space.sm }}>
               {recipe.steps.map((item, i) => (
                 <Text key={i} size={15}>
                   {i + 1}. {item}
@@ -129,7 +129,7 @@ export default function RecipeDetailScreen() {
         )}
 
         {recipe.notes ? (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Notes
             </Text>
@@ -137,7 +137,7 @@ export default function RecipeDetailScreen() {
           </View>
         ) : null}
 
-        <View style={{ gap: space[2] }}>
+        <View style={{ gap: space.sm }}>
           <Text weight="medium" size={13} tone="muted">
             Pièces jointes
           </Text>

@@ -8,7 +8,7 @@ import { GradientFill, PasserelleArch } from "./Brand";
 import { BellIcon, ChevronLeftIcon, SearchIcon } from "./icons";
 import { useNotifications } from "../hooks/useApi";
 import { useAuthStore } from "../state/authStore";
-import { color, space } from "../theme/tokens";
+import { color, space, gutter } from "../theme/tokens";
 
 const iconButton = {
   width: 36,
@@ -29,10 +29,10 @@ export function TabHeader({ title, subtitle, subtitleIcon }: { title: string; su
   const hasUnread = notifications.some((n) => n.unread);
 
   return (
-    <View style={{ gap: space[4] }}>
-    <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+    <View style={{ gap: space.md }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
       <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
           <PasserelleArch width={42} />
           <View style={{ flexShrink: 1 }}>
             <Text heading weight="semibold" size={22} numberOfLines={1}>
@@ -41,7 +41,7 @@ export function TabHeader({ title, subtitle, subtitleIcon }: { title: string; su
           </View>
         </View>
         {subtitle ? (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
             <Text size={13} tone="muted" numberOfLines={1} style={{ flexShrink: 1 }}>
               {subtitle}
             </Text>
@@ -63,7 +63,7 @@ export function TabHeader({ title, subtitle, subtitleIcon }: { title: string; su
       </Pressable>
     </View>
     {/* Edge to edge: cancels the 22 px side padding of the tab screens. */}
-    <View style={{ height: 2, marginHorizontal: -22 }}>
+    <View style={{ height: 2, marginHorizontal: -gutter }}>
       <GradientFill />
     </View>
     </View>
@@ -73,7 +73,7 @@ export function TabHeader({ title, subtitle, subtitleIcon }: { title: string; su
 // Secondary pages opened from those icons: back button + title (+ an optional action).
 export function BackHeader({ title, right }: { title: string; right?: ReactNode }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
       <Pressable hitSlop={hitSlopFor(34)} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Retour" style={{ ...iconButton, width: 34, height: 34 }}>
         <ChevronLeftIcon size={17} color={color.text} />
       </Pressable>

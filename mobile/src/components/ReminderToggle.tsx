@@ -29,7 +29,7 @@ export function ReminderToggle({ value, onChange }: Props) {
         >
           <BellIcon size={18} color={value ? color.accent200 : color.neutral400} />
         </View>
-        <View style={{ flex: 1, marginLeft: space[2] }}>
+        <View style={{ flex: 1, marginLeft: space.sm }}>
           <Text size={15} weight="medium">
             Rappel
           </Text>

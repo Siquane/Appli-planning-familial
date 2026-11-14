@@ -10,7 +10,7 @@ import { TabHeader } from "../../src/components/PageHeader";
 import { ChartIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, RecurringIcon, SparkleIcon, TargetIcon, WalletIcon } from "../../src/components/icons";
 import { useExpenseCategories, useForecast, useMembers, useMonthlyBudget, usePlan } from "../../src/hooks/useApi";
 import { budgetToCsv, categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../../src/lib/money";
-import { color, radius, space } from "../../src/theme/tokens";
+import { color, radius, space, gutter } from "../../src/theme/tokens";
 import { hasBudgetPack } from "../../src/lib/premium";
 
 export default function BudgetScreen() {
@@ -28,7 +28,7 @@ export default function BudgetScreen() {
 
   return (
     <Screen scroll={false} padded={false} edges={["top"]}>
-      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <TabHeader title="Budget" />
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <MonthArrow onPress={() => setMonth(shiftMonth(month, -1))} label="Mois précédent">
@@ -49,7 +49,7 @@ export default function BudgetScreen() {
           </MonthArrow>
         </View>
 
-        <Card style={{ alignItems: "center", paddingVertical: space[6] }}>
+        <Card style={{ alignItems: "center", paddingVertical: space.lg }}>
           <Text size={13} tone="muted">
             Total du mois
           </Text>
@@ -60,14 +60,14 @@ export default function BudgetScreen() {
             {expenses.length} dépense{expenses.length !== 1 ? "s" : ""}
           </Text>
           {overCount > 0 && (
-            <Text size={13} tone="danger" style={{ marginTop: space[2] }}>
+            <Text size={13} tone="danger" style={{ marginTop: space.sm }}>
               {overCount === 1 ? "1 plafond dépassé" : `${overCount} plafonds dépassés`}
             </Text>
           )}
         </Card>
 
         {premium && isCurrent && forecast && (
-          <Card style={{ gap: space[1] }}>
+          <Card style={{ gap: space.xs }}>
             <Text size={13} tone="muted">
               Prévision de fin de mois
             </Text>
@@ -89,7 +89,7 @@ export default function BudgetScreen() {
           </Card>
         )}
 
-        <View style={{ flexDirection: "row", gap: space[2] }}>
+        <View style={{ flexDirection: "row", gap: space.sm }}>
           <Button
             label="Ajouter une dépense"
             icon={<PlusIcon size={18} color={color.text} />}
@@ -99,7 +99,7 @@ export default function BudgetScreen() {
           />
           <Button label="Réglages" variant="ghost" onPress={() => router.push("/budget-settings")} />
         </View>
-        <View style={{ flexDirection: "row", gap: space[2] }}>
+        <View style={{ flexDirection: "row", gap: space.sm }}>
           <Button
             label="Bilan & export"
             icon={<ChartIcon size={17} color={color.pillar3} />}
@@ -135,17 +135,17 @@ export default function BudgetScreen() {
         )}
 
         {byCategory.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Par catégorie
             </Text>
-            <Card style={{ gap: space[4] }}>
+            <Card style={{ gap: space.md }}>
               {byCategory.map((c) => {
                 const over = c.limitCents !== null && c.totalCents > c.limitCents;
                 // With a cap the bar shows how much of it is used; without, it's relative to the biggest category.
                 const ratio = c.limitCents !== null ? c.totalCents / c.limitCents : biggest ? c.totalCents / biggest : 0;
                 return (
-                  <View key={c.category} style={{ gap: space[1] }}>
+                  <View key={c.category} style={{ gap: space.xs }}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                       <Text size={13}>{categoryLabel(options, c.category)}</Text>
                       <Text size={13} weight="medium" tone={over ? "danger" : "text"}>
@@ -176,16 +176,16 @@ export default function BudgetScreen() {
         )}
 
         {!isLoading && expenses.length === 0 && (
-          <Card style={{ alignItems: "center", paddingVertical: space[8] }}>
+          <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
             <WalletIcon size={22} color={color.neutral600} />
-            <Text tone="muted" size={13} center style={{ marginTop: space[2] }}>
+            <Text tone="muted" size={13} center style={{ marginTop: space.sm }}>
               Aucune dépense ce mois-ci.
             </Text>
           </Card>
         )}
 
         {expenses.length > 0 && (
-          <View style={{ gap: space[2] }}>
+          <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Dépenses
             </Text>
@@ -196,7 +196,7 @@ export default function BudgetScreen() {
                 <Pressable key={e.id} onPress={() => router.push(`/expense/new?edit=${e.id}&month=${month}`)}>
                   <Card row style={{ alignItems: "center" }}>
                     <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: space[1] }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
                         <Text size={15} weight="medium" numberOfLines={1} style={{ flexShrink: 1 }}>
                           {e.label}
                         </Text>

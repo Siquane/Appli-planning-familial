@@ -51,7 +51,7 @@ export function TimeField({ label, value, onChange }: Props) {
   }
 
   return (
-    <View style={{ gap: space[2] }}>
+    <View style={{ gap: space.sm }}>
       {label ? (
         <Text size={13} tone="muted">
           {label}
@@ -62,8 +62,8 @@ export function TimeField({ label, value, onChange }: Props) {
         accessibilityRole="button"
         accessibilityLabel={label ? `${label} : ${value}` : value}
         style={{
-          paddingVertical: 12,
-          paddingHorizontal: 14,
+          paddingVertical: space.md,
+          paddingHorizontal: space.lg,
           borderRadius: radius.md,
           backgroundColor: color.surface,
           borderWidth: 1,
@@ -85,11 +85,11 @@ export function TimeField({ label, value, onChange }: Props) {
         <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
           <Pressable style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }} onPress={() => setOpen(false)}>
             <Pressable
-              style={{ backgroundColor: color.surface, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, padding: space[4] }}
+              style={{ backgroundColor: color.surface, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, padding: space.md }}
               onPress={(e) => e.stopPropagation()}
             >
               <DateTimePicker value={draft} mode="time" display="spinner" is24Hour onChange={handleChange} textColor={color.text} />
-              <Button label="OK" variant="primary" block onPress={confirmIOS} style={{ marginTop: space[3] }} />
+              <Button label="OK" variant="primary" block onPress={confirmIOS} style={{ marginTop: space.sm }} />
             </Pressable>
           </Pressable>
         </Modal>

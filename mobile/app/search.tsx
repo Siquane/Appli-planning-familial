@@ -37,7 +37,7 @@ export default function SearchScreen() {
       <TextField value={query} onChangeText={setQuery} placeholder="Tâche, recette, ingrédient, document…" autoCapitalize="none" autoFocus />
 
       {hasQuery && results.total === 0 && (
-        <Card style={{ alignItems: "center", paddingVertical: space[8] }}>
+        <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
           <SearchEmptyIcon size={26} color={color.neutral600} />
           <Text tone="muted" size={13} center>
             Rien ne correspond à « {query.trim()} ».
@@ -102,7 +102,7 @@ export default function SearchScreen() {
 
 function Section({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
   return (
-    <View style={{ gap: space[2] }}>
+    <View style={{ gap: space.sm }}>
       <Text weight="medium" size={13} tone="muted">
         {title} ({count})
       </Text>
@@ -116,7 +116,7 @@ function Row({ icon, title, subtitle, onPress }: { icon: React.ReactNode; title:
     <Pressable onPress={onPress}>
       <Card row style={{ alignItems: "center" }}>
         {icon}
-        <View style={{ flex: 1, marginLeft: space[2] }}>
+        <View style={{ flex: 1, marginLeft: space.sm }}>
           <Text size={15} weight="medium" numberOfLines={1}>
             {title}
           </Text>

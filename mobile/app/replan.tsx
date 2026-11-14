@@ -8,7 +8,7 @@ import { TopBar } from "../src/components/TopBar";
 import { ReshuffleIcon } from "../src/components/icons";
 import { useReplanProposals, useUpdateTask } from "../src/hooks/useApi";
 import { useToastStore } from "../src/state/toastStore";
-import { color, space } from "../src/theme/tokens";
+import { color, space, gutter } from "../src/theme/tokens";
 import { WEEKDAYS_FULL } from "../src/lib/weekdays";
 import type { ReplanCandidate } from "../src/api/types";
 
@@ -26,8 +26,8 @@ export default function ReplanScreen() {
   return (
     <Screen scroll={false} padded={false} techGrid>
       <TopBar title="Replanifier ma semaine" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
+      <ScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
           <ReshuffleIcon size={18} color={color.accent} />
           <Text tone="muted" size={13} style={{ flex: 1 }}>
             Passerelle propose de meilleurs créneaux pour tes tâches flexibles, en tenant compte de tes contraintes.
@@ -35,7 +35,7 @@ export default function ReplanScreen() {
         </View>
 
         {!isLoading && proposals.length === 0 && (
-          <Card style={{ alignItems: "center", paddingVertical: space[8] }}>
+          <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
             <Text tone="muted" size={13} center>
               Aucune tâche flexible à réajuster pour l'instant.
             </Text>
@@ -43,7 +43,7 @@ export default function ReplanScreen() {
         )}
 
         {proposals.map((p) => (
-          <Card key={p.taskId} bg={color.accent900} style={{ gap: space[3] }}>
+          <Card key={p.taskId} bg={color.accent900} style={{ gap: space.sm }}>
             <View>
               <Text weight="medium" size={15}>
                 {p.title}
@@ -52,7 +52,7 @@ export default function ReplanScreen() {
                 Actuellement : {WEEKDAYS_FULL[p.currentWeekday]} {p.currentTime}
               </Text>
             </View>
-            <View style={{ gap: space[2] }}>
+            <View style={{ gap: space.sm }}>
               {p.candidates.map((c, i) => (
                 <Card key={i} row style={{ alignItems: "center" }} bracket={false}>
                   <View style={{ flex: 1 }}>

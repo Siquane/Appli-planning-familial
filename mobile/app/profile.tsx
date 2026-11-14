@@ -98,7 +98,7 @@ export default function ProfileScreen() {
   return (
     <Screen>
       <BackHeader title="Mon profil" />
-      <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
         <Avatar initials={user?.initials ?? ""} bg={color.accent800} fg={color.accent100} size={56} />
         <View style={{ flex: 1 }}>
           <Text heading weight="semibold" size={17} tone={hasName ? undefined : "muted"}>
@@ -112,7 +112,7 @@ export default function ProfileScreen() {
       </View>
 
       {editingName && (
-        <Card style={{ gap: space[3] }}>
+        <Card style={{ gap: space.sm }}>
           <TextField
             label="Prénom et nom"
             value={nameDraft}
@@ -123,14 +123,14 @@ export default function ProfileScreen() {
             returnKeyType="done"
             onSubmitEditing={saveName}
           />
-          <View style={{ flexDirection: "row", gap: space[2], justifyContent: "flex-end" }}>
+          <View style={{ flexDirection: "row", gap: space.sm, justifyContent: "flex-end" }}>
             <Button label="Annuler" variant="ghost" onPress={() => setEditingName(false)} />
             <Button label="Enregistrer" variant="primary" loading={savingName} onPress={saveName} />
           </View>
         </Card>
       )}
 
-      <View style={{ gap: space[2] }}>
+      <View style={{ gap: space.sm }}>
         <Text weight="medium" size={13} tone="muted">
           Synchronisation calendrier
         </Text>
@@ -141,7 +141,7 @@ export default function ProfileScreen() {
             return (
               <View
                 key={p.key}
-                style={{ flexDirection: "row", alignItems: "center", gap: space[2], paddingVertical: 8, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: color.divider }}
+                style={{ flexDirection: "row", alignItems: "center", gap: space.sm, paddingVertical: space.sm, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: color.divider }}
               >
                 <CalendarIcon size={16} color={color.neutral400} />
                 <View style={{ flex: 1 }}>
@@ -172,7 +172,7 @@ export default function ProfileScreen() {
       <Pressable onPress={() => router.push("/premium")}>
         <Card row style={{ alignItems: "center" }}>
           <SparkleIcon size={20} color={color.accent400} />
-          <Text size={15} style={{ flex: 1, marginLeft: space[2] }}>
+          <Text size={15} style={{ flex: 1, marginLeft: space.sm }}>
             {packLabel}
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />
@@ -182,7 +182,7 @@ export default function ProfileScreen() {
       <Pressable onPress={() => router.push("/recurring-tasks")}>
         <Card row style={{ alignItems: "center" }}>
           <RecurringIcon size={16} color={color.neutral400} />
-          <Text size={15} style={{ flex: 1, marginLeft: space[2] }}>
+          <Text size={15} style={{ flex: 1, marginLeft: space.sm }}>
             Tâches récurrentes
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />

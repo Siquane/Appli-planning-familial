@@ -12,12 +12,12 @@ import { Accordion } from "../src/components/Accordion";
 import { useFoodConsent, useSetFoodConsent } from "../src/hooks/useApi";
 import { deleteAccount } from "../src/lib/account";
 import { useToastStore } from "../src/state/toastStore";
-import { space } from "../src/theme/tokens";
+import { space, gutter } from "../src/theme/tokens";
 import { errorText } from "../src/lib/errors";
 
 function Section({ title, children }: { title: string; children: string }) {
   return (
-    <View style={{ gap: 4 }}>
+    <View style={{ gap: space.xs }}>
       <Text size={13} weight="medium">
         {title}
       </Text>
@@ -86,7 +86,7 @@ export default function PrivacyScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Confidentialité" onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <Accordion title="Ce que Passerelle enregistre" defaultOpen>
           <Section title="Tes données">
             Compte (e-mail, prénom, mot de passe chiffré), membres de la famille, tâches, recettes, menus, liste de courses, budget, documents, et les préférences repas de chaque membre.
@@ -111,7 +111,7 @@ export default function PrivacyScreen() {
           </Section>
         </Accordion>
 
-        <Card style={{ gap: space[3] }}>
+        <Card style={{ gap: space.sm }}>
           <Text size={15} weight="medium">
             Données de santé et régimes
           </Text>
@@ -125,7 +125,7 @@ export default function PrivacyScreen() {
 
         <Button label="Lire la politique de confidentialité complète" variant="ghost" block onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})} />
 
-        <Card style={{ gap: space[3] }}>
+        <Card style={{ gap: space.sm }}>
           <Text size={15} weight="medium">
             Tes droits
           </Text>

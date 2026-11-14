@@ -36,7 +36,7 @@ export function Toast() {
 
   return (
     <Animated.View style={[styles.container, { top: insets.top + 10, opacity }]} pointerEvents="none">
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: space[2] }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: space.sm }}>
         {icon && (() => {
           const { Icon, tint } = ICONS[icon];
           return <Icon size={18} color={tint} />;
@@ -52,14 +52,14 @@ export function Toast() {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    left: space[4],
-    right: space[4],
+    left: space.md,
+    right: space.md,
     backgroundColor: color.neutral900,
     borderWidth: 1,
     borderColor: color.divider,
     borderRadius: radius.md,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: space.md,
+    paddingHorizontal: space.lg,
     zIndex: 100,
   },
 });

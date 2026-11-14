@@ -32,7 +32,7 @@ import {
   savePreferences,
   type FillMode,
 } from "../../src/lib/mealPlan";
-import { color, space } from "../../src/theme/tokens";
+import { color, space, gutter } from "../../src/theme/tokens";
 import type { MealPlanPreferences, MealType, ProposedMeal, Weekday } from "../../src/api/types";
 
 const ALL_DAYS: Weekday[] = [0, 1, 2, 3, 4, 5, 6];
@@ -130,10 +130,10 @@ export default function MealPlanScreen() {
     return (
       <Screen scroll={false} padded={false}>
         <TopBar title="Proposition de menus" onBack={() => setProposal(null)} />
-        <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+        <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
           {/* Same icons as the buttons on each card, so the legend matches. */}
-          <View style={{ gap: space[1] }}>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", rowGap: space[1] }}>
+          <View style={{ gap: space.xs }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", rowGap: space.xs }}>
               <Text size={13} tone="muted">Touche </Text>
               <ReshuffleIcon size={16} color={color.accent400} />
               <Text size={13} tone="muted"> pour une autre idée, </Text>
@@ -150,7 +150,7 @@ export default function MealPlanScreen() {
             </Text>
           )}
           {byDay.map(({ day, items }) => (
-            <View key={day} style={{ gap: space[2] }}>
+            <View key={day} style={{ gap: space.sm }}>
               <Text size={13} weight="semibold">
                 {WEEKDAYS_FULL[day]}
               </Text>
@@ -178,7 +178,7 @@ export default function MealPlanScreen() {
                       disabled={!!rerolling}
                       hitSlop={8}
                       accessibilityLabel={`Autre idée pour ${m.type} ${WEEKDAYS_FULL[m.weekday]}`}
-                      style={{ padding: space[2] }}
+                      style={{ padding: space.sm }}
                     >
                       <ReshuffleIcon size={16} color={color.accent400} />
                     </Pressable>
@@ -187,7 +187,7 @@ export default function MealPlanScreen() {
                       disabled={!!rerolling}
                       hitSlop={8}
                       accessibilityLabel={`Retirer ${m.type} ${WEEKDAYS_FULL[m.weekday]}`}
-                      style={{ padding: space[2] }}
+                      style={{ padding: space.sm }}
                     >
                       <CloseIcon size={14} color={color.neutral500} />
                     </Pressable>
@@ -220,14 +220,14 @@ export default function MealPlanScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Générer mes menus" onBack={() => router.back()} />
-      <KeyboardScrollView contentContainerStyle={{ padding: 22, gap: space[4] }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <Pressable onPress={() => router.push("/famille")}>
           <Text size={13} tone="faint">
             Les goûts, régimes et allergies de chaque membre (onglet Famille, fiche du membre, rubrique Repas) sont aussi pris en compte.
           </Text>
         </Pressable>
         <Question title="Quels jours ?">
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
             {ALL_DAYS.map((d) => (
               <Chip key={d} label={WEEKDAYS_SHORT[d]} size="sm" selected={days.includes(d)} onPress={() => setDays((v) => toggle(v, d))} />
             ))}
@@ -235,7 +235,7 @@ export default function MealPlanScreen() {
         </Question>
 
         <Question title="Quels repas ?">
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
             {MEAL_TYPES.map((t) => (
               <Chip key={t} label={t[0].toUpperCase() + t.slice(1)} size="sm" selected={types.includes(t)} onPress={() => setTypes((v) => toggle(v, t))} />
             ))}
@@ -255,7 +255,7 @@ export default function MealPlanScreen() {
         )}
 
         <Question title="Régime alimentaire">
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space[2] }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
             {DIET_OPTIONS.map((o) => (
               <Chip key={o.value} label={o.label} size="sm" selected={prefs.diets.includes(o.value)} onPress={() => update("diets", toggle(prefs.diets, o.value))} />
             ))}
@@ -326,7 +326,7 @@ export default function MealPlanScreen() {
 
 function Question({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View style={{ gap: space[2] }}>
+    <View style={{ gap: space.sm }}>
       <Text size={13} tone="muted">
         {title}
       </Text>
