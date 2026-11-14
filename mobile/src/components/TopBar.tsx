@@ -1,4 +1,5 @@
-import { View, Pressable } from "react-native";
+import { View } from "react-native";
+import { Pressable, hitSlopFor } from "./Touchable";
 import { Text } from "./Text";
 import { ChevronLeftIcon, CopyIcon, EditIcon, TrashIcon } from "./icons";
 import { color, space } from "../theme/tokens";
@@ -14,7 +15,7 @@ interface Props {
 export function TopBar({ title, onBack, onDuplicate, onEdit, onDelete }: Props) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 22, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: color.divider }}>
-      <Pressable
+      <Pressable hitSlop={hitSlopFor(34)}
         onPress={onBack}
         accessibilityRole="button"
         accessibilityLabel="Retour"
@@ -28,17 +29,17 @@ export function TopBar({ title, onBack, onDuplicate, onEdit, onDelete }: Props) 
       {(onDuplicate || onEdit || onDelete) && (
         <View style={{ flexDirection: "row", gap: space[2] }}>
           {onDuplicate && (
-            <Pressable onPress={onDuplicate} accessibilityLabel="Dupliquer" style={{ width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: color.divider, alignItems: "center", justifyContent: "center" }}>
+            <Pressable hitSlop={hitSlopFor(36)} onPress={onDuplicate} accessibilityLabel="Dupliquer" style={{ width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: color.divider, alignItems: "center", justifyContent: "center" }}>
               <CopyIcon size={16} color={color.text} />
             </Pressable>
           )}
           {onEdit && (
-            <Pressable onPress={onEdit} accessibilityLabel="Modifier" style={{ width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: color.divider, alignItems: "center", justifyContent: "center" }}>
+            <Pressable hitSlop={hitSlopFor(36)} onPress={onEdit} accessibilityLabel="Modifier" style={{ width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: color.divider, alignItems: "center", justifyContent: "center" }}>
               <EditIcon size={16} color={color.text} />
             </Pressable>
           )}
           {onDelete && (
-            <Pressable onPress={onDelete} accessibilityLabel="Supprimer" style={{ width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: color.divider, alignItems: "center", justifyContent: "center" }}>
+            <Pressable hitSlop={hitSlopFor(36)} onPress={onDelete} accessibilityLabel="Supprimer" style={{ width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: color.divider, alignItems: "center", justifyContent: "center" }}>
               <TrashIcon size={16} color={color.text} />
             </Pressable>
           )}

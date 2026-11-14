@@ -1,4 +1,5 @@
-import { Pressable, ViewStyle } from "react-native";
+import { ViewStyle } from "react-native";
+import { Pressable } from "./Touchable";
 import { Text } from "./Text";
 import { color, radius } from "../theme/tokens";
 
@@ -22,6 +23,11 @@ export function Chip({ label, selected, onPress, size = "md", mono, squareRadius
   return (
     <Pressable
       onPress={onPress}
+      // Announced with its state (« sélectionné »); the touch area reaches ~44 px
+      // in height without making the pill itself bigger.
+      accessibilityState={{ selected: !!selected }}
+      accessibilityLabel={label}
+      hitSlop={{ top: 8, bottom: 8 }}
       style={[
         {
           paddingVertical: size === "sm" ? 5 : 7,

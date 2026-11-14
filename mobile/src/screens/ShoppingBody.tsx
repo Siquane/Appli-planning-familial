@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, hitSlopFor } from "../components/Touchable";
+import { TextInput, View } from "react-native";
 import { Text, scaled } from "../components/Text";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
@@ -10,7 +11,6 @@ import { fromMenuMessage } from "../lib/shopping";
 import { color, font, radius, space } from "../theme/tokens";
 
 const toast = (m: string) => useToastStore.getState().show(m);
-
 
 /** Shopping list, shown in the « Repas » tab. */
 export function ShoppingBody() {
@@ -129,7 +129,7 @@ function Row({ label, checked, first, onToggle, onRemove }: { label: string; che
           {label}
         </Text>
       </Pressable>
-      <Pressable onPress={onRemove} accessibilityLabel={`Retirer ${label}`} style={{ padding: 6 }}>
+      <Pressable hitSlop={hitSlopFor(26)} onPress={onRemove} accessibilityLabel={`Retirer ${label}`} style={{ padding: 6 }}>
         <CloseIcon size={14} color={color.neutral500} />
       </Pressable>
     </View>

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Alert, Pressable, TextInput, View } from "react-native";
+import { Pressable, hitSlopFor } from "../src/components/Touchable";
+import { Alert, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { KeyboardScrollView } from "../src/components/KeyboardScrollView";
 import { Screen } from "../src/components/Screen";
@@ -174,7 +175,7 @@ function CustomCategoryRow({ id, name }: { id: string; name: string }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: space[2] }}>
       <TextInput value={text} onChangeText={setText} onEndEditing={save} style={[inputStyle, { flex: 1 }]} accessibilityLabel={`Renommer ${name}`} />
-      <Pressable onPress={onDelete} accessibilityLabel={`Supprimer ${name}`} style={{ padding: 6 }}>
+      <Pressable hitSlop={hitSlopFor(26)} onPress={onDelete} accessibilityLabel={`Supprimer ${name}`} style={{ padding: 6 }}>
         <TrashIcon size={16} color={color.neutral400} />
       </Pressable>
     </View>

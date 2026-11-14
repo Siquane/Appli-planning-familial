@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, Share as RNShare, View } from "react-native";
+import { Pressable } from "../src/components/Touchable";
+import { Share as RNShare, View } from "react-native";
 import { router } from "expo-router";
 import { KeyboardScrollView } from "../src/components/KeyboardScrollView";
 import { Screen } from "../src/components/Screen";

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable } from "./Touchable";
+import { View } from "react-native";
 import { Text } from "./Text";
 import { TextField } from "./TextField";
 import { Button } from "./Button";

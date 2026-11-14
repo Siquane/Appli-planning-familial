@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { Pressable } from "../../src/components/Touchable";
 import { router, type Href } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";

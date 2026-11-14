@@ -1,4 +1,5 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
+import { Pressable } from "../components/Touchable";
 import { router } from "expo-router";
 import { Text } from "../components/Text";
 import { Card } from "../components/Card";

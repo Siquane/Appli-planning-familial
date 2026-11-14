@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable } from "../../src/components/Touchable";
+import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
 import { Screen } from "../../src/components/Screen";

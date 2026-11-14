@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, hitSlopFor } from "./Touchable";
+import { View } from "react-native";
 import { router } from "expo-router";
 import { Text } from "./Text";
 import { Avatar } from "./Avatar";
@@ -48,16 +49,16 @@ export function TabHeader({ title, subtitle, subtitleIcon }: { title: string; su
           </View>
         ) : null}
       </View>
-      <Pressable onPress={() => router.push("/search")} accessibilityLabel="Rechercher" style={iconButton}>
+      <Pressable hitSlop={hitSlopFor(36)} onPress={() => router.push("/search")} accessibilityLabel="Rechercher" style={iconButton}>
         <SearchIcon size={18} color={color.text} />
       </Pressable>
-      <Pressable onPress={() => router.push("/inbox")} accessibilityLabel={hasUnread ? "Notifications non lues" : "Notifications"} style={iconButton}>
+      <Pressable hitSlop={hitSlopFor(36)} onPress={() => router.push("/inbox")} accessibilityLabel={hasUnread ? "Notifications non lues" : "Notifications"} style={iconButton}>
         <BellIcon size={18} color={color.text} />
         {hasUnread && (
           <View style={{ position: "absolute", top: 6, right: 7, width: 7, height: 7, borderRadius: 3.5, backgroundColor: color.accent }} />
         )}
       </Pressable>
-      <Pressable onPress={() => router.push("/profile")} accessibilityLabel="Mon profil">
+      <Pressable hitSlop={hitSlopFor(36)} onPress={() => router.push("/profile")} accessibilityLabel="Mon profil">
         <Avatar initials={user?.initials ?? ""} bg={color.accent800} fg={color.accent100} size={36} />
       </Pressable>
     </View>
@@ -73,7 +74,7 @@ export function TabHeader({ title, subtitle, subtitleIcon }: { title: string; su
 export function BackHeader({ title, right }: { title: string; right?: ReactNode }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: space[3] }}>
-      <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Retour" style={{ ...iconButton, width: 34, height: 34 }}>
+      <Pressable hitSlop={hitSlopFor(34)} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Retour" style={{ ...iconButton, width: 34, height: 34 }}>
         <ChevronLeftIcon size={17} color={color.text} />
       </Pressable>
       <Text heading weight="semibold" size={20} style={{ flex: 1 }} numberOfLines={1}>

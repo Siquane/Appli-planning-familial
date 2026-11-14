@@ -1,4 +1,5 @@
-import { Pressable, Switch, View } from "react-native";
+import { Switch, View } from "react-native";
+import { Pressable } from "./Touchable";
 import { Text } from "./Text";
 import { TimeField } from "./TimeField";
 import { sortWeekdays, type DayTimes } from "../lib/dayTimes";

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Pressable } from "react-native";
+import { Pressable } from "./Touchable";
+import { View } from "react-native";
 import type { BottomTabBarProps } from "expo-router/tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CalendarIcon, MealIcon, WalletIcon, ProfileIcon, PlusIcon } from "./icons";

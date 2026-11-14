@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable } from "./Touchable";
+import { View } from "react-native";
 import { Card } from "./Card";
 import { Text } from "./Text";
 import { ChevronRightIcon } from "./icons";

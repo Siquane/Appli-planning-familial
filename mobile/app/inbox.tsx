@@ -1,4 +1,5 @@
-import { Pressable, Switch, View } from "react-native";
+import { Switch, View } from "react-native";
+import { Pressable } from "../src/components/Touchable";
 import { Screen } from "../src/components/Screen";
 import { BackHeader } from "../src/components/PageHeader";
 import { Text } from "../src/components/Text";

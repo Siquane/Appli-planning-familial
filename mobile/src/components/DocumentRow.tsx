@@ -1,4 +1,5 @@
-import { Image, Pressable, View } from "react-native";
+import { Image, View } from "react-native";
+import { Pressable } from "./Touchable";
 import { Card } from "./Card";
 import { Text } from "./Text";
 import { DocumentIcon } from "./icons";

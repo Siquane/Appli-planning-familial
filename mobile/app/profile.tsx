@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Pressable } from "../src/components/Touchable";
 import { View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../src/components/Screen";
@@ -15,7 +16,7 @@ import { useAuthStore } from "../src/state/authStore";
 import { useToastStore } from "../src/state/toastStore";
 import { connectAppleCalendar, startOAuthConnect } from "../src/lib/calendarConnect";
 import { color, space } from "../src/theme/tokens";
-import { Platform, Pressable } from "react-native";
+import { Platform } from "react-native";
 
 const PROVIDERS: { key: "google" | "outlook" | "apple"; label: string }[] = [
   { key: "google", label: "Google Calendar" },

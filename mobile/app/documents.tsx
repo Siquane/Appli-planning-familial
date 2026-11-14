@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Pressable } from "../src/components/Touchable";
 import { ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../src/components/Screen";
@@ -11,7 +12,7 @@ import { DocumentRow } from "../src/components/DocumentRow";
 import { DocumentIcon, PlusIcon } from "../src/components/icons";
 import { MoreLink } from "../src/components/MoreLink";
 import { useDocuments, useMembers, usePlan } from "../src/hooks/useApi";
-import { Pressable } from "react-native";
+
 import { categoryLabel, DOCUMENT_CATEGORIES } from "../src/lib/documentUpload";
 import { color, space } from "../src/theme/tokens";
 import type { DocumentCategory } from "../src/api/types";

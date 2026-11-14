@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, ScrollView, Share, View } from "react-native";
+import { Pressable, hitSlopFor } from "../../src/components/Touchable";
+import { ScrollView, Share, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
@@ -221,7 +222,7 @@ export default function BudgetScreen() {
 
 function MonthArrow({ onPress, label, children }: { onPress: () => void; label: string; children: React.ReactNode }) {
   return (
-    <Pressable
+    <Pressable hitSlop={hitSlopFor(34)}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}

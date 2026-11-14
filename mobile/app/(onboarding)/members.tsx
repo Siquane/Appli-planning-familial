@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Pressable } from "../../src/components/Touchable";
 import { View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../../src/components/Screen";
@@ -9,7 +10,7 @@ import { Card } from "../../src/components/Card";
 import { StepDots } from "../../src/components/StepDots";
 import { Avatar } from "../../src/components/Avatar";
 import { TrashIcon } from "../../src/components/icons";
-import { Pressable } from "react-native";
+
 import { useCreateMember, useDeleteMember, useMembers } from "../../src/hooks/useApi";
 import { color, space } from "../../src/theme/tokens";
 import type { Tint } from "../../src/api/types";

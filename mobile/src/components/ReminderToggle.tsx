@@ -1,4 +1,5 @@
-import { Pressable, Switch, View } from "react-native";
+import { Switch, View } from "react-native";
+import { Pressable } from "./Touchable";
 import { Card } from "./Card";
 import { Text } from "./Text";
 import { BellIcon } from "./icons";

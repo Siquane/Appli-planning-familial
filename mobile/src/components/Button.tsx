@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import { Text } from "./Text";
 import { color, glow, radius, space } from "../theme/tokens";
 import { GradientFill } from "./Brand";
+import { hitSlopFor } from "./Touchable";
 
 type Variant = "primary" | "secondary" | "ghost" | "icon";
 
@@ -29,6 +30,8 @@ export function Button({ label, onPress, variant = "secondary", block, disabled,
       onPress={disabled || loading ? undefined : onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityState={{ disabled: !!(disabled || loading), busy: !!loading }}
+      hitSlop={isIcon ? hitSlopFor(36) : undefined}
       disabled={disabled || loading}
       style={({ pressed }) => [
         {

@@ -1,7 +1,8 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
+import { Pressable } from "./Touchable";
 import { Text } from "./Text";
 import { color, radius } from "../theme/tokens";
-import { WEEKDAYS_SHORT } from "../lib/weekdays";
+import { WEEKDAYS_FULL, WEEKDAYS_SHORT } from "../lib/weekdays";
 import type { Weekday } from "../api/types";
 
 export function WeekStrip({ selected, onSelect, today }: { selected: Weekday; onSelect: (w: Weekday) => void; today: Weekday }) {
@@ -14,6 +15,9 @@ export function WeekStrip({ selected, onSelect, today }: { selected: Weekday; on
           <Pressable
             key={label}
             onPress={() => onSelect(w)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isSelected }}
+            accessibilityLabel={`${WEEKDAYS_FULL[w]}${w === today ? ", aujourd'hui" : ""}`}
             style={{
               // All 7 days share the row, whatever the phone's text size.
               flex: 1,
