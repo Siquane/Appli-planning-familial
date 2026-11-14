@@ -96,7 +96,7 @@ export default function RecipeFormScreen() {
               Importer depuis un site de recettes (optionnel)
             </Text>
             <TextField value={importUrl} onChangeText={setImportUrl} placeholder="Coller le lien de la recette" autoCapitalize="none" keyboardType="url" />
-            <Button label="Importer" variant="secondary" block onPress={onImport} disabled={!importUrl.trim()} loading={importing} />
+            <Button label="Importer" variant="secondary" block onPress={onImport} disabled={!importUrl.trim()} loading={importing} needsNetwork />
           </Card>
         )}
 
@@ -127,7 +127,7 @@ export default function RecipeFormScreen() {
           </Text>
         )}
 
-        <Button label={existing ? "Enregistrer" : "Créer la recette"} variant="primary" block onPress={onSave} disabled={!isValid} loading={saving} />
+        <Button label={existing ? "Enregistrer" : "Créer la recette"} variant="primary" block onPress={onSave} disabled={!isValid} loading={saving} needsNetwork />
       </KeyboardScrollView>
     </Screen>
   );

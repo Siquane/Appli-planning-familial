@@ -4,6 +4,7 @@ import type { MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringE
 import { useAuthStore } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
 import { buildCategoryOptions } from "../lib/money";
+import { offlineExpenses, offlineMeals, offlineShopping, offlineTasks } from "../lib/offlineApi";
 
 // Planning data is shared with the other accounts of the family: look for their changes every minute while the app is open.
 const SHARED_REFRESH_MS = 60_000;
@@ -99,7 +100,7 @@ export function useMeals() {
 export function useSetMeal() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: MealInput) => mealsApi.set(data),
+    mutationFn: (data: MealInput) => offlineMeals.set(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["meals"] }),
   });
 }
@@ -107,7 +108,7 @@ export function useSetMeal() {
 export function useDeleteMeal() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => mealsApi.remove(id),
+    mutationFn: (id: string) => offlineMeals.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["meals"] }),
   });
 }
@@ -219,7 +220,7 @@ export function useMonthlyBudget(month: string) {
 export function useCreateExpense() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: ExpenseInput) => expensesApi.create(data),
+    mutationFn: (data: ExpenseInput) => offlineExpenses.create(data),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["expenses"] });
       if (res.alert) qc.invalidateQueries({ queryKey: ["notifications"] });
@@ -241,7 +242,7 @@ export function useUpdateExpense() {
 export function useDeleteExpense() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => expensesApi.remove(id),
+    mutationFn: (id: string) => offlineExpenses.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["expenses"] }),
   });
 }
@@ -327,7 +328,7 @@ export function useShoppingList() {
 
 export function useAddShoppingItem() {
   const qc = useQueryClient();
-  return useMutation({ mutationFn: (label: string) => shoppingApi.add(label), onSuccess: () => qc.invalidateQueries({ queryKey: ["shopping"] }) });
+  return useMutation({ mutationFn: (label: string) => offlineShopping.add(label), onSuccess: () => qc.invalidateQueries({ queryKey: ["shopping"] }) });
 }
 
 // Ticking an item updates the list at once (no wait for the server), then
@@ -335,7 +336,7 @@ export function useAddShoppingItem() {
 export function useToggleShoppingItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, checked }: { id: string; checked: boolean }) => shoppingApi.update(id, { checked }),
+    mutationFn: ({ id, checked }: { id: string; checked: boolean }) => offlineShopping.setChecked(id, checked),
     onMutate: async ({ id, checked }) => {
       await qc.cancelQueries({ queryKey: ["shopping"] });
       const previous = qc.getQueryData<ShoppingItem[]>(["shopping"]);
@@ -349,7 +350,7 @@ export function useToggleShoppingItem() {
 
 export function useDeleteShoppingItem() {
   const qc = useQueryClient();
-  return useMutation({ mutationFn: (id: string) => shoppingApi.remove(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["shopping"] }) });
+  return useMutation({ mutationFn: (id: string) => offlineShopping.remove(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["shopping"] }) });
 }
 
 export function useShoppingFromMenu() {
@@ -370,7 +371,7 @@ export function useTasks() {
 export function useCreateTask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: TaskInput) => tasksApi.create(data),
+    mutationFn: (data: TaskInput) => offlineTasks.create(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
   });
 }
@@ -378,7 +379,7 @@ export function useCreateTask() {
 export function useUpdateTask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<TaskInput> }) => tasksApi.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<TaskInput> }) => offlineTasks.update(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
   });
 }
@@ -386,7 +387,7 @@ export function useUpdateTask() {
 export function useDeleteTask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => tasksApi.remove(id),
+    mutationFn: (id: string) => offlineTasks.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
   });
 }

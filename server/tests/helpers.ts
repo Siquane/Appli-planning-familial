@@ -17,7 +17,7 @@ export async function signup(app: Express, overrides: Partial<{ email: string; p
   const password = overrides.password ?? "password123";
   const name = overrides.name ?? "Claire Dubois";
 
-  const res = await request(app).post("/auth/signup").send({ email, password, name });
+  const res = await request(app).post("/auth/signup").send({ email, password, name, age15: true });
   if (res.status !== 201) {
     throw new Error(`signup helper failed: ${res.status} ${JSON.stringify(res.body)}`);
   }

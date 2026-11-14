@@ -202,6 +202,7 @@ export default function MealPlanScreen() {
             block
             onPress={onSave}
             loading={save.isPending}
+            needsNetwork
             disabled={!!rerolling || proposal.length === 0}
           />
           <Button
@@ -210,6 +211,7 @@ export default function MealPlanScreen() {
             block
             onPress={weeksLeft > 0 ? onGenerate : () => router.push("/premium")}
             loading={generate.isPending && !rerolling}
+            needsNetwork
             disabled={!!rerolling}
           />
         </KeyboardScrollView>
@@ -304,6 +306,7 @@ export default function MealPlanScreen() {
           block
           onPress={weeksLeft <= 0 ? () => router.push("/premium") : onGenerate}
           loading={generate.isPending}
+          needsNetwork
           disabled={weeksLeft > 0 && slots.length === 0}
         />
         {quota && (

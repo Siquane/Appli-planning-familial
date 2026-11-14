@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
-import { useAuthStore } from "../state/authStore";
+import { useAuthStore, UnreachableError } from "../state/authStore";
+import { useNetworkStore } from "../state/networkStore";
 import { OFFLINE_MESSAGE, statusMessage } from "../lib/errors";
 
 // EXPO_PUBLIC_API_URL lets a real device/dev-build point at a LAN IP; the
@@ -12,10 +13,13 @@ export class ApiError extends Error {
   status: number;
   /** Machine-readable reason when the server gives one ("premium_required", "quota_exceeded"…). */
   code?: string;
-  constructor(status: number, message: string, code?: string) {
+  /** The rest of the error body, for the few errors that carry data (e.g. who would take over a family). */
+  details?: Record<string, unknown>;
+  constructor(status: number, message: string, code?: string, details?: Record<string, unknown>) {
     super(message);
     this.status = status;
     this.code = code;
+    this.details = details;
   }
 }
 
@@ -37,8 +41,10 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
     res = await fetch(`${API_URL}${path}`, { ...options, headers });
   } catch {
     // No answer at all (offline, server asleep): say so instead of « Network request failed ».
+    useNetworkStore.getState().setOnline(false);
     throw new ApiError(0, OFFLINE_MESSAGE);
   }
+  useNetworkStore.getState().setOnline(true);
 
   if (res.status === 401 && !accessToken && !useAuthStore.getState().refreshToken) {
     // No session at all: sign out so the app returns to the login screen.
@@ -47,7 +53,13 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
   }
 
   if (res.status === 401 && retry && useAuthStore.getState().refreshToken) {
-    const refreshed = await useAuthStore.getState().refresh();
+    let refreshed: boolean;
+    try {
+      refreshed = await useAuthStore.getState().refresh();
+    } catch (e) {
+      if (e instanceof UnreachableError) throw new ApiError(0, OFFLINE_MESSAGE);
+      throw e;
+    }
     if (refreshed) return request<T>(path, options, false);
     useAuthStore.getState().signOut();
     throw new ApiError(401, statusMessage(401));
@@ -56,12 +68,21 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
   if (res.status === 204) return undefined as T;
 
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, body.error ?? statusMessage(res.status), typeof body.code === "string" ? body.code : undefined);
+  if (!res.ok) throw new ApiError(res.status, body.error ?? statusMessage(res.status), typeof body.code === "string" ? body.code : undefined, body);
   return body as T;
 }
 
+// Set by src/lib/outbox.ts: before reading, send the changes made offline, so a refresh doesn't bring back older data over them.
+let beforeRead: (() => Promise<void>) | null = null;
+export const setBeforeRead = (fn: (() => Promise<void>) | null) => {
+  beforeRead = fn;
+};
+
 export const api = {
-  get: <T>(path: string) => request<T>(path),
+  get: async <T>(path: string) => {
+    await beforeRead?.().catch(() => {});
+    return request<T>(path);
+  },
   post: <T>(path: string, data?: unknown) => request<T>(path, { method: "POST", body: data !== undefined ? JSON.stringify(data) : undefined }),
   patch: <T>(path: string, data?: unknown) => request<T>(path, { method: "PATCH", body: JSON.stringify(data) }),
   put: <T>(path: string, data?: unknown) => request<T>(path, { method: "PUT", body: JSON.stringify(data) }),

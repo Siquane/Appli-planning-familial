@@ -8,6 +8,8 @@ import { useSettingsStore } from "../../src/state/settingsStore";
 import { useWidgetSync } from "../../src/widgets/sync";
 import { takeWidgetRoute } from "../../src/widgets/links";
 import { syncUser } from "../../src/lib/account";
+import { startOutboxSync } from "../../src/lib/outbox";
+import { FamilyNoticeModal } from "../../src/components/FamilyNoticeModal";
 
 export default function TabsLayout() {
   const { data: tasks } = useTasks();
@@ -21,8 +23,12 @@ export default function TabsLayout() {
     if (route && route !== "/home") router.navigate(route as never);
     // Keep the name/initials and the family in step with the server (the owner can remove an account).
     syncUser();
+    const stopSync = startOutboxSync();
     const sub = AppState.addEventListener("change", (state) => state === "active" && syncUser());
-    return () => sub.remove();
+    return () => {
+      sub.remove();
+      stopSync();
+    };
   }, []);
 
   useEffect(() => {
@@ -44,11 +50,14 @@ export default function TabsLayout() {
   }, [tasks, digestHydrated, eveningDigest]);
 
   return (
+    <>
     <Tabs tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="home" options={{ title: "Planning" }} />
       <Tabs.Screen name="repas" options={{ title: "Repas" }} />
       <Tabs.Screen name="budget" options={{ title: "Budget" }} />
       <Tabs.Screen name="famille" options={{ title: "Famille" }} />
     </Tabs>
+    <FamilyNoticeModal />
+    </>
   );
 }

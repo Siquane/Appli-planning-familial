@@ -3,6 +3,7 @@ import { AppState } from "react-native";
 import { QueryClient, focusManager } from "@tanstack/react-query";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import type { PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
+import { useOutboxStore } from "../state/outboxStore";
 
 // Cached data must outlive the persisted copy, or restored entries would be
 // garbage-collected right away.
@@ -38,5 +39,7 @@ export const persistOptions: Omit<PersistQueryClientOptions, "queryClient"> = {
 /** On sign-out: forget everything, in memory and on the phone. */
 export async function clearQueryCache() {
   queryClient.clear();
+  // Changes still waiting belong to the account that is leaving.
+  await useOutboxStore.getState().clear();
   await AsyncStorage.removeItem(CACHE_STORAGE_KEY).catch(() => {});
 }

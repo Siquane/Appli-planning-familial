@@ -6,7 +6,7 @@ import { authHeader, signup } from "../helpers";
 
 describe("POST /auth/signup", () => {
   it("creates a user and returns tokens", async () => {
-    const res = await request(app).post("/auth/signup").send({ email: "claire@passerelle.test", password: "password123", name: "Claire Dubois" });
+    const res = await request(app).post("/auth/signup").send({ email: "claire@passerelle.test", password: "password123", name: "Claire Dubois", age15: true });
     expect(res.status).toBe(201);
     expect(res.body.user).toMatchObject({ email: "claire@passerelle.test", name: "Claire Dubois", initials: "CD" });
     expect(typeof res.body.accessToken).toBe("string");
@@ -15,7 +15,7 @@ describe("POST /auth/signup", () => {
 
   it("rejects a duplicate email", async () => {
     await signup(app, { email: "dup@passerelle.test" });
-    const res = await request(app).post("/auth/signup").send({ email: "dup@passerelle.test", password: "password123", name: "Someone Else" });
+    const res = await request(app).post("/auth/signup").send({ email: "dup@passerelle.test", password: "password123", name: "Someone Else", age15: true });
     expect(res.status).toBe(409);
   });
 

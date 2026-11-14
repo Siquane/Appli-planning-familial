@@ -8,7 +8,14 @@ export interface User {
   /** The family's id (the owner's): what the store identifies the subscription with. Absent in sessions saved by older versions. */
   familyId?: string;
   familyRole?: FamilyRole;
+  /** One-time message after the family changed hands; closed with familyApi.dismissNotice. */
+  familyNotice?: FamilyNotice | null;
 }
+
+export type FamilyNotice =
+  | { kind: "heir"; from: string }
+  | { kind: "newOwner"; from: string; heir: string }
+  | { kind: "detached"; from: string };
 
 export interface FamilyAccount {
   id: string;

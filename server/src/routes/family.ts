@@ -85,3 +85,9 @@ familyRouter.post("/leave", async (req, res) => {
   await prisma.user.update({ where: { id: req.accountId! }, data: { familyOwnerId: null, familyRole: "owner" } });
   res.status(204).end();
 });
+
+// The account has read the message about the family changing hands.
+familyRouter.delete("/notice", async (req, res) => {
+  await prisma.user.update({ where: { id: req.accountId! }, data: { familyNotice: null } });
+  res.status(204).end();
+});

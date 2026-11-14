@@ -30,6 +30,8 @@ model User {
   familyAccounts User[] @relation("FamilyAccounts")
   familyRole    String  @default("owner")
   familyInvite  FamilyInvite?
+  // One-time message (JSON) shown at the next opening after the family changed hands; see lib/familyHandover.ts.
+  familyNotice  String?
   mealsUntil   DateTime?
   // Explicit consent to store members' diets, allergies and foods to limit
   // (health data / may reveal religion, RGPD art. 9). Null = not given.

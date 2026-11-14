@@ -148,6 +148,7 @@ export default function BudgetScreen() {
           trailing={premium ? undefined : <SparkleIcon size={14} color={color.accent400} />}
           variant="secondary"
           block
+          needsNetwork
           onPress={() => router.push("/statement-import")}
         />
 

@@ -34,7 +34,7 @@ interface AuthState {
   refreshToken: string | null;
   hydrated: boolean;
   hydrate: () => Promise<void>;
-  signUp: (email: string, password: string, name: string, family?: { code: string; age15: boolean }) => Promise<void>;
+  signUp: (email: string, password: string, name: string, consent: { age15: boolean; code?: string }) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
@@ -61,6 +61,9 @@ export const AUTH_DEADLINE_MS = 60_000;
 const RETRY_DELAY_MS = 2_000;
 const RETRYABLE_STATUSES = new Set([502, 503, 504]);
 
+/** The server could not be reached at all (offline, asleep for too long): not the same as being refused. */
+export class UnreachableError extends Error {}
+
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number) {
@@ -84,7 +87,7 @@ async function postWithRetry(path: string, body: unknown): Promise<Record<string
   for (;;) {
     const remaining = deadline - Date.now();
     if (remaining <= 0) {
-      throw new Error("Le serveur ne répond pas. Vérifie ta connexion et réessaie dans un instant.");
+      throw new UnreachableError("Le serveur ne répond pas. Vérifie ta connexion et réessaie dans un instant.");
     }
 
     let res: Response;
@@ -153,8 +156,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
-  signUp: async (email, password, name, family) => {
-    const data = await authRequest("/auth/signup", { email, password, name, ...(family ? { familyCode: family.code, age15: family.age15 } : {}) });
+  signUp: async (email, password, name, consent) => {
+    const data = await authRequest("/auth/signup", { email, password, name, age15: consent.age15, ...(consent.code ? { familyCode: consent.code } : {}) });
     await persist(data.user, data.accessToken, data.refreshToken);
     set({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
   },
@@ -207,7 +210,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await persist(data.user, data.accessToken, data.refreshToken);
         set({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
         return true;
-      } catch {
+      } catch (e) {
+        // Offline is not a reason to sign out: the session is still good, the caller reports it.
+        if (e instanceof UnreachableError) throw e;
         return false;
       } finally {
         refreshInFlight = null;

@@ -62,7 +62,7 @@ export default function PrivacyScreen() {
   function onDelete() {
     Alert.alert(
       "Supprimer ton compte ?",
-      "Tout sera effacé définitivement : membres, tâches, recettes, menus, budget, documents. Un abonnement Play Store éventuel est à annuler dans le Play Store.",
+      "Tout sera effacé définitivement : membres, tâches, recettes, menus, budget, documents. Si d'autres comptes partagent ta famille, un adulte pourra la reprendre : on te le dira avant. Un abonnement Play Store éventuel est à annuler dans le Play Store.",
       [
         { text: "Annuler", style: "cancel" },
         {
@@ -77,10 +77,11 @@ export default function PrivacyScreen() {
               if (e instanceof ApiError && e.code === "family_has_members") {
                 // Other accounts use this family: say so and ask again before deleting for everyone.
                 setDeleting(false);
-                Alert.alert("D'autres comptes utilisent cette famille", e.message, [
+                const handedOver = !!(e.details as { heir?: string | null } | undefined)?.heir;
+                Alert.alert(handedOver ? "Confier la famille avant de partir" : "D'autres comptes utilisent cette famille", e.message, [
                   { text: "Annuler", style: "cancel" },
                   {
-                    text: "Tout supprimer",
+                    text: handedOver ? "Confier et supprimer mon compte" : "Supprimer mon compte",
                     style: "destructive",
                     onPress: async () => {
                       setDeleting(true);
@@ -134,7 +135,7 @@ export default function PrivacyScreen() {
             Les régimes et allergies enregistrés avec ton accord sont visibles de tous les comptes de la famille.
           </Section>
           <Section title="Partir ou retirer">
-            Le créateur peut retirer un compte et chacun peut quitter la famille : le compte reste, sans les données partagées. Si le créateur supprime son compte, les données partagées sont effacées après un avertissement.
+            Le créateur peut retirer un compte et chacun peut quitter la famille : le compte reste, sans les données partagées. Si le créateur supprime son compte, un adulte de la famille peut la reprendre avec ses données ; sinon le planning partagé est effacé. Dans tous les cas chacun est prévenu et garde son compte et ses données personnelles.
           </Section>
         </Accordion>
 
@@ -175,7 +176,7 @@ export default function PrivacyScreen() {
 
         <Accordion title="Supprimer mon compte">
           <Text size={13} tone="muted">
-            Efface définitivement toutes les données de la famille. Saisis ton mot de passe pour confirmer.
+            Efface définitivement tes données. Si d'autres comptes partagent ta famille, un adulte peut la reprendre avant ton départ. Saisis ton mot de passe pour confirmer.
           </Text>
           <TextField label="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
           <Button label="Supprimer mon compte" variant="secondary" block loading={deleting} disabled={!password} onPress={onDelete} />

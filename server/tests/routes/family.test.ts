@@ -54,6 +54,10 @@ describe("joining a family", () => {
     const code = await invite(a.auth, "full");
     expect((await join(code, { age15: false })).res.status).toBe(400);
     expect((await join(code, { age15: undefined })).res.body.error).toContain("15 ans");
+    // Creating one's own family is no different: 15 is the age for any account.
+    const alone = await request(app).post("/auth/signup").send({ email: "alone@passerelle.test", password: "password123", name: "Sam" });
+    expect(alone.status).toBe(400);
+    expect(alone.body.error).toContain("15 ans");
     const wrong = await join("ZZZZ-ZZZZ");
     expect(wrong.res.status).toBe(400);
     expect(wrong.res.body.code).toBe("invalid_family_code");
@@ -239,20 +243,74 @@ describe("leaving, removing, deleting", () => {
     expect(await prisma.expense.count({ where: { userId: j.id } })).toBe(0);
   });
 
-  it("the owner deleting the family must confirm when others use it, then they are left on their own", async () => {
+  it("the owner deleting the account must confirm when others use the family, and an adult takes it over", async () => {
     const a = await owner();
     const j = await join(await invite(a.auth, "full"));
     await addTask(a.auth, "Famille");
+    await addExpense(a.auth, "Courses partagées");
 
     const refused = await request(app).delete("/auth/me").set(a.auth).send({ password: "password123" });
     expect(refused.status).toBe(409);
-    expect(refused.body).toMatchObject({ code: "family_has_members", members: 1 });
+    expect(refused.body).toMatchObject({ code: "family_has_members", members: 1, heir: "Léa Martin" });
+    expect(refused.body.error).toContain("reprendra");
     expect(await prisma.user.count({ where: { id: a.id } })).toBe(1);
 
     expect((await request(app).delete("/auth/me").set(a.auth).send({ password: "password123", confirmFamily: true })).status).toBe(204);
-    // The joiner's account survives, now alone with no family data.
-    expect((await request(app).get("/auth/me").set(j.auth)).body.user).toMatchObject({ id: j.id, familyId: j.id, familyRole: "owner" });
-    expect(await titles(j.auth)).toEqual([]);
+    // The adult now owns the family: same planning and budget, on their own account.
+    const me = (await request(app).get("/auth/me").set(j.auth)).body.user;
+    expect(me).toMatchObject({ id: j.id, familyId: j.id, familyRole: "owner", familyNotice: { kind: "heir", from: "Anaïs Guyon" } });
+    expect(await titles(j.auth)).toEqual(["Famille"]);
+    expect(await month(j.auth)).toEqual(["Courses partagées"]);
+    // They start from the free offer: the departed owner's subscription doesn't follow.
+    const plan = (await request(app).get("/plan").set(j.auth)).body;
+    expect(plan.packs.budget.active).toBe(false);
+    // And can invite people again.
+    expect((await request(app).post("/family/invite").set(j.auth).send({ role: "planning" })).status).toBe(201);
+  });
+
+  it("the other accounts follow the new owner, with their own space kept and a gentle notice", async () => {
+    const a = await owner();
+    const adult = await join(await invite(a.auth, "full"), { name: "Marc Dupont" });
+    const teen = await join(await invite(a.auth, "planning"), { name: "Lou Martin" });
+    await addTask(a.auth, "Famille");
+    await addExpense(teen.auth, "Argent de poche");
+
+    expect((await request(app).delete("/auth/me").set(a.auth).send({ password: "password123", confirmFamily: true })).status).toBe(204);
+
+    const me = (await request(app).get("/auth/me").set(teen.auth)).body.user;
+    expect(me).toMatchObject({ familyId: adult.id, familyRole: "planning", familyNotice: { kind: "newOwner", from: "Anaïs Guyon", heir: "Marc Dupont" } });
+    expect(await titles(teen.auth)).toEqual(["Famille"]);
+    expect(await month(teen.auth)).toEqual(["Argent de poche"]);
+
+    // Closing the message makes it go away.
+    expect((await request(app).delete("/family/notice").set(teen.auth)).status).toBe(204);
+    expect((await request(app).get("/auth/me").set(teen.auth)).body.user.familyNotice).toBeNull();
+  });
+
+  it("can name who takes over, and only among the adults", async () => {
+    const a = await owner();
+    const first = await join(await invite(a.auth, "full"), { name: "Marc Dupont" });
+    const second = await join(await invite(a.auth, "full"), { name: "Sam Roux" });
+    const teen = await join(await invite(a.auth, "planning"), { name: "Lou Martin" });
+    const bad = await request(app).delete("/auth/me").set(a.auth).send({ password: "password123", confirmFamily: true, heirId: teen.id });
+    expect(bad.status).toBe(400);
+    expect((await request(app).delete("/auth/me").set(a.auth).send({ password: "password123", confirmFamily: true, heirId: second.id })).status).toBe(204);
+    expect((await request(app).get("/auth/me").set(second.auth)).body.user.familyRole).toBe("owner");
+    expect((await request(app).get("/auth/me").set(first.auth)).body.user).toMatchObject({ familyId: second.id, familyRole: "full" });
+  });
+
+  it("with no adult to take over, the others keep their account and private data but not the shared planning", async () => {
+    const a = await owner();
+    const teen = await join(await invite(a.auth, "planning"), { name: "Lou Martin" });
+    await addTask(a.auth, "Famille");
+    await addExpense(teen.auth, "Argent de poche");
+    const refused = await request(app).delete("/auth/me").set(a.auth).send({ password: "password123" });
+    expect(refused.body).toMatchObject({ code: "family_has_members", heir: null });
+    expect((await request(app).delete("/auth/me").set(a.auth).send({ password: "password123", confirmFamily: true })).status).toBe(204);
+    const me = (await request(app).get("/auth/me").set(teen.auth)).body.user;
+    expect(me).toMatchObject({ familyId: teen.id, familyRole: "owner", familyNotice: { kind: "detached", from: "Anaïs Guyon" } });
+    expect(await titles(teen.auth)).toEqual([]);
+    expect(await month(teen.auth)).toEqual(["Argent de poche"]);
   });
 
   it("an owner without anyone else deletes without extra confirmation", async () => {
