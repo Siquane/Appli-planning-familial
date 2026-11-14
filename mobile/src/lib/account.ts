@@ -24,8 +24,8 @@ export async function syncUser(): Promise<void> {
  * Delete the account and all its data (password confirms it). Signs out on
  * success so the app returns to the login screen with nothing cached.
  */
-export async function deleteAccount(password: string, confirmFamily = false): Promise<void> {
-  await api.delete<void>("/auth/me", { password, ...(confirmFamily ? { confirmFamily: true } : {}) });
+export async function deleteAccount(password: string, confirmFamily = false, heirId?: string): Promise<void> {
+  await api.delete<void>("/auth/me", { password, ...(confirmFamily ? { confirmFamily: true } : {}), ...(heirId ? { heirId } : {}) });
   await useAuthStore.getState().signOut();
 }
 

@@ -1,4 +1,4 @@
-import { ROLE_LABEL, inviteValidity, joinedSummary, noticeText, shareMessage } from "../family";
+import { ROLE_LABEL, inviteValidity, joinedSummary, noticeText, parseHeirs, shareMessage } from "../family";
 
 const NOW = new Date("2026-11-14T12:00:00Z");
 const inDays = (n: number) => new Date(NOW.getTime() + n * 86_400_000).toISOString();
@@ -51,5 +51,16 @@ describe("notice after the family changes hands", () => {
     const n = noticeText({ kind: "detached", from: "Anaïs" });
     expect(n.body).toContain("ton budget et tes documents personnels sont conservés");
     expect(n.title).not.toMatch(/supprim/i);
+  });
+});
+
+describe("who can take the family over", () => {
+  it("reads the adults the server proposes, ignoring anything else", () => {
+    expect(parseHeirs({ heirs: [{ id: "a", name: "Marc" }, { id: "b", name: "Sam" }, { nope: 1 }, null] })).toEqual([
+      { id: "a", name: "Marc" },
+      { id: "b", name: "Sam" },
+    ]);
+    expect(parseHeirs(undefined)).toEqual([]);
+    expect(parseHeirs({ heirs: "x" })).toEqual([]);
   });
 });
