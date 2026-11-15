@@ -24,6 +24,7 @@ export function taskFromInput(id: string, input: TaskInput, now: Date = new Date
     synced: false,
     notes: "",
     memberIds: [],
+    seriesId: null,
     ...input,
     id,
     date: dateForWeekday(input.weekday, now),
