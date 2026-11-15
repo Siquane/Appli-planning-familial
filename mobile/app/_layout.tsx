@@ -1,5 +1,4 @@
 import { useEffect, useCallback, useRef } from "react";
-import { useColorScheme } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Stack, router } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -22,7 +21,7 @@ import { applyPendingUpdate } from "../src/lib/updates";
 import { initSentry, Sentry, sentryEnabled } from "../src/lib/sentry";
 import { resetBilling } from "../src/lib/billing";
 import { activeScheme, applyTheme, color } from "../src/theme/tokens";
-import { resolveScheme, useThemeStore } from "../src/state/themeStore";
+import { useThemeStore } from "../src/state/themeStore";
 
 initSentry();
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -35,11 +34,9 @@ function RootLayout() {
   const hydrateOnboarding = useOnboardingStore((s) => s.hydrate);
   const themeHydrated = useThemeStore((s) => s.hydrated);
   const hydrateTheme = useThemeStore((s) => s.hydrate);
-  const preference = useThemeStore((s) => s.preference);
-  const system = useColorScheme();
-  // Clair ou sombre : la palette est changée avant le rendu des écrans, qui
-  // sont remontés (clé = thème) pour la relire.
-  const scheme = resolveScheme(preference, system);
+  // Clair ou sombre (choix du profil) : la palette est changée avant le rendu
+  // des écrans, qui sont remontés (clé = thème) pour la relire.
+  const scheme = useThemeStore((s) => s.scheme);
   if (scheme !== activeScheme()) applyTheme(scheme);
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(color.bg).catch(() => {});

@@ -256,7 +256,7 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Sur la fiche d'une tâche, un adulte (tout compte connecté) coche « C'est fait » pour chaque enfant assigné : une fois par semaine (`StarCompletion.week` = lundi local « AAAA-MM-JJ », envoyé par l'appli), annulable. Titre et étoiles recopiés : supprimer la tâche ne retire pas les étoiles.
 - Famille → « Étoiles et récompenses » (`app/stars.tsx`) : solde et étoiles de la semaine par enfant, récompenses (titre + prix, 30 max) à échanger si le solde suffit (`409 not_enough_stars` sinon), historique (appui long pour effacer une erreur).
 - Serveur : `routes/stars.ts` (`GET /stars?week=`, `POST/DELETE /stars/complete`, `/stars/rewards`, `/stars/rewards/:id/redeem`, `DELETE /stars/history/:id`), modèles `StarCompletion`, `Reward`, `RewardRedemption` (migration `20261115140000_stars`), repris par la passation de famille et effacés par « rejoindre une famille ». Gratuit, réseau nécessaire.
-- PR #38 fusionnée le 15/11 (étoiles + Firebase, runtime "7"). Clé FCM V1 déposée sur expo.dev par l'utilisatrice. APK runtime "7" jamais compilé : on attend le runtime "8" (thème clair).
+- PR #38 fusionnée le 15/11 (étoiles + Firebase, runtime "7"). Clé FCM V1 déposée sur expo.dev par l'utilisatrice. **APK runtime "7" à compiler et installer** (Firebase).
 
 ## Dépenses en hausse et calendrier des prélèvements (Budget+, 15/11/2026)
 
@@ -265,11 +265,11 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - **Calendrier des prélèvements** (`app/debits.tsx`, `GET /expenses/debits?month=`) : dépenses récurrentes jour par jour, totaux « déjà passé » / « à venir » ; mois passés et en cours = copies réelles, mois à venir = récurrentes prévues.
 - PR #39 fusionnée le 15/11.
 
-## Thème clair (15/11/2026, `runtimeVersion` "8")
+## Thème clair (15/11/2026)
 
-- Profil → **Apparence** : « Comme le téléphone » (par défaut), « Clair », « Sombre ». Préférence propre au téléphone (`src/state/themeStore.ts`, AsyncStorage `passerelle-theme`).
-- `app.json` : `userInterfaceStyle` "automatic" (avant "dark", qui empêchait de lire le réglage du téléphone) → **`runtimeVersion` "8", nouvel APK** (contient aussi Firebase). Les APK runtime "6" ne reçoivent plus de mises à jour.
+- **Sombre par défaut** ; Profil → **Apparence** : « Sombre » / « Clair ». **Ne suit pas le réglage du téléphone** (choix de l'utilisatrice, après une première version qui le suivait). Préférence propre au téléphone (`src/state/themeStore.ts`, AsyncStorage `passerelle-theme`).
+- `app.json` inchangé (`userInterfaceStyle` "dark") → **pas de nouveau runtime** : arrive par mise à jour au démarrage.
 - Palettes dans `src/theme/tokens.ts` : `color` est **modifié sur place** par `applyTheme` ; la racine (`app/_layout.tsx`) remonte tout l'arbre (clé = thème), ce qui ramène au Planning (le profil y retourne tout seul). Règle : **ne jamais figer une couleur au chargement d'un module** (objet en haut de fichier, `StyleSheet.create`) : la lire au rendu, ou utiliser un getter (`get tint() { return color.pillar1; }`).
 - Clair « blanc et néon adouci » : fond `#f4f8ff`, cartes blanches, texte `#0b1530`, échelles `accent*`/`neutral*` inversées (neutral100 = le plus contrasté dans les deux thèmes), dégradé un peu plus foncé, texte des boutons principaux `color.onGradient` (bleu nuit). Contrastes vérifiés (texte 17:1, secondaire 6,5:1, discret 4,8:1, accent 4,8:1).
-- Les **widgets restent sombres** (`darkColor`). Écran de lancement et icône inchangés (sombres).
-- Pas vu sur un vrai téléphone : à vérifier après installation de l'APK runtime "8".
+- Les **widgets restent sombres** (`darkColor`). Écran de lancement, icône et sélecteurs natifs (date, heure) restent sombres.
+- Pas vu sur un vrai téléphone : à vérifier.

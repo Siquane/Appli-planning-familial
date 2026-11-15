@@ -1,14 +1,13 @@
 jest.mock("@react-native-async-storage/async-storage", () => ({ getItem: jest.fn(), setItem: jest.fn() }));
 import { activeScheme, applyTheme, color, darkColor, gradient, tint } from "../tokens";
-import { resolveScheme } from "../../state/themeStore";
+import { storedScheme } from "../../state/themeStore";
 
-describe("resolveScheme", () => {
-  it("follows the phone unless a theme is forced", () => {
-    expect(resolveScheme("system", "light")).toBe("light");
-    expect(resolveScheme("system", "dark")).toBe("dark");
-    expect(resolveScheme("system", null)).toBe("dark");
-    expect(resolveScheme("dark", "light")).toBe("dark");
-    expect(resolveScheme("light", "dark")).toBe("light");
+describe("storedScheme", () => {
+  it("stays dark unless light was chosen", () => {
+    expect(storedScheme(null)).toBe("dark");
+    expect(storedScheme("dark")).toBe("dark");
+    expect(storedScheme("system")).toBe("dark");
+    expect(storedScheme("light")).toBe("light");
   });
 });
 

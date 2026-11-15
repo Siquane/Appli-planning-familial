@@ -2,33 +2,31 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import type { Scheme } from "../theme/tokens";
 
-// Thème de l'appli, propre à ce téléphone : suivre le réglage du téléphone
-// (par défaut), ou toujours clair, ou toujours sombre.
-export type ThemePreference = "system" | "light" | "dark";
+// Thème de l'appli, propre à ce téléphone : sombre par défaut, clair au choix
+// dans le profil. Il ne suit pas le réglage du téléphone (choix de l'utilisatrice).
 const KEY = "passerelle-theme";
 
 interface ThemeState {
   hydrated: boolean;
-  preference: ThemePreference;
+  scheme: Scheme;
   hydrate: () => Promise<void>;
-  setPreference: (p: ThemePreference) => Promise<void>;
+  setScheme: (s: Scheme) => Promise<void>;
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
   hydrated: false,
-  preference: "system",
+  scheme: "dark",
   hydrate: async () => {
     const stored = await AsyncStorage.getItem(KEY).catch(() => null);
-    set({ hydrated: true, preference: stored === "light" || stored === "dark" ? stored : "system" });
+    set({ hydrated: true, scheme: storedScheme(stored) });
   },
-  setPreference: async (preference) => {
-    set({ preference });
-    await AsyncStorage.setItem(KEY, preference).catch(() => {});
+  setScheme: async (scheme) => {
+    set({ scheme });
+    await AsyncStorage.setItem(KEY, scheme).catch(() => {});
   },
 }));
 
-/** Le thème à afficher, d'après la préférence et le réglage du téléphone. */
-export function resolveScheme(preference: ThemePreference, system: string | null | undefined): Scheme {
-  if (preference !== "system") return preference;
-  return system === "light" ? "light" : "dark";
+/** Sombre sauf si « clair » a été choisi. */
+export function storedScheme(stored: string | null | undefined): Scheme {
+  return stored === "light" ? "light" : "dark";
 }

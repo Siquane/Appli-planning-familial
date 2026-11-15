@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "scheme": "passerelle",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
@@ -125,7 +125,7 @@
     "experiments": {
       "typedRoutes": true
     },
-    "runtimeVersion": "8",
+    "runtimeVersion": "7",
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0

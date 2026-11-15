@@ -17,12 +17,12 @@ import { useToastStore } from "../src/state/toastStore";
 import { connectAppleCalendar, startOAuthConnect } from "../src/lib/calendarConnect";
 import { color, space } from "../src/theme/tokens";
 import { Chip } from "../src/components/Chip";
-import { useThemeStore, type ThemePreference } from "../src/state/themeStore";
+import { useThemeStore } from "../src/state/themeStore";
+import type { Scheme } from "../src/theme/tokens";
 
-const THEMES: { key: ThemePreference; label: string }[] = [
-  { key: "system", label: "Comme le téléphone" },
-  { key: "light", label: "Clair" },
+const THEMES: { key: Scheme; label: string }[] = [
   { key: "dark", label: "Sombre" },
+  { key: "light", label: "Clair" },
 ];
 import { Platform } from "react-native";
 
@@ -35,13 +35,13 @@ const PROVIDERS: { key: "google" | "outlook" | "apple"; label: string }[] = [
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
-  const themePreference = useThemeStore((s) => s.preference);
-  const setThemePreference = useThemeStore((s) => s.setPreference);
+  const themeScheme = useThemeStore((s) => s.scheme);
+  const setThemeScheme = useThemeStore((s) => s.setScheme);
 
   // Changer de thème remonte tous les écrans (retour au Planning) : on revient ensuite ici.
-  async function chooseTheme(next: ThemePreference) {
-    if (next === themePreference) return;
-    await setThemePreference(next);
+  async function chooseTheme(next: Scheme) {
+    if (next === themeScheme) return;
+    await setThemeScheme(next);
     setTimeout(() => router.navigate("/profile"), 150);
   }
 
@@ -153,7 +153,7 @@ export default function ProfileScreen() {
         </Text>
         <View style={{ flexDirection: "row", gap: space.xs }}>
           {THEMES.map((t) => (
-            <Chip key={t.key} label={t.label} selected={themePreference === t.key} onPress={() => chooseTheme(t.key)} size="sm" fill />
+            <Chip key={t.key} label={t.label} selected={themeScheme === t.key} onPress={() => chooseTheme(t.key)} size="sm" fill />
           ))}
         </View>
       </View>
