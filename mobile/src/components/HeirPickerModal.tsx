@@ -19,7 +19,7 @@ export function HeirPickerModal({ heirs, busy, onConfirm, onCancel }: Props) {
   const [chosen, setChosen] = useState(heirs[0]?.id ?? null);
   return (
     <Modal transparent animationType="fade" visible onRequestClose={onCancel}>
-      <View style={{ flex: 1, backgroundColor: "rgba(7,9,18,0.85)", justifyContent: "center", padding: gutter }}>
+      <View style={{ flex: 1, backgroundColor: color.scrim, justifyContent: "center", padding: gutter }}>
         <Card style={{ gap: space.md }}>
           <Text heading size={TYPE.title}>
             Qui reprend la famille ?

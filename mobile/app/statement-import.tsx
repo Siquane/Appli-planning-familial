@@ -110,7 +110,7 @@ export default function StatementImportScreen() {
             </Card>
             <Button
               label={parse.isPending ? "Lecture du relevé…" : premium ? "Choisir un relevé PDF" : "Choisir un relevé PDF · Budget+"}
-              icon={<DocumentIcon size={18} color={color.bg} />}
+              icon={<DocumentIcon size={18} color={color.onGradient} />}
               variant="primary"
               block
               loading={parse.isPending}
@@ -224,7 +224,7 @@ export default function StatementImportScreen() {
 
             <Button
               label={importLabel(count)}
-              icon={<SparkleIcon size={18} color={color.bg} />}
+              icon={<SparkleIcon size={18} color={color.onGradient} />}
               variant="primary"
               block
               disabled={count === 0}

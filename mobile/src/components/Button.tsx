@@ -51,8 +51,8 @@ export function Button({ label, onPress, variant = "secondary", block, disabled,
           borderWidth: variant === "ghost" || variant === "primary" ? 0 : 1,
           borderColor: variant === "secondary" || isIcon ? color.divider : "transparent",
           paddingVertical: isIcon ? 0 : variant === "primary" ? space.sm : space.sm,
-          backgroundColor: pressed && (variant === "secondary" || isIcon) ? "rgba(232,244,255,0.12)" : "transparent",
-          boxShadow: variant === "primary" && !disabled ? glow("rgba(76,196,255,0.35)", 14) : undefined,
+          backgroundColor: pressed && (variant === "secondary" || isIcon) ? color.pressed : "transparent",
+          boxShadow: variant === "primary" && !disabled ? glow(color.glowSoft, 14) : undefined,
           opacity: disabled ? 0.45 : pressed && variant === "primary" ? 0.85 : 1,
         },
         style,
@@ -60,12 +60,12 @@ export function Button({ label, onPress, variant = "secondary", block, disabled,
     >
       {variant === "primary" && <GradientFill radius={radius.md} />}
       {loading ? (
-        <ActivityIndicator size="small" color={variant === "primary" ? color.bg : color.text} />
+        <ActivityIndicator size="small" color={variant === "primary" ? color.onGradient : color.text} />
       ) : (
         <>
           {icon}
           {label ? (
-            <Text weight="medium" heading size={15} style={{ color: variant === "primary" ? color.bg : variant === "ghost" ? color.accent : color.text }}>
+            <Text weight="medium" heading size={15} style={{ color: variant === "primary" ? color.onGradient : variant === "ghost" ? color.accent : color.text }}>
               {label}
             </Text>
           ) : null}

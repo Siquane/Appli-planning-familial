@@ -16,6 +16,14 @@ import { useAuthStore } from "../src/state/authStore";
 import { useToastStore } from "../src/state/toastStore";
 import { connectAppleCalendar, startOAuthConnect } from "../src/lib/calendarConnect";
 import { color, space } from "../src/theme/tokens";
+import { Chip } from "../src/components/Chip";
+import { useThemeStore } from "../src/state/themeStore";
+import type { Scheme } from "../src/theme/tokens";
+
+const THEMES: { key: Scheme; label: string }[] = [
+  { key: "dark", label: "Sombre" },
+  { key: "light", label: "Clair" },
+];
 import { Platform } from "react-native";
 
 const PROVIDERS: { key: "google" | "outlook" | "apple"; label: string }[] = [
@@ -27,6 +35,15 @@ const PROVIDERS: { key: "google" | "outlook" | "apple"; label: string }[] = [
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
+  const themeScheme = useThemeStore((s) => s.scheme);
+  const setThemeScheme = useThemeStore((s) => s.setScheme);
+
+  // Changer de thème remonte tous les écrans (retour au Planning) : on revient ensuite ici.
+  async function chooseTheme(next: Scheme) {
+    if (next === themeScheme) return;
+    await setThemeScheme(next);
+    setTimeout(() => router.navigate("/profile"), 150);
+  }
 
   const { data: status, refetch } = useCalendarStatus();
   const disconnect = useDisconnectCalendar();
@@ -129,6 +146,17 @@ export default function ProfileScreen() {
           </View>
         </Card>
       )}
+
+      <View style={{ gap: space.sm }}>
+        <Text weight="medium" size={13} tone="muted">
+          Apparence
+        </Text>
+        <View style={{ flexDirection: "row", gap: space.xs }}>
+          {THEMES.map((t) => (
+            <Chip key={t.key} label={t.label} selected={themeScheme === t.key} onPress={() => chooseTheme(t.key)} size="sm" fill />
+          ))}
+        </View>
+      </View>
 
       <View style={{ gap: space.sm }}>
         <Text weight="medium" size={13} tone="muted">

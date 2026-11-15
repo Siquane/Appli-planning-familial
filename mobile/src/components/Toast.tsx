@@ -7,9 +7,9 @@ import { useToastStore, type ToastIcon } from "../state/toastStore";
 import { PartyIcon, SparkleIcon, WarningIcon } from "./icons";
 
 const ICONS: Record<ToastIcon, { Icon: typeof PartyIcon; tint: string }> = {
-  party: { Icon: PartyIcon, tint: color.accent400 },
-  sparkle: { Icon: SparkleIcon, tint: color.accent400 },
-  warning: { Icon: WarningIcon, tint: color.danger },
+  party: { Icon: PartyIcon, get tint() { return color.accent400; } },
+  sparkle: { Icon: SparkleIcon, get tint() { return color.accent400; } },
+  warning: { Icon: WarningIcon, get tint() { return color.danger; } },
 };
 
 // Global toast overlay, mounted once in the root layout. Any screen triggers
@@ -35,7 +35,7 @@ export function Toast() {
   if (!message) return null;
 
   return (
-    <Animated.View style={[styles.container, { top: insets.top + 10, opacity }]} pointerEvents="none">
+    <Animated.View style={[styles.container, { top: insets.top + 10, opacity, backgroundColor: color.neutral900, borderColor: color.divider }]} pointerEvents="none">
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: space.sm }}>
         {icon && (() => {
           const { Icon, tint } = ICONS[icon];
@@ -54,9 +54,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: space.md,
     right: space.md,
-    backgroundColor: color.neutral900,
     borderWidth: 1,
-    borderColor: color.divider,
     borderRadius: radius.md,
     paddingVertical: space.md,
     paddingHorizontal: space.lg,

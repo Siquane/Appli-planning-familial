@@ -11,11 +11,11 @@ interface Props extends TextProps {
 }
 
 const toneColor: Record<NonNullable<Props["tone"]>, string> = {
-  text: color.text,
-  muted: color.neutral400,
-  faint: color.neutral500,
-  accent: color.accent300,
-  danger: color.danger,
+  get text() { return color.text; },
+  get muted() { return color.neutral400; },
+  get faint() { return color.neutral500; },
+  get accent() { return color.accent300; },
+  get danger() { return color.danger; },
 };
 
 // Type scale (nominal sizes): 11 caption · 13 secondary · 15 body ·

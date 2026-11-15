@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef } from "react";
+import { StatusBar } from "expo-status-bar";
 import { Stack, router } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -19,11 +20,11 @@ import { Toast } from "../src/components/Toast";
 import { applyPendingUpdate } from "../src/lib/updates";
 import { initSentry, Sentry, sentryEnabled } from "../src/lib/sentry";
 import { resetBilling } from "../src/lib/billing";
-import { color } from "../src/theme/tokens";
+import { activeScheme, applyTheme, color } from "../src/theme/tokens";
+import { useThemeStore } from "../src/state/themeStore";
 
 initSentry();
 SplashScreen.preventAutoHideAsync().catch(() => {});
-SystemUI.setBackgroundColorAsync(color.bg).catch(() => {});
 
 function RootLayout() {
   const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, SpaceGrotesk_500Medium, SpaceGrotesk_700Bold });
@@ -31,20 +32,30 @@ function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const onboardingHydrated = useOnboardingStore((s) => s.hydrated);
   const hydrateOnboarding = useOnboardingStore((s) => s.hydrate);
+  const themeHydrated = useThemeStore((s) => s.hydrated);
+  const hydrateTheme = useThemeStore((s) => s.hydrate);
+  // Clair ou sombre (choix du profil) : la palette est changée avant le rendu
+  // des écrans, qui sont remontés (clé = thème) pour la relire.
+  const scheme = useThemeStore((s) => s.scheme);
+  if (scheme !== activeScheme()) applyTheme(scheme);
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(color.bg).catch(() => {});
+  }, [scheme]);
 
   useEffect(() => {
     // Wake the free-tier API server early so signup/login doesn't wait on a cold start.
     wakeServer();
     hydrate();
     hydrateOnboarding();
-  }, [hydrate, hydrateOnboarding]);
+    hydrateTheme();
+  }, [hydrate, hydrateOnboarding, hydrateTheme]);
 
   // Pick up screens published since this APK was installed (EAS Update).
   useEffect(() => {
     applyPendingUpdate();
   }, []);
 
-  const ready = fontsLoaded && hydrated && onboardingHydrated;
+  const ready = fontsLoaded && hydrated && onboardingHydrated && themeHydrated;
 
   // Session lost while a screen is open (refresh token rejected): go back to
   // the login screen instead of leaving every action failing with a 401.
@@ -73,7 +84,8 @@ function RootLayout() {
   if (!ready) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: color.bg }}>
+    <GestureHandlerRootView key={scheme} style={{ flex: 1, backgroundColor: color.bg }}>
+      <StatusBar style={scheme === "light" ? "dark" : "light"} />
       <SafeAreaProvider>
         <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bg } }} />

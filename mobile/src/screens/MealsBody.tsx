@@ -23,7 +23,7 @@ export function MealsBody() {
 
   return (
       <View style={{ gap: space.md }}>
-        <Button label="Générer mes menus" icon={<SparkleIcon size={18} color={color.bg} />} variant="primary" block onPress={() => router.push("/meal/plan")} />
+        <Button label="Générer mes menus" icon={<SparkleIcon size={18} color={color.onGradient} />} variant="primary" block onPress={() => router.push("/meal/plan")} />
         <WeekStrip selected={selected} onSelect={setSelected} today={today} />
 
         <View style={{ gap: space.sm }}>

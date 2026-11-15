@@ -1,4 +1,4 @@
-import { color } from "../theme/tokens";
+import { darkColor as color } from "../theme/tokens";
 import { menuContent, shoppingContent, summaryContent, tasksContent } from "./content";
 import type { WidgetName, WidgetSnapshot } from "./snapshot";
 import { AddTaskCard, SignedOutCard, WidgetCard } from "./views";
