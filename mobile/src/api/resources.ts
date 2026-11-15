@@ -170,6 +170,9 @@ export const notificationsApi = {
   list: () => api.get<{ notifications: Notification[] }>("/notifications"),
   markRead: (id: string) => api.post<void>(`/notifications/${id}/read`),
   markAllRead: () => api.post<void>("/notifications/read-all"),
+  savePushToken: (token: string) => api.put<void>("/notifications/push-token", { token }),
+  familyAlerts: () => api.get<{ enabled: boolean }>("/notifications/family-alerts"),
+  setFamilyAlerts: (enabled: boolean) => api.put<{ enabled: boolean }>("/notifications/family-alerts", { enabled }),
 };
 
 export const shareApi = {

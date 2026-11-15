@@ -183,6 +183,11 @@ authRouter.post("/logout", async (req, res) => {
   if (refreshToken) {
     await prisma.refreshToken.deleteMany({ where: { tokenHash: hashRefreshToken(refreshToken) } });
   }
+  // Ce téléphone ne doit plus recevoir les alertes du compte qui se déconnecte.
+  const pushToken = req.body?.pushToken;
+  if (typeof pushToken === "string" && pushToken) {
+    await prisma.pushToken.deleteMany({ where: { token: pushToken } });
+  }
   res.status(204).end();
 });
 

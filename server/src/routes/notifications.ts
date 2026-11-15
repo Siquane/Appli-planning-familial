@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../db";
+import { z } from "zod";
 import { requireAuth } from "../middleware/auth";
 
 export const notificationsRouter = Router();
@@ -34,4 +35,31 @@ notificationsRouter.post("/:id/read", async (req, res) => {
 notificationsRouter.post("/read-all", async (req, res) => {
   await prisma.notification.updateMany({ where: { userId: req.userId, unread: true }, data: { unread: false } });
   res.status(204).end();
+});
+
+// Téléphone de ce compte, pour les alertes de la famille (lib/familyAlerts.ts).
+const pushTokenSchema = z.object({ token: z.string().regex(/^Expo(nent)?PushToken\[[^\]]{1,200}\]$/) });
+
+notificationsRouter.put("/push-token", async (req, res) => {
+  const parsed = pushTokenSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Jeton de notification invalide" });
+  // Un téléphone passé à un autre compte change de propriétaire.
+  await prisma.pushToken.upsert({
+    where: { token: parsed.data.token },
+    create: { token: parsed.data.token, userId: req.accountId! },
+    update: { userId: req.accountId! },
+  });
+  res.status(204).end();
+});
+
+notificationsRouter.get("/family-alerts", async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.accountId }, select: { familyAlerts: true } });
+  res.json({ enabled: user?.familyAlerts ?? true });
+});
+
+notificationsRouter.put("/family-alerts", async (req, res) => {
+  const parsed = z.object({ enabled: z.boolean() }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
+  await prisma.user.update({ where: { id: req.accountId }, data: { familyAlerts: parsed.data.enabled } });
+  res.json({ enabled: parsed.data.enabled });
 });

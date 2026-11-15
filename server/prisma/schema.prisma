@@ -9,15 +9,15 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
-  name         String
-  initials     String
-  createdAt    DateTime  @default(now())
+  id                   String        @id @default(cuid())
+  email                String        @unique
+  passwordHash         String
+  name                 String
+  initials             String
+  createdAt            DateTime      @default(now())
   // Each pack is active while its date is in the future ("Les 2" sets both).
   // Set by hand for now (npm run premium), later by the store purchase.
-  budgetUntil  DateTime?
+  budgetUntil          DateTime?
   // Free trial of Budget+: started once per account, lasts BUDGET_TRIAL_DAYS (lib/plan.ts).
   budgetTrialStartedAt DateTime?
   // Family sharing. A family is the data of its creator (the « owner »); other
@@ -25,17 +25,21 @@ model User {
   // its own family's owner. Roles of a joiner: "full" shares everything,
   // including budget and documents; "planning" shares the planning only and
   // keeps its own budget and documents. Packs and trial always belong to the owner.
-  familyOwnerId String?
-  familyOwner   User?   @relation("FamilyAccounts", fields: [familyOwnerId], references: [id], onDelete: SetNull)
-  familyAccounts User[] @relation("FamilyAccounts")
-  familyRole    String  @default("owner")
-  familyInvite  FamilyInvite?
+  familyOwnerId        String?
+  familyOwner          User?         @relation("FamilyAccounts", fields: [familyOwnerId], references: [id], onDelete: SetNull)
+  familyAccounts       User[]        @relation("FamilyAccounts")
+  familyRole           String        @default("owner")
+  familyInvite         FamilyInvite?
   // One-time message (JSON) shown at the next opening after the family changed hands; see lib/familyHandover.ts.
-  familyNotice  String?
-  mealsUntil   DateTime?
+  familyNotice         String?
+  // Notification sur le téléphone quand un autre compte de la famille modifie
+  // le planning, les repas, les courses ou les recettes (lib/familyAlerts.ts).
+  familyAlerts         Boolean       @default(true)
+  pushTokens           PushToken[]
+  mealsUntil           DateTime?
   // Explicit consent to store members' diets, allergies and foods to limit
   // (health data / may reveal religion, RGPD art. 9). Null = not given.
-  foodHealthConsentAt DateTime?
+  foodHealthConsentAt  DateTime?
 
   members             FamilyMember[]
   tasks               Task[]
@@ -97,7 +101,7 @@ model FamilyMember {
   // without the member's name (see services/mealPlanner.ts).
   favoriteFoods String   @default("")
   dislikedFoods String   @default("")
-  appetite      String?  // "petit" | "moyen" | "gros"
+  appetite      String? // "petit" | "moyen" | "gros"
   canteenDays   Int[]    @default([]) // 0 = lundi … 4 = vendredi: lunch eaten outside
   foodNotes     String   @default("")
   // Sensitive (health / may reveal religion): only stored while the account
@@ -183,20 +187,20 @@ model RecipeMember {
 // One slot per weekday+type (upserted), same weekly-template model as Task
 // (weekday, not an absolute date — see lib/dates.ts).
 model Meal {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  weekday   Int
-  type      String
-  title     String   @default("")
-  recipeId  String?
-  recipe    Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
-  notes     String   @default("")
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekday     Int
+  type        String
+  title       String   @default("")
+  recipeId    String?
+  recipe      Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  notes       String   @default("")
   // Shopping list of a generated dish that isn't a family recipe (a recipe
   // keeps its own ingredients). Cleared when the dish is renamed by hand.
   ingredients String[] @default([])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@unique([userId, weekday, type])
 }
@@ -272,7 +276,9 @@ model FamilyInvite {
   ownerId   String   @unique
   owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   code      String   @unique
-  /** Role given to those who join with it: "full" | "planning". */
+  /**
+   * Role given to those who join with it: "full" | "planning".
+   */
   role      String
   expiresAt DateTime
   createdAt DateTime @default(now())
@@ -442,4 +448,15 @@ model CapAlert {
   createdAt DateTime @default(now())
 
   @@unique([userId, category, month, level])
+}
+
+// Jeton Expo d'un téléphone connecté (un compte peut en avoir plusieurs).
+model PushToken {
+  token     String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
