@@ -161,6 +161,16 @@ export function useForecast(enabled = true) {
   return useQuery({ queryKey: ["expenses", "forecast"], queryFn: () => expensesApi.forecast(), enabled: authed && enabled });
 }
 
+export function useDrifts(month: string, enabled = true) {
+  const authed = useEnabled();
+  return useQuery({ queryKey: ["expenses", "drifts", month], queryFn: () => expensesApi.drifts(month).then((r) => r.drifts), enabled: authed && enabled });
+}
+
+export function useDebits(month: string, enabled = true) {
+  const authed = useEnabled();
+  return useQuery({ queryKey: ["expenses", "debits", month], queryFn: () => expensesApi.debits(month), enabled: authed && enabled });
+}
+
 export function useBudgetReport(months = 6, enabled = true) {
   const authed = useEnabled();
   return useQuery({ queryKey: ["expenses", "report", months], queryFn: () => expensesApi.report(months).then((r) => r.months), enabled: authed && enabled });

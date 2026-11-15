@@ -62,6 +62,7 @@ model User {
   savingsGoals        SavingsGoal[]
   importRules         ImportRule[]
   capAlerts           CapAlert[]
+  driftAlerts         DriftAlert[]
   starCompletions     StarCompletion[]
   rewards             Reward[]
   rewardRedemptions   RewardRedemption[]
@@ -516,4 +517,16 @@ model RewardRedemption {
   createdAt DateTime     @default(now())
 
   @@index([userId, memberId])
+}
+
+// Dérive signalée (Budget+) : une fois par catégorie et par mois (lib/drifts.ts).
+model DriftAlert {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category  String
+  month     String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, category, month])
 }

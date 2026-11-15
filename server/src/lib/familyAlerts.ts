@@ -104,6 +104,14 @@ async function flushKey(key: string) {
   await sender(tokens.map((to) => ({ to, title: "Passerelle", body, data: { url: ROUTES[first] }, channelId: "family", sound: "default" })));
 }
 
+/** Envoie un message à tous les téléphones de ces comptes (alertes budget…). */
+export async function pushToAccounts(accountIds: string[], body: string, url: string) {
+  if (accountIds.length === 0) return;
+  const tokens = await prisma.pushToken.findMany({ where: { userId: { in: accountIds } }, select: { token: true } });
+  if (tokens.length === 0) return;
+  await sender(tokens.map(({ token }) => ({ to: token, title: "Passerelle", body, data: { url }, channelId: "family", sound: "default" as const })));
+}
+
 async function sendWithExpo(messages: PushMessage[]) {
   // Expo accepte 100 messages par requête.
   for (let i = 0; i < messages.length; i += 100) {

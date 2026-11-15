@@ -1,5 +1,8 @@
 import { api } from "./client";
 import type {
+  DebitCalendar,
+  Drift,
+  DriftAlert,
   Reward,
   StarsState,
   AutoSlotResult,
@@ -135,9 +138,11 @@ export const documentsApi = {
 
 export const expensesApi = {
   month: (month: string) => api.get<MonthlyBudget>(`/expenses?month=${month}`),
-  create: (data: ExpenseInput) => api.post<{ expense: Expense; alert: CapAlert | null }>("/expenses", data),
-  update: (id: string, data: Partial<ExpenseInput>) => api.patch<{ expense: Expense; alert: CapAlert | null }>(`/expenses/${id}`, data),
+  create: (data: ExpenseInput) => api.post<{ expense: Expense; alert: CapAlert | null; drift?: DriftAlert | null }>("/expenses", data),
+  update: (id: string, data: Partial<ExpenseInput>) => api.patch<{ expense: Expense; alert: CapAlert | null; drift?: DriftAlert | null }>(`/expenses/${id}`, data),
   forecast: () => api.get<Forecast>("/expenses/forecast"),
+  drifts: (month: string) => api.get<{ month: string; drifts: Drift[] }>(`/expenses/drifts?month=${month}`),
+  debits: (month: string) => api.get<DebitCalendar>(`/expenses/debits?month=${month}`),
   report: (months = 6) => api.get<{ months: ReportMonth[] }>(`/expenses/report?months=${months}`),
   remove: (id: string) => api.delete<void>(`/expenses/${id}`),
 };

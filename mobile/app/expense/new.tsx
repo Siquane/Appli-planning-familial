@@ -66,7 +66,13 @@ export default function ExpenseFormScreen() {
           : !alert && crossed
             ? `Plafond « ${categoryLabel(options, category)} » dépassé : ${formatEuros(crossed.totalCents)} / ${formatEuros(crossed.limitCents)}.`
             : null;
-      if (warning) useToastStore.getState().show(`${saved} ${warning}`, "warning");
+      // Budget+ : la catégorie vient de dériver par rapport à d'habitude.
+      const drift = res.drift;
+      if (drift && !warning)
+        useToastStore
+          .getState()
+          .show(`${saved} « ${drift.categoryName} » : +${drift.increasePct} % par rapport à d'habitude (${formatEuros(drift.totalCents)} contre ${formatEuros(drift.averageCents)} en moyenne).`, "warning");
+      else if (warning) useToastStore.getState().show(`${saved} ${warning}`, "warning");
       else if (alert)
         useToastStore
           .getState()
