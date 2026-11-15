@@ -80,3 +80,32 @@ export function SignedOutCard() {
     />
   );
 }
+
+/** A button, not a list: « + Ajouter une tâche », one tap from the new-task form. */
+export function AddTaskCard() {
+  const accent = color.pillar1 as Hex;
+  return (
+    <FlexWidget
+      clickAction="OPEN_URI"
+      clickActionData={{ uri: widgetUri("add-task") }}
+      style={{
+        height: "match_parent",
+        width: "match_parent",
+        backgroundColor: color.surface as Hex,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: (color.neutral900 as Hex) ?? "#292b31",
+        paddingHorizontal: 14,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        flexGap: 10,
+      }}
+    >
+      <FlexWidget style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: accent, alignItems: "center", justifyContent: "center" }}>
+        <TextWidget text="+" style={{ fontSize: 22, fontWeight: "600", color: accent }} />
+      </FlexWidget>
+      <TextWidget text="Ajouter une tâche" maxLines={1} truncate="END" style={{ fontSize: 16, fontWeight: "700", color: color.text as Hex }} />
+    </FlexWidget>
+  );
+}

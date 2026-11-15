@@ -228,3 +228,8 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Compte pas vide (membres, tâches, recettes, repas, documents, dépenses, courses, objectifs, catégories) : `409 account_not_empty` avec `counts` ; avec `erase: true` + mot de passe, le contenu est effacé (fichiers compris, `lib/familyJoin.ts`) puis le compte rejoint. Les packs et l'essai du compte ne comptent plus : ceux de la famille s'appliquent.
 - Application : section « Rejoindre une autre famille » dans Famille → Comptes de la famille, visible seulement quand on est seul dans sa famille (`joinFamily` dans `src/lib/account.ts`, `describeContent` dans `src/lib/family.ts`).
 
+## Widget « Ajouter une tâche »
+
+- 5ᵉ widget Android `AjoutTache` (2 × 1, aucun contenu à afficher : un bouton « + Ajouter une tâche » au style Passerelle). Un appui ouvre `/task/new` via `passerelle://widget/add-task` (`src/widgets/links.ts`, `views.tsx` → `AddTaskCard`). Déclaré dans `app.json` avec l'aperçu `assets/widgets/ajout.png`.
+- **Brique native nouvelle → `runtimeVersion` passe à "6"** : il faut lancer « EAS Build (Android preview) » depuis `main` et réinstaller l'APK ; les APK runtime "5" ne reçoivent plus de mises à jour OTA.
+

@@ -5,7 +5,7 @@ import type { Meal, Member, MonthlyBudget, Recipe, ShoppingItem, Task, Weekday }
 // its data changes; the widgets read it, even when the app is closed. Times
 // ("next task", "tonight") are worked out when the widget draws, not here.
 
-export const WIDGET_NAMES = ["Resume", "Taches", "Menu", "Courses"] as const;
+export const WIDGET_NAMES = ["Resume", "Taches", "Menu", "Courses", "AjoutTache"] as const;
 export type WidgetName = (typeof WIDGET_NAMES)[number];
 
 export interface WidgetSnapshot {
