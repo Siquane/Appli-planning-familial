@@ -8,6 +8,8 @@ import { TextField } from "../../src/components/TextField";
 import { ScheduleTimes } from "../../src/components/ScheduleTimes";
 import { allTimesValid, resolveTimes, type DayTimes } from "../../src/lib/dayTimes";
 import { newSeriesId, planSeriesEdit, seriesOf, seriesSchedule } from "../../src/lib/taskSeries";
+import { isChild, starsLabel } from "../../src/lib/stars";
+import { StarIcon } from "../../src/components/icons";
 import { Chip } from "../../src/components/Chip";
 import { ReminderToggle } from "../../src/components/ReminderToggle";
 import { Button } from "../../src/components/Button";
@@ -15,7 +17,7 @@ import { TopBar } from "../../src/components/TopBar";
 import { useAutoSlotTask, useCreateTask, useDeleteTask, useMembers, useTasks, useUpdateTask } from "../../src/hooks/useApi";
 import { useToastStore } from "../../src/state/toastStore";
 import { confirmReminderPermission } from "../../src/lib/notifications";
-import { space, gutter } from "../../src/theme/tokens";
+import { color, space, gutter } from "../../src/theme/tokens";
 import { WEEKDAYS_SHORT } from "../../src/lib/weekdays";
 import { parseDuration, splitDuration } from "../../src/lib/duration";
 import type { Category, Priority, Task, Weekday } from "../../src/api/types";
@@ -77,6 +79,7 @@ export default function TaskFormScreen() {
   const [flexible, setFlexible] = useState(false);
   const [memberIds, setMemberIds] = useState<string[]>(prefillMember ? [prefillMember] : []);
   const [notes, setNotes] = useState("");
+  const [stars, setStars] = useState(1);
 
   // Rempli une seule fois : un rafraîchissement de la liste (toutes les
   // minutes avec la famille partagée) ne doit pas écraser la saisie.
@@ -99,6 +102,7 @@ export default function TaskFormScreen() {
     setFlexible(existing.flexible);
     setMemberIds(existing.memberIds);
     setNotes(existing.notes);
+    setStars(existing.stars ?? 1);
   }, [existing]);
 
   // « Dupliquer » : on recopie la tâche source dans un formulaire de
@@ -124,6 +128,7 @@ export default function TaskFormScreen() {
     setFlexible(source.flexible);
     setMemberIds(source.memberIds);
     setNotes(source.notes);
+    setStars(source.stars ?? 1);
   }, [source]);
 
   function toggleMember(id: string) {
@@ -155,7 +160,7 @@ export default function TaskFormScreen() {
   const saving = savingSeries || createTask.isPending || updateTask.isPending || autoSlotTask.isPending;
 
   async function onSave() {
-    const base = { title: title.trim(), category, duration, priority, deadlineWeekday, recurring, reminder, memberIds, notes };
+    const base = { title: title.trim(), category, duration, priority, deadlineWeekday, recurring, reminder, memberIds, notes, stars };
     try {
       if (existing) {
         setSavingSeries(true);
@@ -317,6 +322,22 @@ export default function TaskFormScreen() {
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
               {members.map((m) => (
                 <Chip key={m.id} label={m.name} selected={memberIds.includes(m.id)} onPress={() => toggleMember(m.id)} size="sm" />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {members.some((m) => memberIds.includes(m.id) && isChild(m)) && (
+          <View style={{ gap: space.sm }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
+              <StarIcon size={14} color={color.pillar3} />
+              <Text size={13} tone="muted">
+                Étoiles gagnées quand c'est fait : {starsLabel(stars)}
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: space.xs }}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Chip key={n} label={`${n} ★`} selected={stars === n} onPress={() => setStars(n)} size="sm" fill />
               ))}
             </View>
           </View>

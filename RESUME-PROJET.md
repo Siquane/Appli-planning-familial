@@ -240,7 +240,7 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Modifier une tâche agit sur toute la série : jours cochables (au moins un), heure commune ou par jour, cocher = ajouter, décocher = retirer (`planSeriesEdit` réutilise d'abord une tâche décochée pour un nouveau jour, pour garder son rappel). Supprimer depuis la fiche propose « ce jour seulement » ou « tous les jours ». Dupliquer reprend tous les jours.
 - Tests serveur en local : la session crée une base neuve + `prisma migrate deploy` puis lance vitest avec une config sans `globalSetup` (non versionnée), ce qui évite le `db push --force-reset` refusé par Prisma 7.
 - PR #36 fusionnée le 15/11.
-- À suivre (demandé le 15/11, une PR chacune) : étoiles et récompenses pour les enfants, dérives du budget, thème clair (suit le téléphone + choix dans le profil).
+- À suivre (demandé le 15/11, une PR chacune) : dérives du budget, thème clair (suit le téléphone + choix dans le profil).
 
 ## Alertes push « quelqu'un a modifié » (15/11/2026)
 
@@ -248,3 +248,11 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Base : table `PushToken` (par compte), `User.familyAlerts` (interrupteur, vrai par défaut) ; migration `20261115130000_family_alerts`. Routes `PUT /notifications/push-token`, `GET/PUT /notifications/family-alerts` ; `POST /auth/logout` accepte `pushToken` pour l'oublier.
 - Appli : `src/lib/pushAlerts.ts` enregistre le jeton au démarrage et au retour dans l'appli (canal Android `family`) ; un appui ouvre Planning ou Repas ; alerte reçue appli ouverte = données rechargées. Interrupteur dans Notifications, visible seulement s'il y a plusieurs comptes. Page Confidentialité mise à jour (**politique publiée à republier**).
 - **Pas encore actif** : il faut Firebase (guide `docs/notifications-push.md`) : `google-services.json` à ajouter à l'appli (`runtimeVersion` "7", nouvel APK) et clé FCM V1 à déposer sur expo.dev. D'ici là, l'appli ne reçoit pas de jeton et ignore l'erreur.
+- PR #37 fusionnée le 15/11.
+
+## Étoiles et récompenses des enfants (15/11/2026)
+
+- Enfant = membre de **moins de 15 ans** (âge saisi, sinon date de naissance ; `lib/stars.ts` côté serveur et appli). Chaque tâche rapporte **1 à 5 étoiles** (`Task.stars`, réglable dans le formulaire quand un enfant est assigné).
+- Sur la fiche d'une tâche, un adulte (tout compte connecté) coche « C'est fait » pour chaque enfant assigné : une fois par semaine (`StarCompletion.week` = lundi local « AAAA-MM-JJ », envoyé par l'appli), annulable. Titre et étoiles recopiés : supprimer la tâche ne retire pas les étoiles.
+- Famille → « Étoiles et récompenses » (`app/stars.tsx`) : solde et étoiles de la semaine par enfant, récompenses (titre + prix, 30 max) à échanger si le solde suffit (`409 not_enough_stars` sinon), historique (appui long pour effacer une erreur).
+- Serveur : `routes/stars.ts` (`GET /stars?week=`, `POST/DELETE /stars/complete`, `/stars/rewards`, `/stars/rewards/:id/redeem`, `DELETE /stars/history/:id`), modèles `StarCompletion`, `Reward`, `RewardRedemption` (migration `20261115140000_stars`), repris par la passation de famille et effacés par « rejoindre une famille ». Gratuit, réseau nécessaire.

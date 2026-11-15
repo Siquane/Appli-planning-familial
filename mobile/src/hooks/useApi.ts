@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
+import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi } from "../api/resources";
 import type { MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
 import { useAuthStore } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
@@ -519,3 +519,24 @@ export function useRemoveFamilyAccount() {
   const qc = useQueryClient();
   return useMutation({ mutationFn: (id: string) => familyApi.removeAccount(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["family"] }) });
 }
+
+// Étoiles des enfants (semaine = lundi « AAAA-MM-JJ », voir lib/stars.ts).
+export function useStars(week: string) {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["stars", week], queryFn: () => starsApi.get(week), enabled });
+}
+
+function useStarsMutation<T>(fn: (input: T) => Promise<unknown>) {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: fn, onSettled: () => qc.invalidateQueries({ queryKey: ["stars"] }) });
+}
+
+export const useToggleStar = () =>
+  useStarsMutation((d: { taskId: string; memberId: string; week: string; done: boolean }) => {
+    const { done, ...data } = d;
+    return done ? starsApi.complete(data) : starsApi.uncomplete(data);
+  });
+export const useAddReward = () => useStarsMutation((d: { title: string; cost: number }) => starsApi.addReward(d));
+export const useRemoveReward = () => useStarsMutation((id: string) => starsApi.removeReward(id));
+export const useRedeemReward = () => useStarsMutation((d: { rewardId: string; memberId: string }) => starsApi.redeem(d.rewardId, d.memberId));
+export const useRemoveStarHistory = () => useStarsMutation((id: string) => starsApi.removeHistory(id));

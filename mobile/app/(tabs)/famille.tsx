@@ -6,11 +6,12 @@ import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
 import { Avatar } from "../../src/components/Avatar";
 import { TabHeader } from "../../src/components/PageHeader";
-import { ChevronRightIcon, DocumentIcon, GiftIcon, ProfileIcon } from "../../src/components/icons";
+import { ChevronRightIcon, DocumentIcon, GiftIcon, ProfileIcon, StarIcon } from "../../src/components/icons";
 import { useMembers } from "../../src/hooks/useApi";
 import { color, space, gutter } from "../../src/theme/tokens";
 
 const LINKS: { label: string; href: Href; Icon: (p: { size: number; color: string }) => React.JSX.Element }[] = [
+  { label: "Étoiles et récompenses", href: "/stars", Icon: StarIcon },
   { label: "Documents", href: "/documents", Icon: DocumentIcon },
   { label: "Anniversaires", href: "/birthdays", Icon: GiftIcon },
   { label: "Comptes de la famille", href: "/family-access", Icon: ProfileIcon },
