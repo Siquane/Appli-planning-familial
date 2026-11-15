@@ -421,6 +421,20 @@ export function useNotifications() {
   return useQuery({ queryKey: ["notifications"], queryFn: () => notificationsApi.list().then((r) => r.notifications), enabled });
 }
 
+export function useFamilyAlerts() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["family-alerts"], queryFn: () => notificationsApi.familyAlerts().then((r) => r.enabled), enabled });
+}
+
+export function useSetFamilyAlerts() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (on: boolean) => notificationsApi.setFamilyAlerts(on).then((r) => r.enabled),
+    onMutate: (on) => qc.setQueryData(["family-alerts"], on),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["family-alerts"] }),
+  });
+}
+
 export function useMarkNotificationRead() {
   const qc = useQueryClient();
   return useMutation({
