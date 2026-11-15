@@ -9,8 +9,8 @@ import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
 import { Button } from "../../src/components/Button";
 import { TabHeader } from "../../src/components/PageHeader";
-import { ChartIcon, ChevronLeftIcon, DocumentIcon, ChevronRightIcon, PlusIcon, RecurringIcon, SparkleIcon, TargetIcon, WalletIcon } from "../../src/components/icons";
-import { useExpenseCategories, useForecast, useMembers, useMonthlyBudget, usePlan } from "../../src/hooks/useApi";
+import { CalendarIcon, ChartIcon, ChevronLeftIcon, DocumentIcon, ChevronRightIcon, PlusIcon, RecurringIcon, SparkleIcon, TargetIcon, WalletIcon, WarningIcon } from "../../src/components/icons";
+import { useDrifts, useExpenseCategories, useForecast, useMembers, useMonthlyBudget, usePlan } from "../../src/hooks/useApi";
 import { budgetToCsv, categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../../src/lib/money";
 import { color, radius, space, gutter } from "../../src/theme/tokens";
 import { budgetTrial, hasBudgetPack, trialNotice } from "../../src/lib/premium";
@@ -30,6 +30,7 @@ export default function BudgetScreen() {
     if (plan) syncTrialReminder(trial?.active ? trial.endsAt : null);
   }, [plan, trial?.active, trial?.endsAt]);
   const { data: forecast } = useForecast(premium);
+  const { data: drifts = [] } = useDrifts(month, premium);
   const expenses = data?.expenses ?? [];
   const byCategory = data?.byCategory ?? [];
   const biggest = Math.max(0, ...byCategory.map((c) => c.totalCents));
@@ -114,6 +115,25 @@ export default function BudgetScreen() {
           </Card>
         )}
 
+        {premium && drifts.length > 0 && (
+          <Card style={{ gap: space.xs, borderWidth: 1, borderColor: color.accent400 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+              <WarningIcon size={18} color={color.accent400} />
+              <Text size={15} weight="medium">
+                Dépenses en hausse
+              </Text>
+            </View>
+            {drifts.map((d) => (
+              <Text key={d.category} size={13} tone="muted">
+                {categoryLabel(options, d.category)} : {formatEuros(d.totalCents)}, +{d.increasePct} % (d'habitude {formatEuros(d.averageCents)})
+              </Text>
+            ))}
+            <Text size={11} tone="faint">
+              Comparé à la moyenne des 3 mois précédents.
+            </Text>
+          </Card>
+        )}
+
         <View style={{ flexDirection: "row", gap: space.sm }}>
           <Button
             label="Ajouter une dépense"
@@ -142,6 +162,14 @@ export default function BudgetScreen() {
             onPress={() => router.push("/savings")}
           />
         </View>
+        <Button
+          label="Calendrier des prélèvements"
+          icon={<CalendarIcon size={17} color={color.pillar3} />}
+          trailing={premium ? undefined : <SparkleIcon size={14} color={color.accent400} />}
+          variant="secondary"
+          block
+          onPress={() => router.push(`/debits?month=${month}`)}
+        />
         <Button
           label="Importer un relevé"
           icon={<DocumentIcon size={18} color={color.pillar3} />}

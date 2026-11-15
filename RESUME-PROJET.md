@@ -240,7 +240,7 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Modifier une tâche agit sur toute la série : jours cochables (au moins un), heure commune ou par jour, cocher = ajouter, décocher = retirer (`planSeriesEdit` réutilise d'abord une tâche décochée pour un nouveau jour, pour garder son rappel). Supprimer depuis la fiche propose « ce jour seulement » ou « tous les jours ». Dupliquer reprend tous les jours.
 - Tests serveur en local : la session crée une base neuve + `prisma migrate deploy` puis lance vitest avec une config sans `globalSetup` (non versionnée), ce qui évite le `db push --force-reset` refusé par Prisma 7.
 - PR #36 fusionnée le 15/11.
-- À suivre (demandé le 15/11, une PR chacune) : dérives du budget, thème clair (suit le téléphone + choix dans le profil).
+- À suivre (demandé le 15/11) : thème clair (suit le téléphone + choix dans le profil).
 
 ## Alertes push « quelqu'un a modifié » (15/11/2026)
 
@@ -256,3 +256,10 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Sur la fiche d'une tâche, un adulte (tout compte connecté) coche « C'est fait » pour chaque enfant assigné : une fois par semaine (`StarCompletion.week` = lundi local « AAAA-MM-JJ », envoyé par l'appli), annulable. Titre et étoiles recopiés : supprimer la tâche ne retire pas les étoiles.
 - Famille → « Étoiles et récompenses » (`app/stars.tsx`) : solde et étoiles de la semaine par enfant, récompenses (titre + prix, 30 max) à échanger si le solde suffit (`409 not_enough_stars` sinon), historique (appui long pour effacer une erreur).
 - Serveur : `routes/stars.ts` (`GET /stars?week=`, `POST/DELETE /stars/complete`, `/stars/rewards`, `/stars/rewards/:id/redeem`, `DELETE /stars/history/:id`), modèles `StarCompletion`, `Reward`, `RewardRedemption` (migration `20261115140000_stars`), repris par la passation de famille et effacés par « rejoindre une famille ». Gratuit, réseau nécessaire.
+- PR #38 fusionnée le 15/11 (étoiles + Firebase, runtime "7"). Clé FCM V1 déposée sur expo.dev par l'utilisatrice. **APK runtime "7" à compiler et installer.**
+
+## Dépenses en hausse et calendrier des prélèvements (Budget+, 15/11/2026)
+
+- **Dérive** = une catégorie dont le mois dépasse la moyenne des 3 mois précédents d'au moins **25 % ET 20 €**, et qui a servi au moins 2 de ces 3 mois ; l'épargne est ignorée (`server/src/lib/drifts.ts`, `findDrifts`).
+- Carte « Dépenses en hausse » dans l'onglet Budget (`GET /expenses/drifts?month=`). Après l'enregistrement d'une dépense (et l'import d'un relevé, pour le mois en cours), `checkDriftAlert` signale la dérive **une fois par catégorie et par mois** (table `DriftAlert`, migration `20261115150000_drift_alerts`) : message à celui qui enregistre (réponse `drift`), ligne dans Notifications, **push** aux autres comptes qui voient ce budget (propriétaire + comptes « complet » ; un compte « planning » a son propre budget). Un appui ouvre `/budget`.
+- **Calendrier des prélèvements** (`app/debits.tsx`, `GET /expenses/debits?month=`) : dépenses récurrentes jour par jour, totaux « déjà passé » / « à venir » ; mois passés et en cours = copies réelles, mois à venir = récurrentes prévues.

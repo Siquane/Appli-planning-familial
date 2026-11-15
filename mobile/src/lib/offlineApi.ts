@@ -1,5 +1,5 @@
 import { expensesApi, mealsApi, shoppingApi, tasksApi } from "../api/resources";
-import type { CapAlert, Expense, ExpenseInput, Meal, MealInput, MonthlyBudget, ShoppingItem, Task, TaskInput } from "../api/types";
+import type { CapAlert, DriftAlert, Expense, ExpenseInput, Meal, MealInput, MonthlyBudget, ShoppingItem, Task, TaskInput } from "../api/types";
 import { queryClient } from "./queryClient";
 import { newTempId } from "./outboxQueue";
 import { writeOrQueue } from "./outbox";
@@ -108,7 +108,7 @@ export const offlineMeals = {
     }),
 };
 
-type ExpenseAnswer = { expense: Expense; alert: CapAlert | null };
+type ExpenseAnswer = { expense: Expense; alert: CapAlert | null; drift?: DriftAlert | null };
 
 export const offlineExpenses = {
   create: (data: ExpenseInput) => {

@@ -7,6 +7,7 @@ import { checkCategoryAndMember } from "../lib/expenseCategories";
 import { materializeRecurring } from "../lib/recurring";
 import { patchSchema } from "../lib/validation";
 import { checkCapAlert } from "../lib/capAlerts";
+import { checkDriftAlert, getDebits, getDrifts } from "../lib/drifts";
 import { requireBudgetPack } from "../lib/plan";
 import { forecastMonth } from "../lib/forecast";
 import { daysInMonth } from "../lib/recurring";
@@ -160,6 +161,33 @@ expensesRouter.get("/forecast", async (req, res) => {
   res.json({ month, ...forecast });
 });
 
+// Budget+ : GET /expenses/drifts?month=2026-11 -> catégories nettement plus
+// chères que la moyenne des 3 mois précédents (lib/drifts.ts).
+expensesRouter.get("/drifts", async (req, res) => {
+  const parsed = z.object({ month: monthString.optional() }).safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
+  const userId = req.userId!;
+  if (!(await requireBudgetPack(userId, res, "Les dépenses en hausse"))) return;
+  const now = currentMonth();
+  const month = parsed.data.month ?? now;
+  for (let i = 3; i >= 0; i--) await materializeRecurring(userId, shiftMonth(month, -i), now);
+  const drifts = await getDrifts(userId, month);
+  res.json({ month, drifts });
+});
+
+// Budget+ : GET /expenses/debits?month=2026-11 -> les dépenses récurrentes du
+// mois jour par jour, avec ce qui est déjà passé et ce qui reste à venir.
+expensesRouter.get("/debits", async (req, res) => {
+  const parsed = z.object({ month: monthString.optional() }).safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
+  const userId = req.userId!;
+  if (!(await requireBudgetPack(userId, res, "Le calendrier des prélèvements"))) return;
+  const now = currentMonth();
+  const month = parsed.data.month ?? now;
+  await materializeRecurring(userId, month, now);
+  res.json(await getDebits(userId, month, now, todayString()));
+});
+
 // Budget pack: GET /expenses/export?from=2026-01&to=2026-11&format=csv|pdf
 // -> the file itself (attachment), oldest expense first. 24 months at most.
 expensesRouter.get("/export", async (req, res) => {
@@ -242,7 +270,8 @@ expensesRouter.post("/", async (req, res) => {
     data: { ...rest, memberId: memberId ?? null, date: new Date(`${date}T00:00:00Z`), userId: req.userId! },
   });
   const alert = await checkCapAlert(req.userId!, expense.category, date.slice(0, 7));
-  res.status(201).json({ expense: serializeExpense(expense), alert });
+  const drift = await checkDriftAlert(req.userId!, expense.category, date.slice(0, 7), req.accountId!);
+  res.status(201).json({ expense: serializeExpense(expense), alert, drift });
 });
 
 async function loadOwnedExpense(userId: string, id: string) {
@@ -263,8 +292,10 @@ expensesRouter.patch("/:id", async (req, res) => {
     where: { id: existing.id },
     data: { ...rest, ...(date ? { date: new Date(`${date}T00:00:00Z`) } : {}) },
   });
-  const alert = await checkCapAlert(req.userId!, expense.category, expense.date.toISOString().slice(0, 7));
-  res.json({ expense: serializeExpense(expense), alert });
+  const month = expense.date.toISOString().slice(0, 7);
+  const alert = await checkCapAlert(req.userId!, expense.category, month);
+  const drift = await checkDriftAlert(req.userId!, expense.category, month, req.accountId!);
+  res.json({ expense: serializeExpense(expense), alert, drift });
 });
 
 // Deleting a copy of a recurring expense skips that month only (the

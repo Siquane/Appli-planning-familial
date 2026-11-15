@@ -9,7 +9,8 @@ import { isValidCategory } from "../lib/expenseCategories";
 import { labelKey, parseStatement } from "../lib/statementParser";
 import { MAX_STATEMENT_BYTES, StatementReadError, readPdfItems } from "../lib/statementPdf";
 import { categorize, looksRecurring } from "../lib/statementCategories";
-import { amountCents } from "./expenses";
+import { amountCents, currentMonth } from "./expenses";
+import { checkDriftAlert } from "../lib/drifts";
 
 // Import of a bank statement (PDF) into the budget — a Budget+ feature.
 //   POST /statements/parse   the PDF goes in the request body, is read in
@@ -168,5 +169,10 @@ statementsRouter.post("/import", budgetGate, async (req, res) => {
     return { recurringCreated, rulesLearned };
   });
 
+  // Dérives (Budget+) : seulement pour le mois en cours, les mois passés sont de l'historique.
+  const month = currentMonth();
+  for (const category of new Set(rows.filter((r) => r.date.startsWith(month)).map((r) => r.category))) {
+    await checkDriftAlert(userId, category, month, req.accountId!);
+  }
   res.status(201).json({ imported: rows.length, ...result });
 });

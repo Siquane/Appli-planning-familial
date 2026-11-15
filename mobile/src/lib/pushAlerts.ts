@@ -13,7 +13,7 @@ import { getPushToken, setPushToken } from "./pushToken";
 export const FAMILY_CHANNEL = "family";
 
 // Seuls ces écrans peuvent être ouverts depuis une notification.
-const ALLOWED = /^\/(home|repas)(\?tab=(menu|courses|recettes))?$/;
+const ALLOWED = /^\/(home|budget|repas)(\?tab=(menu|courses|recettes))?$/;
 
 export function alertRoute(data: unknown): string | null {
   const url = (data as { url?: unknown } | null | undefined)?.url;
