@@ -82,3 +82,19 @@ describe("cleanQuestion", () => {
     expect(cleanQuestion({ ...base, type: "ordre", elements: ["a", "b"] })).toBeNull();
   });
 });
+
+import { PROGRAMMES, chapterById, programmeKey } from "../../src/lib/cervelle/programme";
+
+describe("programme", () => {
+  it("recognises how families write the class", () => {
+    expect(programmeKey("CM2")).toBe("CM2");
+    expect(programmeKey("5ème")).toBe("5e");
+    expect(programmeKey("5e")).toBe("5e");
+    expect(programmeKey("4e")).toBeNull();
+  });
+  it("has unique chapter ids", () => {
+    const ids = Object.values(PROGRAMMES).flatMap((subjects) => subjects.flatMap((s) => s.chapters.map((c) => c.id)));
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(chapterById("cm2-hi-republique")?.grade).toBe("CM2");
+  });
+});

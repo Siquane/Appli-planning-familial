@@ -29,6 +29,7 @@ import {
   shopItem,
 } from "../lib/cervelle/game";
 import { LEVELS, REVISION_ICONS, type Level } from "../lib/cervelle/icons";
+import { SCHOOL_YEAR, chapterById, findChapter, programmeFor, programmeForPrompt } from "../lib/cervelle/programme";
 import * as ai from "../services/cervelleAi";
 
 // Cervelle — révisions à partir des cours en photo. A separate app, same
@@ -369,6 +370,7 @@ async function revisionCards(learnerId: string) {
         createdBy: r.createdBy,
         photoCount: r.photoCount,
         counts,
+        programmeChapterId: r.programmeChapterId,
         progress: revisionProgress({ sheetsRead: !!r.sheetsReadAt, quizBest: r.quizBest, examBest: r.examBest, mastered: counts.mastered, notions: leafs.length }),
       };
     }),
@@ -381,6 +383,31 @@ cervelleRouter.get("/learners/:learnerId/revisions", async (req, res) => {
   res.json({ revisions: await revisionCards(learner.id) });
 });
 
+/** The official programme of the learner's class, chapter by chapter, with what has been revised. */
+cervelleRouter.get("/learners/:learnerId/programme", async (req, res) => {
+  const learner = await loadLearner(req, res);
+  if (!learner) return;
+  const subjects = SCHOOL_LEVELS.has(learner.level) ? programmeFor(learner.grade) : null;
+  if (!subjects) return res.json({ available: false, grade: learner.grade, schoolYear: SCHOOL_YEAR, subjects: [] });
+  const cards = (await revisionCards(learner.id)).filter((r) => r.status === "ready" && r.programmeChapterId);
+  res.json({
+    available: true,
+    grade: learner.grade,
+    schoolYear: SCHOOL_YEAR,
+    subjects: subjects.map((s) => ({
+      subject: s.subject,
+      source: s.source,
+      verified: s.verifie,
+      cycleWide: !!s.cycleWide,
+      chapters: s.chapters.map((c) => {
+        const revisions = cards.filter((r) => r.programmeChapterId === c.id).map((r) => ({ id: r.id, title: r.title, progress: r.progress }));
+        const best = Math.max(-1, ...revisions.map((r) => r.progress));
+        return { id: c.id, title: c.title, notions: c.notions, revisions, status: best < 0 ? "todo" : best >= 80 ? "mastered" : "started" };
+      }),
+    })),
+  });
+});
+
 async function loadRevision(req: Request, res: Response, learner: Learner) {
   const revision = await prisma.revision.findFirst({ where: { id: String(req.params.revisionId), learnerId: learner.id } });
   if (!revision) {
@@ -388,6 +415,11 @@ async function loadRevision(req: Request, res: Response, learner: Learner) {
     return null;
   }
   return failStale(revision);
+}
+
+function programmeInfo(chapterId: string | null) {
+  const found = chapterId ? chapterById(chapterId) : null;
+  return found ? { chapterId: found.chapter.id, chapter: found.chapter.title, subject: found.subject.subject, grade: found.grade } : null;
 }
 
 function serializeRevisionDetail(r: Revision, notions: NotionWithChildren[], questionCount: number) {
@@ -410,6 +442,7 @@ function serializeRevisionDetail(r: Revision, notions: NotionWithChildren[], que
     photoCount: r.photoCount,
     questionCount,
     steps: { sheets: !!r.sheetsReadAt, quizBest: r.quizBest, examBest: r.examBest },
+    programme: programmeInfo(r.programmeChapterId),
     progress: revisionProgress({ sheetsRead: !!r.sheetsReadAt, quizBest: r.quizBest, examBest: r.examBest, mastered, notions: leafs.length }),
     notions: roots.map((root) => {
       const children = root.children.sort((a, b) => a.order - b.order);
@@ -418,7 +451,7 @@ function serializeRevisionDetail(r: Revision, notions: NotionWithChildren[], que
         id: root.id,
         title: root.title,
         mastery: children.length ? combinedMastery(childLabels) : labelOf(root, now),
-        children: children.map((c, i) => ({ id: c.id, title: c.title, mastery: childLabels[i] })),
+        children: children.map((c, i) => ({ id: c.id, title: c.title, mastery: childLabels[i], fromProgramme: c.fromProgramme })),
       };
     }),
     sheets: r.sheets,
@@ -502,10 +535,16 @@ async function loadStoredFiles(keys: string[]): Promise<ai.CourseFile[] | null> 
 }
 
 /** Runs Claude and saves notions, sheets and questions. Never throws: failures are stored on the revision. */
+const SCHOOL_LEVELS = new Set(["primaire", "college", "lycee"]);
+/** At most this many sub-notions added « from the programme » per revision: the course stays the base. */
+const MAX_PROGRAMME_ADDITIONS = 2;
+
 export async function processRevision(revisionId: string, files: ai.CourseFile[], learner: Pick<Learner, "level" | "grade">, hint: { title: string; subject: string }) {
   try {
-    const out = await ai.generateRevision({ files, level: learner.level as Level, grade: learner.grade, hint });
-    await saveGenerated(revisionId, out, hint);
+    const school = SCHOOL_LEVELS.has(learner.level);
+    const programme = school ? programmeForPrompt(learner.grade) : null;
+    const out = await ai.generateRevision({ files, level: learner.level as Level, grade: learner.grade, hint, programme });
+    await saveGenerated(revisionId, out, hint, { school, grade: learner.grade });
   } catch (e) {
     const message = e instanceof ai.CervelleAiError ? e.message : "La préparation a échoué. Réessaie.";
     if (!(e instanceof ai.CervelleAiError)) console.error("Cervelle: revision failed", e);
@@ -513,7 +552,9 @@ export async function processRevision(revisionId: string, files: ai.CourseFile[]
   }
 }
 
-async function saveGenerated(revisionId: string, out: ai.GeneratedRevision, hint: { title: string; subject: string }) {
+async function saveGenerated(revisionId: string, out: ai.GeneratedRevision, hint: { title: string; subject: string }, ctx: { school: boolean; grade: string }) {
+  const chapter = ctx.school && out.chapitre_programme ? findChapter(ctx.grade, out.chapitre_programme) : null;
+  let additions = 0;
   await prisma.$transaction(
     async (tx) => {
       await tx.notion.deleteMany({ where: { revisionId } });
@@ -522,15 +563,22 @@ async function saveGenerated(revisionId: string, out: ai.GeneratedRevision, hint
       let kept = 0;
       for (const [i, n] of out.notions.slice(0, 8).entries()) {
         const root = await tx.notion.create({ data: { revisionId, title: n.titre.trim().slice(0, 160) || `Partie ${i + 1}`, order: i } });
+        let children = 0;
         for (const [j, sub] of n.sous_notions.slice(0, 6).entries()) {
-          const leaf = await tx.notion.create({ data: { revisionId, parentId: root.id, title: sub.titre.trim().slice(0, 160) || root.title, order: j } });
-          sheets.push({ notionId: leaf.id, parentTitle: root.title, title: leaf.title, ...ai.cleanSheet(sub.fiche) });
+          // Outside school, or past the cap, nothing is added beyond the photographed course.
+          const fromProgramme = sub.origine === "programme";
+          if (fromProgramme && (!ctx.school || additions >= MAX_PROGRAMME_ADDITIONS)) continue;
+          if (fromProgramme) additions++;
+          children++;
+          const leaf = await tx.notion.create({ data: { revisionId, parentId: root.id, title: sub.titre.trim().slice(0, 160) || root.title, order: j, fromProgramme } });
+          sheets.push({ notionId: leaf.id, parentTitle: root.title, title: leaf.title, fromProgramme, ...ai.cleanSheet(sub.fiche) });
           const questions = sub.questions.map(ai.cleanQuestion).filter((q): q is ai.CleanQuestion => q !== null).slice(0, 8);
           if (questions.length) {
             await tx.question.createMany({ data: questions.map((q) => ({ ...q, revisionId, notionId: leaf.id, order: questionOrder++ })) });
             kept += questions.length;
           }
         }
+        if (children === 0) await tx.notion.delete({ where: { id: root.id } });
       }
       if (kept === 0) throw new ai.CervelleAiError("Je n'ai pas trouvé assez de contenu pour faire des questions. Ajoute d'autres pages du cours.");
       await tx.revision.update({
@@ -539,10 +587,11 @@ async function saveGenerated(revisionId: string, out: ai.GeneratedRevision, hint
           status: "ready",
           error: null,
           title: hint.title || out.titre.trim().slice(0, 120) || "Révision",
-          subject: hint.subject || out.matiere.trim().slice(0, 60),
+          subject: hint.subject || chapter?.subject.subject || out.matiere.trim().slice(0, 60),
           icon: REVISION_ICONS.includes(out.icone) ? out.icone : "livre",
           summary: out.resume.trim().slice(0, 800),
           sheets,
+          programmeChapterId: chapter?.chapter.id ?? null,
         },
       });
     },

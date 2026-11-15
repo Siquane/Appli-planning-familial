@@ -16,12 +16,14 @@ const generated: ai.GeneratedRevision = {
   matiere: "Sciences",
   icone: "planete",
   resume: "Le Soleil et les planètes qui tournent autour.",
+  chapitre_programme: "",
   notions: [
     {
       titre: "Les planètes",
       sous_notions: [
         {
           titre: "Planètes telluriques",
+          origine: "cours",
           fiche: { essentiel: "Quatre planètes rocheuses.", points: ["Mercure, Vénus, Terre, Mars"], vocabulaire: [{ terme: "tellurique", definition: "rocheuse" }], exemple: "", retenir: "4 telluriques" },
           questions: [
             { type: "qcm", enonce: "Laquelle est tellurique ?", choix: ["Jupiter", "Mars", "Saturne"], reponse: "1", reponses_acceptees: [], elements: [], explication: "Mars est rocheuse." },
@@ -33,6 +35,7 @@ const generated: ai.GeneratedRevision = {
         },
         {
           titre: "Planètes gazeuses",
+          origine: "cours",
           fiche: { essentiel: "Quatre géantes gazeuses.", points: [], vocabulaire: [], exemple: "", retenir: "" },
           questions: [
             { type: "ordre", enonce: "Range de la plus proche à la plus lointaine", choix: [], reponse: "", reponses_acceptees: [], elements: ["Jupiter", "Saturne", "Uranus", "Neptune"], explication: "" },
@@ -298,5 +301,68 @@ describe("Cervelle — assistant and corrected tests", () => {
     const detail = await request(app).get(`/cervelle/learners/${learnerId}/revisions/${revision.id}`).set(auth);
     expect(detail.body.revision.notions[0].children[1].mastery).toBe("review");
     expect(detail.body.revision.notions[0].mastery).toBe("review");
+  });
+});
+
+describe("Cervelle — programme officiel", () => {
+  const withProgramme: ai.GeneratedRevision = {
+    ...generated,
+    titre: "Chrétientés et islam",
+    matiere: "",
+    chapitre_programme: "5e-hi-chretientes-islam",
+    notions: [
+      {
+        titre: "Byzance",
+        sous_notions: [
+          { ...generated.notions[0].sous_notions[0], titre: "L'Empire byzantin", origine: "cours" },
+          { ...generated.notions[0].sous_notions[1], titre: "L'Europe carolingienne", origine: "programme" },
+          { ...generated.notions[0].sous_notions[1], titre: "En trop 1", origine: "programme" },
+          { ...generated.notions[0].sous_notions[1], titre: "En trop 2", origine: "programme" },
+        ],
+      },
+    ],
+  };
+
+  it("gives Claude the chapters of the class, stores the chapter and marks what the programme added", async () => {
+    const { auth, learnerId } = await parentWithChild();
+    const spy = vi.spyOn(ai, "generateRevision").mockResolvedValue(withProgramme);
+    const res = await request(app).post(`/cervelle/learners/${learnerId}/revisions`).set(auth).send({ files: [{ data: JPEG, mimeType: "image/jpeg" }] });
+    const detail = await waitFor(
+      () => request(app).get(`/cervelle/learners/${learnerId}/revisions/${res.body.revision.id}`).set(auth),
+      (r) => r.body.revision.status !== "processing",
+    );
+    expect(spy.mock.calls[0][0].programme).toContain("[5e-hi-feodal]");
+    const r = detail.body.revision;
+    expect(r.programme).toEqual({ chapterId: "5e-hi-chretientes-islam", chapter: "Chrétientés et islam (VIe-XIIIe siècles), des mondes en contact", subject: "Histoire", grade: "5e" });
+    expect(r.subject).toBe("Histoire");
+    // At most 2 additions from the programme; the course stays the base.
+    expect(r.notions[0].children.map((c: { title: string; fromProgramme: boolean }) => [c.title, c.fromProgramme])).toEqual([
+      ["L'Empire byzantin", false],
+      ["L'Europe carolingienne", true],
+      ["En trop 1", true],
+    ]);
+
+    const programme = await request(app).get(`/cervelle/learners/${learnerId}/programme`).set(auth);
+    expect(programme.body).toMatchObject({ available: true, grade: "5e" });
+    const histoire = programme.body.subjects.find((s: { subject: string }) => s.subject === "Histoire");
+    const chapter = histoire.chapters.find((c: { id: string }) => c.id === "5e-hi-chretientes-islam");
+    expect(chapter).toMatchObject({ status: "started", revisions: [{ id: r.id }] });
+    expect(histoire.chapters.find((c: { id: string }) => c.id === "5e-hi-feodal").status).toBe("todo");
+  });
+
+  it("keeps adults to their course: no programme, nothing added", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    const adult = await request(app).post("/cervelle/learners").set(auth).send({ name: "Sam", level: "adulte", grade: "5e" });
+    const spy = vi.spyOn(ai, "generateRevision").mockResolvedValue(withProgramme);
+    const res = await request(app).post(`/cervelle/learners/${adult.body.learner.id}/revisions`).set(auth).send({ files: [{ data: JPEG, mimeType: "image/jpeg" }] });
+    const detail = await waitFor(
+      () => request(app).get(`/cervelle/learners/${adult.body.learner.id}/revisions/${res.body.revision.id}`).set(auth),
+      (r) => r.body.revision.status !== "processing",
+    );
+    expect(spy.mock.calls[0][0].programme).toBeNull();
+    expect(detail.body.revision.programme).toBeNull();
+    expect(detail.body.revision.notions[0].children).toHaveLength(1);
+    expect((await request(app).get(`/cervelle/learners/${adult.body.learner.id}/programme`).set(auth)).body.available).toBe(false);
   });
 });

@@ -505,30 +505,32 @@ model LearnerDevice {
 }
 
 model Revision {
-  id           String    @id @default(cuid())
-  learnerId    String
-  learner      Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
-  title        String    @default("")
-  subject      String    @default("")
+  id                 String    @id @default(cuid())
+  learnerId          String
+  learner            Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  title              String    @default("")
+  subject            String    @default("")
   // Illustration key chosen by Claude among a fixed list (see lib/cervelle/icons.ts).
-  icon         String    @default("livre")
-  examDate     DateTime?
+  icon               String    @default("livre")
+  examDate           DateTime?
   // "processing" | "ready" | "failed"
-  status       String    @default("processing")
-  error        String?
+  status             String    @default("processing")
+  error              String?
   // "parent" | "enfant"
-  createdBy    String    @default("parent")
-  summary      String    @default("")
+  createdBy          String    @default("parent")
+  summary            String    @default("")
   // Revision sheets: [{ notionId, title, essentiel, points[], vocabulaire[{terme, definition}], exemple, retenir }]
-  sheets       Json      @default("[]")
-  photoKeys    String[]  @default([])
-  photoCount   Int       @default(0)
-  sheetsReadAt DateTime?
+  sheets             Json      @default("[]")
+  photoKeys          String[]  @default([])
+  photoCount         Int       @default(0)
+  sheetsReadAt       DateTime?
+  // Chapter of the official programme (lib/cervelle/programme.ts), when the class has one.
+  programmeChapterId String?
   // Best scores in percent.
-  quizBest     Int?
-  examBest     Int?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  quizBest           Int?
+  examBest           Int?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   notions     Notion[]
   questions   Question[]
@@ -549,6 +551,8 @@ model Notion {
   order          Int       @default(0)
   // "new" (en cours) | "review" (à revoir) | "mastered" (maîtrisé)
   mastery        String    @default("new")
+  // Added by Cervelle because the programme expects it and the photographed course left it out.
+  fromProgramme  Boolean   @default(false)
   // Correct answers in a row, drives the spaced-review interval.
   streak         Int       @default(0)
   nextReviewAt   DateTime?
