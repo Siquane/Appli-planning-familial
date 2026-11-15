@@ -187,6 +187,10 @@ describe("Cervelle — quiz, mastery and game", () => {
     const again = await request(app).post(`/cervelle/learners/${learnerId}/answers`).set(auth).send({ questionId: qcm.id, mode: "qcm", answer: "1" });
     expect(again.body.coins).toBe(0);
 
+    const cards = await request(app).get(`/cervelle/learners/${learnerId}/quiz?revisionId=${revision.id}&mode=cartes`).set(auth);
+    const backs = Object.fromEntries(cards.body.questions.map((q: { type: string; back: string }) => [q.type, q.back]));
+    expect(backs).toEqual({ carte: "Jupiter", courte: "Mercure", trous: "Saturne a des anneaux." });
+
     const review = await request(app).get(`/cervelle/learners/${learnerId}/quiz?mode=a_revoir`).set(auth);
     expect(review.body.questions.length).toBeGreaterThan(0);
   });

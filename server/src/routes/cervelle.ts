@@ -651,8 +651,8 @@ function shuffle<T>(list: T[]): T[] {
   return a;
 }
 
-/** What the app shows: never the answer, except the back of a flash card. */
-function playable(q: Question & { notion: Notion }) {
+/** What the app shows: never the answer, except the back of a flash card (in « cartes », every question is a card). */
+function playable(q: Question & { notion: Notion }, mode: QuizMode) {
   const base = { id: q.id, type: q.type, prompt: q.prompt, notionId: q.notionId, notionTitle: q.notion.title };
   switch (q.type) {
     case "qcm":
@@ -662,7 +662,7 @@ function playable(q: Question & { notion: Notion }) {
     case "carte":
       return { ...base, back: q.answer };
     default:
-      return base;
+      return mode === "cartes" ? { ...base, back: q.type === "trous" ? q.prompt.replace(/_{3,}/, q.answer) : q.answer } : base;
   }
 }
 
@@ -706,7 +706,7 @@ cervelleRouter.get("/learners/:learnerId/quiz", async (req, res) => {
   } else {
     picked = pickSpread(all, mode === "interro" ? 15 : 10, now);
   }
-  res.json({ mode, revisionId, questions: picked.map(playable) });
+  res.json({ mode, revisionId, questions: picked.map((q) => playable(q, mode)) });
 });
 
 const answerSchema = z.object({
