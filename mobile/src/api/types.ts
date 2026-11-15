@@ -106,6 +106,8 @@ export interface Task {
   externalProvider: string | null;
   /** Tâches créées ensemble sur plusieurs jours : même seriesId. */
   seriesId: string | null;
+  /** Étoiles gagnées par un enfant assigné quand la tâche est faite (1 à 5). */
+  stars: number;
 }
 
 export type TaskInput = Partial<Omit<Task, "id" | "date" | "externalProvider">> & {
@@ -451,4 +453,24 @@ export interface StatementImportRow {
   category: string;
   recurring: boolean;
   learn: boolean;
+}
+
+export interface StarChild {
+  memberId: string;
+  balance: number;
+  weekStars: number;
+}
+
+export interface Reward {
+  id: string;
+  title: string;
+  cost: number;
+}
+
+export interface StarsState {
+  children: StarChild[];
+  /** Tâches faites cette semaine. */
+  completions: { taskId: string; memberId: string; stars: number }[];
+  rewards: Reward[];
+  history: { id: string; kind: "earned" | "spent"; memberId: string; title: string; stars: number; createdAt: string }[];
 }

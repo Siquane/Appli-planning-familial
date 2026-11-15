@@ -6,8 +6,11 @@ import { Card } from "../../src/components/Card";
 import { Tag } from "../../src/components/Tag";
 import { TopBar } from "../../src/components/TopBar";
 import { Avatar } from "../../src/components/Avatar";
-import { CalendarIcon, ClockIcon, DeadlineIcon } from "../../src/components/icons";
-import { useDeleteTask, useMembers, useTasks } from "../../src/hooks/useApi";
+import { CalendarIcon, ClockIcon, DeadlineIcon, StarIcon } from "../../src/components/icons";
+import { Button } from "../../src/components/Button";
+import { isChild, starsLabel, weekKey } from "../../src/lib/stars";
+import { errorText } from "../../src/lib/errors";
+import { useDeleteTask, useMembers, useStars, useTasks, useToggleStar } from "../../src/hooks/useApi";
 import { useToastStore } from "../../src/state/toastStore";
 import { color, space, gutter } from "../../src/theme/tokens";
 import { categoryColor, formatDuration, priorityLabel, WEEKDAYS_FULL } from "../../src/lib/weekdays";
@@ -20,6 +23,9 @@ export default function TaskDetailScreen() {
   const { data: members = [] } = useMembers();
   const deleteTask = useDeleteTask();
   const task = tasks.find((t) => t.id === id);
+  const week = weekKey();
+  const { data: starsState } = useStars(week);
+  const toggleStar = useToggleStar();
 
   if (!task) {
     return (
@@ -103,6 +109,42 @@ export default function TaskDetailScreen() {
                 </View>
               ))}
             </View>
+          </View>
+        )}
+
+        {assigned.some((m) => isChild(m)) && (
+          <View style={{ gap: space.sm }}>
+            <Text weight="medium" size={13} tone="muted">
+              Étoiles cette semaine · {starsLabel(task.stars ?? 1)} par enfant
+            </Text>
+            {assigned
+              .filter((m) => isChild(m))
+              .map((m) => {
+                const done = !!starsState?.completions.some((c) => c.taskId === task.id && c.memberId === m.id);
+                return (
+                  <Card key={m.id} row style={{ alignItems: "center", gap: space.sm }}>
+                    <StarIcon size={18} color={done ? color.pillar3 : color.neutral600} />
+                    <Text size={15} style={{ flex: 1 }}>
+                      {m.name}
+                    </Text>
+                    <Button
+                      label={done ? "Fait ✓" : "C'est fait"}
+                      variant={done ? "secondary" : "primary"}
+                      needsNetwork
+                      loading={toggleStar.isPending && toggleStar.variables?.memberId === m.id}
+                      onPress={() =>
+                        toggleStar.mutate(
+                          { taskId: task.id, memberId: m.id, week, done: !done },
+                          {
+                            onSuccess: () => useToastStore.getState().show(done ? `Étoiles retirées à ${m.name}.` : `+${task.stars ?? 1} ★ pour ${m.name} !`),
+                            onError: (e) => useToastStore.getState().show(errorText(e, "enregistrer les étoiles")),
+                          },
+                        )
+                      }
+                    />
+                  </Card>
+                );
+              })}
           </View>
         )}
 

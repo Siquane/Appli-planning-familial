@@ -76,6 +76,9 @@ export async function leaveFamilyBehind(ownerId: string, ownerName: string, heir
     prisma.mealGeneration.updateMany(move),
     prisma.savingsGoal.updateMany(move),
     prisma.capAlert.updateMany(move),
+    prisma.starCompletion.updateMany(move),
+    prisma.reward.updateMany(move),
+    prisma.rewardRedemption.updateMany(move),
     prisma.familyInvite.deleteMany({ where: { ownerId } }),
     prisma.user.updateMany({
       where: { familyOwnerId: ownerId, id: { not: heirId } },

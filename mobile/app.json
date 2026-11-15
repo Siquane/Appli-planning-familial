@@ -21,7 +21,8 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "app.passerelle.mobile"
+      "package": "app.passerelle.mobile",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -124,7 +125,7 @@
     "experiments": {
       "typedRoutes": true
     },
-    "runtimeVersion": "6",
+    "runtimeVersion": "7",
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0

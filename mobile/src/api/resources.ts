@@ -1,5 +1,7 @@
 import { api } from "./client";
 import type {
+  Reward,
+  StarsState,
   AutoSlotResult,
   CalendarStatus,
   CategoryBudget,
@@ -173,6 +175,16 @@ export const notificationsApi = {
   savePushToken: (token: string) => api.put<void>("/notifications/push-token", { token }),
   familyAlerts: () => api.get<{ enabled: boolean }>("/notifications/family-alerts"),
   setFamilyAlerts: (enabled: boolean) => api.put<{ enabled: boolean }>("/notifications/family-alerts", { enabled }),
+};
+
+export const starsApi = {
+  get: (week: string) => api.get<StarsState>(`/stars?week=${week}`),
+  complete: (data: { taskId: string; memberId: string; week: string }) => api.post<void>("/stars/complete", data),
+  uncomplete: (data: { taskId: string; memberId: string; week: string }) => api.delete<void>("/stars/complete", data),
+  addReward: (data: { title: string; cost: number }) => api.post<{ reward: Reward }>("/stars/rewards", data),
+  removeReward: (id: string) => api.delete<void>(`/stars/rewards/${id}`),
+  redeem: (id: string, memberId: string) => api.post<{ balance: number }>(`/stars/rewards/${id}/redeem`, { memberId }),
+  removeHistory: (id: string) => api.delete<void>(`/stars/history/${id}`),
 };
 
 export const shareApi = {
