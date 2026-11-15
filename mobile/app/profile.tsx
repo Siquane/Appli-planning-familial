@@ -16,6 +16,14 @@ import { useAuthStore } from "../src/state/authStore";
 import { useToastStore } from "../src/state/toastStore";
 import { connectAppleCalendar, startOAuthConnect } from "../src/lib/calendarConnect";
 import { color, space } from "../src/theme/tokens";
+import { Chip } from "../src/components/Chip";
+import { useThemeStore, type ThemePreference } from "../src/state/themeStore";
+
+const THEMES: { key: ThemePreference; label: string }[] = [
+  { key: "system", label: "Comme le téléphone" },
+  { key: "light", label: "Clair" },
+  { key: "dark", label: "Sombre" },
+];
 import { Platform } from "react-native";
 
 const PROVIDERS: { key: "google" | "outlook" | "apple"; label: string }[] = [
@@ -27,6 +35,15 @@ const PROVIDERS: { key: "google" | "outlook" | "apple"; label: string }[] = [
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
+  const themePreference = useThemeStore((s) => s.preference);
+  const setThemePreference = useThemeStore((s) => s.setPreference);
+
+  // Changer de thème remonte tous les écrans (retour au Planning) : on revient ensuite ici.
+  async function chooseTheme(next: ThemePreference) {
+    if (next === themePreference) return;
+    await setThemePreference(next);
+    setTimeout(() => router.navigate("/profile"), 150);
+  }
 
   const { data: status, refetch } = useCalendarStatus();
   const disconnect = useDisconnectCalendar();
@@ -129,6 +146,17 @@ export default function ProfileScreen() {
           </View>
         </Card>
       )}
+
+      <View style={{ gap: space.sm }}>
+        <Text weight="medium" size={13} tone="muted">
+          Apparence
+        </Text>
+        <View style={{ flexDirection: "row", gap: space.xs }}>
+          {THEMES.map((t) => (
+            <Chip key={t.key} label={t.label} selected={themePreference === t.key} onPress={() => chooseTheme(t.key)} size="sm" fill />
+          ))}
+        </View>
+      </View>
 
       <View style={{ gap: space.sm }}>
         <Text weight="medium" size={13} tone="muted">

@@ -43,6 +43,6 @@ const cornerBase: ViewStyle = {
   position: "absolute",
   width: 9,
   height: 9,
-  borderColor: color.accent,
+  get borderColor() { return color.accent; },
   opacity: 0.65,
 };

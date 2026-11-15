@@ -14,10 +14,10 @@ function TechGridOverlay() {
   return (
     <View pointerEvents="none" style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
       {Array.from({ length: count }).map((_, i) => (
-        <View key={`v${i}`} style={{ position: "absolute", left: i * pitch, top: 0, bottom: 0, width: 1, backgroundColor: "rgba(34,229,255,0.05)" }} />
+        <View key={`v${i}`} style={{ position: "absolute", left: i * pitch, top: 0, bottom: 0, width: 1, backgroundColor: color.grid }} />
       ))}
       {Array.from({ length: count }).map((_, i) => (
-        <View key={`h${i}`} style={{ position: "absolute", top: i * pitch, left: 0, right: 0, height: 1, backgroundColor: "rgba(34,229,255,0.05)" }} />
+        <View key={`h${i}`} style={{ position: "absolute", top: i * pitch, left: 0, right: 0, height: 1, backgroundColor: color.grid }} />
       ))}
     </View>
   );

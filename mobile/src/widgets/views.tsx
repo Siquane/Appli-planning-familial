@@ -1,5 +1,5 @@
 import { FlexWidget, TextWidget } from "react-native-android-widget";
-import { color } from "../theme/tokens";
+import { darkColor as color } from "../theme/tokens";
 import type { WidgetContent } from "./content";
 import { widgetUri } from "./links";
 

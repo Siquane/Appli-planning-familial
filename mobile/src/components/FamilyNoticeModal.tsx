@@ -8,7 +8,7 @@ import { familyApi } from "../api/resources";
 import { noticeText } from "../lib/family";
 import { syncUser } from "../lib/account";
 import { useAuthStore } from "../state/authStore";
-import { gutter, space } from "../theme/tokens";
+import { color, gutter, space } from "../theme/tokens";
 
 /**
  * Shown once, at the next opening, to an account whose family changed hands
@@ -35,7 +35,7 @@ export function FamilyNoticeModal() {
 
   return (
     <Modal transparent animationType="fade" visible onRequestClose={() => close()}>
-      <View style={{ flex: 1, backgroundColor: "rgba(7,9,18,0.85)", justifyContent: "center", padding: gutter }}>
+      <View style={{ flex: 1, backgroundColor: color.scrim, justifyContent: "center", padding: gutter }}>
         <Card style={{ gap: space.md }}>
           <Text heading size={TYPE.title}>
             {title}

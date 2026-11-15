@@ -5,9 +5,9 @@ import { color, radius, space } from "../theme/tokens";
 type Variant = "accent" | "neutral" | "outline";
 
 const variants: Record<Variant, { bg?: string; fg: string; border?: string }> = {
-  accent: { bg: color.accent800, fg: color.accent100 },
-  neutral: { bg: color.neutral800, fg: color.neutral100 },
-  outline: { fg: color.accent, border: color.accent },
+  accent: { get bg() { return color.accent800; }, get fg() { return color.accent100; } },
+  neutral: { get bg() { return color.neutral800; }, get fg() { return color.neutral100; } },
+  outline: { get fg() { return color.accent; }, get border() { return color.accent; } },
 };
 
 // `tint` colours the tag from one hue (text, faint fill, soft border) — used
