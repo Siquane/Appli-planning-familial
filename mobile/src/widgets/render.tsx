@@ -1,11 +1,13 @@
 import { color } from "../theme/tokens";
 import { menuContent, shoppingContent, summaryContent, tasksContent } from "./content";
 import type { WidgetName, WidgetSnapshot } from "./snapshot";
-import { SignedOutCard, WidgetCard } from "./views";
+import { AddTaskCard, SignedOutCard, WidgetCard } from "./views";
 import { widgetUri } from "./links";
 
 /** The widget named `name`, drawn from the saved snapshot at time `now`. */
 export function renderWidget(name: string, snapshot: WidgetSnapshot | null, now: Date = new Date()) {
+  // The « add a task » button needs no data: signed out, the app opens on its login screen.
+  if (name === "AjoutTache") return <AddTaskCard />;
   if (!snapshot) return <SignedOutCard />;
   switch (name as WidgetName) {
     case "Taches":

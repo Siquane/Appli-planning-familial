@@ -4,7 +4,7 @@
 // over the link, so the route is also kept here for a few seconds and
 // replayed once the tabs are on screen.
 
-export type WidgetTarget = "planning" | "menu" | "courses";
+export type WidgetTarget = "planning" | "menu" | "courses" | "add-task";
 
 export function widgetUri(target: WidgetTarget): string {
   return `passerelle://widget/${target}`;
@@ -12,7 +12,7 @@ export function widgetUri(target: WidgetTarget): string {
 
 /** The route for an incoming URL, or null when it isn't a widget link. */
 export function routeForWidgetUrl(url: string, now: number = Date.now()): string | null {
-  const m = /widget\/(planning|menu|courses)\b/.exec(url);
+  const m = /widget\/(planning|menu|courses|add-task)\b/.exec(url);
   if (!m) return null;
   // `w` changes on every tap, so tapping the same widget twice still switches view.
   switch (m[1] as WidgetTarget) {
@@ -20,6 +20,8 @@ export function routeForWidgetUrl(url: string, now: number = Date.now()): string
       return `/repas?tab=menu&w=${now}`;
     case "courses":
       return `/repas?tab=courses&w=${now}`;
+    case "add-task":
+      return "/task/new";
     default:
       return "/home";
   }
