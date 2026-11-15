@@ -11,6 +11,8 @@ import { useDeleteTask, useMembers, useTasks } from "../../src/hooks/useApi";
 import { useToastStore } from "../../src/state/toastStore";
 import { color, space, gutter } from "../../src/theme/tokens";
 import { categoryColor, formatDuration, priorityLabel, WEEKDAYS_FULL } from "../../src/lib/weekdays";
+import { seriesOf } from "../../src/lib/taskSeries";
+import { describeSchedule, type DayTimes } from "../../src/lib/dayTimes";
 
 export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,21 +34,32 @@ export default function TaskDetailScreen() {
 
   const assigned = task.memberIds.map((mid) => members.find((m) => m.id === mid)).filter((m): m is NonNullable<typeof m> => !!m);
 
+  const siblings = seriesOf(tasks, task);
+  const schedule: DayTimes = {};
+  for (const t of siblings) schedule[t.weekday] ??= t.time;
+
+  async function remove(ids: string[]) {
+    try {
+      for (const tid of ids) await deleteTask.mutateAsync(tid);
+      useToastStore.getState().show(ids.length > 1 ? "Tâches supprimées." : "Tâche supprimée.");
+      router.back();
+    } catch {
+      useToastStore.getState().show("Impossible de supprimer la tâche.");
+    }
+  }
+
   function onDelete() {
+    if (siblings.length > 1) {
+      Alert.alert("Supprimer la tâche", `« ${task!.title} » a lieu ${siblings.length} fois par semaine.`, [
+        { text: "Annuler", style: "cancel" },
+        { text: `Le ${WEEKDAYS_FULL[task!.weekday].toLowerCase()} seulement`, onPress: () => remove([task!.id]) },
+        { text: "Tous les jours", style: "destructive", onPress: () => remove(siblings.map((t) => t.id)) },
+      ]);
+      return;
+    }
     Alert.alert("Supprimer la tâche", `Supprimer « ${task!.title} » ?`, [
       { text: "Annuler", style: "cancel" },
-      {
-        text: "Supprimer",
-        style: "destructive",
-        onPress: () => {
-          deleteTask.mutate(task!.id, {
-            onSuccess: () => {
-              useToastStore.getState().show("Tâche supprimée.");
-              router.back();
-            },
-          });
-        },
-      },
+      { text: "Supprimer", style: "destructive", onPress: () => remove([task!.id]) },
     ]);
   }
 
@@ -64,6 +77,11 @@ export default function TaskDetailScreen() {
 
         <Card style={{ gap: space.sm }}>
           <Row icon={<CalendarIcon size={16} color={color.neutral400} />} label={WEEKDAYS_FULL[task.weekday]} />
+          {siblings.length > 1 && (
+            <Text size={13} tone="muted">
+              Tous les jours de cette tâche : {describeSchedule(schedule)}
+            </Text>
+          )}
           <Row icon={<ClockIcon size={16} color={color.neutral400} />} label={`${task.time} · ${formatDuration(task.duration)}`} />
           {task.deadlineWeekday !== null && (
             <Row icon={<DeadlineIcon size={16} color={color.neutral400} />} label={`Échéance : ${WEEKDAYS_FULL[task.deadlineWeekday]}`} />

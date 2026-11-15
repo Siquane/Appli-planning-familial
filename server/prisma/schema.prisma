@@ -131,12 +131,17 @@ model Task {
   flexible         Boolean  @default(false)
   synced           Boolean  @default(false)
   notes            String   @default("")
+  // Tâches créées ensemble sur plusieurs jours (une ligne par jour) : même
+  // seriesId, pour les modifier ou les supprimer ensemble. null = tâche seule.
+  seriesId         String?
   externalEventId  String?
   externalProvider String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   members TaskMember[]
+
+  @@index([userId, seriesId])
 }
 
 model TaskMember {

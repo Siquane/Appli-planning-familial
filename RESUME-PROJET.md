@@ -1,7 +1,7 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 13 novembre 2026 (soir, reprise de la branche Premium).
+Dernière mise à jour : 15 novembre 2026 (tâches en série).
 
 ## ⚠️ Point de reprise (13/11/2026, soir) — à lire d'abord
 
@@ -233,3 +233,10 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - 5ᵉ widget Android `AjoutTache` (2 × 1, aucun contenu à afficher : un bouton « + Ajouter une tâche » au style Passerelle). Un appui ouvre `/task/new` via `passerelle://widget/add-task` (`src/widgets/links.ts`, `views.tsx` → `AddTaskCard`). Déclaré dans `app.json` avec l'aperçu `assets/widgets/ajout.png`.
 - **Brique native nouvelle → `runtimeVersion` passe à "6"** : il faut lancer « EAS Build (Android preview) » depuis `main` et réinstaller l'APK ; les APK runtime "5" ne reçoivent plus de mises à jour OTA.
 
+## Tâches sur plusieurs jours reliées en série (15/11/2026)
+
+- Problème : une tâche = un jour dans la base ; cocher lundi + mercredi créait deux tâches sans lien, et le formulaire de modification n'acceptait qu'un jour.
+- `Task.seriesId` (migration `20261115120000_task_series`) relie les tâches créées ensemble. L'identifiant est fabriqué par l'appli (`newSeriesId`, `src/lib/taskSeries.ts`) pour marcher hors connexion. La migration regroupe les anciennes tâches **récurrentes** identiques (titre, catégorie, durée, priorité, membres ; un exemplaire par jour).
+- Modifier une tâche agit sur toute la série : jours cochables (au moins un), heure commune ou par jour, cocher = ajouter, décocher = retirer (`planSeriesEdit` réutilise d'abord une tâche décochée pour un nouveau jour, pour garder son rappel). Supprimer depuis la fiche propose « ce jour seulement » ou « tous les jours ». Dupliquer reprend tous les jours.
+- Tests serveur en local : la session crée une base neuve + `prisma migrate deploy` puis lance vitest avec une config sans `globalSetup` (non versionnée), ce qui évite le `db push --force-reset` refusé par Prisma 7.
+- À suivre (demandé le 15/11, une PR chacune) : alertes push quand un autre compte modifie le planning, étoiles et récompenses pour les enfants, dérives du budget, thème clair (suit le téléphone + choix dans le profil).

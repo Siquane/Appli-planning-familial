@@ -104,6 +104,8 @@ export interface Task {
   notes: string;
   memberIds: string[];
   externalProvider: string | null;
+  /** Tâches créées ensemble sur plusieurs jours : même seriesId. */
+  seriesId: string | null;
 }
 
 export type TaskInput = Partial<Omit<Task, "id" | "date" | "externalProvider">> & {
