@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi } from "../api/resources";
-import type { MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
+import type { MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskDoneMark, TaskInput, Tint, Weekday } from "../api/types";
 import { useAuthStore } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
 import { buildCategoryOptions } from "../lib/money";
@@ -376,6 +376,31 @@ export function useClearCheckedShopping() {
 export function useTasks() {
   const enabled = useEnabled();
   return useQuery({ queryKey: ["tasks"], queryFn: () => tasksApi.list().then((r) => r.tasks), enabled, refetchInterval: SHARED_REFRESH_MS });
+}
+
+// Tâches cochées « faites » pour une semaine (lundi « AAAA-MM-JJ »).
+export function useTaskDone(week: string) {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["taskDone", week], queryFn: () => tasksApi.done(week).then((r) => r.done), enabled, refetchInterval: SHARED_REFRESH_MS });
+}
+
+// Coche / décoche tout de suite à l'écran, puis confirme auprès du serveur
+// (et revient en arrière si l'envoi échoue).
+export function useToggleTaskDone(week: string) {
+  const qc = useQueryClient();
+  const key = ["taskDone", week];
+  return useMutation({
+    mutationFn: (d: { taskId: string; day: string; done: boolean }) => (d.done ? tasksApi.markDone(d.taskId, d.day) : tasksApi.unmarkDone(d.taskId, d.day)),
+    onMutate: async (d) => {
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<TaskDoneMark[]>(key);
+      const rest = (previous ?? []).filter((m) => !(m.taskId === d.taskId && m.day === d.day));
+      qc.setQueryData<TaskDoneMark[]>(key, d.done ? [...rest, { taskId: d.taskId, day: d.day }] : rest);
+      return { previous };
+    },
+    onError: (_e, _d, ctx) => qc.setQueryData(key, ctx?.previous),
+    onSettled: () => qc.invalidateQueries({ queryKey: key }),
+  });
 }
 
 export function useCreateTask() {

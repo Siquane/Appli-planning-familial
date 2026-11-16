@@ -110,6 +110,12 @@ export interface Task {
   stars: number;
 }
 
+/** Une tâche cochée « faite » un jour donné (« AAAA-MM-JJ »). */
+export interface TaskDoneMark {
+  taskId: string;
+  day: string;
+}
+
 export type TaskInput = Partial<Omit<Task, "id" | "date" | "externalProvider">> & {
   title: string;
   category: Category;

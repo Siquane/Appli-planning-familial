@@ -9,11 +9,15 @@ import { WeekStrip } from "../../src/components/WeekStrip";
 import { TaskCard } from "../../src/components/TaskCard";
 import { TabHeader } from "../../src/components/PageHeader";
 import { TodayCard } from "../../src/components/TodayCard";
-import { ReshuffleIcon, CalendarIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
-import { useMembers, useTasks } from "../../src/hooks/useApi";
+import { ReshuffleIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
+import { useMembers, useTaskDone, useTasks, useToggleTaskDone } from "../../src/hooks/useApi";
+import { DayRing, EmptyState } from "../../src/components/Playful";
+import { useToastStore } from "../../src/state/toastStore";
+import { errorText } from "../../src/lib/errors";
+import { weekKey } from "../../src/lib/stars";
 import { useAuthStore } from "../../src/state/authStore";
 import { color, space } from "../../src/theme/tokens";
-import { todayWeekday, WEEKDAYS_FULL } from "../../src/lib/weekdays";
+import { dayOfWeek, progressLine, todayWeekday, WEEKDAYS_FULL } from "../../src/lib/weekdays";
 import { daysUntilBirthday } from "../../src/lib/notifications";
 import type { Weekday } from "../../src/api/types";
 
@@ -30,6 +34,22 @@ export default function HomeScreen() {
     () => tasks.filter((t) => t.weekday === selected).sort((a, b) => a.time.localeCompare(b.time)),
     [tasks, selected]
   );
+
+  // Coches « fait » de la semaine affichée (la semaine en cours).
+  const week = weekKey();
+  const day = dayOfWeek(week, selected);
+  const { data: doneMarks = [] } = useTaskDone(week);
+  const toggleDone = useToggleTaskDone(week);
+  const doneIds = useMemo(() => new Set(doneMarks.filter((m) => m.day === day).map((m) => m.taskId)), [doneMarks, day]);
+  const doneCount = dayTasks.filter((t) => doneIds.has(t.id)).length;
+  const progress = progressLine(doneCount, dayTasks.length);
+
+  function onToggle(taskId: string) {
+    const done = !doneIds.has(taskId);
+    // Dernière tâche du jour cochée : petite célébration.
+    if (done && doneCount + 1 === dayTasks.length) useToastStore.getState().show(selected === today ? "Tout est fait pour aujourd'hui, bravo la famille !" : "Tout est fait pour ce jour-là, bravo !", "party");
+    toggleDone.mutate({ taskId, day, done }, { onError: (e) => useToastStore.getState().show(errorText(e, "enregistrer la tâche")) });
+  }
 
   const flexibleCount = tasks.filter((t) => t.flexible).length;
 
@@ -80,15 +100,17 @@ export default function HomeScreen() {
           {WEEKDAYS_FULL[selected]}
         </Text>
         {!isLoading && dayTasks.length === 0 && (
-          <Card style={{ alignItems: "center", paddingVertical: space.lg }}>
-            <CalendarIcon size={26} color={color.neutral600} />
-            <Text tone="muted" size={13} center>
-              Rien de prévu ce jour-là.
-            </Text>
+          <Card>
+            <EmptyState title="Journée libre" detail="Rien de prévu ce jour-là. Profitez-en, ou ajoutez une tâche avec le « + »." />
+          </Card>
+        )}
+        {dayTasks.length > 0 && (
+          <Card>
+            <DayRing done={doneCount} total={dayTasks.length} title={progress.title} detail={progress.detail} />
           </Card>
         )}
         {dayTasks.map((task) => (
-          <TaskCard key={task.id} task={task} members={members} />
+          <TaskCard key={task.id} task={task} members={members} done={doneIds.has(task.id)} onToggleDone={() => onToggle(task.id)} />
         ))}
       </View>
     </Screen>

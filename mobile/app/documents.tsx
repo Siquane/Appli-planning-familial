@@ -9,7 +9,7 @@ import { Chip } from "../src/components/Chip";
 import { Button } from "../src/components/Button";
 import { TopBar } from "../src/components/TopBar";
 import { DocumentRow } from "../src/components/DocumentRow";
-import { DocumentIcon, PlusIcon } from "../src/components/icons";
+import { PlusIcon } from "../src/components/icons";
 import { MoreLink } from "../src/components/MoreLink";
 import { PrivateNote } from "../src/components/PrivateNote";
 import { useDocuments, useMembers, usePlan } from "../src/hooks/useApi";
@@ -17,6 +17,7 @@ import { useDocuments, useMembers, usePlan } from "../src/hooks/useApi";
 import { categoryLabel, DOCUMENT_CATEGORIES } from "../src/lib/documentUpload";
 import { color, space, gutter } from "../src/theme/tokens";
 import type { DocumentCategory } from "../src/api/types";
+import { EmptyState } from "../src/components/Playful";
 
 export default function DocumentsScreen() {
   const { data: documents = [], isLoading } = useDocuments();
@@ -68,11 +69,12 @@ export default function DocumentsScreen() {
         )}
 
         {!isLoading && visible.length === 0 && (
-          <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
-            <DocumentIcon size={22} color={color.neutral600} />
-            <Text tone="muted" size={13} center style={{ marginTop: space.sm }}>
-              {filtered ? "Aucun document pour ce filtre." : "Aucun document pour l'instant.\nOrdonnances, assurances, papiers de l'école…"}
-            </Text>
+          <Card>
+            {filtered ? (
+              <EmptyState title="Rien dans ce tiroir" detail="Aucun document pour ce filtre." />
+            ) : (
+              <EmptyState title="Classeur tout neuf 🗂️" detail="Ordonnances, assurances, papiers de l'école… tout au même endroit." />
+            )}
           </Card>
         )}
 

@@ -6,11 +6,14 @@ import { Card } from "./Card";
 import { Tag } from "./Tag";
 import { AvatarStack } from "./Avatar";
 import { ClockIcon, RecurringIcon } from "./icons";
+import { DoneCheck } from "./Playful";
 import { color, space } from "../theme/tokens";
 import { categoryColor, formatDuration } from "../lib/weekdays";
 import type { Member, Task } from "../api/types";
 
-export function TaskCard({ task, members }: { task: Task; members: Member[] }) {
+// `done` / `onToggleDone` : la case ronde « fait » (Planning). Sans eux,
+// la carte reste une simple ligne cliquable (recherche, réglages…).
+export function TaskCard({ task, members, done, onToggleDone }: { task: Task; members: Member[]; done?: boolean; onToggleDone?: () => void }) {
   const assigned = task.memberIds
     .map((id) => members.find((m) => m.id === id))
     .filter((m): m is Member => !!m)
@@ -26,9 +29,12 @@ export function TaskCard({ task, members }: { task: Task; members: Member[] }) {
         row
         style={{
           alignItems: "center",
+          opacity: done ? 0.7 : 1,
           ...(task.recurring ? { borderWidth: 1, borderStyle: "dashed", borderColor: color.accent700 } : null),
         }}
       >
+        {onToggleDone && <DoneCheck done={!!done} tint={categoryColor(task.category)} label={task.title} onToggle={onToggleDone} />}
+
         <View style={{ width: 52, gap: 3 }}>
           <Text mono size={13} weight="medium">
             {task.time}
@@ -44,7 +50,13 @@ export function TaskCard({ task, members }: { task: Task; members: Member[] }) {
         <View style={{ flex: 1, gap: space.xs }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
             {task.recurring && <RecurringIcon size={11} color={color.accent400} />}
-            <Text weight="medium" size={15} numberOfLines={1} style={{ flexShrink: 1 }}>
+            <Text
+              weight="medium"
+              size={15}
+              numberOfLines={1}
+              tone={done ? "muted" : "text"}
+              style={{ flexShrink: 1, textDecorationLine: done ? "line-through" : "none" }}
+            >
               {task.title}
             </Text>
           </View>

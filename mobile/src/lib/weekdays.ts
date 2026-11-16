@@ -49,3 +49,21 @@ export function formatDuration(minutes: number): string {
   const m = minutes % 60;
   return m ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`;
 }
+
+/** Jour « AAAA-MM-JJ » d'un jour de la semaine (0 = lundi), à partir du lundi « AAAA-MM-JJ ». */
+export function dayOfWeek(week: string, weekday: Weekday): string {
+  const [y, m, d] = week.split("-").map(Number);
+  const day = new Date(y, m - 1, d + weekday);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${day.getFullYear()}-${pad(day.getMonth() + 1)}-${pad(day.getDate())}`;
+}
+
+/** Petite phrase pour l'anneau du jour. */
+export function progressLine(done: number, total: number): { title: string; detail: string } {
+  if (total === 0) return { title: "Journée libre", detail: "Rien de prévu." };
+  const left = total - done;
+  if (left === 0) return { title: "Tout est fait !", detail: "Bravo la famille." };
+  if (done === 0) return { title: "C'est parti", detail: `${total} tâche${total > 1 ? "s" : ""} au programme.` };
+  if (done / total >= 0.5) return { title: "Belle lancée !", detail: `Plus que ${left} tâche${left > 1 ? "s" : ""}.` };
+  return { title: "Bon début", detail: `Encore ${left} tâche${left > 1 ? "s" : ""}.` };
+}

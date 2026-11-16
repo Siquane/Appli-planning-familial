@@ -9,12 +9,13 @@ import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
 import { Button } from "../../src/components/Button";
 import { TabHeader } from "../../src/components/PageHeader";
-import { CalendarIcon, ChartIcon, ChevronLeftIcon, DocumentIcon, ChevronRightIcon, PlusIcon, RecurringIcon, SparkleIcon, TargetIcon, WalletIcon, WarningIcon } from "../../src/components/icons";
+import { CalendarIcon, ChartIcon, ChevronLeftIcon, DocumentIcon, ChevronRightIcon, PlusIcon, RecurringIcon, SparkleIcon, TargetIcon, WarningIcon } from "../../src/components/icons";
 import { useDrifts, useExpenseCategories, useForecast, useMembers, useMonthlyBudget, usePlan } from "../../src/hooks/useApi";
 import { budgetToCsv, categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../../src/lib/money";
 import { color, radius, space, gutter } from "../../src/theme/tokens";
 import { budgetTrial, hasBudgetPack, trialNotice } from "../../src/lib/premium";
 import { syncTrialReminder } from "../../src/lib/notifications";
+import { EmptyState } from "../../src/components/Playful";
 
 export default function BudgetScreen() {
   const [month, setMonth] = useState(currentMonth());
@@ -238,11 +239,8 @@ export default function BudgetScreen() {
         )}
 
         {!isLoading && expenses.length === 0 && (
-          <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
-            <WalletIcon size={22} color={color.neutral600} />
-            <Text tone="muted" size={13} center style={{ marginTop: space.sm }}>
-              Aucune dépense ce mois-ci.
-            </Text>
+          <Card>
+            <EmptyState title="Porte-monnaie au repos 💤" detail="Aucune dépense ce mois-ci." />
           </Card>
         )}
 
