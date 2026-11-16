@@ -132,11 +132,34 @@ describe("programme", () => {
     expect(programmeKey("CM2")).toBe("CM2");
     expect(programmeKey("5ème")).toBe("5e");
     expect(programmeKey("5e")).toBe("5e");
-    expect(programmeKey("4e")).toBeNull();
+    expect(programmeKey("6ème")).toBe("6e");
+    expect(programmeKey("Sixième")).toBe("6e");
+    expect(programmeKey("4eme")).toBe("4e");
+    expect(programmeKey("3e")).toBe("3e");
+    expect(programmeKey("troisième")).toBe("3e");
+    expect(programmeKey("CM1")).toBeNull();
+    expect(programmeKey("2nde")).toBeNull();
   });
   it("has unique chapter ids", () => {
     const ids = Object.values(PROGRAMMES).flatMap((subjects) => subjects.flatMap((s) => s.chapters.map((c) => c.id)));
     expect(new Set(ids).size).toBe(ids.length);
     expect(chapterById("cm2-hi-republique")?.grade).toBe("CM2");
+    // Les ids déjà enregistrés sur des révisions de 5e ne bougent pas.
+    expect(chapterById("c4-svt-terre")?.grade).toBe("5e");
+    expect(chapterById("3e-svt-terre")?.grade).toBe("3e");
+  });
+  it("covers CM2, 6e, 5e, 4e and 3e, each read on the official texts", () => {
+    expect(Object.keys(PROGRAMMES).sort()).toEqual(["3e", "4e", "5e", "6e", "CM2"]);
+    for (const [grade, subjects] of Object.entries(PROGRAMMES)) {
+      for (const s of subjects) {
+        expect(s.chapters.length, `${grade} ${s.subject}`).toBeGreaterThan(0);
+        expect(s.verifie, `${grade} ${s.subject}`).toBe(true);
+        for (const c of s.chapters) expect(c.notions.length, c.id).toBeGreaterThan(0);
+      }
+    }
+    // 4e et 3e : français et maths encore sur le programme 2020.
+    expect(PROGRAMMES["4e"].find((s) => s.subject === "Mathématiques")?.source).toContain("2020");
+    expect(PROGRAMMES["3e"].find((s) => s.subject === "Français")?.source).toContain("2020");
+    expect(PROGRAMMES["6e"].find((s) => s.subject === "Français")?.source).toContain("2025");
   });
 });

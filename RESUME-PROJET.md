@@ -24,6 +24,8 @@ Dernière mise à jour : 15 novembre 2026 (tâches en série).
 - Revue complète (état, architecture, décisions, points faibles) : `RESUME-PROJET.md` du dépôt `Siquane/cervelle`.
 - Côté serveur ici : `server/src/routes/cervelle.ts`, `server/src/services/cervelleAi.ts`, `server/src/lib/cervelle/`, migrations `20261116080000_cervelle` et `20261116090000_cervelle_programme`, textes officiels dans `docs/programmes/`. PR #41.
 - Utilise `ANTHROPIC_API_KEY` (comme les menus). Limites par famille et par 24 h : 15 révisions, 10 interros, 120 messages d'assistant, 400 corrections.
+- Programme officiel : CM2, 6e, 5e, 4e, 3e (`lib/cervelle/programme.ts`, tableau des textes en vigueur dans `docs/programmes/README.md`).
+- Notifications de l'enfant : `LearnerDevice.pushToken` (migration `20261116130000_cervelle_push`), `PUT /cervelle/child/push`, « fiches prêtes » envoyé par `lib/cervelle/push.ts` via le même envoi Expo que Passerelle (`sendPush` dans `lib/familyAlerts.ts`). Les rappels datés sont programmés par l'appli à partir de `GET /cervelle/learners/me/reminders`. Mode de quiz `express` (6 questions).
 
 ## Contexte
 

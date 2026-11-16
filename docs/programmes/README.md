@@ -23,14 +23,22 @@ liste des chapitres de `server/src/lib/cervelle/programme.ts`.
 
 ## Programmes en vigueur en 2026-2027 (d'après Éduscol)
 
-| Matière | CM2 | 5e |
-|---|---|---|
-| Français | BO n° 16 du 17 avril 2025 (nouveau) | BO n° 10 du 5 mars 2026 (nouveau) |
-| Mathématiques | BO n° 16 du 17 avril 2025 (nouveau) | BO n° 10 du 5 mars 2026 (nouveau) |
-| Histoire-géographie | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 |
-| Sciences et technologie | BO n° 25 du 22 juin 2023 | — |
-| SVT, physique-chimie | — | BO n° 31 du 30 juillet 2020 |
-| Technologie | — | BO n° 9 du 29 février 2024 |
-| EMC | BO n° 24 du 13 juin 2024 | BO n° 24 du 13 juin 2024 |
-| Langues vivantes | BO n° 31 du 30 juillet 2020 | BO n° 22 du 29 mai 2025 (nouveau) |
-| Arts, musique, EPS | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 |
+| Matière | CM2 | 6e | 5e | 4e | 3e |
+|---|---|---|---|---|---|
+| Français | BO n° 16 du 17 avril 2025 (nouveau) | BO n° 16 du 17 avril 2025 | BO n° 10 du 5 mars 2026 (nouveau) | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 |
+| Mathématiques | BO n° 16 du 17 avril 2025 (nouveau) | BO n° 16 du 17 avril 2025 | BO n° 10 du 5 mars 2026 (nouveau) | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 |
+| Histoire-géographie | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 |
+| Sciences et technologie | BO n° 25 du 22 juin 2023 | BO n° 25 du 22 juin 2023 | — | — | — |
+| SVT, physique-chimie | — | — | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 |
+| Technologie | — | — | BO n° 9 du 29 février 2024 | BO n° 9 du 29 février 2024 | BO n° 9 du 29 février 2024 (nouveau) |
+| EMC | BO n° 24 du 13 juin 2024 | BO n° 24 du 13 juin 2024 (nouveau) | BO n° 24 du 13 juin 2024 | BO n° 24 du 13 juin 2024 | BO n° 24 du 13 juin 2024 (nouveau) |
+| Langues vivantes | BO n° 31 du 30 juillet 2020 | BO n° 22 du 29 mai 2025 | BO n° 22 du 29 mai 2025 (nouveau) | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 |
+| Vie affective | BO n° 6 du 6 février 2025 (élémentaire) | BO n° 6 du 6 février 2025 (collège) | idem | idem | idem |
+| Arts, musique, EPS | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 |
+
+Remarques pour `programme.ts` :
+- Les maths et le français 2020 (4e, 3e), les SVT, la physique-chimie et les
+  langues vivantes 2020 n'ont pas de découpage par année : chapitres marqués
+  `cycleWide` (ordre choisi par le professeur). La technologie 2024 a des
+  repères par année, repris tels quels.
+- Pas d'italien en 6e (la LV2 commence en 5e).
