@@ -20,3 +20,19 @@ export function daysBetween(a: string, b: string): number {
 export function beforeParisDay(day: string): Date {
   return new Date(Date.parse(`${day}T00:00:00Z`) - 3 * 60 * 60 * 1000);
 }
+
+/** Monday of the week containing `day` (« YYYY-MM-DD »). */
+export function mondayOf(day: string): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  const back = (d.getUTCDay() + 6) % 7;
+  return addDays(day, -back);
+}
+
+export function addDays(day: string, n: number): string {
+  return new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+}
+
+/** 0 = lundi … 6 = dimanche. */
+export function weekdayOf(day: string): number {
+  return (new Date(`${day}T00:00:00Z`).getUTCDay() + 6) % 7;
+}

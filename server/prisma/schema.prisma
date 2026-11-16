@@ -563,14 +563,31 @@ model Learner {
   chestDay     String?
   owned        String[]      @default([])
   equipped     String[]      @default([])
+  // Timer lengths the child chose (minutes); null = the default for their level.
+  focusMinutes Int?
+  breakMinutes Int?
+  // Result of « Quel élève es-tu ? »: { profile, scores, methods[] }.
+  studyProfile Json?
+  // Code another child types to ask to be friends (6 characters), made on first use.
+  friendCode   String?       @unique
   createdAt    DateTime      @default(now())
 
-  codes       LearnerCode[]
-  devices     LearnerDevice[]
-  revisions   Revision[]
-  attempts    Attempt[]
-  sessions    StudySession[]
-  examReviews ExamReview[]
+  codes          LearnerCode[]
+  devices        LearnerDevice[]
+  revisions      Revision[]
+  attempts       Attempt[]
+  sessions       StudySession[]
+  examReviews    ExamReview[]
+  events         StudyEvent[]
+  todos          TodoItem[]
+  habits         Habit[]
+  journal        JournalEntry[]
+  friendsOut     Friendship[]    @relation("FriendFrom")
+  friendsIn      Friendship[]    @relation("FriendTo")
+  cheersSent     Cheer[]         @relation("CheerFrom")
+  cheersReceived Cheer[]         @relation("CheerTo")
+  challengesOut  Challenge[]     @relation("ChallengeFrom")
+  challengesIn   Challenge[]     @relation("ChallengeTo")
 
   @@index([userId])
 }
@@ -695,8 +712,10 @@ model StudySession {
   learner    Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
   revisionId String?
   revision   Revision? @relation(fields: [revisionId], references: [id], onDelete: SetNull)
-  // "fiches" | "qcm" | "cartes" | "interro" | "a_revoir"
+  // "fiches" | "qcm" | "cartes" | "interro" | "a_revoir" | "minuteur"
   mode       String
+  // What a timer session was for (« Exo 3 physique »), when it isn't a revision.
+  label      String    @default("")
   seconds    Int       @default(0)
   correct    Int       @default(0)
   total      Int       @default(0)
@@ -728,9 +747,152 @@ model AiUsage {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  // "revision" | "exam" | "assistant" | "grading"
+  // "revision" | "exam" | "assistant" | "grading" | "timetable"
   kind      String
   createdAt DateTime @default(now())
 
   @@index([userId, kind, createdAt])
+}
+
+// ─── Cervelle : s'organiser (agenda, tâches, habitudes, journal) ─────────
+
+// A slot of the child's agenda: every week on `weekday` (timetable), or once on `day`.
+model StudyEvent {
+  id               String   @id @default(cuid())
+  learnerId        String
+  learner          Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  title            String
+  // "cours" | "interro" | "devoir" | "revision" | "activite"
+  kind             String   @default("cours")
+  // 0 = lundi … 6 = dimanche (same as Passerelle's tasks).
+  weekday          Int?
+  day              String?
+  start            String
+  end              String
+  room             String   @default("")
+  // "parent" | "enfant"
+  createdBy        String   @default("enfant")
+  // "cervelle", or "passerelle" when it was brought in from the family planning.
+  source           String   @default("cervelle")
+  // The Passerelle task this slot is synchronised with, when the parent asked for it.
+  passerelleTaskId String?
+  createdAt        DateTime @default(now())
+
+  @@index([learnerId])
+}
+
+model TodoItem {
+  id        String    @id @default(cuid())
+  learnerId String
+  learner   Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  title     String
+  urgent    Boolean   @default(false)
+  important Boolean   @default(true)
+  dueDay    String?
+  doneAt    DateTime?
+  // What ticking it gave, taken back if it's unticked.
+  coins     Int       @default(0)
+  xp        Int       @default(0)
+  createdBy String    @default("enfant")
+  createdAt DateTime  @default(now())
+
+  @@index([learnerId, createdAt])
+}
+
+model Habit {
+  id         String    @id @default(cuid())
+  learnerId  String
+  learner    Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  title      String
+  emoji      String    @default("⭐")
+  color      String    @default("ciel")
+  // Days it's planned (0 = lundi … 6 = dimanche).
+  days       Int[]     @default([0, 1, 2, 3, 4, 5, 6])
+  order      Int       @default(0)
+  archivedAt DateTime?
+  createdBy  String    @default("enfant")
+  createdAt  DateTime  @default(now())
+
+  checks HabitCheck[]
+
+  @@index([learnerId])
+}
+
+model HabitCheck {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  day       String
+  coins     Int      @default(0)
+  xp        Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, day])
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  learnerId String
+  learner   Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  day       String
+  // 1 (pas bien) … 5 (super)
+  mood      Int
+  learned   String   @default("")
+  proud     String   @default("")
+  hard      String   @default("")
+  updatedAt DateTime @updatedAt
+
+  @@unique([learnerId, day])
+}
+
+// ─── Cervelle : amis (validés par un parent de chaque côté) ──────────────
+
+model Friendship {
+  id           String   @id @default(cuid())
+  fromId       String
+  from         Learner  @relation("FriendFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  toId         String
+  to           Learner  @relation("FriendTo", fields: [toId], references: [id], onDelete: Cascade)
+  // A parent of each child must say yes before they see each other.
+  fromApproved Boolean  @default(false)
+  toApproved   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@unique([fromId, toId])
+  @@index([toId])
+}
+
+// A ready-made encouragement (no free text between children).
+model Cheer {
+  id        String    @id @default(cuid())
+  fromId    String
+  from      Learner   @relation("CheerFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  toId      String
+  to        Learner   @relation("CheerTo", fields: [toId], references: [id], onDelete: Cascade)
+  kind      String
+  seenAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([toId, createdAt])
+  @@index([fromId, createdAt])
+}
+
+// « Qui travaille le plus cette semaine ? » between two friends.
+model Challenge {
+  id          String   @id @default(cuid())
+  fromId      String
+  from        Learner  @relation("ChallengeFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  toId        String
+  to          Learner  @relation("ChallengeTo", fields: [toId], references: [id], onDelete: Cascade)
+  // Monday of the week (« 2026-11-16 »).
+  week        String
+  // "pending" | "active" | "declined" | "done"
+  status      String   @default("pending")
+  winnerId    String?
+  fromMinutes Int?
+  toMinutes   Int?
+  createdAt   DateTime @default(now())
+
+  @@index([fromId, week])
+  @@index([toId, week])
 }

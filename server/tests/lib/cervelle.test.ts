@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { applyAnswer, combinedMastery, displayedMastery, revisionProgress } from "../../src/lib/cervelle/mastery";
 import { localGrade, normalizeAnswer, sameOrder } from "../../src/lib/cervelle/grading";
-import { currentStreak, equip, levelOf, missions, nextStreak } from "../../src/lib/cervelle/game";
-import { beforeParisDay, daysBetween, parisDay } from "../../src/lib/cervelle/days";
-import { cleanQuestion } from "../../src/services/cervelleAi";
+import { challengeWinner, currentStreak, equip, focusReward, levelOf, makeFriendCode, missions, nextStreak, timerDefaults } from "../../src/lib/cervelle/game";
+import { beforeParisDay, daysBetween, mondayOf, parisDay, weekdayOf } from "../../src/lib/cervelle/days";
+import { cleanQuestion, cleanSlots } from "../../src/services/cervelleAi";
 
 const DAY = 86_400_000;
 const fresh = { mastery: "new", streak: 0, nextReviewAt: null, lastAnsweredAt: null };
@@ -67,7 +67,49 @@ describe("game", () => {
     expect(levelOf(650)).toMatchObject({ level: 4, name: "Cervelle futée" });
     expect(levelOf(99_999).nextLevelXp).toBeNull();
     expect(equip(["casquette", "lunettes"], "couronne")).toEqual(["lunettes", "couronne"]);
-    expect(missions([{ mode: "fiches", correct: 0, total: 0 }, { mode: "qcm", correct: 5, total: 10 }], 15).done).toBe(2);
+  });
+
+  it("picks three daily missions that change with the day, never one the child can't do", () => {
+    const ctx = {
+      sessions: [{ mode: "fiches", correct: 0, total: 0 }, { mode: "qcm", correct: 7, total: 10 }],
+      answersToday: 15,
+      focusMinutes: 0,
+      habitsChecked: 0,
+      habitsPlanned: 0,
+      todosDoneToday: 0,
+      todosAddedToday: 0,
+      todosOpen: 0,
+      journalToday: false,
+      hasRevisions: true,
+      focusTarget: 25,
+    };
+    const a = missions(ctx, "learner:2026-11-16");
+    expect(a.total).toBe(3);
+    expect(a.list[0].done).toBe(true);
+    expect(a.list[1]).toMatchObject({ id: "minuteur", label: "Travailler 25 min avec le minuteur", done: false, progress: "0/25 min" });
+    expect(["planifier", "journal"]).toContain(a.list[2].id);
+    // Same day, same missions; other days, other picks.
+    expect(missions(ctx, "learner:2026-11-16").list.map((m) => m.id)).toEqual(a.list.map((m) => m.id));
+    const week = new Set(Array.from({ length: 14 }, (_, i) => missions({ ...ctx, habitsPlanned: 3, todosOpen: 2 }, `learner:day${i}`).list.map((m) => m.id).join()));
+    expect(week.size).toBeGreaterThan(1);
+    // No revision yet: no revision mission.
+    expect(missions({ ...ctx, hasRevisions: false }, "x").list.map((m) => m.id)).not.toContain("quiz");
+  });
+
+  it("pays the timer by the minute, under a daily cap", () => {
+    expect(focusReward(4 * 60, 0)).toEqual({ coins: 0, xp: 0, minutes: 0 });
+    expect(focusReward(25 * 60, 0)).toEqual({ coins: 5, xp: 50, minutes: 25 });
+    expect(focusReward(25 * 60, 170)).toEqual({ coins: 2, xp: 20, minutes: 25 });
+    expect(timerDefaults("primaire")).toEqual({ focus: 15, pause: 5 });
+    expect(challengeWinner("a", 30, "b", 40)).toBe("b");
+    expect(challengeWinner("a", 30, "b", 30)).toBe("tie");
+    expect(challengeWinner("a", 0, "b", 0)).toBeNull();
+    expect(makeFriendCode(() => 0)).toBe("AAAAAA");
+    expect(mondayOf("2026-11-22")).toBe("2026-11-16");
+    expect(weekdayOf("2026-11-16")).toBe(0);
+    expect(cleanSlots([{ jour: 0, debut: "8:00", fin: "08:55", matiere: " Français ", salle: "" }, { jour: 7, debut: "09:00", fin: "10:00", matiere: "X", salle: "" }, { jour: 1, debut: "10:00", fin: "09:00", matiere: "Y", salle: "" }])).toEqual([
+      { weekday: 0, start: "08:00", end: "08:55", title: "Français", room: "" },
+    ]);
   });
 });
 

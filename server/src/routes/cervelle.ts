@@ -9,7 +9,8 @@ import { isMealAiConfigured } from "../env";
 import { verifyAccessToken } from "../lib/jwt";
 import { resolveSpace } from "../lib/family";
 import { getStorage, removeObjects } from "../lib/storage";
-import { beforeParisDay, parisDay } from "../lib/cervelle/days";
+import { beforeParisDay, parisDay, weekdayOf } from "../lib/cervelle/days";
+import { mountOrganize } from "./cervelleOrganize";
 import { applyAnswer, combinedMastery, displayedMastery, revisionProgress, type Mastery } from "../lib/cervelle/mastery";
 import { localGrade, normalizeAnswer, sameOrder } from "../lib/cervelle/grading";
 import {
@@ -23,6 +24,7 @@ import {
   XP_PER_RIGHT_ANSWER,
   currentStreak,
   equip,
+  timerDefaults,
   levelOf,
   missions,
   nextStreak,
@@ -54,7 +56,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_PDF_BYTES = 15 * 1024 * 1024;
 
 /** Claude calls per family and per day. */
-export const DAILY_LIMITS = { revision: 15, exam: 10, assistant: 120, grading: 400 } as const;
+export const DAILY_LIMITS = { revision: 15, exam: 10, assistant: 120, grading: 400, timetable: 10 } as const;
 
 type Caller = { kind: "parent"; familyId: string } | { kind: "child"; familyId: string; learnerId: string; deviceId: string };
 
@@ -98,13 +100,13 @@ async function cervelleAuth(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-function parentOnly(req: Request, res: Response, next: NextFunction) {
+export function parentOnly(req: Request, res: Response, next: NextFunction) {
   if (req.cervelle?.kind !== "parent") return res.status(403).json({ error: "Réservé aux parents." });
   next();
 }
 
 /** The learner a request is about, or null (and the response is sent). */
-async function loadLearner(req: Request, res: Response): Promise<Learner | null> {
+export async function loadLearner(req: Request, res: Response): Promise<Learner | null> {
   const caller = req.cervelle!;
   const id = String(req.params.learnerId);
   if (caller.kind === "child") {
@@ -136,7 +138,7 @@ async function usedToday(familyId: string, kind: keyof typeof DAILY_LIMITS) {
   return prisma.aiUsage.count({ where: { userId: familyId, kind, createdAt: { gte: since } } });
 }
 
-async function underDailyLimit(familyId: string, kind: keyof typeof DAILY_LIMITS, res: Response) {
+export async function underDailyLimit(familyId: string, kind: keyof typeof DAILY_LIMITS, res: Response) {
   if ((await usedToday(familyId, kind)) >= DAILY_LIMITS[kind]) {
     res.status(429).json({ error: "Limite du jour atteinte pour la famille. Réessaie demain.", code: "daily_limit" });
     return false;
@@ -144,9 +146,9 @@ async function underDailyLimit(familyId: string, kind: keyof typeof DAILY_LIMITS
   return true;
 }
 
-const recordUsage = (familyId: string, kind: keyof typeof DAILY_LIMITS) => prisma.aiUsage.create({ data: { userId: familyId, kind } });
+export const recordUsage = (familyId: string, kind: keyof typeof DAILY_LIMITS) => prisma.aiUsage.create({ data: { userId: familyId, kind } });
 
-function aiConfigured(res: Response) {
+export function aiConfigured(res: Response) {
   if (isMealAiConfigured()) return true;
   res.status(503).json({ error: "Les révisions ne sont pas encore activées sur le serveur (clé Claude manquante)." });
   return false;
@@ -192,7 +194,7 @@ cervelleRouter.get("/session", async (req, res) => {
 
 // ─── Learners (parent) ───────────────────────────────────────────────────
 
-function serializeLearner(l: Learner) {
+export function serializeLearner(l: Learner) {
   const today = parisDay();
   return {
     id: l.id,
@@ -207,6 +209,8 @@ function serializeLearner(l: Learner) {
     mascot: levelOf(l.xp),
     owned: l.owned,
     equipped: l.equipped,
+    timer: { focus: l.focusMinutes ?? timerDefaults(l.level).focus, pause: l.breakMinutes ?? timerDefaults(l.level).pause },
+    studyProfile: l.studyProfile ?? null,
   };
 }
 
@@ -324,7 +328,7 @@ cervelleRouter.get("/learners/:learnerId/overview", parentOnly, async (req, res)
     notions: counts,
     upcoming,
     revisions,
-    recentSessions: recent.map((s) => ({ id: s.id, mode: s.mode, seconds: s.seconds, correct: s.correct, total: s.total, revisionTitle: s.revision?.title ?? null, createdAt: s.createdAt.toISOString() })),
+    recentSessions: recent.map((s) => ({ id: s.id, mode: s.mode, seconds: s.seconds, correct: s.correct, total: s.total, revisionTitle: s.revision?.title ?? (s.label || null), createdAt: s.createdAt.toISOString() })),
   });
 });
 
@@ -470,7 +474,7 @@ cervelleRouter.get("/learners/:learnerId/revisions/:revisionId", async (req, res
   res.json({ revision: serializeRevisionDetail(revision, notions, questionCount) });
 });
 
-const fileSchema = z.object({
+export const fileSchema = z.object({
   data: z.string().min(10),
   mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "application/pdf"]),
 });
@@ -483,7 +487,7 @@ const createRevisionSchema = z.object({
 });
 
 /** Decodes and checks the uploaded files (real images or PDF, sizes). */
-function decodeFiles(files: z.infer<typeof fileSchema>[]): ai.CourseFile[] | string {
+export function decodeFiles(files: z.infer<typeof fileSchema>[]): ai.CourseFile[] | string {
   const out: ai.CourseFile[] = [];
   for (const f of files) {
     const data = Buffer.from(f.data, "base64");
@@ -908,15 +912,36 @@ cervelleRouter.post("/learners/:learnerId/sessions", async (req, res) => {
 
 // ─── Home, missions, shop ────────────────────────────────────────────────
 
-async function missionState(learner: Learner) {
+export async function missionState(learner: Learner) {
   const today = parisDay();
   const since = beforeParisDay(today);
-  const [sessions, answers] = await Promise.all([
-    prisma.studySession.findMany({ where: { learnerId: learner.id, day: today }, select: { mode: true, correct: true, total: true } }),
+  const [sessions, answers, habits, todos, journal, ready] = await Promise.all([
+    prisma.studySession.findMany({ where: { learnerId: learner.id, day: today }, select: { mode: true, correct: true, total: true, seconds: true } }),
     prisma.attempt.findMany({ where: { learnerId: learner.id, createdAt: { gte: since } }, select: { createdAt: true } }),
+    prisma.habit.findMany({ where: { learnerId: learner.id, archivedAt: null }, select: { days: true, createdAt: true, checks: { where: { day: today }, select: { id: true } } } }),
+    prisma.todoItem.findMany({ where: { learnerId: learner.id, OR: [{ doneAt: null }, { doneAt: { gte: since } }, { createdAt: { gte: since } }] }, select: { doneAt: true, createdAt: true } }),
+    prisma.journalEntry.count({ where: { learnerId: learner.id, day: today } }),
+    prisma.revision.count({ where: { learnerId: learner.id, status: "ready" } }),
   ]);
   const answersToday = answers.filter((a) => parisDay(a.createdAt) === today).length;
-  const m = missions(sessions, answersToday);
+  const weekday = weekdayOf(today);
+  const before = (d: Date) => parisDay(d) < today;
+  const m = missions(
+    {
+      sessions,
+      answersToday,
+      focusMinutes: Math.floor(sessions.filter((x) => x.mode === "minuteur").reduce((n, x) => n + x.seconds, 0) / 60),
+      habitsChecked: habits.filter((h) => h.checks.length > 0).length,
+      habitsPlanned: habits.filter((h) => h.days.includes(weekday) && before(h.createdAt)).length,
+      todosDoneToday: todos.filter((t) => t.doneAt && parisDay(t.doneAt) === today).length,
+      todosAddedToday: todos.filter((t) => parisDay(t.createdAt) === today).length,
+      todosOpen: todos.filter((t) => before(t.createdAt) && (!t.doneAt || parisDay(t.doneAt) === today)).length,
+      journalToday: journal > 0,
+      hasRevisions: ready > 0,
+      focusTarget: learner.focusMinutes ?? timerDefaults(learner.level).focus,
+    },
+    `${learner.id}:${today}`,
+  );
   return { ...m, chestOpened: learner.chestDay === today, chestCoins: CHEST_COINS };
 }
 
@@ -933,7 +958,7 @@ cervelleRouter.post("/learners/:learnerId/chest", async (req, res) => {
   if (!learner) return;
   const state = await missionState(learner);
   if (state.chestOpened) return res.status(409).json({ error: "Coffre déjà ouvert aujourd'hui. Reviens demain !" });
-  if (state.done < state.total) return res.status(400).json({ error: "Termine les 3 missions du jour pour ouvrir le coffre." });
+  if (state.done < state.total) return res.status(400).json({ error: "Termine les missions du jour pour ouvrir le coffre." });
   const today = parisDay();
   // Conditional update: two taps at once can't open it twice.
   const opened = await prisma.learner.updateMany({
@@ -1094,3 +1119,6 @@ cervelleRouter.delete("/learners/:learnerId/exam-reviews/:examId", async (req, r
   await removeObjects(exam.photoKeys);
   res.status(204).end();
 });
+
+// Agenda, tâches, habitudes, journal, minuteur, statistiques et amis.
+mountOrganize(cervelleRouter, { loadLearner, parentOnly, serializeLearner, missionState, underDailyLimit, recordUsage, aiConfigured, decodeFiles });

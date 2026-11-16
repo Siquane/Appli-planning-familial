@@ -5,6 +5,7 @@ import { env } from "../../src/env";
 import { prisma } from "../../src/db";
 import * as ai from "../../src/services/cervelleAi";
 import { authHeader, signup } from "../helpers";
+import { parisDay } from "../../src/lib/cervelle/days";
 
 // A tiny valid JPEG header: the route checks the magic bytes, Claude is mocked.
 const JPEG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(200, 1)]).toString("base64");
@@ -233,12 +234,22 @@ describe("Cervelle — quiz, mastery and game", () => {
 
     const quiz = await request(app).post(`${url}/sessions`).set(auth).send({ revisionId: revision.id, mode: "interro", seconds: 300, correct: 9, total: 10 });
     expect(quiz.body.session).toMatchObject({ percent: 90, score20: 18, coins: 15 });
-    expect(quiz.body.missions.done).toBe(2);
+    // Three missions: one on the revisions, the timer, and one more.
+    const ids = quiz.body.missions.list.map((m: { id: string }) => m.id);
+    expect(ids).toHaveLength(3);
+    expect(ids[1]).toBe("minuteur");
+    expect(["fiche", "quiz", "questions"]).toContain(ids[0]);
+    expect(["planifier", "journal"]).toContain(ids[2]);
 
     // Missions not finished: the chest stays closed.
     expect((await request(app).post(`${url}/chest`).set(auth)).status).toBe(400);
     const questions = await prisma.question.findMany({ where: { revisionId: revision.id }, take: 1 });
     await prisma.attempt.createMany({ data: Array.from({ length: 15 }, () => ({ learnerId, questionId: questions[0].id, correct: true, mode: "qcm" })) });
+    const focus = await request(app).post(`${url}/focus`).set(auth).send({ seconds: 25 * 60, label: "Exo 3 physique" });
+    expect(focus.body).toMatchObject({ coins: 5, xp: 50, counted: true });
+    await request(app).post(`${url}/todos`).set(auth).send({ title: "Ficher le chapitre 4" });
+    const journal = await request(app).put(`${url}/journal/${parisDay()}`).set(auth).send({ mood: 4 });
+    expect(journal.body.missions.done).toBe(3);
     const chest = await request(app).post(`${url}/chest`).set(auth);
     expect(chest.status).toBe(200);
     expect(chest.body.coins).toBe(20);
@@ -248,7 +259,7 @@ describe("Cervelle — quiz, mastery and game", () => {
     expect(detail.body.revision.steps).toMatchObject({ sheets: true, quizBest: null, examBest: 90 });
 
     const overview = await request(app).get(`${url}/overview`).set(auth);
-    expect(overview.body.time).toMatchObject({ last30Seconds: 420, totalSeconds: 420, changePercent: 100 });
+    expect(overview.body.time).toMatchObject({ last30Seconds: 1920, totalSeconds: 1920, changePercent: 100 });
     expect(overview.body.upcoming.map((r: { id: string }) => r.id)).toEqual([revision.id]);
   });
 
