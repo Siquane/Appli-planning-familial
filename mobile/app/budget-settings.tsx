@@ -27,15 +27,15 @@ const toast = (m: string) => useToastStore.getState().show(m);
 const errorMessage = (e: unknown) => (errorText(e, "enregistrer le réglage"));
 
 const inputStyle = {
-  color: color.text,
+  get color() { return color.text; },
   fontFamily: font.body,
   fontSize: scaled(15),
   paddingVertical: space.sm,
   paddingHorizontal: space.md,
   borderRadius: radius.md,
-  backgroundColor: color.bg,
+  get backgroundColor() { return color.bg; },
   borderWidth: 1,
-  borderColor: color.divider,
+  get borderColor() { return color.divider; },
 } as const;
 
 export default function BudgetSettingsScreen() {

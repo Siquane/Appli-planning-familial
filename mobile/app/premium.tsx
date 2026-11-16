@@ -157,7 +157,7 @@ export default function PremiumScreen() {
                 </Text>
               ) : null}
               {trial?.available && !active ? (
-                <Button label={`Essayer ${trial.days / 7} semaines gratuitement`} icon={<SparkleIcon size={18} color={color.bg} />} variant="primary" block loading={startTrial.isPending} onPress={onTrial} needsNetwork />
+                <Button label={`Essayer ${trial.days / 7} semaines gratuitement`} icon={<SparkleIcon size={18} color={color.onGradient} />} variant="primary" block loading={startTrial.isPending} onPress={onTrial} needsNetwork />
               ) : null}
               {active && until ? (
                 <Text size={13} tone="accent">

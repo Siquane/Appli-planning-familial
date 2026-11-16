@@ -20,6 +20,7 @@ import { WEEKDAYS_SHORT } from "../../src/lib/weekdays";
 import { color, space } from "../../src/theme/tokens";
 import type { Category, Weekday } from "../../src/api/types";
 import { errorText } from "../../src/lib/errors";
+import { newSeriesId } from "../../src/lib/taskSeries";
 
 const CATEGORIES: Category[] = ["École", "Travail", "Maison", "Santé", "Loisirs"];
 
@@ -77,6 +78,7 @@ export default function RecurringTasksOnboardingScreen() {
     setSaving(true);
     try {
       for (const draft of drafts) {
+        const seriesId = draft.weekdays.length > 1 ? newSeriesId() : null;
         for (const weekday of draft.weekdays) {
           await createTask.mutateAsync({
             title: draft.title,
@@ -91,6 +93,7 @@ export default function RecurringTasksOnboardingScreen() {
             flexible: false,
             memberIds: [],
             notes: "",
+            seriesId,
           });
         }
       }

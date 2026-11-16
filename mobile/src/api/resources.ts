@@ -1,5 +1,10 @@
 import { api } from "./client";
 import type {
+  DebitCalendar,
+  Drift,
+  DriftAlert,
+  Reward,
+  StarsState,
   AutoSlotResult,
   CalendarStatus,
   CategoryBudget,
@@ -133,9 +138,11 @@ export const documentsApi = {
 
 export const expensesApi = {
   month: (month: string) => api.get<MonthlyBudget>(`/expenses?month=${month}`),
-  create: (data: ExpenseInput) => api.post<{ expense: Expense; alert: CapAlert | null }>("/expenses", data),
-  update: (id: string, data: Partial<ExpenseInput>) => api.patch<{ expense: Expense; alert: CapAlert | null }>(`/expenses/${id}`, data),
+  create: (data: ExpenseInput) => api.post<{ expense: Expense; alert: CapAlert | null; drift?: DriftAlert | null }>("/expenses", data),
+  update: (id: string, data: Partial<ExpenseInput>) => api.patch<{ expense: Expense; alert: CapAlert | null; drift?: DriftAlert | null }>(`/expenses/${id}`, data),
   forecast: () => api.get<Forecast>("/expenses/forecast"),
+  drifts: (month: string) => api.get<{ month: string; drifts: Drift[] }>(`/expenses/drifts?month=${month}`),
+  debits: (month: string) => api.get<DebitCalendar>(`/expenses/debits?month=${month}`),
   report: (months = 6) => api.get<{ months: ReportMonth[] }>(`/expenses/report?months=${months}`),
   remove: (id: string) => api.delete<void>(`/expenses/${id}`),
 };
@@ -170,6 +177,19 @@ export const notificationsApi = {
   list: () => api.get<{ notifications: Notification[] }>("/notifications"),
   markRead: (id: string) => api.post<void>(`/notifications/${id}/read`),
   markAllRead: () => api.post<void>("/notifications/read-all"),
+  savePushToken: (token: string) => api.put<void>("/notifications/push-token", { token }),
+  familyAlerts: () => api.get<{ enabled: boolean }>("/notifications/family-alerts"),
+  setFamilyAlerts: (enabled: boolean) => api.put<{ enabled: boolean }>("/notifications/family-alerts", { enabled }),
+};
+
+export const starsApi = {
+  get: (week: string) => api.get<StarsState>(`/stars?week=${week}`),
+  complete: (data: { taskId: string; memberId: string; week: string }) => api.post<void>("/stars/complete", data),
+  uncomplete: (data: { taskId: string; memberId: string; week: string }) => api.delete<void>("/stars/complete", data),
+  addReward: (data: { title: string; cost: number }) => api.post<{ reward: Reward }>("/stars/rewards", data),
+  removeReward: (id: string) => api.delete<void>(`/stars/rewards/${id}`),
+  redeem: (id: string, memberId: string) => api.post<{ balance: number }>(`/stars/rewards/${id}/redeem`, { memberId }),
+  removeHistory: (id: string) => api.delete<void>(`/stars/history/${id}`),
 };
 
 export const shareApi = {

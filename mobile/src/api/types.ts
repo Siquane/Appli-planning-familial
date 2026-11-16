@@ -104,6 +104,10 @@ export interface Task {
   notes: string;
   memberIds: string[];
   externalProvider: string | null;
+  /** Tâches créées ensemble sur plusieurs jours : même seriesId. */
+  seriesId: string | null;
+  /** Étoiles gagnées par un enfant assigné quand la tâche est faite (1 à 5). */
+  stars: number;
 }
 
 export type TaskInput = Partial<Omit<Task, "id" | "date" | "externalProvider">> & {
@@ -449,4 +453,52 @@ export interface StatementImportRow {
   category: string;
   recurring: boolean;
   learn: boolean;
+}
+
+export interface StarChild {
+  memberId: string;
+  balance: number;
+  weekStars: number;
+}
+
+export interface Reward {
+  id: string;
+  title: string;
+  cost: number;
+}
+
+export interface StarsState {
+  children: StarChild[];
+  /** Tâches faites cette semaine. */
+  completions: { taskId: string; memberId: string; stars: number }[];
+  rewards: Reward[];
+  history: { id: string; kind: "earned" | "spent"; memberId: string; title: string; stars: number; createdAt: string }[];
+}
+
+/** Budget+ : catégorie nettement plus chère que la moyenne des 3 mois précédents. */
+export interface Drift {
+  category: string;
+  totalCents: number;
+  averageCents: number;
+  increaseCents: number;
+  increasePct: number;
+}
+
+export interface DriftAlert extends Drift {
+  categoryName: string;
+}
+
+export interface Debit {
+  day: number;
+  label: string;
+  amountCents: number;
+  category: string;
+  passed: boolean;
+}
+
+export interface DebitCalendar {
+  month: string;
+  debits: Debit[];
+  passedCents: number;
+  upcomingCents: number;
 }

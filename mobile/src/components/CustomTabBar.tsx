@@ -14,10 +14,10 @@ import { GradientFill } from "./Brand";
 // Each has its logo colour (cyan → violet); the active one lights up with a
 // neon halo and a small glowing ring underneath.
 const TABS: Record<string, { label: string; tint: string; Icon: (props: { size: number; color: string }) => React.JSX.Element }> = {
-  home: { label: "Planning", tint: color.pillar1, Icon: CalendarIcon },
-  repas: { label: "Repas", tint: color.pillar2, Icon: MealIcon },
-  budget: { label: "Budget", tint: color.pillar3, Icon: WalletIcon },
-  famille: { label: "Famille", tint: color.pillar4, Icon: ProfileIcon },
+  home: { label: "Planning", get tint() { return color.pillar1; }, Icon: CalendarIcon },
+  repas: { label: "Repas", get tint() { return color.pillar2; }, Icon: MealIcon },
+  budget: { label: "Budget", get tint() { return color.pillar3; }, Icon: WalletIcon },
+  famille: { label: "Famille", get tint() { return color.pillar4; }, Icon: ProfileIcon },
 };
 
 type RouteItem = BottomTabBarProps["state"]["routes"][number];
@@ -99,7 +99,7 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
             padding: 2,
             marginHorizontal: space.sm,
             marginTop: -24,
-            boxShadow: glow("rgba(76,196,255,0.5)", 18),
+            boxShadow: glow(color.glowStrong, 18),
           }}
         >
           <GradientFill radius={26} />

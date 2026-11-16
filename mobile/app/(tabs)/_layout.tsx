@@ -10,6 +10,12 @@ import { takeWidgetRoute } from "../../src/widgets/links";
 import { syncUser } from "../../src/lib/account";
 import { startOutboxSync } from "../../src/lib/outbox";
 import { FamilyNoticeModal } from "../../src/components/FamilyNoticeModal";
+import * as Notifications from "expo-notifications";
+import { alertRoute, registerPushToken } from "../../src/lib/pushAlerts";
+import { queryClient } from "../../src/lib/queryClient";
+
+// Une alerte déjà ouverte ne doit pas rouvrir son écran après une reconnexion.
+let handledAlert: string | null = null;
 
 export default function TabsLayout() {
   const { data: tasks } = useTasks();
@@ -23,10 +29,32 @@ export default function TabsLayout() {
     if (route && route !== "/home") router.navigate(route as never);
     // Keep the name/initials and the family in step with the server (the owner can remove an account).
     syncUser();
+    registerPushToken();
     const stopSync = startOutboxSync();
-    const sub = AppState.addEventListener("change", (state) => state === "active" && syncUser());
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+      syncUser();
+      registerPushToken();
+    });
+    // Appui sur une alerte de la famille : ouvrir l'écran concerné (aussi quand
+    // c'est elle qui a lancé l'appli).
+    const open = (response: Notifications.NotificationResponse | null) => {
+      const route = alertRoute(response?.notification.request.content.data);
+      const id = response?.notification.request.identifier ?? null;
+      if (!route || id === handledAlert) return;
+      handledAlert = id;
+      router.navigate(route as never);
+    };
+    open(Notifications.getLastNotificationResponse());
+    const tap = Notifications.addNotificationResponseReceivedListener(open);
+    // Alerte reçue appli ouverte : les données ont changé, on les recharge.
+    const received = Notifications.addNotificationReceivedListener((n) => {
+      if (alertRoute(n.request.content.data)) queryClient.invalidateQueries();
+    });
     return () => {
       sub.remove();
+      tap.remove();
+      received.remove();
       stopSync();
     };
   }, []);

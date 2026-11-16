@@ -15,7 +15,7 @@ const iconButton = {
   height: 36,
   borderRadius: 8,
   borderWidth: 1,
-  borderColor: color.divider,
+  get borderColor() { return color.divider; },
   alignItems: "center",
   justifyContent: "center",
 } as const;

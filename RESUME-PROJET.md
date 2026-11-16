@@ -1,7 +1,7 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 13 novembre 2026 (soir, reprise de la branche Premium).
+Dernière mise à jour : 15 novembre 2026 (tâches en série).
 
 ## ⚠️ Point de reprise (13/11/2026, soir) — à lire d'abord
 
@@ -235,3 +235,48 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Compte pas vide (membres, tâches, recettes, repas, documents, dépenses, courses, objectifs, catégories) : `409 account_not_empty` avec `counts` ; avec `erase: true` + mot de passe, le contenu est effacé (fichiers compris, `lib/familyJoin.ts`) puis le compte rejoint. Les packs et l'essai du compte ne comptent plus : ceux de la famille s'appliquent.
 - Application : section « Rejoindre une autre famille » dans Famille → Comptes de la famille, visible seulement quand on est seul dans sa famille (`joinFamily` dans `src/lib/account.ts`, `describeContent` dans `src/lib/family.ts`).
 
+## Widget « Ajouter une tâche »
+
+- 5ᵉ widget Android `AjoutTache` (2 × 1, aucun contenu à afficher : un bouton « + Ajouter une tâche » au style Passerelle). Un appui ouvre `/task/new` via `passerelle://widget/add-task` (`src/widgets/links.ts`, `views.tsx` → `AddTaskCard`). Déclaré dans `app.json` avec l'aperçu `assets/widgets/ajout.png`.
+- **Brique native nouvelle → `runtimeVersion` passe à "6"** : il faut lancer « EAS Build (Android preview) » depuis `main` et réinstaller l'APK ; les APK runtime "5" ne reçoivent plus de mises à jour OTA.
+
+## Tâches sur plusieurs jours reliées en série (15/11/2026)
+
+- Problème : une tâche = un jour dans la base ; cocher lundi + mercredi créait deux tâches sans lien, et le formulaire de modification n'acceptait qu'un jour.
+- `Task.seriesId` (migration `20261115120000_task_series`) relie les tâches créées ensemble. L'identifiant est fabriqué par l'appli (`newSeriesId`, `src/lib/taskSeries.ts`) pour marcher hors connexion. La migration regroupe les anciennes tâches **récurrentes** identiques (titre, catégorie, durée, priorité, membres ; un exemplaire par jour).
+- Modifier une tâche agit sur toute la série : jours cochables (au moins un), heure commune ou par jour, cocher = ajouter, décocher = retirer (`planSeriesEdit` réutilise d'abord une tâche décochée pour un nouveau jour, pour garder son rappel). Supprimer depuis la fiche propose « ce jour seulement » ou « tous les jours ». Dupliquer reprend tous les jours.
+- Tests serveur en local : la session crée une base neuve + `prisma migrate deploy` puis lance vitest avec une config sans `globalSetup` (non versionnée), ce qui évite le `db push --force-reset` refusé par Prisma 7.
+- PR #36 fusionnée le 15/11.
+- Les 4 fonctionnalités demandées le 15/11 sont faites (PR #36 à #40).
+
+## Alertes push « quelqu'un a modifié » (15/11/2026)
+
+- Quand un compte modifie le planning, le menu, les courses ou les recettes, les **autres** comptes de la famille reçoivent une notification (« Léa a modifié le planning et la liste de courses. »). Middleware `familyActivity` posé devant `/tasks`, `/meals`, `/shopping`, `/recipes` dans `server/src/index.ts` (sauf `/tasks/auto-slot`, `/meals/generate`, `/recipes/import`, qui n'enregistrent rien) ; regroupement par personne pendant 90 s (`FAMILY_ALERT_DELAY_MS`), en mémoire (`lib/familyAlerts.ts`), envoi via l'API push d'Expo, jetons périmés effacés.
+- Base : table `PushToken` (par compte), `User.familyAlerts` (interrupteur, vrai par défaut) ; migration `20261115130000_family_alerts`. Routes `PUT /notifications/push-token`, `GET/PUT /notifications/family-alerts` ; `POST /auth/logout` accepte `pushToken` pour l'oublier.
+- Appli : `src/lib/pushAlerts.ts` enregistre le jeton au démarrage et au retour dans l'appli (canal Android `family`) ; un appui ouvre Planning ou Repas ; alerte reçue appli ouverte = données rechargées. Interrupteur dans Notifications, visible seulement s'il y a plusieurs comptes. Page Confidentialité mise à jour (**politique publiée à republier**).
+- **Firebase** : projet `passerelle-61282` créé le 15/11 ; `mobile/google-services.json` ajouté (pas un secret) avec `android.googleServicesFile` dans `app.json` → **`runtimeVersion` "7"** : après fusion, lancer « EAS Build (Android preview) » depuis main et installer le nouvel APK (les APK runtime "6" ne reçoivent plus de mises à jour). **À faire par l'utilisatrice** : clé FCM V1 (compte de service Firebase) déposée sur expo.dev → Credentials → Android (guide `docs/notifications-push.md`, étape 2), sinon Expo ne peut pas envoyer.
+- PR #37 fusionnée le 15/11.
+
+## Étoiles et récompenses des enfants (15/11/2026)
+
+- Enfant = membre de **moins de 15 ans** (âge saisi, sinon date de naissance ; `lib/stars.ts` côté serveur et appli). Chaque tâche rapporte **1 à 5 étoiles** (`Task.stars`, réglable dans le formulaire quand un enfant est assigné).
+- Sur la fiche d'une tâche, un adulte (tout compte connecté) coche « C'est fait » pour chaque enfant assigné : une fois par semaine (`StarCompletion.week` = lundi local « AAAA-MM-JJ », envoyé par l'appli), annulable. Titre et étoiles recopiés : supprimer la tâche ne retire pas les étoiles.
+- Famille → « Étoiles et récompenses » (`app/stars.tsx`) : solde et étoiles de la semaine par enfant, récompenses (titre + prix, 30 max) à échanger si le solde suffit (`409 not_enough_stars` sinon), historique (appui long pour effacer une erreur).
+- Serveur : `routes/stars.ts` (`GET /stars?week=`, `POST/DELETE /stars/complete`, `/stars/rewards`, `/stars/rewards/:id/redeem`, `DELETE /stars/history/:id`), modèles `StarCompletion`, `Reward`, `RewardRedemption` (migration `20261115140000_stars`), repris par la passation de famille et effacés par « rejoindre une famille ». Gratuit, réseau nécessaire.
+- PR #38 fusionnée le 15/11 (étoiles + Firebase, runtime "7"). Clé FCM V1 déposée sur expo.dev par l'utilisatrice. **APK runtime "7" à compiler et installer** (Firebase).
+
+## Dépenses en hausse et calendrier des prélèvements (Budget+, 15/11/2026)
+
+- **Dérive** = une catégorie dont le mois dépasse la moyenne des 3 mois précédents d'au moins **25 % ET 20 €**, et qui a servi au moins 2 de ces 3 mois ; l'épargne est ignorée (`server/src/lib/drifts.ts`, `findDrifts`).
+- Carte « Dépenses en hausse » dans l'onglet Budget (`GET /expenses/drifts?month=`). Après l'enregistrement d'une dépense (et l'import d'un relevé, pour le mois en cours), `checkDriftAlert` signale la dérive **une fois par catégorie et par mois** (table `DriftAlert`, migration `20261115150000_drift_alerts`) : message à celui qui enregistre (réponse `drift`), ligne dans Notifications, **push** aux autres comptes qui voient ce budget (propriétaire + comptes « complet » ; un compte « planning » a son propre budget). Un appui ouvre `/budget`.
+- **Calendrier des prélèvements** (`app/debits.tsx`, `GET /expenses/debits?month=`) : dépenses récurrentes jour par jour, totaux « déjà passé » / « à venir » ; mois passés et en cours = copies réelles, mois à venir = récurrentes prévues.
+- PR #39 fusionnée le 15/11.
+
+## Thème clair (15/11/2026)
+
+- **Sombre par défaut** ; Profil → **Apparence** : « Sombre » / « Clair ». **Ne suit pas le réglage du téléphone** (choix de l'utilisatrice, après une première version qui le suivait). Préférence propre au téléphone (`src/state/themeStore.ts`, AsyncStorage `passerelle-theme`).
+- `app.json` inchangé (`userInterfaceStyle` "dark") → **pas de nouveau runtime** : arrive par mise à jour au démarrage.
+- Palettes dans `src/theme/tokens.ts` : `color` est **modifié sur place** par `applyTheme` ; la racine (`app/_layout.tsx`) remonte tout l'arbre (clé = thème), ce qui ramène au Planning (le profil y retourne tout seul). Règle : **ne jamais figer une couleur au chargement d'un module** (objet en haut de fichier, `StyleSheet.create`) : la lire au rendu, ou utiliser un getter (`get tint() { return color.pillar1; }`).
+- Clair « blanc et néon adouci » : fond `#f4f8ff`, cartes blanches, texte `#0b1530`, échelles `accent*`/`neutral*` inversées (neutral100 = le plus contrasté dans les deux thèmes), dégradé un peu plus foncé, texte des boutons principaux `color.onGradient` (bleu nuit). Contrastes vérifiés (texte 17:1, secondaire 6,5:1, discret 4,8:1, accent 4,8:1).
+- Les **widgets restent sombres** (`darkColor`). Écran de lancement, icône et sélecteurs natifs (date, heure) restent sombres.
+- Pas vu sur un vrai téléphone : à vérifier.

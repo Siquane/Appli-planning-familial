@@ -181,6 +181,12 @@ export const ProfileIcon = makeIcon(
 );
 
 // Gift
+// Étoile à 5 branches (étoiles des enfants).
+export const StarIcon = makeIcon(
+  [{ kind: "path", d: "M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z", tint: true }],
+  16,
+);
+
 export const GiftIcon = makeIcon(
   [
   { kind: "path", d: "M5.5 12.5h13v6.5a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19z", tint: true },

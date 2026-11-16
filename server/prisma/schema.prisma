@@ -32,6 +32,10 @@ model User {
   familyInvite         FamilyInvite?
   // One-time message (JSON) shown at the next opening after the family changed hands; see lib/familyHandover.ts.
   familyNotice         String?
+  // Notification sur le téléphone quand un autre compte de la famille modifie
+  // le planning, les repas, les courses ou les recettes (lib/familyAlerts.ts).
+  familyAlerts         Boolean       @default(true)
+  pushTokens           PushToken[]
   mealsUntil           DateTime?
   // Explicit consent to store members' diets, allergies and foods to limit
   // (health data / may reveal religion, RGPD art. 9). Null = not given.
@@ -58,6 +62,10 @@ model User {
   savingsGoals        SavingsGoal[]
   importRules         ImportRule[]
   capAlerts           CapAlert[]
+  driftAlerts         DriftAlert[]
+  starCompletions     StarCompletion[]
+  rewards             Reward[]
+  rewardRedemptions   RewardRedemption[]
   learners            Learner[]
   aiUsages            AiUsage[]
 }
@@ -113,6 +121,8 @@ model FamilyMember {
   documents         Document[]
   expenses          Expense[]
   recurringExpenses RecurringExpense[]
+  starCompletions   StarCompletion[]
+  rewardRedemptions RewardRedemption[]
   learners          Learner[]
 }
 
@@ -134,12 +144,20 @@ model Task {
   flexible         Boolean  @default(false)
   synced           Boolean  @default(false)
   notes            String   @default("")
+  // Tâches créées ensemble sur plusieurs jours (une ligne par jour) : même
+  // seriesId, pour les modifier ou les supprimer ensemble. null = tâche seule.
+  seriesId         String?
+  // Étoiles gagnées par un enfant (moins de 15 ans) quand la tâche est faite.
+  stars            Int      @default(1)
   externalEventId  String?
   externalProvider String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  members TaskMember[]
+  members         TaskMember[]
+  starCompletions StarCompletion[]
+
+  @@index([userId, seriesId])
 }
 
 model TaskMember {
@@ -442,6 +460,78 @@ model CapAlert {
   createdAt DateTime @default(now())
 
   @@unique([userId, category, month, level])
+}
+
+// Jeton Expo d'un téléphone connecté (un compte peut en avoir plusieurs).
+model PushToken {
+  token     String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// Étoiles : une tâche faite par un enfant, une fois par semaine (week = lundi,
+// « AAAA-MM-JJ », date locale du téléphone). Le titre et les étoiles sont
+// recopiés : supprimer la tâche ne retire pas les étoiles gagnées.
+model StarCompletion {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId    String?
+  task      Task?        @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  memberId  String
+  member    FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  week      String
+  title     String
+  stars     Int
+  createdAt DateTime     @default(now())
+
+  @@unique([taskId, memberId, week])
+  @@index([userId, memberId])
+}
+
+// Récompense définie par un adulte (ex. « Sortie cinéma », 20 étoiles).
+model Reward {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  cost        Int
+  createdAt   DateTime           @default(now())
+  redemptions RewardRedemption[]
+
+  @@index([userId])
+}
+
+// Récompense échangée : les étoiles sont dépensées (titre et prix recopiés).
+model RewardRedemption {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  rewardId  String?
+  reward    Reward?      @relation(fields: [rewardId], references: [id], onDelete: SetNull)
+  title     String
+  cost      Int
+  createdAt DateTime     @default(now())
+
+  @@index([userId, memberId])
+}
+
+// Dérive signalée (Budget+) : une fois par catégorie et par mois (lib/drifts.ts).
+model DriftAlert {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category  String
+  month     String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, category, month])
 }
 
 // ─── Cervelle (révisions) ────────────────────────────────────────────────

@@ -16,9 +16,9 @@ import { color, space } from "../../src/theme/tokens";
 import type { Tint } from "../../src/api/types";
 
 const TINTS: { tint: Tint; bg: string; fg: string }[] = [
-  { tint: "accent", bg: color.accent800, fg: color.accent100 },
-  { tint: "accent2", bg: color.accent800, fg: color.accent100 },
-  { tint: "neutral", bg: color.neutral700, fg: color.neutral100 },
+  { tint: "accent", get bg() { return color.accent800; }, get fg() { return color.accent100; } },
+  { tint: "accent2", get bg() { return color.accent800; }, get fg() { return color.accent100; } },
+  { tint: "neutral", get bg() { return color.neutral700; }, get fg() { return color.neutral100; } },
 ];
 
 export default function MembersOnboardingScreen() {

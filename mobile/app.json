@@ -21,7 +21,8 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "app.passerelle.mobile"
+      "package": "app.passerelle.mobile",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -104,6 +105,18 @@
               "resizeMode": "horizontal|vertical",
               "updatePeriodMillis": 1800000,
               "previewImage": "./assets/widgets/courses.png"
+            },
+            {
+              "name": "AjoutTache",
+              "label": "Passerelle · Ajouter une tâche",
+              "description": "Un bouton pour ajouter une tâche en un geste",
+              "minWidth": "110dp",
+              "minHeight": "40dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 1,
+              "resizeMode": "horizontal",
+              "updatePeriodMillis": 0,
+              "previewImage": "./assets/widgets/ajout.png"
             }
           ]
         }
@@ -112,7 +125,7 @@
     "experiments": {
       "typedRoutes": true
     },
-    "runtimeVersion": "5",
+    "runtimeVersion": "7",
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0

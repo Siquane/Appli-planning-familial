@@ -6,6 +6,8 @@ describe("widget links", () => {
     expect(routeForWidgetUrl(widgetUri("menu"), 1)).toBe("/repas?tab=menu&w=1");
     expect(routeForWidgetUrl(widgetUri("courses"), 1)).toBe("/repas?tab=courses&w=1");
     expect(routeForWidgetUrl("/widget/courses", 2)).toBe("/repas?tab=courses&w=2");
+    // The « Ajouter une tâche » button opens the new-task form.
+    expect(routeForWidgetUrl(widgetUri("add-task"), 1)).toBe("/task/new");
   });
 
   it("leave other links alone", () => {

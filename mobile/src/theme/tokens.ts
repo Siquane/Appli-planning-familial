@@ -2,7 +2,7 @@
 // the logo's background), slate-blue surfaces, blue-white text, and the logo's
 // neon ramp cyan → blue → violet. The 4 rings of the logo give the 4 tabs
 // their colours. Spacing, radii and shadows still follow the Nocturne system.
-export const color = {
+const dark = {
   bg: "#070912",
   surface: "#0f1426",
   text: "#e8f4ff",
@@ -39,11 +39,81 @@ export const color = {
   pillar2: "#45a0ff",
   pillar3: "#737cff",
   pillar4: "#ad5cff",
-} as const;
+
+  // Halos néon (boutons principaux, onglet actif) et voile derrière les fenêtres.
+  glowSoft: "rgba(76,196,255,0.35)",
+  glowStrong: "rgba(76,196,255,0.5)",
+  pressed: "rgba(232,244,255,0.12)",
+  scrim: "rgba(7,9,18,0.85)",
+  grid: "rgba(34,229,255,0.05)",
+  // Texte et icônes posés sur le dégradé (boutons principaux).
+  onGradient: "#070912",
+};
+
+export type Palette = Record<keyof typeof dark, string>;
+
+// Thème clair « blanc et néon adouci » : fond blanc bleuté, texte bleu nuit,
+// le même dégradé cyan → violet un peu plus foncé pour rester lisible. Les
+// échelles accent* et neutral* sont inversées : neutral100 reste « le plus
+// contrasté », neutral900 « le plus proche du fond », comme en sombre.
+const light: Palette = {
+  bg: "#f4f8ff",
+  surface: "#ffffff",
+  text: "#0b1530",
+  divider: "rgba(11,21,48,0.12)",
+
+  accent: "#07788f",
+  accent100: "#05323b",
+  accent200: "#08505e",
+  accent300: "#0a7085",
+  accent400: "#0b86a1",
+  accent500: "#07788f",
+  accent600: "#3cc4dc",
+  accent700: "#86dfee",
+  accent800: "#cdf3fa",
+  accent900: "#e8fafd",
+
+  neutral100: "#121a33",
+  neutral200: "#232c47",
+  neutral300: "#3a4462",
+  neutral400: "#4f5978",
+  neutral500: "#636d8d",
+  neutral600: "#8e97b3",
+  neutral700: "#c2c9dc",
+  neutral800: "#dfe4f0",
+  neutral900: "#eef1f8",
+
+  danger: "#d22f45",
+  success: "#13895a",
+
+  pillar1: "#07788f",
+  pillar2: "#2f7fe0",
+  pillar3: "#5560e8",
+  pillar4: "#8a3fe0",
+
+  glowSoft: "rgba(63,143,240,0.28)",
+  glowStrong: "rgba(63,143,240,0.35)",
+  pressed: "rgba(11,21,48,0.06)",
+  scrim: "rgba(11,21,48,0.45)",
+  grid: "rgba(8,150,179,0.06)",
+  onGradient: "#0b1530",
+};
+
+/** Palette en cours. Modifiée sur place par applyTheme : la lire au moment du rendu. */
+export const color: Palette = { ...dark };
+
+/** Couleurs fixes du thème sombre (widgets de l'écran d'accueil, qui restent sombres). */
+export const darkColor: Readonly<Palette> = dark;
+
+export type Scheme = "dark" | "light";
+let currentScheme: Scheme = "dark";
+export const activeScheme = () => currentScheme;
 
 // The logo's neon gradient, left to right (brand colours, independent of the
 // tab tints). Used for primary buttons, the + and the line under each tab header.
-export const gradient = ["#22e5ff", "#3fb8ff", "#9b5cff"] as const;
+const darkGradient = ["#22e5ff", "#3fb8ff", "#9b5cff"];
+const lightGradient = ["#12b8d6", "#3f8ff0", "#8a4cf0"];
+export const gradient: string[] = [...darkGradient];
 
 // A soft neon halo, like the glow around the logo's rings (RN boxShadow).
 export function glow(c: string, blur = 12) {
@@ -60,10 +130,28 @@ export const gutter = 22;
 // (a hairline ring + ambient darkness, no flood) into elevation/shadow props
 // applied via the Card component per platform.
 export const shadow = {
-  sm: { ring: color.neutral800 },
-  md: { ring: color.neutral700, opacity: 0.55, radius: 18, y: 6 },
-  lg: { ring: color.neutral500, opacity: 0.65, radius: 40, y: 16 },
-} as const;
+  sm: {
+    get ring() {
+      return color.neutral800;
+    },
+  },
+  md: {
+    get ring() {
+      return color.neutral700;
+    },
+    opacity: 0.55,
+    radius: 18,
+    y: 6,
+  },
+  lg: {
+    get ring() {
+      return color.neutral500;
+    },
+    opacity: 0.65,
+    radius: 40,
+    y: 16,
+  },
+};
 
 import { Platform } from "react-native";
 
@@ -79,10 +167,29 @@ export const font = {
   mono: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" }),
 } as const;
 
+const tintOf = (bg: keyof Palette, fg: keyof Palette) => ({
+  get bg() {
+    return color[bg];
+  },
+  get fg() {
+    return color[fg];
+  },
+});
+
 export const tint = {
-  accent: { bg: color.accent800, fg: color.accent100 },
-  neutral: { bg: color.neutral700, fg: color.neutral100 },
-  accent2: { bg: color.accent800, fg: color.accent100 },
-} as const;
+  accent: tintOf("accent800", "accent100"),
+  neutral: tintOf("neutral700", "neutral100"),
+  accent2: tintOf("accent800", "accent100"),
+};
 
 export type TintName = keyof typeof tint;
+
+/**
+ * Passe tout l'affichage en clair ou en sombre. Les écrans lisent `color` au
+ * rendu : la racine les remonte (clé = thème) juste après l'appel.
+ */
+export function applyTheme(scheme: Scheme) {
+  currentScheme = scheme;
+  Object.assign(color, scheme === "light" ? light : dark);
+  gradient.splice(0, gradient.length, ...(scheme === "light" ? lightGradient : darkGradient));
+}

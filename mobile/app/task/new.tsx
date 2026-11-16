@@ -7,14 +7,17 @@ import { Text } from "../../src/components/Text";
 import { TextField } from "../../src/components/TextField";
 import { ScheduleTimes } from "../../src/components/ScheduleTimes";
 import { allTimesValid, resolveTimes, type DayTimes } from "../../src/lib/dayTimes";
+import { newSeriesId, planSeriesEdit, seriesOf, seriesSchedule } from "../../src/lib/taskSeries";
+import { isChild, starsLabel } from "../../src/lib/stars";
+import { StarIcon } from "../../src/components/icons";
 import { Chip } from "../../src/components/Chip";
 import { ReminderToggle } from "../../src/components/ReminderToggle";
 import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
-import { useAutoSlotTask, useCreateTask, useMembers, useTasks, useUpdateTask } from "../../src/hooks/useApi";
+import { useAutoSlotTask, useCreateTask, useDeleteTask, useMembers, useTasks, useUpdateTask } from "../../src/hooks/useApi";
 import { useToastStore } from "../../src/state/toastStore";
 import { confirmReminderPermission } from "../../src/lib/notifications";
-import { space, gutter } from "../../src/theme/tokens";
+import { color, space, gutter } from "../../src/theme/tokens";
 import { WEEKDAYS_SHORT } from "../../src/lib/weekdays";
 import { parseDuration, splitDuration } from "../../src/lib/duration";
 import type { Category, Priority, Task, Weekday } from "../../src/api/types";
@@ -35,9 +38,12 @@ export default function TaskFormScreen() {
   const { data: members = [] } = useMembers();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
   const autoSlotTask = useAutoSlotTask();
 
   const existing: Task | undefined = useMemo(() => tasks.find((t) => t.id === edit), [tasks, edit]);
+  // En modification, on travaille sur toute la série (tous les jours créés ensemble).
+  const siblings: Task[] = useMemo(() => (existing ? seriesOf(tasks, existing) : []), [tasks, existing]);
 
   const [title, setTitle] = useState(prefillTitle ?? "");
   const [category, setCategory] = useState<Category>((prefillCategory as Category) ?? "Maison");
@@ -73,13 +79,21 @@ export default function TaskFormScreen() {
   const [flexible, setFlexible] = useState(false);
   const [memberIds, setMemberIds] = useState<string[]>(prefillMember ? [prefillMember] : []);
   const [notes, setNotes] = useState("");
+  const [stars, setStars] = useState(1);
 
+  // Rempli une seule fois : un rafraîchissement de la liste (toutes les
+  // minutes avec la famille partagée) ne doit pas écraser la saisie.
+  const loaded = useRef(false);
   useEffect(() => {
-    if (!existing) return;
+    if (!existing || loaded.current) return;
+    loaded.current = true;
+    const schedule = seriesSchedule(seriesOf(tasks, existing));
     setTitle(existing.title);
     setCategory(existing.category);
-    setWeekdays([existing.weekday]);
+    setWeekdays(schedule.weekdays);
     setTime(existing.time);
+    setDayTimes(schedule.dayTimes);
+    setPerDayTimes(schedule.perDay);
     applyDuration(existing.duration);
     setPriority(existing.priority);
     setDeadlineWeekday(existing.deadlineWeekday);
@@ -88,6 +102,7 @@ export default function TaskFormScreen() {
     setFlexible(existing.flexible);
     setMemberIds(existing.memberIds);
     setNotes(existing.notes);
+    setStars(existing.stars ?? 1);
   }, [existing]);
 
   // « Dupliquer » : on recopie la tâche source dans un formulaire de
@@ -98,10 +113,13 @@ export default function TaskFormScreen() {
   useEffect(() => {
     if (!source || prefilled.current) return;
     prefilled.current = true;
+    const schedule = seriesSchedule(seriesOf(tasks, source));
     setTitle(source.title);
     setCategory(source.category);
-    setWeekdays([source.weekday]);
+    setWeekdays(schedule.weekdays);
     setTime(source.time);
+    setDayTimes(schedule.dayTimes);
+    setPerDayTimes(schedule.perDay);
     applyDuration(source.duration);
     setPriority(source.priority);
     setDeadlineWeekday(source.deadlineWeekday);
@@ -110,20 +128,20 @@ export default function TaskFormScreen() {
     setFlexible(source.flexible);
     setMemberIds(source.memberIds);
     setNotes(source.notes);
+    setStars(source.stars ?? 1);
   }, [source]);
 
   function toggleMember(id: string) {
     setMemberIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
-  // En édition une tâche ne peut avoir qu'un seul jour ; en création on peut
-  // en cocher plusieurs (ex. lundi + mercredi) — une tâche est créée par jour.
+  // Plusieurs jours possibles (ex. lundi + mercredi) : une tâche par jour,
+  // reliées en série. En modification, il faut garder au moins un jour.
   function toggleWeekday(w: Weekday) {
-    if (existing) {
-      setWeekdays([w]);
-    } else {
-      setWeekdays((prev) => (prev.includes(w) ? prev.filter((x) => x !== w) : [...prev, w]));
-    }
+    setWeekdays((prev) => {
+      if (!prev.includes(w)) return [...prev, w];
+      return existing && prev.length === 1 ? prev : prev.filter((x) => x !== w);
+    });
   }
 
   // Aucun jour coché en création = on laisse Passerelle choisir le créneau
@@ -134,31 +152,50 @@ export default function TaskFormScreen() {
   const missing: string[] = [];
   if (!title.trim()) missing.push("un titre");
   // Création sur plusieurs jours : une heure par jour si l'interrupteur est activé.
-  const times = resolveTimes(weekdays, time, perDayTimes && !existing, dayTimes);
+  const times = resolveTimes(weekdays, time, perDayTimes, dayTimes);
   if (customDuration && parseDuration(customFields.hours, customFields.minutes) === null) missing.push("une durée entre 5 min et 8 h");
-  if (!autoPlacement && !allTimesValid(existing ? { 0: time } : times)) missing.push("une heure valide (HH:MM)");
+  if (!autoPlacement && !allTimesValid(times)) missing.push("une heure valide (HH:MM)");
   const isValid = missing.length === 0;
-  const saving = createTask.isPending || updateTask.isPending || autoSlotTask.isPending;
+  const [savingSeries, setSavingSeries] = useState(false);
+  const saving = savingSeries || createTask.isPending || updateTask.isPending || autoSlotTask.isPending;
 
   async function onSave() {
-    const base = { title: title.trim(), category, duration, priority, deadlineWeekday, recurring, reminder, memberIds, notes };
+    const base = { title: title.trim(), category, duration, priority, deadlineWeekday, recurring, reminder, memberIds, notes, stars };
     try {
       if (existing) {
-        await updateTask.mutateAsync({ id: existing.id, data: { ...base, time, flexible, weekday: weekdays[0] } });
-        useToastStore.getState().show("Tâche modifiée.");
+        setSavingSeries(true);
+        const plan = planSeriesEdit(siblings, weekdays, times);
+        const several = plan.updates.length + plan.creates.length > 1;
+        const seriesId = existing.seriesId ?? (several ? newSeriesId() : null);
+        for (const u of plan.updates) {
+          await updateTask.mutateAsync({ id: u.id, data: { ...base, flexible, seriesId, weekday: u.weekday, ...(u.time ? { time: u.time } : {}) } });
+        }
+        for (const c of plan.creates) {
+          await createTask.mutateAsync({ ...base, flexible, seriesId, weekday: c.weekday, time: c.time });
+        }
+        for (const id of plan.deletes) await deleteTask.mutateAsync(id);
+        useToastStore.getState().show(several ? "Tâches modifiées." : "Tâche modifiée.");
+        // Le jour ouvert a été décoché : sa fiche n'existe plus, on revient à la liste.
+        if (plan.deletes.includes(existing.id)) {
+          router.dismiss(2);
+          return;
+        }
       } else if (autoPlacement) {
         const slot = await autoSlotTask.mutateAsync({ priority, deadlineWeekday, memberIds });
         await createTask.mutateAsync({ ...base, time: slot.time, weekday: slot.weekday, flexible: true });
         useToastStore.getState().show(`Tâche créée automatiquement — ${WEEKDAYS_SHORT[slot.weekday]} à ${slot.time}.`);
       } else {
+        const seriesId = weekdays.length > 1 ? newSeriesId() : null;
         for (const weekday of weekdays) {
-          await createTask.mutateAsync({ ...base, time: times[weekday] ?? time, weekday, flexible });
+          await createTask.mutateAsync({ ...base, time: times[weekday] ?? time, weekday, flexible, seriesId });
         }
         useToastStore.getState().show(weekdays.length > 1 ? "Tâches créées." : "Tâche créée.");
       }
       router.back();
     } catch (e) {
       useToastStore.getState().show(errorText(e, "enregistrer la tâche"));
+    } finally {
+      setSavingSeries(false);
     }
   }
 
@@ -181,13 +218,18 @@ export default function TaskFormScreen() {
 
         <View style={{ gap: space.sm }}>
           <Text size={13} tone="muted">
-            Jour{!existing ? " (plusieurs possibles, ou aucun)" : ""}
+            Jour{existing ? "s (plusieurs possibles)" : " (plusieurs possibles, ou aucun)"}
           </Text>
           <View style={{ flexDirection: "row", gap: space.xs }}>
             {WEEKDAYS_SHORT.map((label, i) => (
               <Chip key={label} label={label} selected={weekdays.includes(i as Weekday)} onPress={() => toggleWeekday(i as Weekday)} size="sm" fill />
             ))}
           </View>
+          {existing && siblings.length > 1 && (
+            <Text tone="faint" size={13}>
+              Les changements s'appliquent aux {siblings.length} jours de cette tâche. Décocher un jour le retire du planning.
+            </Text>
+          )}
           {autoPlacement && (
             <Text tone="faint" size={13}>
               Aucun jour choisi : Passerelle sélectionnera elle-même le meilleur créneau de la semaine selon la priorité, l'échéance et les tâches déjà planifiées.
@@ -197,7 +239,7 @@ export default function TaskFormScreen() {
 
         {!autoPlacement && (
           <ScheduleTimes
-            weekdays={existing ? [] : weekdays}
+            weekdays={weekdays}
             time={time}
             onTimeChange={setTime}
             perDay={perDayTimes}
@@ -280,6 +322,22 @@ export default function TaskFormScreen() {
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
               {members.map((m) => (
                 <Chip key={m.id} label={m.name} selected={memberIds.includes(m.id)} onPress={() => toggleMember(m.id)} size="sm" />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {members.some((m) => memberIds.includes(m.id) && isChild(m)) && (
+          <View style={{ gap: space.sm }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
+              <StarIcon size={14} color={color.pillar3} />
+              <Text size={13} tone="muted">
+                Étoiles gagnées quand c'est fait : {starsLabel(stars)}
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: space.xs }}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Chip key={n} label={`${n} ★`} selected={stars === n} onPress={() => setStars(n)} size="sm" fill />
               ))}
             </View>
           </View>

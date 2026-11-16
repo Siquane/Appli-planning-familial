@@ -52,6 +52,25 @@ describe("tasks CRUD", () => {
     expect(patched.body.task).toMatchObject({ recurring: true, reminder: false });
   });
 
+  it("links the days of a task with a seriesId, kept when another field changes", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+
+    const mon = await request(app).post("/tasks").set(auth).send({ ...baseTask, weekday: 0, seriesId: "s_abc12345" });
+    const wed = await request(app).post("/tasks").set(auth).send({ ...baseTask, weekday: 2, seriesId: "s_abc12345" });
+    expect(mon.body.task.seriesId).toBe("s_abc12345");
+    expect(wed.body.task.seriesId).toBe("s_abc12345");
+
+    const patched = await request(app).patch(`/tasks/${mon.body.task.id}`).set(auth).send({ title: "Sport" });
+    expect(patched.body.task.seriesId).toBe("s_abc12345");
+
+    const single = await request(app).post("/tasks").set(auth).send(baseTask);
+    expect(single.body.task.seriesId).toBeNull();
+
+    const bad = await request(app).post("/tasks").set(auth).send({ ...baseTask, seriesId: "x y" });
+    expect(bad.status).toBe(400);
+  });
+
   it("rejects an invalid payload", async () => {
     const { accessToken } = await signup(app);
     const res = await request(app)

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, tasksApi } from "../api/resources";
+import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi } from "../api/resources";
 import type { MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskInput, Tint, Weekday } from "../api/types";
 import { useAuthStore } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
@@ -159,6 +159,16 @@ export function usePaySavingsGoal() {
 export function useForecast(enabled = true) {
   const authed = useEnabled();
   return useQuery({ queryKey: ["expenses", "forecast"], queryFn: () => expensesApi.forecast(), enabled: authed && enabled });
+}
+
+export function useDrifts(month: string, enabled = true) {
+  const authed = useEnabled();
+  return useQuery({ queryKey: ["expenses", "drifts", month], queryFn: () => expensesApi.drifts(month).then((r) => r.drifts), enabled: authed && enabled });
+}
+
+export function useDebits(month: string, enabled = true) {
+  const authed = useEnabled();
+  return useQuery({ queryKey: ["expenses", "debits", month], queryFn: () => expensesApi.debits(month), enabled: authed && enabled });
 }
 
 export function useBudgetReport(months = 6, enabled = true) {
@@ -421,6 +431,20 @@ export function useNotifications() {
   return useQuery({ queryKey: ["notifications"], queryFn: () => notificationsApi.list().then((r) => r.notifications), enabled });
 }
 
+export function useFamilyAlerts() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["family-alerts"], queryFn: () => notificationsApi.familyAlerts().then((r) => r.enabled), enabled });
+}
+
+export function useSetFamilyAlerts() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (on: boolean) => notificationsApi.setFamilyAlerts(on).then((r) => r.enabled),
+    onMutate: (on) => qc.setQueryData(["family-alerts"], on),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["family-alerts"] }),
+  });
+}
+
 export function useMarkNotificationRead() {
   const qc = useQueryClient();
   return useMutation({
@@ -505,3 +529,24 @@ export function useRemoveFamilyAccount() {
   const qc = useQueryClient();
   return useMutation({ mutationFn: (id: string) => familyApi.removeAccount(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["family"] }) });
 }
+
+// Étoiles des enfants (semaine = lundi « AAAA-MM-JJ », voir lib/stars.ts).
+export function useStars(week: string) {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["stars", week], queryFn: () => starsApi.get(week), enabled });
+}
+
+function useStarsMutation<T>(fn: (input: T) => Promise<unknown>) {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: fn, onSettled: () => qc.invalidateQueries({ queryKey: ["stars"] }) });
+}
+
+export const useToggleStar = () =>
+  useStarsMutation((d: { taskId: string; memberId: string; week: string; done: boolean }) => {
+    const { done, ...data } = d;
+    return done ? starsApi.complete(data) : starsApi.uncomplete(data);
+  });
+export const useAddReward = () => useStarsMutation((d: { title: string; cost: number }) => starsApi.addReward(d));
+export const useRemoveReward = () => useStarsMutation((id: string) => starsApi.removeReward(id));
+export const useRedeemReward = () => useStarsMutation((d: { rewardId: string; memberId: string }) => starsApi.redeem(d.rewardId, d.memberId));
+export const useRemoveStarHistory = () => useStarsMutation((id: string) => starsApi.removeHistory(id));

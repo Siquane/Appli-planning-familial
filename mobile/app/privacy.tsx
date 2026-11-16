@@ -143,6 +143,9 @@ export default function PrivacyScreen() {
           <Section title="Où">
             Base de données en Europe (Neon, Francfort), serveur Render, fichiers chez Cloudflare R2 (privés, liens temporaires). Les e-mails de mot de passe oublié passent par Brevo.
           </Section>
+          <Section title="Alertes de la famille">
+            Pour te prévenir quand quelqu'un d'autre modifie le planning, les repas ou les courses, nous gardons un identifiant de notification de ton téléphone (fourni par Expo et Google Firebase). Le message contient seulement le prénom et ce qui a changé. L'identifiant est effacé à la déconnexion ; l'interrupteur est dans Notifications.
+          </Section>
           <Section title="Erreurs de l'appli">
             En cas de plantage, un rapport technique est envoyé à Sentry (serveurs en Europe), sans données personnelles.
           </Section>

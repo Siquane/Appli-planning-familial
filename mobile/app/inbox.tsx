@@ -6,7 +6,8 @@ import { Text } from "../src/components/Text";
 import { Card } from "../src/components/Card";
 import { Button } from "../src/components/Button";
 import { BellIcon } from "../src/components/icons";
-import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from "../src/hooks/useApi";
+import { useFamily, useFamilyAlerts, useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications, useSetFamilyAlerts } from "../src/hooks/useApi";
+import { registerPushToken } from "../src/lib/pushAlerts";
 import { color, space } from "../src/theme/tokens";
 import { useSettingsStore } from "../src/state/settingsStore";
 import { confirmReminderPermission, DIGEST_HOUR } from "../src/lib/notifications";
@@ -21,6 +22,17 @@ export default function NotificationsScreen() {
   const hasUnread = notifications.some((n) => n.unread);
   const eveningDigest = useSettingsStore((st) => st.eveningDigest);
   const setEveningDigest = useSettingsStore((st) => st.setEveningDigest);
+
+  // Alertes de la famille : seulement quand d'autres comptes partagent la famille.
+  const { data: family } = useFamily();
+  const sharedFamily = (family?.accounts.length ?? 0) > 1;
+  const { data: familyAlerts = true } = useFamilyAlerts();
+  const setFamilyAlerts = useSetFamilyAlerts();
+
+  async function toggleFamilyAlerts(on: boolean) {
+    setFamilyAlerts.mutate(on);
+    if (on && (await confirmReminderPermission())) registerPushToken();
+  }
 
   async function toggleDigest(on: boolean) {
     await setEveningDigest(on);
@@ -49,6 +61,27 @@ export default function NotificationsScreen() {
           />
         </Card>
       </Pressable>
+
+      {sharedFamily && (
+        <Pressable onPress={() => toggleFamilyAlerts(!familyAlerts)} accessibilityRole="switch" accessibilityState={{ checked: familyAlerts }}>
+          <Card row style={{ alignItems: "center" }}>
+            <View style={{ flex: 1 }}>
+              <Text size={15} weight="medium">
+                Modifications de la famille
+              </Text>
+              <Text size={11} tone="faint">
+                Quand quelqu'un d'autre change le planning, les repas, les courses ou les recettes.
+              </Text>
+            </View>
+            <Switch
+              value={familyAlerts}
+              onValueChange={toggleFamilyAlerts}
+              trackColor={{ false: color.neutral700, true: color.accent700 }}
+              thumbColor={familyAlerts ? color.accent300 : color.neutral300}
+            />
+          </Card>
+        </Pressable>
+      )}
 
       {notifications.length === 0 ? (
         <Card style={{ alignItems: "center", paddingVertical: space.xl }}>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "460897686539",
+    "project_id": "passerelle-61282",
+    "storage_bucket": "passerelle-61282.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:460897686539:android:dc6bd16363ec503706230e",
+        "android_client_info": {
+          "package_name": "app.passerelle.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGmm-3xhhcjEdhMn_itR7wGzl7C5Eb9VY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
