@@ -1,5 +1,5 @@
 import { color } from "../../theme/tokens";
-import { categoryColor, formatDuration, jsDayToWeekday, priorityLabel, todayWeekday } from "../weekdays";
+import { categoryColor, dayOfWeek, progressLine, formatDuration, jsDayToWeekday, priorityLabel, todayWeekday } from "../weekdays";
 
 describe("jsDayToWeekday", () => {
   it("maps JS Sun-first days onto the Lun-first 0..6 convention", () => {
@@ -52,5 +52,23 @@ describe("formatDuration", () => {
   it("formats hours plus minutes, zero-padded", () => {
     expect(formatDuration(90)).toBe("1h30");
     expect(formatDuration(65)).toBe("1h05");
+  });
+});
+
+describe("dayOfWeek", () => {
+  it("gives the date of a weekday in a week, across months", () => {
+    expect(dayOfWeek("2026-11-16", 0)).toBe("2026-11-16");
+    expect(dayOfWeek("2026-11-16", 6)).toBe("2026-11-22");
+    expect(dayOfWeek("2026-11-30", 3)).toBe("2026-12-03");
+  });
+});
+
+describe("progressLine", () => {
+  it("cheers on the day's progress", () => {
+    expect(progressLine(0, 0).title).toBe("Journée libre");
+    expect(progressLine(0, 4).title).toBe("C'est parti");
+    expect(progressLine(1, 4)).toEqual({ title: "Bon début", detail: "Encore 3 tâches." });
+    expect(progressLine(3, 5)).toEqual({ title: "Belle lancée !", detail: "Plus que 2 tâches." });
+    expect(progressLine(4, 4).title).toBe("Tout est fait !");
   });
 });

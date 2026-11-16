@@ -156,6 +156,7 @@ model Task {
 
   members         TaskMember[]
   starCompletions StarCompletion[]
+  doneDays        TaskDone[]
 
   @@index([userId, seriesId])
 }
@@ -895,4 +896,16 @@ model Challenge {
 
   @@index([fromId, week])
   @@index([toId, week])
+}
+
+// Une tâche cochée « faite » un jour donné (« AAAA-MM-JJ »). Une tâche
+// récurrente se coche chaque semaine : une ligne par jour.
+model TaskDone {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  day       String
+  createdAt DateTime @default(now())
+
+  @@unique([taskId, day])
 }

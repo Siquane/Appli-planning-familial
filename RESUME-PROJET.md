@@ -172,6 +172,15 @@ Mises à jour majeures du serveur : faites le 13/11 au soir (voir « Dépendance
 - À confirmer : l'installation a-t-elle réussi ? Le halo des onglets rend-il bien sur le téléphone (jamais vu sur un vrai appareil) ?
 - Éviter les sessions en parallèle sur l'appli : le 13/11, trois sessions ont produit des APK et des résumés contradictoires.
 
+## Touche ludique, inspirée de Cervelle (16/11/2026)
+
+- **Tâche « faite »** pour toutes les tâches, jour par jour : modèle `TaskDone` (`taskId` + `day` « AAAA-MM-JJ », unique), routes `GET /tasks/done?week=<lundi>`, `PUT /tasks/:id/done {day}`, `DELETE /tasks/:id/done?day=`. Indépendant des étoiles des enfants (qui restent dans la fiche de la tâche).
+- Appli (`src/components/Playful.tsx`) : `DoneCheck` (case ronde à la couleur de la catégorie, rebond + étincelles), `DayRing` (anneau du jour en dégradé + phrase, `progressLine`), `EmptyState` (arche du logo qui flotte). API Animated de React Native uniquement, coupée si « réduire les animations » est activé.
+- Planning : case ronde sur chaque tâche, anneau du jour, bulle « Tout est fait… » quand la dernière tâche est cochée. Coche instantanée à l'écran, annulée si l'envoi échoue (`useToggleTaskDone`).
+- Formes : `radius` 6 / 14 / 18, puces en pilule par défaut, boutons principaux et secondaires « épais » (rebord `edge` / `edgeSoft` qui s'écrase à l'appui).
+- Écrans vides avec l'arche et une phrase sympa : Planning, recettes, documents, notifications, budget, courses.
+- Pas de module natif : arrive par EAS Update, avec la migration serveur au déploiement Render.
+
 ## Idées notées pour plus tard
 
 Comptes séparés pour chaque membre de la famille, synchronisation Google Agenda, statistiques du budget sur 12 mois, étoiles pour les tâches des enfants, idées cadeaux d'anniversaire, liste de courses en temps réel, thème clair, version iPhone (99 €/an).

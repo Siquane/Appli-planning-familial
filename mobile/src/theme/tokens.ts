@@ -48,6 +48,9 @@ const dark = {
   grid: "rgba(34,229,255,0.05)",
   // Texte et icônes posés sur le dégradé (boutons principaux).
   onGradient: "#070912",
+  // Rebord « épais » sous les boutons, qui s'écrase quand on appuie.
+  edge: "#4b2f9e",
+  edgeSoft: "#1e2740",
 };
 
 export type Palette = Record<keyof typeof dark, string>;
@@ -97,6 +100,8 @@ const light: Palette = {
   scrim: "rgba(11,21,48,0.45)",
   grid: "rgba(8,150,179,0.06)",
   onGradient: "#0b1530",
+  edge: "#5a2fb8",
+  edgeSoft: "#c2c9dc",
 };
 
 /** Palette en cours. Modifiée sur place par applyTheme : la lire au moment du rendu. */
@@ -120,7 +125,8 @@ export function glow(c: string, blur = 12) {
   return `0 0 ${blur}px ${c}`;
 }
 
-export const radius = { sm: 4, md: 8, lg: 14 } as const;
+// Coins arrondis, un peu ludiques (cartes 14, grands blocs 18).
+export const radius = { sm: 6, md: 14, lg: 18 } as const;
 
 // Spacing scale, in steps of 4. `gutter` is the side margin of every screen.
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;

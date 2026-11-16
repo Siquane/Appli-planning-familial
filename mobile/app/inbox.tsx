@@ -5,12 +5,12 @@ import { BackHeader } from "../src/components/PageHeader";
 import { Text } from "../src/components/Text";
 import { Card } from "../src/components/Card";
 import { Button } from "../src/components/Button";
-import { BellIcon } from "../src/components/icons";
 import { useFamily, useFamilyAlerts, useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications, useSetFamilyAlerts } from "../src/hooks/useApi";
 import { registerPushToken } from "../src/lib/pushAlerts";
 import { color, space } from "../src/theme/tokens";
 import { useSettingsStore } from "../src/state/settingsStore";
 import { confirmReminderPermission, DIGEST_HOUR } from "../src/lib/notifications";
+import { EmptyState } from "../src/components/Playful";
 
 export default function NotificationsScreen() {
   const { data: notifications = [] } = useNotifications();
@@ -84,11 +84,8 @@ export default function NotificationsScreen() {
       )}
 
       {notifications.length === 0 ? (
-        <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
-          <BellIcon size={26} color={color.neutral600} />
-          <Text tone="muted" size={13} center>
-            Aucune notification pour le moment.
-          </Text>
+        <Card>
+          <EmptyState title="Tout est calme 🌙" detail="Aucune notification pour le moment." />
         </Card>
       ) : (
         <>

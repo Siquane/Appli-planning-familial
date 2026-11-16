@@ -7,6 +7,7 @@ import { getProposals, SchedulableTask, Weekday } from "../lib/scheduling";
 import { syncTaskToCalendar, unsyncTaskFromCalendar } from "../services/calendarSync";
 import type { Task } from "@prisma/client";
 import { patchSchema } from "../lib/validation";
+import { isMondayKey } from "../lib/stars";
 
 export const tasksRouter = Router();
 tasksRouter.use(requireAuth);
@@ -141,6 +142,51 @@ tasksRouter.patch("/:id", async (req, res) => {
     console.error("Calendar sync failed on update:", e);
   }
   res.json({ task: serializeTask(final) });
+});
+
+// « Fait » : une tâche cochée un jour donné. GET renvoie les coches d'une
+// semaine (lundi « AAAA-MM-JJ ») ; PUT et DELETE cochent / décochent un jour.
+const dayKey = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((d) => {
+  const t = new Date(`${d}T12:00:00Z`);
+  return !Number.isNaN(t.getTime()) && t.toISOString().slice(0, 10) === d;
+}, "Jour invalide");
+
+function addDays(day: string, n: number): string {
+  const d = new Date(`${day}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+tasksRouter.get("/done", async (req, res) => {
+  const week = typeof req.query.week === "string" ? req.query.week : "";
+  if (!isMondayKey(week)) return res.status(400).json({ error: "Semaine invalide" });
+  const rows = await prisma.taskDone.findMany({
+    where: { task: { userId: req.userId! }, day: { gte: week, lte: addDays(week, 6) } },
+    select: { taskId: true, day: true },
+  });
+  res.json({ done: rows });
+});
+
+tasksRouter.put("/:id/done", async (req, res) => {
+  const parsed = z.object({ day: dayKey }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Jour invalide" });
+  const task = await loadOwnedTask(req.userId!, req.params.id);
+  if (!task) return res.status(404).json({ error: "Not found" });
+  await prisma.taskDone.upsert({
+    where: { taskId_day: { taskId: task.id, day: parsed.data.day } },
+    create: { taskId: task.id, day: parsed.data.day },
+    update: {},
+  });
+  res.status(204).end();
+});
+
+tasksRouter.delete("/:id/done", async (req, res) => {
+  const parsed = dayKey.safeParse(req.query.day);
+  if (!parsed.success) return res.status(400).json({ error: "Jour invalide" });
+  const task = await loadOwnedTask(req.userId!, req.params.id);
+  if (!task) return res.status(404).json({ error: "Not found" });
+  await prisma.taskDone.deleteMany({ where: { taskId: task.id, day: parsed.data } });
+  res.status(204).end();
 });
 
 tasksRouter.delete("/:id", async (req, res) => {
