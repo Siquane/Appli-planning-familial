@@ -610,6 +610,10 @@ model LearnerDevice {
   name       String   @default("")
   createdAt  DateTime @default(now())
   lastSeenAt DateTime @default(now())
+  // Expo push token of this phone (« ExponentPushToken[…] »), for « Tes fiches sont prêtes ».
+  pushToken  String?  @unique
+  // The child can turn the « fiches prêtes » notification off on this phone.
+  readyAlert Boolean  @default(true)
 }
 
 model Revision {
