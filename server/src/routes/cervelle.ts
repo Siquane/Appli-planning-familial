@@ -32,6 +32,7 @@ import {
 } from "../lib/cervelle/game";
 import { LEVELS, REVISION_ICONS, type Level } from "../lib/cervelle/icons";
 import { SCHOOL_YEAR, chapterById, findChapter, programmeFor, programmeForPrompt } from "../lib/cervelle/programme";
+import { notifyRevisionReady } from "../lib/cervelle/push";
 import * as ai from "../services/cervelleAi";
 
 // Cervelle — révisions à partir des cours en photo. A separate app, same
@@ -180,6 +181,60 @@ cervelleRouter.post("/child/logout", async (req, res) => {
   const caller = req.cervelle!;
   if (caller.kind === "child") await prisma.learnerDevice.deleteMany({ where: { id: caller.deviceId } });
   res.status(204).end();
+});
+
+// ─── Notifications on the child's phone ─────────────────────────────────
+
+const childPushSchema = z.object({
+  token: z.string().regex(/^Expo(nent)?PushToken\[[^\]]{1,200}\]$/).nullable(),
+  readyAlert: z.boolean().optional(),
+});
+
+/** The child's phone registers its Expo push token (null = notifications refused or turned off). */
+cervelleRouter.put("/child/push", async (req, res) => {
+  const caller = req.cervelle!;
+  if (caller.kind !== "child") return res.status(403).json({ error: "Réservé au téléphone de l'enfant." });
+  const parsed = childPushSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Jeton de notification invalide" });
+  const { token, readyAlert } = parsed.data;
+  await prisma.$transaction([
+    // A phone handed to another child (or relinked) keeps only its newest link.
+    ...(token ? [prisma.learnerDevice.updateMany({ where: { pushToken: token, NOT: { id: caller.deviceId } }, data: { pushToken: null } })] : []),
+    prisma.learnerDevice.update({ where: { id: caller.deviceId }, data: { pushToken: token, ...(readyAlert !== undefined ? { readyAlert } : {}) } }),
+  ]);
+  res.status(204).end();
+});
+
+/**
+ * What the phone needs to schedule its own reminders: upcoming interros of
+ * ready revisions, notions « À revoir » now, and when mastered notions come
+ * back to « À revoir » over the next days.
+ */
+cervelleRouter.get("/learners/:learnerId/reminders", async (req, res) => {
+  const learner = await loadLearner(req, res);
+  if (!learner) return;
+  const now = new Date();
+  const today = parisDay(now);
+  const [revisions, notions] = await Promise.all([
+    prisma.revision.findMany({
+      where: { learnerId: learner.id, status: "ready", examDate: { gte: new Date(`${today}T00:00:00Z`) } },
+      select: { id: true, title: true, subject: true, examDate: true },
+      orderBy: { examDate: "asc" },
+      take: 30,
+    }),
+    prisma.notion.findMany({ where: { revision: { learnerId: learner.id, status: "ready" } } }),
+  ]);
+  const leafNotions = leaves(notions);
+  const horizon = now.getTime() + 8 * 86_400_000;
+  res.json({
+    exams: revisions.map((r) => ({ revisionId: r.id, title: r.title, subject: r.subject, examDate: r.examDate!.toISOString().slice(0, 10) })),
+    reviewNow: leafNotions.filter((n) => labelOf(n, now) === "review").length,
+    // Mastered notions whose review falls due in the next 8 days.
+    reviewDue: leafNotions
+      .filter((n) => n.mastery === "mastered" && n.nextReviewAt && n.nextReviewAt.getTime() > now.getTime() && n.nextReviewAt.getTime() <= horizon)
+      .map((n) => n.nextReviewAt!.toISOString())
+      .sort(),
+  });
 });
 
 /** Who is calling: a parent (and their family's learners) or a child. */
@@ -549,6 +604,7 @@ export async function processRevision(revisionId: string, files: ai.CourseFile[]
     const programme = school ? programmeForPrompt(learner.grade) : null;
     const out = await ai.generateRevision({ files, level: learner.level as Level, grade: learner.grade, hint, programme });
     await saveGenerated(revisionId, out, hint, { school, grade: learner.grade });
+    await notifyRevisionReady(revisionId);
   } catch (e) {
     const message = e instanceof ai.CervelleAiError ? e.message : "La préparation a échoué. Réessaie.";
     if (!(e instanceof ai.CervelleAiError)) console.error("Cervelle: revision failed", e);
@@ -692,7 +748,8 @@ cervelleRouter.get("/learners/:learnerId/revisions/:revisionId/photos", async (r
 
 // ─── Quiz ────────────────────────────────────────────────────────────────
 
-export const QUIZ_MODES = ["qcm", "cartes", "interro", "a_revoir"] as const;
+// « express » : 6 questions d'une révision, les notions À revoir d'abord (veille d'interro).
+export const QUIZ_MODES = ["qcm", "cartes", "interro", "a_revoir", "express"] as const;
 type QuizMode = (typeof QUIZ_MODES)[number];
 
 function shuffle<T>(list: T[]): T[] {
@@ -748,7 +805,7 @@ cervelleRouter.get("/learners/:learnerId/quiz", async (req, res) => {
   }
   const now = new Date();
   const scope: Prisma.QuestionWhereInput = revisionId ? { revisionId } : { revision: { learnerId: learner.id, status: "ready" } };
-  const types: Record<QuizMode, string[] | null> = { qcm: ["qcm", "vrai_faux"], cartes: ["carte", "courte", "trous"], interro: null, a_revoir: null };
+  const types: Record<QuizMode, string[] | null> = { qcm: ["qcm", "vrai_faux"], cartes: ["carte", "courte", "trous"], interro: null, a_revoir: null, express: null };
   const all = await prisma.question.findMany({ where: { ...scope, ...(types[mode] ? { type: { in: types[mode]! } } : {}) }, include: { notion: true } });
 
   let picked: (Question & { notion: Notion })[];
@@ -756,6 +813,8 @@ cervelleRouter.get("/learners/:learnerId/quiz", async (req, res) => {
     picked = pickSpread(all.filter((q) => labelOf(q.notion, now) === "review"), 12, now);
   } else if (mode === "cartes") {
     picked = pickSpread(all, 20, now);
+  } else if (mode === "express") {
+    picked = pickSpread(all, 6, now);
   } else {
     picked = pickSpread(all, mode === "interro" ? 15 : 10, now);
   }

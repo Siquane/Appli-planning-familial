@@ -6,6 +6,7 @@ import { prisma } from "../../src/db";
 import * as ai from "../../src/services/cervelleAi";
 import { authHeader, signup } from "../helpers";
 import { parisDay } from "../../src/lib/cervelle/days";
+import { setPushSender, type PushMessage } from "../../src/lib/familyAlerts";
 
 // A tiny valid JPEG header: the route checks the magic bytes, Claude is mocked.
 const JPEG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(200, 1)]).toString("base64");
@@ -375,5 +376,87 @@ describe("Cervelle — programme officiel", () => {
     expect(detail.body.revision.programme).toBeNull();
     expect(detail.body.revision.notions[0].children).toHaveLength(1);
     expect((await request(app).get(`/cervelle/learners/${adult.body.learner.id}/programme`).set(auth)).body.available).toBe(false);
+  });
+});
+
+describe("Cervelle — notifications on the child's phone", () => {
+  async function childOf(auth: Record<string, string>, learnerId: string) {
+    const code = await request(app).post(`/cervelle/learners/${learnerId}/code`).set(auth);
+    const login = await request(app).post("/cervelle/child/login").send({ code: code.body.code, deviceName: "Téléphone" });
+    return { Authorization: `Bearer ${login.body.token}` };
+  }
+
+  it("sends « fiches prêtes » to the child's phone only, unless the child turned it off", async () => {
+    const sent: PushMessage[] = [];
+    setPushSender(async (m) => {
+      sent.push(...m);
+    });
+    try {
+      const { auth, learnerId } = await parentWithChild();
+      const child = await childOf(auth, learnerId);
+      // Only the child's phone registers here; a parent can't.
+      expect((await request(app).put("/cervelle/child/push").set(auth).send({ token: "ExponentPushToken[abc]" })).status).toBe(403);
+      expect((await request(app).put("/cervelle/child/push").set(child).send({ token: "pas-un-jeton" })).status).toBe(400);
+      expect((await request(app).put("/cervelle/child/push").set(child).send({ token: "ExponentPushToken[abc]" })).status).toBe(204);
+
+      const revision = await readyRevision(auth, learnerId);
+      await waitFor(async () => sent.length, (n) => n > 0);
+      expect(sent).toEqual([
+        { to: "ExponentPushToken[abc]", title: "Cervelle", body: "Tes fiches sur « Le système solaire » sont prêtes. On révise ?", data: { url: `/revision/${revision.id}` }, channelId: "revisions", sound: "default" },
+      ]);
+
+      sent.length = 0;
+      await request(app).put("/cervelle/child/push").set(child).send({ token: "ExponentPushToken[abc]", readyAlert: false });
+      await readyRevision(auth, learnerId);
+      await new Promise((r) => setTimeout(r, 50));
+      expect(sent).toEqual([]);
+    } finally {
+      setPushSender(null);
+    }
+  });
+
+  it("forgets the token when the phone is unlinked or handed to another child", async () => {
+    const { auth, learnerId } = await parentWithChild();
+    const first = await childOf(auth, learnerId);
+    await request(app).put("/cervelle/child/push").set(first).send({ token: "ExponentPushToken[same]" });
+    const second = await childOf(auth, learnerId);
+    await request(app).put("/cervelle/child/push").set(second).send({ token: "ExponentPushToken[same]" });
+    expect(await prisma.learnerDevice.count({ where: { pushToken: "ExponentPushToken[same]" } })).toBe(1);
+    await request(app).post("/cervelle/child/logout").set(second);
+    expect(await prisma.learnerDevice.count({ where: { pushToken: "ExponentPushToken[same]" } })).toBe(0);
+  });
+
+  it("gives the phone what it needs to schedule reminders, and a short express quiz", async () => {
+    const { auth, learnerId } = await parentWithChild();
+    const child = await childOf(auth, learnerId);
+    const revision = await readyRevision(auth, learnerId);
+
+    const before = await request(app).get("/cervelle/learners/me/reminders").set(child);
+    expect(before.status).toBe(200);
+    expect(before.body).toEqual({
+      exams: [{ revisionId: revision.id, title: "Le système solaire", subject: "Sciences", examDate: "2099-01-10" }],
+      reviewNow: 0,
+      reviewDue: [],
+    });
+
+    // A mistake: the notion is « À revoir ».
+    const quiz = await request(app).get(`/cervelle/learners/me/quiz?revisionId=${revision.id}&mode=qcm`).set(child);
+    const qcm = quiz.body.questions.find((q: { type: string }) => q.type === "qcm");
+    await request(app).post("/cervelle/learners/me/answers").set(child).send({ questionId: qcm.id, mode: "qcm", answer: "0" });
+    // A mastered notion that comes back in 3 days.
+    const soon = new Date(Date.now() + 3 * 86_400_000);
+    const other = await prisma.notion.findFirst({ where: { revisionId: revision.id, title: "Planètes gazeuses" } });
+    await prisma.notion.update({ where: { id: other!.id }, data: { mastery: "mastered", streak: 2, nextReviewAt: soon } });
+
+    const after = await request(app).get("/cervelle/learners/me/reminders").set(child);
+    expect(after.body.reviewNow).toBe(1);
+    expect(after.body.reviewDue).toEqual([soon.toISOString()]);
+
+    const express = await request(app).get(`/cervelle/learners/me/quiz?revisionId=${revision.id}&mode=express`).set(child);
+    expect(express.status).toBe(200);
+    expect(express.body.questions).toHaveLength(6);
+    expect(new Set(express.body.questions.map((q: { notionTitle: string }) => q.notionTitle))).toEqual(new Set(["Planètes telluriques", "Planètes gazeuses"]));
+    const session = await request(app).post("/cervelle/learners/me/sessions").set(child).send({ revisionId: revision.id, mode: "express", seconds: 120, correct: 4, total: 6 });
+    expect(session.status).toBe(201);
   });
 });
