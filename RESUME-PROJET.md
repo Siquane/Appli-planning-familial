@@ -19,12 +19,11 @@ Dernière mise à jour : 15 novembre 2026 (tâches en série).
 - Sauvegarde hebdomadaire : **5 secrets GitHub encore à ajouter**. cron-job.org (`/health` toutes les 10 min) : à faire si pas fait.
 - Règles : avant de pousser, `git fetch origin main` et fusionner main ; ne jamais redescendre `runtimeVersion` ; migrations datées **après** la dernière de main.
 
-## Cervelle (15/11/2026) — appli de révision séparée, même serveur
+## Cervelle — appli de révision séparée, même serveur
 
-- Nouvelle appli **Cervelle** dans le dépôt `Siquane/cervelle` (Expo SDK 58), branchée sur CE serveur : routes `/cervelle/*` (`server/src/routes/cervelle.ts`), appels à Claude dans `server/src/services/cervelleAi.ts`, règles dans `server/src/lib/cervelle/`. Migration `20261115090000_cervelle`.
-- Parents : compte Passerelle. Enfants : code à 6 chiffres (15 min) → jeton d'appareil `cv_…`, routes `/cervelle/learners/me/…`.
+- Revue complète (état, architecture, décisions, points faibles) : `RESUME-PROJET.md` du dépôt `Siquane/cervelle`.
+- Côté serveur ici : `server/src/routes/cervelle.ts`, `server/src/services/cervelleAi.ts`, `server/src/lib/cervelle/`, migrations `20261116080000_cervelle` et `20261116090000_cervelle_programme`, textes officiels dans `docs/programmes/`. PR #41.
 - Utilise `ANTHROPIC_API_KEY` (comme les menus). Limites par famille et par 24 h : 15 révisions, 10 interros, 120 messages d'assistant, 400 corrections.
-- Photos des cours gardées dans R2 (`cervelle/<famille>/…`) si le stockage est configuré, pour pouvoir relancer une préparation.
 
 ## Contexte
 
