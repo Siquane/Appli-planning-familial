@@ -137,12 +137,14 @@ export const PROGRAMMES: Record<string, SubjectProgramme[]> = {
     {
       subject: "Anglais",
       source: "Programme de langues vivantes du cycle 3, BO n° 31 du 30 juillet 2020 (en vigueur au CM2 en 2026-2027)",
-      verifie: false,
+      verifie: true,
       cycleWide: true,
       chapters: [
-        { id: "cm2-an-moi", title: "La personne et la vie quotidienne", notions: ["Se présenter, la famille, le corps", "La maison, l'école, les vêtements, la nourriture", "Les nombres, l'heure, la date"] },
-        { id: "cm2-an-reperes", title: "Des repères géographiques, historiques et culturels", notions: ["Pays et villes anglophones", "Fêtes et traditions", "Personnages et monuments"] },
-        { id: "cm2-an-imaginaire", title: "L'imaginaire", notions: ["Contes, comptines, chansons", "Albums et histoires"] },
+        { id: "cm2-an-moi", title: "La personne et la vie quotidienne", notions: ["Le corps humain, les vêtements, les modes de vie", "Le portrait physique et moral", "La ville, la maison, l'écohabitat", "Le développement durable : tri, recyclage, transports, énergie"] },
+        { id: "cm2-an-reperes", title: "Des repères géographiques, historiques et culturels", notions: ["Situation et paysages des pays anglophones", "Repères culturels, fêtes et traditions", "Figures historiques et contemporaines, grandes pages d'histoire"] },
+        { id: "cm2-an-imaginaire", title: "L'imaginaire", notions: ["Albums et littérature de jeunesse", "Contes, mythes et légendes", "Héros et personnages de fiction, BD, séries, cinéma"] },
+        { id: "cm2-an-grammaire", title: "Grammaire", notions: ["Le verbe : accord avec le sujet, présent, passé, futur, auxiliaires", "Le groupe nominal : articles, possessifs, démonstratifs, place de l'adjectif, génitif", "Types de phrases : déclarative, interrogative, exclamative, impérative, négative", "Mots de liaison simples (and, or, because)"] },
+        { id: "cm2-an-phonologie", title: "Prononciation", notions: ["Les sons propres à l'anglais", "Accent tonique, rythme et intonation", "L'alphabet et le lien entre sons et écriture"] },
       ],
     },
   ],
