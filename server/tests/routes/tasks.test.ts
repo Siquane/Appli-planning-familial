@@ -143,3 +143,38 @@ describe("GET /tasks/replan/proposals", () => {
     expect(res.body.proposals[0].candidates.length).toBeGreaterThan(0);
   });
 });
+
+describe("tasks done", () => {
+  const WEEK = "2026-11-16"; // un lundi
+
+  it("ticks a task for one day, lists the week, and unticks it", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    const task = (await request(app).post("/tasks").set(auth).send({ title: "Courses", category: "Maison", weekday: 1, time: "18:00", recurring: true })).body.task;
+
+    expect((await request(app).put(`/tasks/${task.id}/done`).set(auth).send({ day: "2026-11-17" })).status).toBe(204);
+    // Cocher deux fois ne crée pas de doublon.
+    expect((await request(app).put(`/tasks/${task.id}/done`).set(auth).send({ day: "2026-11-17" })).status).toBe(204);
+    // La semaine suivante ne compte pas.
+    await request(app).put(`/tasks/${task.id}/done`).set(auth).send({ day: "2026-11-24" });
+
+    let res = await request(app).get(`/tasks/done?week=${WEEK}`).set(auth);
+    expect(res.status).toBe(200);
+    expect(res.body.done).toEqual([{ taskId: task.id, day: "2026-11-17" }]);
+
+    expect((await request(app).delete(`/tasks/${task.id}/done?day=2026-11-17`).set(auth)).status).toBe(204);
+    res = await request(app).get(`/tasks/done?week=${WEEK}`).set(auth);
+    expect(res.body.done).toEqual([]);
+  });
+
+  it("rejects bad days and other families' tasks", async () => {
+    const a = authHeader((await signup(app)).accessToken);
+    const b = authHeader((await signup(app)).accessToken);
+    const task = (await request(app).post("/tasks").set(a).send({ title: "Courses", category: "Maison", weekday: 1, time: "18:00" })).body.task;
+
+    expect((await request(app).put(`/tasks/${task.id}/done`).set(a).send({ day: "2026-02-30" })).status).toBe(400);
+    expect((await request(app).get("/tasks/done?week=2026-11-17").set(a)).status).toBe(400);
+    expect((await request(app).put(`/tasks/${task.id}/done`).set(b).send({ day: "2026-11-17" })).status).toBe(404);
+    expect((await request(app).delete(`/tasks/${task.id}/done?day=2026-11-17`).set(b)).status).toBe(404);
+  });
+});

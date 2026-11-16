@@ -19,6 +19,14 @@ Dernière mise à jour : 15 novembre 2026 (tâches en série).
 - Sauvegarde hebdomadaire : **5 secrets GitHub encore à ajouter**. cron-job.org (`/health` toutes les 10 min) : à faire si pas fait.
 - Règles : avant de pousser, `git fetch origin main` et fusionner main ; ne jamais redescendre `runtimeVersion` ; migrations datées **après** la dernière de main.
 
+## Cervelle — appli de révision séparée, même serveur
+
+- Revue complète (état, architecture, décisions, points faibles) : `RESUME-PROJET.md` du dépôt `Siquane/cervelle`.
+- Côté serveur ici : `server/src/routes/cervelle.ts`, `server/src/services/cervelleAi.ts`, `server/src/lib/cervelle/`, migrations `20261116080000_cervelle` et `20261116090000_cervelle_programme`, textes officiels dans `docs/programmes/`. PR #41.
+- Utilise `ANTHROPIC_API_KEY` (comme les menus). Limites par famille et par 24 h : 15 révisions, 10 interros, 120 messages d'assistant, 400 corrections.
+- Programme officiel : CM2, 6e, 5e, 4e, 3e (`lib/cervelle/programme.ts`, tableau des textes en vigueur dans `docs/programmes/README.md`).
+- Notifications de l'enfant : `LearnerDevice.pushToken` (migration `20261116130000_cervelle_push`), `PUT /cervelle/child/push`, « fiches prêtes » envoyé par `lib/cervelle/push.ts` via le même envoi Expo que Passerelle (`sendPush` dans `lib/familyAlerts.ts`). Les rappels datés sont programmés par l'appli à partir de `GET /cervelle/learners/me/reminders`. Mode de quiz `express` (6 questions).
+
 ## Contexte
 
 - Application famille : planning, tâches récurrentes, livre de recettes, anniversaires, menu de la semaine, documents, budget.
@@ -165,6 +173,15 @@ Mises à jour majeures du serveur : faites le 13/11 au soir (voir « Dépendance
 - Ce qui a été ajouté après la compilation de cet APK (bol de l'onglet Repas, nom modifiable dans le profil, dépendances) arrive par EAS Update **une fois la PR #11 fusionnée** (les mises à jour ne sont publiées que depuis main) : fermer puis rouvrir l'appli une fois.
 - À confirmer : l'installation a-t-elle réussi ? Le halo des onglets rend-il bien sur le téléphone (jamais vu sur un vrai appareil) ?
 - Éviter les sessions en parallèle sur l'appli : le 13/11, trois sessions ont produit des APK et des résumés contradictoires.
+
+## Touche ludique, inspirée de Cervelle (16/11/2026)
+
+- **Tâche « faite »** pour toutes les tâches, jour par jour : modèle `TaskDone` (`taskId` + `day` « AAAA-MM-JJ », unique), routes `GET /tasks/done?week=<lundi>`, `PUT /tasks/:id/done {day}`, `DELETE /tasks/:id/done?day=`. Indépendant des étoiles des enfants (qui restent dans la fiche de la tâche).
+- Appli (`src/components/Playful.tsx`) : `DoneCheck` (case ronde à la couleur de la catégorie, rebond + étincelles), `DayRing` (anneau du jour en dégradé + phrase, `progressLine`), `EmptyState` (arche du logo qui flotte). API Animated de React Native uniquement, coupée si « réduire les animations » est activé.
+- Planning : case ronde sur chaque tâche, anneau du jour, bulle « Tout est fait… » quand la dernière tâche est cochée. Coche instantanée à l'écran, annulée si l'envoi échoue (`useToggleTaskDone`).
+- Formes : `radius` 6 / 14 / 18, puces en pilule par défaut, boutons principaux et secondaires « épais » (rebord `edge` / `edgeSoft` qui s'écrase à l'appui).
+- Écrans vides avec l'arche et une phrase sympa : Planning, recettes, documents, notifications, budget, courses.
+- Pas de module natif : arrive par EAS Update, avec la migration serveur au déploiement Render.
 
 ## Idées notées pour plus tard
 

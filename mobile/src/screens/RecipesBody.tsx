@@ -7,6 +7,7 @@ import { Button } from "../components/Button";
 import { BookIcon, PlusIcon } from "../components/icons";
 import { useRecipes } from "../hooks/useApi";
 import { color, space } from "../theme/tokens";
+import { EmptyState } from "../components/Playful";
 
 /** Recipe book content, shown in the « Repas » tab (and on /recipes). */
 export function RecipesBody() {
@@ -17,11 +18,8 @@ export function RecipesBody() {
         <Button label="Nouvelle recette" icon={<PlusIcon size={18} color={color.text} />} variant="secondary" block onPress={() => router.push("/recipe/new")} />
 
         {recipes.length === 0 && (
-          <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
-            <BookIcon size={22} color={color.neutral600} />
-            <Text tone="muted" size={13} center style={{ marginTop: space.sm }}>
-              Aucune recette pour l'instant.
-            </Text>
+          <Card>
+            <EmptyState title="Le livre est encore vierge 📖" detail="Ajoutez votre première recette, ou importez-la depuis un lien." />
           </Card>
         )}
 

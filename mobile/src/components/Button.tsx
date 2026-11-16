@@ -25,9 +25,14 @@ interface Props {
 }
 
 // Primary actions are filled with the logo's neon gradient (dark text on top);
-// secondary and ghost buttons stay sober.
+// primary and secondary buttons are « chunky »: a thicker bottom edge that
+// flattens under the finger, so the button sinks when pressed.
 export function Button({ label, onPress, variant = "secondary", block, disabled, loading, icon, trailing, style, accessibilityLabel, needsNetwork }: Props) {
   const isIcon = variant === "icon";
+  const chunky = variant === "primary" || variant === "secondary";
+  // A disabled primary button drops the gradient (too murky once faded) for a
+  // plain surface with readable grey text, so it still reads clearly.
+  const flatPrimary = variant === "primary" && !!disabled && !loading;
   const online = useIsOnline();
   if (needsNetwork && !online) disabled = true;
   return (
@@ -38,7 +43,9 @@ export function Button({ label, onPress, variant = "secondary", block, disabled,
       accessibilityState={{ disabled: !!(disabled || loading), busy: !!loading }}
       hitSlop={isIcon ? hitSlopFor(36) : undefined}
       disabled={disabled || loading}
-      style={({ pressed }) => [
+      style={({ pressed }) => {
+        const sunk = pressed && !disabled && !loading;
+        return [
         {
           flexDirection: "row",
           alignItems: "center",
@@ -48,24 +55,37 @@ export function Button({ label, onPress, variant = "secondary", block, disabled,
           width: isIcon ? 36 : block ? "100%" : undefined,
           height: isIcon ? 36 : undefined,
           borderRadius: radius.md,
-          borderWidth: variant === "ghost" || variant === "primary" ? 0 : 1,
-          borderColor: variant === "secondary" || isIcon ? color.divider : "transparent",
-          paddingVertical: isIcon ? 0 : variant === "primary" ? space.sm : space.sm,
-          backgroundColor: pressed && (variant === "secondary" || isIcon) ? color.pressed : "transparent",
+          borderWidth: variant === "ghost" || (variant === "primary" && !flatPrimary) ? 0 : 1,
+          borderColor: variant === "secondary" || isIcon || flatPrimary ? color.divider : "transparent",
+          paddingVertical: isIcon ? 0 : variant === "primary" ? space.sm + 2 : space.sm,
+          backgroundColor: flatPrimary ? color.neutral900 : pressed && (variant === "secondary" || isIcon) ? color.pressed : "transparent",
           boxShadow: variant === "primary" && !disabled ? glow(color.glowSoft, 14) : undefined,
-          opacity: disabled ? 0.45 : pressed && variant === "primary" ? 0.85 : 1,
+          opacity: disabled && !flatPrimary ? 0.45 : 1,
+          ...(chunky
+            ? {
+                borderBottomWidth: sunk ? 1 : 4,
+                borderBottomColor: variant === "primary" && !flatPrimary ? color.edge : color.edgeSoft,
+                transform: [{ translateY: sunk ? 3 : 0 }],
+              }
+            : null),
         },
         style,
-      ]}
+      ];
+      }}
     >
-      {variant === "primary" && <GradientFill radius={radius.md} />}
+      {variant === "primary" && !flatPrimary && <GradientFill radius={radius.md} />}
       {loading ? (
         <ActivityIndicator size="small" color={variant === "primary" ? color.onGradient : color.text} />
       ) : (
         <>
           {icon}
           {label ? (
-            <Text weight="medium" heading size={15} style={{ color: variant === "primary" ? color.onGradient : variant === "ghost" ? color.accent : color.text }}>
+            <Text
+              weight="semibold"
+              heading
+              size={15}
+              style={{ color: flatPrimary ? color.neutral400 : variant === "primary" ? color.onGradient : variant === "ghost" ? color.accent : color.text }}
+            >
               {label}
             </Text>
           ) : null}

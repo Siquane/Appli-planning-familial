@@ -23,6 +23,7 @@ import { recurringExpensesRouter } from "./routes/recurringExpenses";
 import { savingsGoalsRouter } from "./routes/savingsGoals";
 import { planRouter } from "./routes/plan";
 import { billingRouter } from "./routes/billing";
+import { cervelleRouter } from "./routes/cervelle";
 import { grantLifetimePremium } from "./lib/lifetimePremium";
 
 export const app = express();
@@ -30,6 +31,9 @@ export const app = express();
 // req.ip (used by the auth rate limits) is the real client address.
 app.set("trust proxy", 1);
 app.use(cors());
+// Cervelle receives course photos in the request body (base64): its own,
+// larger limit, mounted before the global 100 kB JSON parser.
+app.use("/cervelle", express.json({ limit: "40mb" }), cervelleRouter);
 app.use(express.json());
 
 app.get("/health", (_req, res) => res.json({ ok: true }));

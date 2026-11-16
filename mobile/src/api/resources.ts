@@ -1,5 +1,6 @@
 import { api } from "./client";
 import type {
+  TaskDoneMark,
   DebitCalendar,
   Drift,
   DriftAlert,
@@ -65,6 +66,10 @@ export const tasksApi = {
   create: (data: TaskInput) => api.post<{ task: Task }>("/tasks", data),
   update: (id: string, data: Partial<TaskInput>) => api.patch<{ task: Task }>(`/tasks/${id}`, data),
   remove: (id: string) => api.delete<void>(`/tasks/${id}`),
+  /** Coches « fait » d'une semaine (lundi « AAAA-MM-JJ »). */
+  done: (week: string) => api.get<{ done: TaskDoneMark[] }>(`/tasks/done?week=${week}`),
+  markDone: (id: string, day: string) => api.put<void>(`/tasks/${id}/done`, { day }),
+  unmarkDone: (id: string, day: string) => api.delete<void>(`/tasks/${id}/done?day=${day}`),
   replanProposals: () => api.get<{ proposals: ReplanProposal[] }>("/tasks/replan/proposals"),
   autoSlot: (data: { priority: Priority; deadlineWeekday: Weekday | null; memberIds: string[] }) =>
     api.post<AutoSlotResult>("/tasks/auto-slot", data),

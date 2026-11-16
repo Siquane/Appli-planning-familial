@@ -10,6 +10,7 @@ import { useToastStore } from "../state/toastStore";
 import { fromMenuMessage } from "../lib/shopping";
 import { color, font, radius, space } from "../theme/tokens";
 import { errorText } from "../lib/errors";
+import { EmptyState } from "../components/Playful";
 
 const toast = (m: string) => useToastStore.getState().show(m);
 
@@ -68,10 +69,8 @@ export function ShoppingBody() {
       <Button label="Générer depuis le menu de la semaine" variant="ghost" block onPress={onFromMenu} loading={fromMenu.isPending} />
 
       {!isLoading && items.length === 0 && (
-        <Card style={{ alignItems: "center", paddingVertical: space.lg }}>
-          <Text tone="muted" size={13} center>
-            La liste est vide. Ajoutez des articles ou générez-la depuis le menu.
-          </Text>
+        <Card>
+          <EmptyState title="Panier vide 🧺" detail="Ajoutez des articles, ou générez la liste depuis le menu de la semaine." />
         </Card>
       )}
 

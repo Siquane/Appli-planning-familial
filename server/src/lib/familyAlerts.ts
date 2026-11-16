@@ -48,6 +48,11 @@ export interface PushMessage {
 }
 
 type Sender = (messages: PushMessage[]) => Promise<void>;
+
+/** Envoie des messages tout prêts (Cervelle utilise le même canal d'envoi). */
+export function sendPush(messages: PushMessage[]): Promise<void> {
+  return messages.length ? sender(messages) : Promise.resolve();
+}
 let sender: Sender = sendWithExpo;
 
 /** Tests : remplace l'envoi réel vers Expo. */
@@ -125,7 +130,11 @@ async function sendWithExpo(messages: PushMessage[]) {
     const json = (await res.json()) as { data?: { status: string; details?: { error?: string } }[] };
     // Téléphone désinstallé ou jeton périmé : on l'oublie.
     const gone = (json.data ?? []).flatMap((ticket, j) => (ticket.details?.error === "DeviceNotRegistered" ? [batch[j].to] : []));
-    if (gone.length) await prisma.pushToken.deleteMany({ where: { token: { in: gone } } });
+    if (gone.length) {
+      await prisma.pushToken.deleteMany({ where: { token: { in: gone } } });
+      // Téléphones des enfants (Cervelle).
+      await prisma.learnerDevice.updateMany({ where: { pushToken: { in: gone } }, data: { pushToken: null } });
+    }
   }
 }
 

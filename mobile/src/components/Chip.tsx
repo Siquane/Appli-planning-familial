@@ -17,9 +17,9 @@ interface Props {
 
 // The selectable pill used for day/duration/priority/deadline/category/filter
 // choices — selected state is the accent-800 tint, matching every `h.style`/
-// `c.style` selection block in the DC templates (chips go square-cornered in
-// the "data-grid" direction, radius-md not full pill).
-export function Chip({ label, selected, onPress, size = "md", mono, squareRadius = true, style, fill }: Props) {
+// `c.style` selection block in the DC templates. Chips are pills by default
+// (a touch of playfulness); `squareRadius` keeps the rounded-square shape.
+export function Chip({ label, selected, onPress, size = "md", mono, squareRadius = false, style, fill }: Props) {
   return (
     <Pressable
       onPress={onPress}
