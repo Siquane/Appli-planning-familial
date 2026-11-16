@@ -30,7 +30,7 @@ export function TaskCard({ task, members, done, onToggleDone }: { task: Task; me
         style={{
           alignItems: "center",
           opacity: done ? 0.7 : 1,
-          ...(task.recurring ? { borderWidth: 1, borderStyle: "dashed", borderColor: color.accent700 } : null),
+          ...(task.recurring ? { borderWidth: 1, borderColor: color.accent800 } : null),
         }}
       >
         {onToggleDone && <DoneCheck done={!!done} tint={categoryColor(task.category)} label={task.title} onToggle={onToggleDone} />}
