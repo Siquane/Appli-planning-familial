@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
+import type { FamilyRole } from "../api/types";
 
 const KEY = "passerelle.onboarded";
 
@@ -14,6 +15,15 @@ async function write(value: boolean) {
     return;
   }
   await SecureStore.setItemAsync(KEY, value ? "1" : "0");
+}
+
+/**
+ * L'accueil n'est retenu que sur le téléphone : après une réinstallation ou sur
+ * un nouveau téléphone, on regarde le compte. Il est déjà prêt s'il a rejoint
+ * une famille (c'est elle qui a fait l'accueil) ou s'il a des membres ou des tâches.
+ */
+export function accountIsSetUp(info: { familyRole?: FamilyRole; members: number; tasks: number }): boolean {
+  return (info.familyRole !== undefined && info.familyRole !== "owner") || info.members > 0 || info.tasks > 0;
 }
 
 interface OnboardingState {

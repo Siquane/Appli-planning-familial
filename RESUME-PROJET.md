@@ -273,14 +273,14 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Sur la fiche d'une tâche, un adulte (tout compte connecté) coche « C'est fait » pour chaque enfant assigné : une fois par semaine (`StarCompletion.week` = lundi local « AAAA-MM-JJ », envoyé par l'appli), annulable. Titre et étoiles recopiés : supprimer la tâche ne retire pas les étoiles.
 - Famille → « Étoiles et récompenses » (`app/stars.tsx`) : solde et étoiles de la semaine par enfant, récompenses (titre + prix, 30 max) à échanger si le solde suffit (`409 not_enough_stars` sinon), historique (appui long pour effacer une erreur).
 - Serveur : `routes/stars.ts` (`GET /stars?week=`, `POST/DELETE /stars/complete`, `/stars/rewards`, `/stars/rewards/:id/redeem`, `DELETE /stars/history/:id`), modèles `StarCompletion`, `Reward`, `RewardRedemption` (migration `20261115140000_stars`), repris par la passation de famille et effacés par « rejoindre une famille ». Gratuit, réseau nécessaire.
-- PR #38 fusionnée le 15/11 (étoiles + Firebase, runtime "7"). Clé FCM V1 déposée sur expo.dev par l'utilisatrice. **APK runtime "7" à compiler et installer** (Firebase).
+- PR #38 fusionnée le 15/11 (étoiles + Firebase, runtime "7"). Clé FCM V1 déposée sur expo.dev par l'utilisatrice. **APK runtime "7"** (build n°17 depuis main, 15/11 23 h 44 UTC, contient Firebase et tout jusqu'à la PR #40) : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/906dc17a-cd48-40f6-a374-3b88b5e019d8 — à installer sur chaque téléphone (désinstaller l'ancienne version d'abord si « Application non installée »).
 
 ## Dépenses en hausse et calendrier des prélèvements (Budget+, 15/11/2026)
 
 - **Dérive** = une catégorie dont le mois dépasse la moyenne des 3 mois précédents d'au moins **25 % ET 20 €**, et qui a servi au moins 2 de ces 3 mois ; l'épargne est ignorée (`server/src/lib/drifts.ts`, `findDrifts`).
 - Carte « Dépenses en hausse » dans l'onglet Budget (`GET /expenses/drifts?month=`). Après l'enregistrement d'une dépense (et l'import d'un relevé, pour le mois en cours), `checkDriftAlert` signale la dérive **une fois par catégorie et par mois** (table `DriftAlert`, migration `20261115150000_drift_alerts`) : message à celui qui enregistre (réponse `drift`), ligne dans Notifications, **push** aux autres comptes qui voient ce budget (propriétaire + comptes « complet » ; un compte « planning » a son propre budget). Un appui ouvre `/budget`.
 - **Calendrier des prélèvements** (`app/debits.tsx`, `GET /expenses/debits?month=`) : dépenses récurrentes jour par jour, totaux « déjà passé » / « à venir » ; mois passés et en cours = copies réelles, mois à venir = récurrentes prévues.
-- PR #39 fusionnée le 15/11.
+- PR #39 et #40 fusionnées le 15/11.
 
 ## Thème clair (15/11/2026)
 
@@ -290,3 +290,9 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Clair « blanc et néon adouci » : fond `#f4f8ff`, cartes blanches, texte `#0b1530`, échelles `accent*`/`neutral*` inversées (neutral100 = le plus contrasté dans les deux thèmes), dégradé un peu plus foncé, texte des boutons principaux `color.onGradient` (bleu nuit). Contrastes vérifiés (texte 17:1, secondaire 6,5:1, discret 4,8:1, accent 4,8:1).
 - Les **widgets restent sombres** (`darkColor`). Écran de lancement, icône et sélecteurs natifs (date, heure) restent sombres.
 - Pas vu sur un vrai téléphone : à vérifier.
+
+## Accueil sauté pour un compte déjà configuré (16/11/2026)
+
+- L'accueil (membres, plages protégées…) n'était retenu que sur le téléphone (`passerelle.onboarded` dans SecureStore) : il revenait après chaque réinstallation.
+- `app/index.tsx` : si l'accueil n'a pas été vu sur ce téléphone, l'appli regarde le compte (`accountIsSetUp` dans `src/state/onboardingStore.ts`) : compte qui a rejoint une famille, ou qui a des membres ou des tâches → directement au Planning (et l'accueil est noté comme vu). Sans réponse en 10 s (serveur endormi, pas de réseau) → l'accueil, comme avant.
+
