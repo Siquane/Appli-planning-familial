@@ -240,7 +240,14 @@ authRouter.delete("/me", requireAuth, loginLimiter, async (req, res) => {
     await leaveFamilyBehind(user.id, user.name, heirId);
   }
   const files = await prisma.document.findMany({ where: { userId: user.id }, select: { fileKey: true } });
-  await removeObjects(files.map((f) => f.fileKey));
+  // Cervelle: the children's profiles go with the account (cascade), so their
+  // course and test photos must leave storage too.
+  const learnerIds = (await prisma.learner.findMany({ where: { userId: user.id }, select: { id: true } })).map((l) => l.id);
+  const [revisions, exams] = await Promise.all([
+    prisma.revision.findMany({ where: { learnerId: { in: learnerIds } }, select: { photoKeys: true } }),
+    prisma.examReview.findMany({ where: { learnerId: { in: learnerIds } }, select: { photoKeys: true } }),
+  ]);
+  await removeObjects([...files.map((f) => f.fileKey), ...[...revisions, ...exams].flatMap((r) => r.photoKeys)]);
   await prisma.user.delete({ where: { id: user.id } });
   res.status(204).end();
 });
