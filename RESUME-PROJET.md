@@ -273,3 +273,9 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Clair « blanc et néon adouci » : fond `#f4f8ff`, cartes blanches, texte `#0b1530`, échelles `accent*`/`neutral*` inversées (neutral100 = le plus contrasté dans les deux thèmes), dégradé un peu plus foncé, texte des boutons principaux `color.onGradient` (bleu nuit). Contrastes vérifiés (texte 17:1, secondaire 6,5:1, discret 4,8:1, accent 4,8:1).
 - Les **widgets restent sombres** (`darkColor`). Écran de lancement, icône et sélecteurs natifs (date, heure) restent sombres.
 - Pas vu sur un vrai téléphone : à vérifier.
+
+## Accueil sauté pour un compte déjà configuré (16/11/2026)
+
+- L'accueil (membres, plages protégées…) n'était retenu que sur le téléphone (`passerelle.onboarded` dans SecureStore) : il revenait après chaque réinstallation.
+- `app/index.tsx` : si l'accueil n'a pas été vu sur ce téléphone, l'appli regarde le compte (`accountIsSetUp` dans `src/state/onboardingStore.ts`) : compte qui a rejoint une famille, ou qui a des membres ou des tâches → directement au Planning (et l'accueil est noté comme vu). Sans réponse en 10 s (serveur endormi, pas de réseau) → l'accueil, comme avant.
+
