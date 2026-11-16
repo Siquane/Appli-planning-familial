@@ -56,8 +56,8 @@ export function DoneCheck({ done, tint, label, onToggle }: { done: boolean; tint
       accessibilityRole="checkbox"
       accessibilityState={{ checked: done }}
       accessibilityLabel={done ? `${label} : faite. Toucher pour décocher.` : `Marquer « ${label} » comme faite`}
-      hitSlop={10}
-      style={{ width: 30, height: 30, alignItems: "center", justifyContent: "center" }}
+      hitSlop={13}
+      style={{ width: 24, height: 24, alignItems: "center", justifyContent: "center" }}
     >
       {SPARKS.map((s, i) => (
         <Animated.View
@@ -79,10 +79,10 @@ export function DoneCheck({ done, tint, label, onToggle }: { done: boolean; tint
       ))}
       <Animated.View
         style={{
-          width: 28,
-          height: 28,
-          borderRadius: 14,
-          borderWidth: 2.5,
+          width: 22,
+          height: 22,
+          borderRadius: 11,
+          borderWidth: 2,
           borderColor: tint,
           backgroundColor: done ? tint : "transparent",
           boxShadow: done ? glow(tint, 10) : undefined,
@@ -92,7 +92,7 @@ export function DoneCheck({ done, tint, label, onToggle }: { done: boolean; tint
         }}
       >
         {done && (
-          <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+          <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
             <Path d="M5 12.5l4.5 4.5L19 7" stroke={color.onGradient} strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" />
           </Svg>
         )}
