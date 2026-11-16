@@ -19,6 +19,10 @@ export interface Storage {
   /** Size in bytes of the stored object, or null if it does not exist. */
   size(key: string): Promise<number | null>;
   remove(key: string): Promise<void>;
+  /** Server-side write (Cervelle course photos, which the API receives itself). */
+  putObject?(key: string, body: Buffer, mimeType: string): Promise<void>;
+  /** Server-side read; null if the object does not exist. */
+  getObject?(key: string): Promise<Buffer | null>;
 }
 
 class S3Storage implements Storage {
@@ -59,6 +63,22 @@ class S3Storage implements Storage {
 
   async remove(key: string) {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+  }
+
+  async putObject(key: string, body: Buffer, mimeType: string) {
+    await this.client.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: mimeType }));
+  }
+
+  async getObject(key: string) {
+    try {
+      const out = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+      if (!out.Body) return null;
+      return Buffer.from(await out.Body.transformToByteArray());
+    } catch (e) {
+      const status = (e as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+      if (status === 404) return null;
+      throw e;
+    }
   }
 }
 

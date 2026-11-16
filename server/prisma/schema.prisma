@@ -66,6 +66,8 @@ model User {
   starCompletions     StarCompletion[]
   rewards             Reward[]
   rewardRedemptions   RewardRedemption[]
+  learners            Learner[]
+  aiUsages            AiUsage[]
 }
 
 model PasswordResetCode {
@@ -121,6 +123,7 @@ model FamilyMember {
   recurringExpenses RecurringExpense[]
   starCompletions   StarCompletion[]
   rewardRedemptions RewardRedemption[]
+  learners          Learner[]
 }
 
 // priority: 'high' | 'medium' | 'low'
@@ -529,4 +532,205 @@ model DriftAlert {
   createdAt DateTime @default(now())
 
   @@unique([userId, category, month])
+}
+
+// ─── Cervelle (révisions) ────────────────────────────────────────────────
+// A separate app (Cervelle) uses this server and the family's accounts.
+// Parents sign in with their Passerelle account; each child gets a Learner
+// profile and signs in on their own phone with a one-time code (LearnerCode)
+// that gives that phone a device token (LearnerDevice). See routes/cervelle.ts.
+
+model Learner {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memberId     String?
+  member       FamilyMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  name         String
+  // "primaire" | "college" | "lycee" | "superieur" | "adulte"
+  level        String
+  // School year as the family writes it (« CM1 », « 4e », « Terminale »…), or "".
+  grade        String        @default("")
+  color        String        @default("violet")
+  // Game: coins to spend in the shop, xp grows the mascot, streak = study days in a row.
+  coins        Int           @default(0)
+  xp           Int           @default(0)
+  streak       Int           @default(0)
+  bestStreak   Int           @default(0)
+  // Calendar day (Europe/Paris, « 2026-11-14 ») of the last study session.
+  lastStudyDay String?
+  // Day on which the daily missions' chest was opened.
+  chestDay     String?
+  owned        String[]      @default([])
+  equipped     String[]      @default([])
+  createdAt    DateTime      @default(now())
+
+  codes       LearnerCode[]
+  devices     LearnerDevice[]
+  revisions   Revision[]
+  attempts    Attempt[]
+  sessions    StudySession[]
+  examReviews ExamReview[]
+
+  @@index([userId])
+}
+
+model LearnerCode {
+  id        String   @id @default(cuid())
+  learnerId String
+  learner   Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  codeHash  String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model LearnerDevice {
+  id         String   @id @default(cuid())
+  learnerId  String
+  learner    Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  name       String   @default("")
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+}
+
+model Revision {
+  id                 String    @id @default(cuid())
+  learnerId          String
+  learner            Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  title              String    @default("")
+  subject            String    @default("")
+  // Illustration key chosen by Claude among a fixed list (see lib/cervelle/icons.ts).
+  icon               String    @default("livre")
+  examDate           DateTime?
+  // "processing" | "ready" | "failed"
+  status             String    @default("processing")
+  error              String?
+  // "parent" | "enfant"
+  createdBy          String    @default("parent")
+  summary            String    @default("")
+  // Revision sheets: [{ notionId, title, essentiel, points[], vocabulaire[{terme, definition}], exemple, retenir }]
+  sheets             Json      @default("[]")
+  photoKeys          String[]  @default([])
+  photoCount         Int       @default(0)
+  sheetsReadAt       DateTime?
+  // Chapter of the official programme (lib/cervelle/programme.ts), when the class has one.
+  programmeChapterId String?
+  // Best scores in percent.
+  quizBest           Int?
+  examBest           Int?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  notions     Notion[]
+  questions   Question[]
+  sessions    StudySession[]
+  examReviews ExamReview[]
+
+  @@index([learnerId, createdAt])
+}
+
+model Notion {
+  id             String    @id @default(cuid())
+  revisionId     String
+  revision       Revision  @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  parentId       String?
+  parent         Notion?   @relation("NotionTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children       Notion[]  @relation("NotionTree")
+  title          String
+  order          Int       @default(0)
+  // "new" (en cours) | "review" (à revoir) | "mastered" (maîtrisé)
+  mastery        String    @default("new")
+  // Added by Cervelle because the programme expects it and the photographed course left it out.
+  fromProgramme  Boolean   @default(false)
+  // Correct answers in a row, drives the spaced-review interval.
+  streak         Int       @default(0)
+  nextReviewAt   DateTime?
+  lastAnsweredAt DateTime?
+
+  questions Question[]
+
+  @@index([revisionId])
+}
+
+model Question {
+  id          String   @id @default(cuid())
+  revisionId  String
+  revision    Revision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  notionId    String
+  notion      Notion   @relation(fields: [notionId], references: [id], onDelete: Cascade)
+  // "qcm" | "vrai_faux" | "carte" | "courte" | "trous" | "ordre"
+  type        String
+  prompt      String
+  choices     String[] @default([])
+  // qcm: index of the right choice; vrai_faux: "vrai" | "faux"; others: the expected answer.
+  answer      String
+  acceptable  String[] @default([])
+  items       String[] @default([])
+  explanation String   @default("")
+  order       Int      @default(0)
+
+  attempts Attempt[]
+
+  @@index([revisionId])
+}
+
+model Attempt {
+  id         String   @id @default(cuid())
+  learnerId  String
+  learner    Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  correct    Boolean
+  answer     String   @default("")
+  mode       String
+  createdAt  DateTime @default(now())
+
+  @@index([learnerId, createdAt])
+}
+
+model StudySession {
+  id         String    @id @default(cuid())
+  learnerId  String
+  learner    Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  revisionId String?
+  revision   Revision? @relation(fields: [revisionId], references: [id], onDelete: SetNull)
+  // "fiches" | "qcm" | "cartes" | "interro" | "a_revoir"
+  mode       String
+  seconds    Int       @default(0)
+  correct    Int       @default(0)
+  total      Int       @default(0)
+  coins      Int       @default(0)
+  day        String
+  createdAt  DateTime  @default(now())
+
+  @@index([learnerId, createdAt])
+}
+
+model ExamReview {
+  id         String    @id @default(cuid())
+  learnerId  String
+  learner    Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  revisionId String?
+  revision   Revision? @relation(fields: [revisionId], references: [id], onDelete: SetNull)
+  status     String    @default("processing")
+  error      String?
+  // { note, resume, points_forts[], erreurs[{question, reponse_eleve, correction, explication, notion}], conseils[] }
+  analysis   Json?
+  photoKeys  String[]  @default([])
+  createdAt  DateTime  @default(now())
+
+  @@index([learnerId, createdAt])
+}
+
+// Every Claude call made for Cervelle, to cap daily use per family.
+model AiUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // "revision" | "exam" | "assistant" | "grading"
+  kind      String
+  createdAt DateTime @default(now())
+
+  @@index([userId, kind, createdAt])
 }
