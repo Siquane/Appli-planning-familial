@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { View, RefreshControl } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../../src/components/Screen";
+import { Pressable } from "../../src/components/Touchable";
 import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
 import { Button } from "../../src/components/Button";
@@ -85,16 +86,6 @@ export default function HomeScreen() {
         </Card>
       )}
 
-      {flexibleCount > 0 && (
-        <Card row style={{ alignItems: "center", backgroundColor: color.accent900 }}>
-          <ReshuffleIcon size={16} color={color.accent200} />
-          <Text size={13} style={{ flex: 1, marginLeft: space.sm }}>
-            {flexibleCount} tâche{flexibleCount > 1 ? "s" : ""} flexible{flexibleCount > 1 ? "s" : ""} — Passerelle peut réajuster ta semaine.
-          </Text>
-          <Button label="Replanifier" variant="ghost" onPress={() => router.push("/replan")} />
-        </Card>
-      )}
-
       <View style={{ gap: space.sm }}>
         <Text weight="medium" size={15} tone="muted">
           {WEEKDAYS_FULL[selected]}
@@ -113,6 +104,24 @@ export default function HomeScreen() {
           <TaskCard key={task.id} task={task} members={members} done={doneIds.has(task.id)} onToggleDone={() => onToggle(task.id)} />
         ))}
       </View>
+
+      {/* Discret, sous la liste : un simple lien vers « Replanifier ». */}
+      {flexibleCount > 0 && (
+        <Pressable
+          onPress={() => router.push("/replan")}
+          accessibilityRole="button"
+          accessibilityLabel="Replanifier les tâches flexibles"
+          style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: space.xs, paddingVertical: space.sm }}
+        >
+          <ReshuffleIcon size={14} color={color.neutral500} />
+          <Text size={13} tone="faint">
+            {flexibleCount} tâche{flexibleCount > 1 ? "s" : ""} flexible{flexibleCount > 1 ? "s" : ""} ·{" "}
+          </Text>
+          <Text size={13} tone="accent">
+            Replanifier
+          </Text>
+        </Pressable>
+      )}
     </Screen>
   );
 }
