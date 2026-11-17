@@ -309,3 +309,9 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - **Case « Dans les récaps »** sur chaque tâche (`Task.inDigest`, vrai par défaut, migration `20261117180000_task_in_digest`) : décochée, la tâche n'apparaît ni dans le récap du soir ni dans celui du matin ; elle reste au Planning et garde son rappel.
 - Pas de nouvel APK (JS seulement, runtime "8").
 
+## Quota Expo épuisé → APK compilé sur GitHub (17/11/2026)
+
+- Le compte Expo gratuit a utilisé toutes ses compilations Android de novembre (remise à zéro le 1er décembre) : « EAS Build (Android preview) » échoue avec « This account has used its Android builds from the Free plan this month ».
+- Nouveau workflow **« APK sur GitHub (sans quota Expo) »** (`.github/workflows/apk-github.yml`) : `eas build --local` sur une machine GitHub (Java 17, SDK Android de la machine), même clé de signature (récupérée chez Expo) et même canal de mises à jour. L'APK est publié dans une **Release GitHub** (`apk-<n°>`, fichier `passerelle.apk`, lien en fin de journal). Environ 20–30 min sur les 2 000 min/mois GitHub.
+- APK runtime "8" (notes + widget Notes, récap du matin) : à compiler avec ce workflow puis à installer.
+
