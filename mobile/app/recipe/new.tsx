@@ -48,7 +48,7 @@ export default function RecipeFormScreen() {
       setImportUrl("");
       useToastStore.getState().show("Recette importée : vérifie-la puis enregistre.");
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "Import impossible.");
+      useToastStore.getState().show(e instanceof Error ? e.message : "Impossible de lire cette recette. Vérifie le lien, ou saisis-la à la main.");
     } finally {
       setImporting(false);
     }
@@ -93,7 +93,7 @@ export default function RecipeFormScreen() {
         {!existing && (
           <Card style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
-              Importer depuis un site de recettes (optionnel)
+              Importer depuis un site de recettes (facultatif)
             </Text>
             <TextField value={importUrl} onChangeText={setImportUrl} placeholder="Coller le lien de la recette" autoCapitalize="none" keyboardType="url" />
             <Button label="Importer" variant="secondary" block onPress={onImport} disabled={!importUrl.trim()} loading={importing} needsNetwork />
@@ -109,7 +109,7 @@ export default function RecipeFormScreen() {
         {members.length > 0 && (
           <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
-              Qui aime ce plat ? (optionnel)
+              Qui aime ce plat ? (facultatif)
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
               {members.map((m) => (

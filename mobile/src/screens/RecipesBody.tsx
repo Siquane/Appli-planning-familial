@@ -19,7 +19,7 @@ export function RecipesBody() {
 
         {recipes.length === 0 && (
           <Card>
-            <EmptyState title="Le livre est encore vierge 📖" detail="Ajoutez votre première recette, ou importez-la depuis un lien." />
+            <EmptyState title="Le livre est encore vierge 📖" detail="Ajoute ta première recette, ou importe-la depuis un lien." />
           </Card>
         )}
 

@@ -97,7 +97,7 @@ export default function TaskDetailScreen() {
         {assigned.length > 0 && (
           <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
-              Assigné à
+              Assignée à
             </Text>
             <View style={{ flexDirection: "row", gap: space.sm }}>
               {assigned.map((m) => (

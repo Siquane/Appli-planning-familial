@@ -195,7 +195,7 @@ function ExportSection() {
     try {
       await exportExpenses(period, format);
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "L'export a échoué.");
+      useToastStore.getState().show(e instanceof Error ? e.message : "L'export a échoué. Vérifie ta connexion et réessaie.");
     } finally {
       setBusy(null);
     }

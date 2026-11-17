@@ -26,7 +26,7 @@ export default function NotificationsOnboardingScreen() {
           <BellIcon size={30} color={color.accent200} />
         </View>
         <Text heading weight="semibold" size={22} center>
-          Restez au courant
+          Reste au courant
         </Text>
         <Text tone="muted" size={15} center style={{ maxWidth: 280 }}>
           Passerelle te prévient des changements de planning et des tâches à venir. Tu pourras régler ça dans ton profil.

@@ -61,7 +61,7 @@ export function WidgetCard({ content, accent, uri }: { content: WidgetContent; a
       })}
       {empty && <TextWidget text={content.empty ?? ""} maxLines={1} truncate="END" style={{ width: "match_parent", textAlign: "center", fontSize: ROW_SIZE, color: ROW_COLOR.normal }} />}
       {empty && content.example && content.example.length > 0 && (
-        <TextWidget text="Exemple — appuie pour remplir" maxLines={1} style={{ width: "match_parent", textAlign: "center", fontSize: 12, color: ROW_COLOR.faint, fontStyle: "italic" }} />
+        <TextWidget text="Exemple · touche pour remplir" maxLines={1} style={{ width: "match_parent", textAlign: "center", fontSize: 12, color: ROW_COLOR.faint, fontStyle: "italic" }} />
       )}
       {empty &&
         content.example?.map((text, i) => (
