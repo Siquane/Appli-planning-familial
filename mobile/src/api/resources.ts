@@ -1,5 +1,7 @@
 import { api } from "./client";
 import type {
+  Note,
+  NoteInput,
   TaskDoneMark,
   DebitCalendar,
   Drift,
@@ -195,6 +197,13 @@ export const starsApi = {
   removeReward: (id: string) => api.delete<void>(`/stars/rewards/${id}`),
   redeem: (id: string, memberId: string) => api.post<{ balance: number }>(`/stars/rewards/${id}/redeem`, { memberId }),
   removeHistory: (id: string) => api.delete<void>(`/stars/history/${id}`),
+};
+
+export const notesApi = {
+  list: () => api.get<{ notes: Note[] }>("/notes"),
+  create: (data: NoteInput) => api.post<{ note: Note }>("/notes", data),
+  update: (id: string, data: Partial<NoteInput>) => api.patch<{ note: Note }>(`/notes/${id}`, data),
+  remove: (id: string) => api.delete<void>(`/notes/${id}`),
 };
 
 export const shareApi = {

@@ -296,3 +296,10 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - L'accueil (membres, plages protégées…) n'était retenu que sur le téléphone (`passerelle.onboarded` dans SecureStore) : il revenait après chaque réinstallation.
 - `app/index.tsx` : si l'accueil n'a pas été vu sur ce téléphone, l'appli regarde le compte (`accountIsSetUp` dans `src/state/onboardingStore.ts`) : compte qui a rejoint une famille, ou qui a des membres ou des tâches → directement au Planning (et l'accueil est noté comme vu). Sans réponse en 10 s (serveur endormi, pas de réseau) → l'accueil, comme avant.
 
+## Notes et widget « Notes » (17/11/2026, `runtimeVersion` "8")
+
+- Famille → **Notes** (`app/notes.tsx`, filtres Toutes / Famille / Perso) et « Note » dans le menu « + ». Écran d'une note : `app/note/[id].tsx` (`/note/new` pour en créer une) : titre facultatif, texte, **Famille** (tous les comptes la voient et la modifient) ou **Perso** (seul l'auteur la voit), couleur, épinglage.
+- Serveur : modèle `Note` (migration `20261117170000_notes`), routes `/notes`. Une note Famille vit dans l'espace de la famille (`userId` = famille), une note Perso chez son auteur (`userId` = son compte) : quitter la famille ou supprimer son compte n'emporte que ses notes perso. Seul l'auteur peut rendre perso une note Famille. La passation de famille transfère les notes Famille ; « rejoindre une famille » efface les notes Famille de l'ancien compte.
+- **Widget « Notes »** (6ᵉ widget, 3 × 2) : les 4 dernières notes (épinglées d'abord), un appui ouvre la note (`passerelle://widget/note/<id>`), « + » ouvre `/note/new`, le titre ouvre la liste. Aperçu `assets/widgets/notes.png`. Nouveau widget natif → **`runtimeVersion` "8"** : lancer « EAS Build (Android preview) » depuis main et installer le nouvel APK.
+- Retour depuis un écran ouvert par un widget : `goBack()` / `useBackFallback()` (`src/lib/navigation.ts`, PR #52).
+

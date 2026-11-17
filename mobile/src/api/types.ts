@@ -508,3 +508,22 @@ export interface DebitCalendar {
   passedCents: number;
   upcomingCents: number;
 }
+
+export type NoteColor = "default" | "cyan" | "blue" | "lavender" | "violet" | "green" | "amber";
+
+/** « Famille » (shared) : vue par tous les comptes ; « Perso » : par son auteur seulement. */
+export interface Note {
+  id: string;
+  title: string;
+  body: string;
+  shared: boolean;
+  color: NoteColor;
+  pinned: boolean;
+  /** Écrite par ce compte. */
+  mine: boolean;
+  authorName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NoteInput = Pick<Note, "title" | "body" | "shared" | "color" | "pinned">;

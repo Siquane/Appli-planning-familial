@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useMeals, useMembers, useMonthlyBudget, useRecipes, useShoppingList, useTasks } from "../hooks/useApi";
+import { useMeals, useMembers, useMonthlyBudget, useNotes, useRecipes, useShoppingList, useTasks } from "../hooks/useApi";
 import { currentMonth } from "../lib/money";
 import { buildSnapshot } from "./snapshot";
 import { refreshWidgets } from "./refresh";
@@ -12,10 +12,11 @@ export function useWidgetSync() {
   const { data: budget } = useMonthlyBudget(currentMonth());
   const { data: shopping } = useShoppingList();
   const { data: members } = useMembers();
+  const { data: notes } = useNotes();
 
   useEffect(() => {
     if (!tasks || !meals) return;
-    const timer = setTimeout(() => refreshWidgets(buildSnapshot(tasks, meals, recipes ?? [], budget, shopping ?? [], members ?? [])), 500);
+    const timer = setTimeout(() => refreshWidgets(buildSnapshot(tasks, meals, recipes ?? [], budget, shopping ?? [], members ?? [], new Date(), notes ?? [])), 500);
     return () => clearTimeout(timer);
-  }, [tasks, meals, recipes, budget, shopping, members]);
+  }, [tasks, meals, recipes, budget, shopping, members, notes]);
 }
