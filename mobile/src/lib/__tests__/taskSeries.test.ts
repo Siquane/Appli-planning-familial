@@ -20,6 +20,7 @@ const task = (id: string, weekday: Weekday, time = "18:00", seriesId: string | n
   externalProvider: null,
   seriesId,
   stars: 1,
+  inDigest: true,
 });
 
 describe("newSeriesId", () => {

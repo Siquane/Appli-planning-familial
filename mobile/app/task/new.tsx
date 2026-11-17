@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { View } from "react-native";
+import { Switch, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { Pressable } from "../../src/components/Touchable";
 import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
@@ -82,6 +83,7 @@ export default function TaskFormScreen() {
   const [memberIds, setMemberIds] = useState<string[]>(prefillMember ? [prefillMember] : []);
   const [notes, setNotes] = useState("");
   const [stars, setStars] = useState(1);
+  const [inDigest, setInDigest] = useState(true);
 
   // Rempli une seule fois : un rafraîchissement de la liste (toutes les
   // minutes avec la famille partagée) ne doit pas écraser la saisie.
@@ -105,6 +107,7 @@ export default function TaskFormScreen() {
     setMemberIds(existing.memberIds);
     setNotes(existing.notes);
     setStars(existing.stars ?? 1);
+    setInDigest(existing.inDigest ?? true);
   }, [existing]);
 
   // « Dupliquer » : on recopie la tâche source dans un formulaire de
@@ -131,6 +134,7 @@ export default function TaskFormScreen() {
     setMemberIds(source.memberIds);
     setNotes(source.notes);
     setStars(source.stars ?? 1);
+    setInDigest(source.inDigest ?? true);
   }, [source]);
 
   function toggleMember(id: string) {
@@ -162,7 +166,7 @@ export default function TaskFormScreen() {
   const saving = savingSeries || createTask.isPending || updateTask.isPending || autoSlotTask.isPending;
 
   async function onSave() {
-    const base = { title: title.trim(), category, duration, priority, deadlineWeekday, recurring, reminder, memberIds, notes, stars };
+    const base = { title: title.trim(), category, duration, priority, deadlineWeekday, recurring, reminder, memberIds, notes, stars, inDigest };
     try {
       if (existing) {
         setSavingSeries(true);
@@ -361,6 +365,26 @@ export default function TaskFormScreen() {
             }}
           />
         )}
+
+        <Pressable
+          onPress={() => setInDigest((v) => !v)}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: inDigest }}
+          style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}
+        >
+          <View style={{ flex: 1 }}>
+            <Text size={15}>Dans les récaps</Text>
+            <Text size={11} tone="faint">
+              Récap du soir (tâches du lendemain) et du matin (tâches du jour). Décoche pour une tâche évidente, comme le coucher.
+            </Text>
+          </View>
+          <Switch
+            value={inDigest}
+            onValueChange={setInDigest}
+            trackColor={{ false: color.neutral700, true: color.accent700 }}
+            thumbColor={inDigest ? color.accent300 : color.neutral300}
+          />
+        </Pressable>
 
         <TextField label="Notes" value={notes} onChangeText={setNotes} multiline placeholder="Détails, lieu, contexte..." />
 

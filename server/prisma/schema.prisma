@@ -151,6 +151,8 @@ model Task {
   seriesId         String?
   // Étoiles gagnées par un enfant (moins de 15 ans) quand la tâche est faite.
   stars            Int      @default(1)
+  // Apparaît dans le récap du soir et du matin (décochable par tâche).
+  inDigest         Boolean  @default(true)
   externalEventId  String?
   externalProvider String?
   createdAt        DateTime @default(now())
