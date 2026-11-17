@@ -34,6 +34,7 @@ function serializeTask(task: TaskWithMembers) {
     externalProvider: task.externalProvider,
     seriesId: task.seriesId,
     stars: task.stars,
+    inDigest: task.inDigest,
   };
 }
 
@@ -59,6 +60,7 @@ const taskSchema = z.object({
   notes: z.string().default(""),
   memberIds: z.array(z.string()).default([]),
   stars: z.number().int().min(1).max(5).default(1),
+  inDigest: z.boolean().default(true),
   // Généré par l'appli (elle doit pouvoir créer une série hors connexion).
   seriesId: z.string().min(8).max(40).regex(/^[A-Za-z0-9_-]+$/).nullable().optional(),
 });
@@ -103,6 +105,7 @@ tasksRouter.post("/", async (req, res) => {
       notes: d.notes,
       seriesId: d.seriesId ?? null,
       stars: d.stars,
+      inDigest: d.inDigest,
       members: { create: d.memberIds.map((memberId) => ({ memberId })) },
     },
     include,

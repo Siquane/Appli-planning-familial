@@ -11,6 +11,7 @@ import { color, space } from "../src/theme/tokens";
 import { useSettingsStore } from "../src/state/settingsStore";
 import { confirmReminderPermission, DIGEST_HOUR } from "../src/lib/notifications";
 import { EmptyState } from "../src/components/Playful";
+import { TimeField } from "../src/components/TimeField";
 
 export default function NotificationsScreen() {
   const { data: notifications = [] } = useNotifications();
@@ -22,6 +23,15 @@ export default function NotificationsScreen() {
   const hasUnread = notifications.some((n) => n.unread);
   const eveningDigest = useSettingsStore((st) => st.eveningDigest);
   const setEveningDigest = useSettingsStore((st) => st.setEveningDigest);
+  const morningDigest = useSettingsStore((st) => st.morningDigest);
+  const setMorningDigest = useSettingsStore((st) => st.setMorningDigest);
+  const morningTime = useSettingsStore((st) => st.morningTime);
+  const setMorningTime = useSettingsStore((st) => st.setMorningTime);
+
+  async function toggleMorning(on: boolean) {
+    await setMorningDigest(on);
+    if (on) await confirmReminderPermission();
+  }
 
   // Alertes de la famille : seulement quand d'autres comptes partagent la famille.
   const { data: family } = useFamily();
@@ -42,6 +52,33 @@ export default function NotificationsScreen() {
   return (
     <Screen>
       <BackHeader title="Notifications" right={hasUnread ? <Button label="Tout marquer lu" variant="ghost" onPress={() => markAllRead.mutate()} /> : undefined} />
+
+      <Card style={{ gap: space.sm }}>
+        <Pressable onPress={() => toggleMorning(!morningDigest)} accessibilityRole="switch" accessibilityState={{ checked: morningDigest }} style={{ flexDirection: "row", alignItems: "center" }}>
+          <View style={{ flex: 1 }}>
+            <Text size={15} weight="medium">
+              Récap du matin
+            </Text>
+            <Text size={11} tone="faint">
+              Chaque matin, toutes les tâches du jour, avec qui les fait.
+            </Text>
+          </View>
+          <Switch
+            value={morningDigest}
+            onValueChange={toggleMorning}
+            trackColor={{ false: color.neutral700, true: color.accent700 }}
+            thumbColor={morningDigest ? color.accent300 : color.neutral300}
+          />
+        </Pressable>
+        {morningDigest && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+            <Text size={13} tone="muted" style={{ flex: 1 }}>
+              Heure
+            </Text>
+            <TimeField value={morningTime} onChange={setMorningTime} />
+          </View>
+        )}
+      </Card>
 
       <Pressable onPress={() => toggleDigest(!eveningDigest)} accessibilityRole="switch" accessibilityState={{ checked: eveningDigest }}>
         <Card row style={{ alignItems: "center" }}>

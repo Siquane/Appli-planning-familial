@@ -71,6 +71,17 @@ describe("tasks CRUD", () => {
     expect(bad.status).toBe(400);
   });
 
+  it("keeps a task in the digests unless it is unticked", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    const created = await request(app).post("/tasks").set(auth).send(baseTask);
+    expect(created.body.task.inDigest).toBe(true);
+    const patched = await request(app).patch(`/tasks/${created.body.task.id}`).set(auth).send({ inDigest: false });
+    expect(patched.body.task.inDigest).toBe(false);
+    const other = await request(app).patch(`/tasks/${created.body.task.id}`).set(auth).send({ title: "Autre" });
+    expect(other.body.task.inDigest).toBe(false);
+  });
+
   it("rejects an invalid payload", async () => {
     const { accessToken } = await signup(app);
     const res = await request(app)

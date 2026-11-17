@@ -303,3 +303,9 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - **Widget « Notes »** (6ᵉ widget, 3 × 2) : les 4 dernières notes (épinglées d'abord), un appui ouvre la note (`passerelle://widget/note/<id>`), « + » ouvre `/note/new`, le titre ouvre la liste. Aperçu `assets/widgets/notes.png`. Nouveau widget natif → **`runtimeVersion` "8"** : lancer « EAS Build (Android preview) » depuis main et installer le nouvel APK.
 - Retour depuis un écran ouvert par un widget : `goBack()` / `useBackFallback()` (`src/lib/navigation.ts`, PR #52).
 
+## Récap du matin et case « Dans les récaps » (17/11/2026)
+
+- **Récap du matin** (`syncMorningDigest`, `src/lib/notifications.ts`) : chaque matin à **9 h par défaut** (heure réglable et interrupteur dans Notifications, préférences du téléphone dans `settingsStore`), toutes les tâches du jour, une par ligne avec qui les fait (« 08:20 École · Jules »). Canal Android `morning` en importance haute : bannière en haut de l'écran avec son, liste complète en dépliant. Un appui ouvre le Planning. Pas de vrai plein écran (réservé par Android aux réveils et appels).
+- **Case « Dans les récaps »** sur chaque tâche (`Task.inDigest`, vrai par défaut, migration `20261117180000_task_in_digest`) : décochée, la tâche n'apparaît ni dans le récap du soir ni dans celui du matin ; elle reste au Planning et garde son rappel.
+- Pas de nouvel APK (JS seulement, runtime "8").
+

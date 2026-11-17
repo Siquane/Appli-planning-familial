@@ -108,6 +108,8 @@ export interface Task {
   seriesId: string | null;
   /** Étoiles gagnées par un enfant assigné quand la tâche est faite (1 à 5). */
   stars: number;
+  /** Apparaît dans le récap du soir et du matin (vrai par défaut). */
+  inDigest: boolean;
 }
 
 /** Une tâche cochée « faite » un jour donné (« AAAA-MM-JJ »). */
