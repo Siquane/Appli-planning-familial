@@ -59,7 +59,7 @@ const taskSchema = z.object({
   synced: z.boolean().default(false),
   notes: z.string().default(""),
   memberIds: z.array(z.string()).default([]),
-  stars: z.number().int().min(1).max(5).default(1),
+  stars: z.number().int().min(0).max(5).default(1),
   inDigest: z.boolean().default(true),
   // Généré par l'appli (elle doit pouvoir créer une série hors connexion).
   seriesId: z.string().min(8).max(40).regex(/^[A-Za-z0-9_-]+$/).nullable().optional(),
@@ -267,7 +267,8 @@ tasksRouter.get("/replan/proposals", async (req, res) => {
   const flexible = tasks.filter((t) => t.flexible);
   const proposals = flexible.map((t) => {
     const schedulableTask = schedulable.find((s) => s.id === t.id)!;
-    const candidates = getProposals(schedulableTask, schedulable, constraints);
+    // Plusieurs heures par jour, pour laisser le choix.
+    const candidates = getProposals(schedulableTask, schedulable, constraints, 6, 2);
     return { taskId: t.id, title: t.title, currentWeekday: t.weekday, currentTime: t.time, candidates };
   });
 

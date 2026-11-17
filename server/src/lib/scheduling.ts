@@ -102,7 +102,8 @@ export function scoreCandidate(
   return { weekday, time, score, reasons };
 }
 
-export function getProposals(task: SchedulableTask, allTasks: SchedulableTask[], constraints: Constraints, limit = 3): Candidate[] {
+/** Best slots, best first, at most `perDay` per weekday (replan offers several hours a day). */
+export function getProposals(task: SchedulableTask, allTasks: SchedulableTask[], constraints: Constraints, limit = 3, perDay = 1): Candidate[] {
   const candidates: Candidate[] = [];
   for (let weekday = 0 as Weekday; weekday <= 6; weekday++) {
     for (const time of TIME_POOL) {
@@ -111,11 +112,12 @@ export function getProposals(task: SchedulableTask, allTasks: SchedulableTask[],
     }
   }
   candidates.sort((a, b) => b.score - a.score);
-  const seenDays = new Set<number>();
+  const perWeekday = new Map<number, number>();
   const top: Candidate[] = [];
   for (const c of candidates) {
-    if (seenDays.has(c.weekday)) continue;
-    seenDays.add(c.weekday);
+    const n = perWeekday.get(c.weekday) ?? 0;
+    if (n >= perDay) continue;
+    perWeekday.set(c.weekday, n + 1);
     top.push(c);
     if (top.length === limit) break;
   }

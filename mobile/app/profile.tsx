@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable } from "../src/components/Touchable";
-import { View } from "react-native";
+import { Switch, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "../src/components/Screen";
 import { BackHeader } from "../src/components/PageHeader";
@@ -16,14 +16,10 @@ import { useAuthStore } from "../src/state/authStore";
 import { useToastStore } from "../src/state/toastStore";
 import { connectAppleCalendar, startOAuthConnect } from "../src/lib/calendarConnect";
 import { color, space } from "../src/theme/tokens";
-import { Chip } from "../src/components/Chip";
 import { useThemeStore } from "../src/state/themeStore";
 import type { Scheme } from "../src/theme/tokens";
 
-const THEMES: { key: Scheme; label: string }[] = [
-  { key: "dark", label: "Sombre" },
-  { key: "light", label: "Clair" },
-];
+
 import { Platform } from "react-native";
 
 const PROVIDERS: { key: "google" | "outlook" | "apple"; label: string }[] = [
@@ -147,16 +143,24 @@ export default function ProfileScreen() {
         </Card>
       )}
 
-      <View style={{ gap: space.sm }}>
-        <Text weight="medium" size={13} tone="muted">
+      <Pressable
+        onPress={() => chooseTheme(themeScheme === "light" ? "dark" : "light")}
+        accessibilityRole="switch"
+        accessibilityLabel="Thème clair"
+        accessibilityState={{ checked: themeScheme === "light" }}
+        style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}
+      >
+        <Text weight="medium" size={13} tone="muted" style={{ flex: 1 }}>
           Apparence
         </Text>
-        <View style={{ flexDirection: "row", gap: space.xs }}>
-          {THEMES.map((t) => (
-            <Chip key={t.key} label={t.label} selected={themeScheme === t.key} onPress={() => chooseTheme(t.key)} size="sm" fill />
-          ))}
-        </View>
-      </View>
+        <Text size={13}>{themeScheme === "light" ? "Clair" : "Sombre"}</Text>
+        <Switch
+          value={themeScheme === "light"}
+          onValueChange={(on) => chooseTheme(on ? "light" : "dark")}
+          trackColor={{ false: color.neutral700, true: color.accent700 }}
+          thumbColor={themeScheme === "light" ? color.accent300 : color.neutral300}
+        />
+      </Pressable>
 
       <View style={{ gap: space.sm }}>
         <Text weight="medium" size={13} tone="muted">

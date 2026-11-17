@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { ScrollView, View } from "react-native";
+import { Chip } from "../src/components/Chip";
+import { TimeField } from "../src/components/TimeField";
 import { router } from "expo-router";
 import { Screen } from "../src/components/Screen";
 import { Text } from "../src/components/Text";
@@ -9,14 +12,14 @@ import { ReshuffleIcon } from "../src/components/icons";
 import { useReplanProposals, useUpdateTask } from "../src/hooks/useApi";
 import { useToastStore } from "../src/state/toastStore";
 import { color, space, gutter } from "../src/theme/tokens";
-import { WEEKDAYS_FULL } from "../src/lib/weekdays";
-import type { ReplanCandidate } from "../src/api/types";
+import { WEEKDAYS_FULL, WEEKDAYS_SHORT } from "../src/lib/weekdays";
+import type { ReplanCandidate, Weekday } from "../src/api/types";
 
 export default function ReplanScreen() {
   const { data: proposals = [], isLoading } = useReplanProposals();
   const updateTask = useUpdateTask();
 
-  function apply(taskId: string, title: string, candidate: ReplanCandidate) {
+  function apply(taskId: string, title: string, candidate: Pick<ReplanCandidate, "weekday" | "time">) {
     updateTask.mutate(
       { id: taskId, data: { weekday: candidate.weekday, time: candidate.time } },
       { onSuccess: () => useToastStore.getState().show(`« ${title} » déplacée au ${WEEKDAYS_FULL[candidate.weekday]} ${candidate.time}.`) }
@@ -67,9 +70,36 @@ export default function ReplanScreen() {
                 </Card>
               ))}
             </View>
+            <OtherSlot weekday={p.currentWeekday as Weekday} time={p.currentTime} onApply={(weekday, time) => apply(p.taskId, p.title, { weekday, time })} />
           </Card>
         ))}
       </ScrollView>
     </Screen>
+  );
+}
+
+/** « Autre moment » : n'importe quel jour et n'importe quelle heure, au choix. */
+function OtherSlot({ weekday, time, onApply }: { weekday: Weekday; time: string; onApply: (weekday: Weekday, time: string) => void }) {
+  const [day, setDay] = useState<Weekday>(weekday);
+  const [hour, setHour] = useState(time);
+  const [open, setOpen] = useState(false);
+  if (!open) return <Button label="Choisir un autre moment" variant="ghost" onPress={() => setOpen(true)} />;
+  return (
+    <Card style={{ gap: space.sm }} bracket={false}>
+      <Text weight="medium" size={13}>
+        Autre moment
+      </Text>
+      <View style={{ flexDirection: "row", gap: space.xs }}>
+        {WEEKDAYS_SHORT.map((label, i) => (
+          <Chip key={label} label={label} selected={day === i} onPress={() => setDay(i as Weekday)} size="sm" fill />
+        ))}
+      </View>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+        <View style={{ flex: 1 }}>
+          <TimeField value={hour} onChange={setHour} />
+        </View>
+        <Button label="Appliquer" variant="primary" onPress={() => onApply(day, hour)} disabled={!/^\d{2}:\d{2}$/.test(hour)} />
+      </View>
+    </Card>
   );
 }
