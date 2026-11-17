@@ -65,7 +65,7 @@ export default function DocumentFormScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title={existing ? "Modifier le document" : "Nouveau document"} onBack={() => router.back()} />
+      <TopBar title={existing ? "Modifier le document" : "Nouveau document"} onBack={() => router.back()} save={{ onPress: onSave, disabled: !isValid, loading: saving, needsNetwork: true }} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         {!existing && (
           <View style={{ gap: space.sm }}>
