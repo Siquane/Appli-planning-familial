@@ -52,32 +52,8 @@ export function currentStreak(lastStudyDay: string | null, streak: number, today
   return daysBetween(lastStudyDay, today) <= 1 ? streak : 0;
 }
 
-export type Slot = "tete" | "visage" | "cou";
-
-export const SHOP = [
-  { id: "casquette", name: "Casquette", slot: "tete", price: 30 },
-  { id: "lunettes", name: "Lunettes rondes", slot: "visage", price: 40 },
-  { id: "noeud", name: "Nœud papillon", slot: "cou", price: 50 },
-  { id: "toque", name: "Toque de chef", slot: "tete", price: 70 },
-  { id: "casque", name: "Casque audio", slot: "tete", price: 80 },
-  { id: "sorcier", name: "Chapeau de magicien", slot: "tete", price: 100 },
-  { id: "echarpe", name: "Écharpe", slot: "cou", price: 60 },
-  { id: "masque", name: "Masque de super-héros", slot: "visage", price: 90 },
-  { id: "couronne", name: "Couronne", slot: "tete", price: 150 },
-] as const satisfies readonly { id: string; name: string; slot: Slot; price: number }[];
-
-export type ShopItemId = (typeof SHOP)[number]["id"];
-
-export function shopItem(id: string) {
-  return SHOP.find((i) => i.id === id) ?? null;
-}
-
-/** Equipping an item takes its slot's place. */
-export function equip(equipped: string[], id: string): string[] {
-  const item = shopItem(id);
-  if (!item) return equipped;
-  return [...equipped.filter((e) => shopItem(e)?.slot !== item.slot), id];
-}
+// The shop's catalogue moved to ./shop (more slots, seasons, badges).
+export { SHOP, shopItem, equip, type Slot } from "./shop";
 
 export interface DaySessions {
   mode: string;

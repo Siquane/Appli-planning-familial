@@ -568,6 +568,8 @@ model Learner {
   chestDay     String?
   owned        String[]      @default([])
   equipped     String[]      @default([])
+  /// Up to 3 saved outfits (lists of item ids), see src/lib/cervelle/shop.ts.
+  outfits      Json          @default("[]")
   // Timer lengths the child chose (minutes); null = the default for their level.
   focusMinutes Int?
   breakMinutes Int?
