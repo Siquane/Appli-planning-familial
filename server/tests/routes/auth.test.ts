@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { setMailTransport, type Mail } from "../../src/services/mailer";
 import { app } from "../../src/index";
 import { authHeader, signup } from "../helpers";
+import { prisma } from "../../src/db";
 
 describe("POST /auth/signup", () => {
   it("creates a user and returns tokens", async () => {
@@ -182,5 +183,75 @@ describe("password reset", () => {
     await request(app).post("/auth/forgot-password").send({ email: "cooldown@passerelle.test" });
     await request(app).post("/auth/forgot-password").send({ email: "cooldown@passerelle.test" });
     expect(sent).toHaveLength(1);
+  });
+});
+
+describe("sign in with an e-mail code (Cervelle)", () => {
+  const sent: Mail[] = [];
+  beforeEach(async () => {
+    sent.length = 0;
+    await prisma.emailLoginCode.deleteMany({});
+    setMailTransport(async (mail) => {
+      sent.push(mail);
+    });
+  });
+  afterEach(() => setMailTransport(null));
+  const codeFrom = (mail: Mail) => mail.text.match(/\b(\d{6})\b/)![1];
+
+  it("signs in an existing account, with a Cervelle-branded e-mail", async () => {
+    await signup(app, { email: "Parent@Cervelle.test", password: "password123", name: "Anaïs" });
+    expect((await request(app).post("/auth/email-code").send({ email: "parent@cervelle.test", app: "cervelle" })).status).toBe(200);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ senderName: "Cervelle", to: { email: "Parent@Cervelle.test" } });
+    expect(sent[0].text).toContain("te connecter à Cervelle");
+    expect(sent[0].text).toContain("Bonjour Anaïs");
+
+    const ok = await request(app).post("/auth/email-code/verify").send({ email: "PARENT@cervelle.test", code: codeFrom(sent[0]) });
+    expect(ok.status).toBe(200);
+    expect(ok.body).toMatchObject({ created: false, user: { name: "Anaïs" } });
+    expect(typeof ok.body.accessToken).toBe("string");
+
+    // Single use.
+    expect((await request(app).post("/auth/email-code/verify").send({ email: "parent@cervelle.test", code: codeFrom(sent[0]) })).status).toBe(400);
+  });
+
+  it("creates the account for a new address once the name and age are given", async () => {
+    await request(app).post("/auth/email-code").send({ email: "nouveau@cervelle.test" });
+    const code = codeFrom(sent[0]);
+    expect(sent[0].text).toMatch(/^Bonjour,/);
+
+    const needs = await request(app).post("/auth/email-code/verify").send({ email: "nouveau@cervelle.test", code });
+    expect(needs.status).toBe(400);
+    expect(needs.body.code).toBe("needs_profile");
+    const noAge = await request(app).post("/auth/email-code/verify").send({ email: "nouveau@cervelle.test", code, name: "Sam" });
+    expect(noAge.body.code).toBe("needs_profile");
+
+    // The code still works once the profile is filled in.
+    const created = await request(app).post("/auth/email-code/verify").send({ email: "nouveau@cervelle.test", code, name: "Sam", age15: true });
+    expect(created.status).toBe(201);
+    expect(created.body).toMatchObject({ created: true, user: { name: "Sam", email: "nouveau@cervelle.test" } });
+
+    // The same account works with « mot de passe oublié » afterwards (no password was ever set).
+    await request(app).post("/auth/forgot-password").send({ email: "nouveau@cervelle.test", app: "cervelle" });
+    expect(sent[1]).toMatchObject({ senderName: "Cervelle" });
+    expect(sent[1].text).toContain("mot de passe Cervelle");
+  });
+
+  it("locks the code after too many wrong attempts and limits resends", async () => {
+    await request(app).post("/auth/email-code").send({ email: "brute@cervelle.test" });
+    await request(app).post("/auth/email-code").send({ email: "brute@cervelle.test" });
+    expect(sent).toHaveLength(1);
+    const good = codeFrom(sent[0]);
+    const wrong = good === "000000" ? "111111" : "000000";
+    for (let i = 0; i < 5; i++) await request(app).post("/auth/email-code/verify").send({ email: "brute@cervelle.test", code: wrong });
+    const late = await request(app).post("/auth/email-code/verify").send({ email: "brute@cervelle.test", code: good, name: "X", age15: true });
+    expect(late.status).toBe(400);
+  });
+
+  it("keeps Passerelle's e-mails as they were", async () => {
+    await signup(app, { email: "famille@passerelle.test" });
+    await request(app).post("/auth/forgot-password").send({ email: "famille@passerelle.test" });
+    expect(sent[0].senderName).toBeUndefined();
+    expect(sent[0].text).toContain("mot de passe Passerelle");
   });
 });

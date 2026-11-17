@@ -70,6 +70,20 @@ model User {
   aiUsages            AiUsage[]
 }
 
+// Code à 6 chiffres envoyé par e-mail pour se connecter sans mot de passe (appli
+// Cervelle). Lié à l'adresse et non au compte : il sert aussi à créer le compte.
+model EmailLoginCode {
+  id        String   @id @default(cuid())
+  // Adresse en minuscules.
+  email     String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
 model PasswordResetCode {
   id        String   @id @default(cuid())
   userId    String
