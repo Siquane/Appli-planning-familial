@@ -232,7 +232,7 @@ export default function TaskFormScreen() {
           )}
           {autoPlacement && (
             <Text tone="faint" size={13}>
-              Aucun jour choisi : Passerelle sélectionnera elle-même le meilleur créneau de la semaine selon la priorité, l'échéance et les tâches déjà planifiées.
+              Aucun jour choisi : Passerelle trouvera le meilleur créneau de la semaine selon la priorité, l'échéance et ce qui est déjà prévu.
             </Text>
           )}
         </View>
@@ -304,7 +304,7 @@ export default function TaskFormScreen() {
 
         <View style={{ gap: space.sm }}>
           <Text size={13} tone="muted">
-            Échéance (optionnel)
+            Échéance (facultatif)
           </Text>
           <View style={{ flexDirection: "row", gap: space.xs }}>
             <Chip label="Aucune" selected={deadlineWeekday === null} onPress={() => setDeadlineWeekday(null)} size="sm" fill />
@@ -317,7 +317,7 @@ export default function TaskFormScreen() {
         {members.length > 0 && (
           <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
-              Assigné à
+              Pour qui ?
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
               {members.map((m) => (
@@ -346,7 +346,7 @@ export default function TaskFormScreen() {
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
           <Chip label="Récurrente" selected={recurring} onPress={() => setRecurring((v) => !v)} size="sm" />
           {!autoPlacement && (
-            <Chip label="Flexible (replanifiable)" selected={flexible} onPress={() => setFlexible((v) => !v)} size="sm" />
+            <Chip label="Flexible (Passerelle peut la déplacer)" selected={flexible} onPress={() => setFlexible((v) => !v)} size="sm" />
           )}
         </View>
 

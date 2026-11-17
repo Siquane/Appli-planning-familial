@@ -42,10 +42,10 @@ export default function ConstraintsOnboardingScreen() {
       <View style={{ gap: space.lg }}>
         <View style={{ gap: space.xs }}>
           <Text heading weight="semibold" size={22}>
-            Vos plages protégées
+            Tes plages protégées
           </Text>
           <Text tone="muted" size={15}>
-            Passerelle évite de proposer des tâches pendant ces créneaux (format HH:MM).
+            Passerelle évite de proposer des tâches pendant ces créneaux. Écris les heures comme 21:00.
           </Text>
         </View>
 

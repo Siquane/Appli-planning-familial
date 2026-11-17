@@ -87,17 +87,17 @@ export default function ProfileScreen() {
   async function onConnect(provider: "google" | "outlook" | "apple") {
     if (isUnavailable(provider)) {
       const name = provider === "google" ? "Google Calendar" : "Outlook";
-      useToastStore.getState().show(`La synchronisation ${name} n'est pas encore activée sur le serveur.`);
+      useToastStore.getState().show(`La synchronisation avec ${name} arrive bientôt.`);
       return;
     }
     setConnecting(provider);
     try {
       if (provider === "apple") {
         if (Platform.OS === "web") {
-          useToastStore.getState().show("Apple Calendar n'est disponible que sur iOS/Android.");
+          useToastStore.getState().show("Apple Calendar n'est disponible que dans l'appli mobile.");
         } else {
           const res = await connectAppleCalendar();
-          useToastStore.getState().show(res.ok ? "Apple Calendar connecté." : (res.reason ?? "Échec de connexion."));
+          useToastStore.getState().show(res.ok ? "Apple Calendar connecté." : (res.reason ?? "Impossible de connecter Apple Calendar. Autorise l'accès au calendrier dans les réglages du téléphone, puis réessaie."));
           refetch();
         }
       } else {
@@ -181,7 +181,7 @@ export default function ProfileScreen() {
                   )}
                   {unavailable && (
                     <Text size={11} tone="faint">
-                      Pas encore activé sur le serveur
+                      Bientôt disponible
                     </Text>
                   )}
                 </View>

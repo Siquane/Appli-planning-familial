@@ -68,7 +68,7 @@ export default function MealEditScreen() {
         {recipes.length > 0 && (
           <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
-              Lier une recette (optionnel)
+              Lier une recette (facultatif)
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
               <Chip label="Aucune" selected={recipeId === null} onPress={() => setRecipeId(null)} size="sm" />

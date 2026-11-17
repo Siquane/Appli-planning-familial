@@ -97,7 +97,7 @@ export default function ForgotPasswordScreen() {
         )}
         {slow && (
           <Text tone="muted" size={13} center>
-            Le serveur démarre, ça peut prendre jusqu'à une minute…
+            Passerelle se réveille, ça peut prendre jusqu'à une minute…
           </Text>
         )}
         {step === "code" && (

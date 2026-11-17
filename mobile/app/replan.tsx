@@ -37,7 +37,7 @@ export default function ReplanScreen() {
         {!isLoading && proposals.length === 0 && (
           <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
             <Text tone="muted" size={13} center>
-              Aucune tâche flexible à réajuster pour l'instant.
+              Aucune tâche flexible pour l'instant. Coche « Flexible » sur une tâche pour que Passerelle puisse la déplacer.
             </Text>
           </Card>
         )}

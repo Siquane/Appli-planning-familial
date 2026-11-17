@@ -107,7 +107,7 @@ export default function SignupScreen() {
         <Button label={hasCode ? "Rejoindre la famille" : "Créer mon compte"} variant="primary" block onPress={onSubmit} loading={loading} disabled={!email || !password || !name || !age15 || (hasCode && !code.trim())} />
         {slow && (
           <Text tone="muted" size={13} center>
-            Le serveur démarre, ça peut prendre jusqu'à une minute…
+            Passerelle se réveille, ça peut prendre jusqu'à une minute…
           </Text>
         )}
       </View>

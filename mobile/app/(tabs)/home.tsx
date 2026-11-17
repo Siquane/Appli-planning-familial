@@ -101,7 +101,7 @@ export default function HomeScreen() {
         </Text>
         {!isLoading && dayTasks.length === 0 && (
           <Card>
-            <EmptyState title="Journée libre" detail="Rien de prévu ce jour-là. Profitez-en, ou ajoutez une tâche avec le « + »." />
+            <EmptyState title="Journée libre" detail="Rien de prévu ce jour-là. Profites-en, ou ajoute une tâche avec le « + »." />
           </Card>
         )}
         {dayTasks.length > 0 && (

@@ -111,10 +111,10 @@ export default function RecurringTasksOnboardingScreen() {
       <View style={{ gap: space.lg }}>
         <View style={{ gap: space.xs }}>
           <Text heading weight="semibold" size={22}>
-            Vos tâches récurrentes
+            Tes tâches récurrentes
           </Text>
           <Text tone="muted" size={15}>
-            Elles se replaceront automatiquement chaque semaine dans la grille.
+            Elles reviennent toutes seules chaque semaine dans le planning.
           </Text>
         </View>
 

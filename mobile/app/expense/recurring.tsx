@@ -122,7 +122,7 @@ export default function RecurringExpenseFormScreen() {
         <ChipPicker label="Catégorie" options={options} selected={category} onSelect={(v) => v && setCategory(v)} />
 
         {members.length > 0 && (
-          <ChipPicker label="Pour qui ? (optionnel)" options={members.map((m) => ({ value: m.id, label: m.name }))} selected={memberId} onSelect={setMemberId} optional />
+          <ChipPicker label="Pour qui ? (facultatif)" options={members.map((m) => ({ value: m.id, label: m.name }))} selected={memberId} onSelect={setMemberId} optional />
         )}
 
         {hint && (

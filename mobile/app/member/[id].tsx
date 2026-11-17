@@ -103,7 +103,7 @@ export default function MemberScreen() {
           <TextField label="Âge (facultatif)" value={age} onChangeText={setAge} keyboardType="number-pad" placeholder="Ex. 8" />
           {ageInvalid ? (
             <Text size={13} tone="danger">
-              Âge entre 0 et 120 ans.
+              L'âge doit être compris entre 0 et 120 ans.
             </Text>
           ) : null}
         </Card>

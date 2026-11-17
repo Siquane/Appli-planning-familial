@@ -105,7 +105,7 @@ export default function DocumentFormScreen() {
         {members.length > 0 && (
           <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
-              Concerne (optionnel)
+              Concerne (facultatif)
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
               {members.map((m) => (
