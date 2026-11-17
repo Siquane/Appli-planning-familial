@@ -22,6 +22,7 @@ import { WEEKDAYS_SHORT } from "../../src/lib/weekdays";
 import { parseDuration, splitDuration } from "../../src/lib/duration";
 import type { Category, Priority, Task, Weekday } from "../../src/api/types";
 import { errorText } from "../../src/lib/errors";
+import { goBack, useBackFallback } from "../../src/lib/navigation";
 
 const CATEGORIES: Category[] = ["École", "Travail", "Maison", "Santé", "Loisirs"];
 const DURATIONS = [15, 30, 45, 60, 90, 120];
@@ -40,6 +41,7 @@ export default function TaskFormScreen() {
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   const autoSlotTask = useAutoSlotTask();
+  useBackFallback();
 
   const existing: Task | undefined = useMemo(() => tasks.find((t) => t.id === edit), [tasks, edit]);
   // En modification, on travaille sur toute la série (tous les jours créés ensemble).
@@ -191,7 +193,7 @@ export default function TaskFormScreen() {
         }
         useToastStore.getState().show(weekdays.length > 1 ? "Tâches créées." : "Tâche créée.");
       }
-      router.back();
+      goBack();
     } catch (e) {
       useToastStore.getState().show(errorText(e, "enregistrer la tâche"));
     } finally {
@@ -201,7 +203,7 @@ export default function TaskFormScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title={existing ? "Modifier la tâche" : source ? "Dupliquer la tâche" : "Nouvelle tâche"} onBack={() => router.back()} />
+      <TopBar title={existing ? "Modifier la tâche" : source ? "Dupliquer la tâche" : "Nouvelle tâche"} onBack={() => goBack()} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Devoirs de Léo" />
 
