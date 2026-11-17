@@ -181,6 +181,15 @@ export const ProfileIcon = makeIcon(
 );
 
 // Gift
+// Feuille de note à coin corné.
+export const NoteIcon = makeIcon(
+  [
+    { kind: "path", d: "M6 3.5h9l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19V5a1.5 1.5 0 0 1 1-1.5z", tint: true },
+    { kind: "path", d: "M15 3.5V8h4M8.5 11.5h7M8.5 15h5" },
+  ],
+  16,
+);
+
 // Étoile à 5 branches (étoiles des enfants).
 export const StarIcon = makeIcon(
   [{ kind: "path", d: "M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z", tint: true }],

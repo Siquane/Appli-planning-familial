@@ -135,7 +135,7 @@ export default function PrivacyScreen() {
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <Accordion title="Ce que Passerelle enregistre" defaultOpen>
           <Section title="Tes données">
-            Compte (e-mail, prénom, mot de passe chiffré), membres de la famille, tâches, recettes, menus, liste de courses, budget, documents, et les préférences repas de chaque membre.
+            Compte (e-mail, prénom, mot de passe chiffré), membres de la famille, tâches, recettes, menus, liste de courses, notes, budget, documents, et les préférences repas de chaque membre.
           </Section>
           <Section title="Relevés bancaires (Budget+)">
             Le PDF est lu par notre serveur le temps de l'analyse, puis oublié : jamais enregistré, jamais envoyé à Claude ni à une autre entreprise. Seules les dépenses que tu coches sont gardées, avec les catégories que tu corriges pour les retenir au prochain import.
@@ -153,7 +153,7 @@ export default function PrivacyScreen() {
 
         <Accordion title="Partage en famille">
           <Section title="Qui voit quoi">
-            Avec un code famille, d'autres personnes (dès 15 ans) ont leur propre compte autour de la même famille. Profil Complet : tout est partagé. Profil Planning : le planning, les repas, les courses et les recettes sont partagés ; le budget et les documents restent personnels.
+            Avec un code famille, d'autres personnes (dès 15 ans) ont leur propre compte autour de la même famille. Profil Complet : tout est partagé. Profil Planning : le planning, les repas, les courses, les recettes et les notes « Famille » sont partagés ; le budget, les documents et les notes « Perso » restent personnels.
           </Section>
           <Section title="Santé et régimes">
             Les régimes et allergies enregistrés avec ton accord sont visibles de tous les comptes de la famille.

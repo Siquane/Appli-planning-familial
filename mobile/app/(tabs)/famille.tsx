@@ -9,7 +9,7 @@ import { Avatar } from "../../src/components/Avatar";
 import { TextField } from "../../src/components/TextField";
 import { Button } from "../../src/components/Button";
 import { TabHeader } from "../../src/components/PageHeader";
-import { ChevronRightIcon, DocumentIcon, GiftIcon, ProfileIcon, StarIcon } from "../../src/components/icons";
+import { ChevronRightIcon, DocumentIcon, GiftIcon, NoteIcon, ProfileIcon, StarIcon } from "../../src/components/icons";
 import { useCreateMember, useMembers } from "../../src/hooks/useApi";
 import type { Tint } from "../../src/api/types";
 import { color, space, gutter } from "../../src/theme/tokens";
@@ -18,6 +18,7 @@ import { color, space, gutter } from "../../src/theme/tokens";
 const TINTS: Tint[] = ["accent", "accent2", "neutral"];
 
 const LINKS: { label: string; href: Href; Icon: (p: { size: number; color: string }) => React.JSX.Element }[] = [
+  { label: "Notes", href: "/notes", Icon: NoteIcon },
   { label: "Étoiles et récompenses", href: "/stars", Icon: StarIcon },
   { label: "Documents", href: "/documents", Icon: DocumentIcon },
   { label: "Anniversaires", href: "/birthdays", Icon: GiftIcon },

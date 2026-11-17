@@ -8,6 +8,11 @@ describe("widget links", () => {
     expect(routeForWidgetUrl("/widget/courses", 2)).toBe("/repas?tab=courses&w=2");
     // The « Ajouter une tâche » button opens the new-task form.
     expect(routeForWidgetUrl(widgetUri("add-task"), 1)).toBe("/task/new");
+    // Notes : la liste, une note précise, ou une nouvelle note.
+    expect(routeForWidgetUrl(widgetUri("notes"), 1)).toBe("/notes");
+    expect(routeForWidgetUrl(widgetUri("add-note"), 1)).toBe("/note/new");
+    expect(routeForWidgetUrl(widgetUri("note/cmabc123"), 1)).toBe("/note/cmabc123");
+    expect(routeForWidgetUrl("passerelle://widget/note/../../x", 1)).toBeNull();
   });
 
   it("leave other links alone", () => {

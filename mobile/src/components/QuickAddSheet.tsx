@@ -2,7 +2,7 @@ import { Modal, Pressable, View } from "react-native";
 import { router, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "./Text";
-import { BookIcon, CalendarIcon, DocumentIcon, MealIcon, WalletIcon } from "./icons";
+import { BookIcon, CalendarIcon, DocumentIcon, MealIcon, NoteIcon, WalletIcon } from "./icons";
 import { color, radius, space } from "../theme/tokens";
 
 type Item = { label: string; hint: string; href: Href; Icon: (p: { size: number; color: string }) => React.JSX.Element };
@@ -13,6 +13,7 @@ export const QUICK_ADD_ITEMS: Item[] = [
   { label: "Document", hint: "Ordonnance, assurance…", href: "/document/new", Icon: DocumentIcon },
   { label: "Recette", hint: "Livre de recettes", href: "/recipe/new", Icon: BookIcon },
   { label: "Repas", hint: "Menu de la semaine", href: "/repas", Icon: MealIcon },
+  { label: "Note", hint: "Pour la famille ou pour toi", href: "/note/new", Icon: NoteIcon },
 ];
 
 // Opened by the central « + » of the tab bar: one tap to reach any "add" form.

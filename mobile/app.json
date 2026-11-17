@@ -117,6 +117,18 @@
               "resizeMode": "horizontal",
               "updatePeriodMillis": 0,
               "previewImage": "./assets/widgets/ajout.png"
+            },
+            {
+              "name": "Notes",
+              "label": "Passerelle · Notes",
+              "description": "Les dernières notes, et un + pour en écrire une",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 1800000,
+              "previewImage": "./assets/widgets/notes.png"
             }
           ]
         }
@@ -125,7 +137,7 @@
     "experiments": {
       "typedRoutes": true
     },
-    "runtimeVersion": "7",
+    "runtimeVersion": "8",
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0
