@@ -98,7 +98,7 @@ export default function NoteScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title={isNew ? "Nouvelle note" : "Note"} onBack={() => goBack("/notes")} onDelete={existing ? onDelete : undefined} />
+      <TopBar title={isNew ? "Nouvelle note" : "Note"} onBack={() => goBack("/notes")} onDelete={existing ? onDelete : undefined} save={{ onPress: onSave, disabled: empty, loading: saving, needsNetwork: true }} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre (facultatif)" value={title} onChangeText={setTitle} placeholder="Ex. Code du portail" maxLength={120} />
         <TextField label="Note" value={body} onChangeText={setBody} multiline placeholder="Écris ici…" maxLength={10000} style={{ minHeight: 160, textAlignVertical: "top" }} />

@@ -76,6 +76,16 @@ describe("getProposals", () => {
     }
   });
 
+  it("can offer several hours on the same day", () => {
+    const t = task({ priority: "high" });
+    const proposals = getProposals(t, [], constraints, 6, 2);
+    expect(proposals.length).toBeLessThanOrEqual(6);
+    const perDay = new Map<number, number>();
+    for (const p of proposals) perDay.set(p.weekday, (perDay.get(p.weekday) ?? 0) + 1);
+    expect(Math.max(...perDay.values())).toBeLessThanOrEqual(2);
+    expect(proposals.length).toBeGreaterThan(3);
+  });
+
   it("returns nothing once the deadline has passed for every remaining day", () => {
     const t = task({ deadlineWeekday: 0 });
     const proposals = getProposals(t, [], constraints, 3);

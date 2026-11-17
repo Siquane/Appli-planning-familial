@@ -74,6 +74,7 @@ starsRouter.post("/complete", async (req, res) => {
   if (!task) return res.status(404).json({ error: "Tâche introuvable" });
   if (!task.members.some((m) => m.memberId === d.memberId)) return res.status(400).json({ error: "Cette tâche n'est pas assignée à ce membre" });
   if (!(await childOf(familyId, d.memberId))) return res.status(400).json({ error: "Les étoiles sont pour les enfants de moins de 15 ans" });
+  if (task.stars === 0) return res.status(400).json({ error: "Cette tâche ne rapporte pas d'étoile" });
 
   const completion = await prisma.starCompletion.upsert({
     where: { taskId_memberId_week: { taskId: task.id, memberId: d.memberId, week: d.week } },

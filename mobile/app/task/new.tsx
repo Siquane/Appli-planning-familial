@@ -207,7 +207,7 @@ export default function TaskFormScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title={existing ? "Modifier la tâche" : source ? "Dupliquer la tâche" : "Nouvelle tâche"} onBack={() => goBack()} />
+      <TopBar title={existing ? "Modifier la tâche" : source ? "Dupliquer la tâche" : "Nouvelle tâche"} onBack={() => goBack()} save={{ onPress: onSave, disabled: !isValid, loading: saving }} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Devoirs de Léo" />
 
@@ -338,12 +338,12 @@ export default function TaskFormScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
               <StarIcon size={14} color={color.pillar3} />
               <Text size={13} tone="muted">
-                Étoiles gagnées quand c'est fait : {starsLabel(stars)}
+                Étoiles gagnées quand c'est fait : {stars === 0 ? "aucune" : starsLabel(stars)}
               </Text>
             </View>
             <View style={{ flexDirection: "row", gap: space.xs }}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <Chip key={n} label={`${n} ★`} selected={stars === n} onPress={() => setStars(n)} size="sm" fill />
+              {[0, 1, 2, 3, 4, 5].map((n) => (
+                <Chip key={n} label={n === 0 ? "Aucune" : `${n} ★`} selected={stars === n} onPress={() => setStars(n)} size="sm" fill />
               ))}
             </View>
           </View>

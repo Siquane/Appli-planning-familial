@@ -315,3 +315,14 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Nouveau workflow **« APK sur GitHub (sans quota Expo) »** (`.github/workflows/apk-github.yml`) : `eas build --local` sur une machine GitHub (Java 17, SDK Android de la machine), même clé de signature (récupérée chez Expo) et même canal de mises à jour. L'APK est publié dans une **Release GitHub** (`apk-<n°>`, fichier `passerelle.apk`, lien en fin de journal). Environ 20–30 min sur les 2 000 min/mois GitHub.
 - APK runtime "8" (notes + widget Notes, récap du matin) : à compiler avec ce workflow puis à installer.
 
+## Retouches du 17/11/2026 (soir)
+
+- Bouton « Enregistrer » en haut à droite des 8 formulaires (`TopBar` prop `save`), visible clavier ouvert.
+- Bouton principal (dégradé) sans rebord épais (il faisait une bande violette décalée, surtout en thème clair) ; les boutons secondaires gardent le rebord.
+- Profil : un seul interrupteur « Apparence » (Sombre / Clair) sur une ligne.
+- Planning : `edges={["top"]}` (la barre d'onglets gère déjà le bas ; avant, une bande vide coupait la liste au-dessus des onglets).
+- Étoiles : une tâche peut valoir **0 étoile** (« Aucune ») ; elle n'affiche alors pas « C'est fait » pour les enfants.
+- Replanifier : jusqu'à 6 propositions (2 heures par jour au plus, `getProposals(…, 6, 2)`) et « Choisir un autre moment » (jour + heure libres).
+- Widget « Ajouter une tâche » : 3 × 1 au minimum (`minWidth` 180dp), le texte tient en entier. Reste en runtime "8" : aucun APK runtime "8" n'existe encore.
+- Workflow « APK sur GitHub » : 1er essai arrêté par la limite de 60 min ; limite portée à 150 min et compilation arm64 seulement (`ORG_GRADLE_PROJECT_reactNativeArchitectures`).
+
