@@ -1,3 +1,4 @@
+import { useChildSpaceStore } from "../state/childSpaceStore";
 import { Platform } from "react-native";
 import { useAuthStore, UnreachableError } from "../state/authStore";
 import { useNetworkStore } from "../state/networkStore";
@@ -35,6 +36,9 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
     ...(options.headers as Record<string, string>),
   };
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+  // « Espace de Jules » ouvert : le budget et les documents sont ceux de l'enfant.
+  const childSpace = useChildSpaceStore.getState().memberId;
+  if (childSpace) headers["X-Child-Space"] = childSpace;
 
   let res: Response;
   try {
