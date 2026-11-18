@@ -210,7 +210,16 @@ export const shareApi = {
   get: () => api.get<{ shareToken: string; sharedWith: SharedPerson[] }>("/share"),
   invite: (data: { name: string; role?: string }) => api.post<{ person: SharedPerson }>("/share/people", data),
   remove: (id: string) => api.delete<void>(`/share/people/${id}`),
+  /** Un lien par membre : la page web de sa semaine. */
+  memberLinks: () => api.get<{ links: MemberShareLink[] }>("/share/members"),
+  resetMemberLink: (memberId: string) => api.post<MemberShareLink>(`/share/members/${memberId}/reset`, {}),
 };
+
+export interface MemberShareLink {
+  memberId: string;
+  name: string;
+  token: string;
+}
 
 export const calendarApi = {
   status: () => api.get<CalendarStatus>("/calendar/status"),

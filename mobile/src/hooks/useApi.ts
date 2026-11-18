@@ -502,6 +502,19 @@ export function useInvitePerson() {
   });
 }
 
+export function useMemberShareLinks() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["share", "members"], queryFn: () => shareApi.memberLinks().then((r) => r.links), enabled });
+}
+
+export function useResetMemberShareLink() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (memberId: string) => shareApi.resetMemberLink(memberId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["share", "members"] }),
+  });
+}
+
 export function useRemoveSharedPerson() {
   const qc = useQueryClient();
   return useMutation({

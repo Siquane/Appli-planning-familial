@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable } from "../src/components/Touchable";
-import { Share as RNShare, View } from "react-native";
+import { Alert, Share as RNShare, View } from "react-native";
 import { router } from "expo-router";
 import { KeyboardScrollView } from "../src/components/KeyboardScrollView";
 import { Screen } from "../src/components/Screen";
@@ -10,31 +10,40 @@ import { Button } from "../src/components/Button";
 import { TextField } from "../src/components/TextField";
 import { TopBar } from "../src/components/TopBar";
 import { TrashIcon } from "../src/components/icons";
-import { useInvitePerson, useRemoveSharedPerson, useShare } from "../src/hooks/useApi";
+import { useInvitePerson, useMemberShareLinks, useRemoveSharedPerson, useResetMemberShareLink, useShare } from "../src/hooks/useApi";
+import type { MemberShareLink } from "../src/api/resources";
 import { useToastStore } from "../src/state/toastStore";
 import { API_URL } from "../src/api/client";
 import { color, space, gutter } from "../src/theme/tokens";
 
-// EXPO_PUBLIC_SHARE_URL can override this once a nicer custom domain is
-// secured for the app; until then the link points at the real backend route
-// (GET /share/public/:token in server/src/routes/share.ts), which works.
-const SHARE_BASE_URL = process.env.EXPO_PUBLIC_SHARE_URL ?? `${API_URL}/share/public`;
+// Page web de la semaine d'un membre (GET /share/m/:token, server/src/routes/share.ts).
+const MEMBER_PAGE_URL = `${API_URL}/share/m`;
 
 export default function ShareScreen() {
-  const { data, isLoading } = useShare();
+  const { data } = useShare();
+  const { data: links = [], isLoading } = useMemberShareLinks();
+  const reset = useResetMemberShareLink();
   const invite = useInvitePerson();
   const remove = useRemoveSharedPerson();
   const [name, setName] = useState("");
 
-  const link = data ? `${SHARE_BASE_URL}/${data.shareToken}` : "";
-
-  async function onShareLink() {
-    if (!link) return;
+  async function onShareLink(l: MemberShareLink) {
     try {
-      await RNShare.share({ message: link });
+      await RNShare.share({ message: `Le planning de ${l.name} sur Passerelle : ${MEMBER_PAGE_URL}/${l.token}` });
     } catch {
       // user dismissed the share sheet — nothing to do
     }
+  }
+
+  function onReset(l: MemberShareLink) {
+    Alert.alert("Nouveau lien", `L'ancien lien du planning de ${l.name} ne fonctionnera plus. Il faudra renvoyer le nouveau.`, [
+      { text: "Annuler", style: "cancel" },
+      {
+        text: "Créer un nouveau lien",
+        style: "destructive",
+        onPress: () => reset.mutate(l.memberId, { onSuccess: () => useToastStore.getState().show(`Nouveau lien pour ${l.name}.`) }),
+      },
+    ]);
   }
 
   function onInvite() {
@@ -55,20 +64,31 @@ export default function ShareScreen() {
       <TopBar title="Partager le planning" onBack={() => router.back()} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <Text tone="muted" size={13}>
-          Les personnes invitées voient les tâches synchronisées de ton planning, sans avoir besoin d'un compte.
+          Un lien par membre : la personne qui l'ouvre voit la semaine de ce membre jour par jour (tâches et rendez-vous), dans son navigateur, sans compte. Pratique pour une nounou, un grand-parent ou un enfant.
         </Text>
 
-        {!isLoading && (
-          <Card style={{ gap: space.sm }}>
-            <Text size={13} tone="faint">
-              Lien de partage
+        {!isLoading && links.length === 0 && (
+          <Card>
+            <Text size={13} tone="muted">
+              Ajoute d'abord les membres de la famille (onglet Famille) et indique-les dans « Pour qui ? » sur leurs tâches.
             </Text>
-            <Text size={13} mono numberOfLines={1}>
-              {link}
-            </Text>
-            <Button label="Partager le lien" variant="secondary" onPress={onShareLink} />
           </Card>
         )}
+
+        {links.map((l) => (
+          <Card key={l.memberId} style={{ gap: space.sm }}>
+            <Text size={15} weight="medium">
+              Planning de {l.name}
+            </Text>
+            <Text size={11} tone="faint" mono numberOfLines={1}>
+              {MEMBER_PAGE_URL}/{l.token}
+            </Text>
+            <View style={{ flexDirection: "row", gap: space.sm }}>
+              <Button label="Partager le lien" variant="secondary" style={{ flex: 1 }} onPress={() => onShareLink(l)} />
+              <Button label="Nouveau lien" variant="ghost" onPress={() => onReset(l)} needsNetwork />
+            </View>
+          </Card>
+        ))}
 
         <View style={{ gap: space.sm }}>
           <Text weight="medium" size={13} tone="muted">
