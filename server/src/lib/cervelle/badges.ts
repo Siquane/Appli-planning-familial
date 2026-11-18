@@ -293,3 +293,15 @@ export function coinsFor(key: string): number {
   const tier = Number(key.split(":")[1]);
   return TIER_COINS[tier - 1] ?? 0;
 }
+
+const TIER_NAMES = ["", "bronze", "argent", "or"];
+const SEASON_NAMES: Record<string, string> = { printemps: "Printemps", ete: "Été", automne: "Automne", hiver: "Hiver" };
+
+/** A stored badge key in words: « Photographe (argent) », « Automne 2026 », « Noël 2026 ». */
+export function BADGE_LABELS(key: string): string {
+  const [a, b, c] = key.split(":");
+  if (a === "saison") return `${SEASON_NAMES[b] ?? b} ${c}`;
+  if (a === "fete") return fetesOf(Number(c)).find((f) => f.id === b)?.label ?? key;
+  const s = SUCCESSES.find((x) => x.id === a);
+  return s ? `${s.label} (${TIER_NAMES[Number(b)] ?? b})` : key;
+}
