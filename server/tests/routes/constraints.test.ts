@@ -30,6 +30,18 @@ describe("constraints", () => {
     expect(refetched.body.constraints.sleepStart).toBe("22:00");
   });
 
+  it("keeps working hours per account", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    const first = await request(app).get("/constraints").set(auth);
+    expect(first.body.constraints.work).toEqual({ days: [], start: "09:00", end: "17:30" });
+
+    const patched = await request(app).patch("/constraints").set(auth).send({ workDays: [4, 0, 1, 2, 3, 3], workStart: "09:00", workEnd: "17:30" });
+    expect(patched.status).toBe(200);
+    expect(patched.body.constraints.work).toEqual({ days: [0, 1, 2, 3, 4], start: "09:00", end: "17:30" });
+    expect(patched.body.constraints.lunchStart).toBe("12:00");
+  });
+
   it("rejects a malformed time", async () => {
     const { accessToken } = await signup(app);
     const res = await request(app).patch("/constraints").set(authHeader(accessToken)).send({ sleepStart: "not-a-time" });

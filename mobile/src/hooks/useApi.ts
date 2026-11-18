@@ -447,7 +447,10 @@ export function useUpdateConstraints() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: constraintsApi.update,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["constraints"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["constraints"] });
+      qc.invalidateQueries({ queryKey: ["replan"] });
+    },
   });
 }
 

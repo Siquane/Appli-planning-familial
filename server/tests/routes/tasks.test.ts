@@ -153,6 +153,20 @@ describe("GET /tasks/replan/proposals", () => {
     expect(res.body.proposals[0].title).toBe("Flexible");
     expect(res.body.proposals[0].candidates.length).toBeGreaterThan(0);
   });
+
+  it("avoids the account's working hours", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    await request(app).patch("/constraints").set(auth).send({ workDays: [0, 1, 2, 3, 4], workStart: "09:00", workEnd: "17:30" });
+    await request(app).post("/tasks").set(auth).send({ ...baseTask, title: "Clé des poubelles", flexible: true, priority: "high" });
+
+    const res = await request(app).get("/tasks/replan/proposals").set(auth);
+    const candidates: { weekday: number; time: string }[] = res.body.proposals[0].candidates;
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const c of candidates) {
+      if (c.weekday <= 4) expect(c.time < "09:00" || c.time >= "17:30").toBe(true);
+    }
+  });
 });
 
 describe("tasks done", () => {

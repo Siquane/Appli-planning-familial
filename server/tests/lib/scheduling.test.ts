@@ -23,6 +23,43 @@ function task(overrides: Partial<SchedulableTask> = {}): SchedulableTask {
 }
 
 describe("scoreCandidate", () => {
+  const work = { ...constraints, work: { days: [0, 1, 2, 3, 4], start: "09:00", end: "17:30" } };
+
+  it("never proposes a slot during working hours on a working day", () => {
+    const t = task();
+    expect(scoreCandidate(3, "09:00", t, [], work)).toBeNull();
+    expect(scoreCandidate(3, "17:00", t, [], work)).toBeNull(); // finirait à 17:30 mais commence pendant le travail
+    expect(scoreCandidate(3, "08:00", t, [], work)).not.toBeNull();
+    expect(scoreCandidate(3, "17:30", t, [], work)).not.toBeNull();
+    expect(scoreCandidate(5, "10:00", t, [], work)).not.toBeNull(); // samedi
+  });
+
+  it("refuses a slot whose duration runs into working hours or lunch", () => {
+    expect(scoreCandidate(0, "08:00", task({ duration: 90 }), [], work)).toBeNull();
+    expect(scoreCandidate(5, "11:00", task({ duration: 90 }), [], work)).toBeNull(); // déborde sur le déjeuner
+    expect(scoreCandidate(5, "11:00", task({ duration: 60 }), [], work)).not.toBeNull();
+  });
+
+  it("only proposes evenings and weekends to someone working 9:00–17:30 on weekdays", () => {
+    const proposals = getProposals(task({ duration: 30 }), [], work, 50, 20);
+    for (const p of proposals) {
+      if (p.weekday <= 4) expect(p.time < "09:00" || p.time >= "17:30").toBe(true);
+    }
+  });
+
+  it("an existing task blocks its whole duration", () => {
+    const t = task({ id: "t1", memberIds: ["m1"] });
+    const other = task({ id: "t2", weekday: 5, time: "09:00", duration: 120, memberIds: ["m1"] });
+    expect(scoreCandidate(5, "10:00", t, [other], constraints)).toBeNull();
+    expect(scoreCandidate(5, "11:00", t, [other], constraints)).not.toBeNull();
+  });
+
+  it("a task for no one in particular blocks everyone", () => {
+    const t = task({ id: "t1", memberIds: ["m1"] });
+    const other = task({ id: "t2", weekday: 0, time: "09:00", memberIds: [] });
+    expect(scoreCandidate(0, "09:00", t, [other], constraints)).toBeNull();
+  });
+
   it("excludes slots inside lunch, do-not-disturb, or sleep windows", () => {
     const t = task();
     expect(scoreCandidate(0, "12:30", t, [], constraints)).toBeNull(); // lunch
