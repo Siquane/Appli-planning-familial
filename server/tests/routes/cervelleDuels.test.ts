@@ -71,6 +71,14 @@ describe("Cervelle — défis quiz", () => {
     const revisionId = await course(lea.learnerId, 3);
     expect((await request(app).post("/cervelle/learners/me/duels").set(lea.child).send({ friendId: tom.learnerId, revisionId })).status).toBe(400);
     expect(duelWinner("a", 5, "b", 5)).toBe("draw");
+    // Révision à deux: questions with answers, for my own course only.
+    const duo = await request(app).get(`/cervelle/learners/me/revisions/${revisionId}/duo`).set(lea.child);
+    expect(duo.status).toBe(400);
+    const big = await course(lea.learnerId, 14);
+    const duo2 = await request(app).get(`/cervelle/learners/me/revisions/${big}/duo`).set(lea.child);
+    expect(duo2.body.questions).toHaveLength(12);
+    expect(duo2.body.questions[0]).toHaveProperty("answer");
+    expect((await request(app).get(`/cervelle/learners/me/revisions/${big}/duo`).set(tom.child)).status).toBe(404);
     // Brothers and sisters can duel without being « friends ».
     const { accessToken } = await signup(app);
     const auth = authHeader(accessToken);

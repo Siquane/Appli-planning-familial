@@ -39,6 +39,21 @@ const shuffle = <T,>(a: T[]) => {
 };
 
 export function mountDuels(router: Router, d: { loadLearner: (req: Request, res: Response) => Promise<Learner | null> }) {
+  /**
+   * « Révision à deux » on one phone: 12 QCM / vrai-faux questions of one of
+   * my courses, WITH their answers (the phone checks them, turn by turn).
+   * Nothing is recorded: the other player's answers must not change my progress.
+   */
+  router.get("/learners/:learnerId/revisions/:revisionId/duo", async (req, res) => {
+    const learner = await d.loadLearner(req, res);
+    if (!learner) return;
+    const revision = await prisma.revision.findFirst({ where: { id: String(req.params.revisionId), learnerId: learner.id, status: "ready" }, select: { title: true } });
+    if (!revision) return res.status(404).json({ error: "Révision introuvable" });
+    const pool = await prisma.question.findMany({ where: { revisionId: String(req.params.revisionId), type: { in: ["qcm", "vrai_faux"] } }, select: { id: true, type: true, prompt: true, choices: true, answer: true, explanation: true } });
+    if (pool.length < 4) return res.status(400).json({ error: "Pas assez de questions dans ce cours. Choisis-en un autre." });
+    res.json({ title: revision.title, questions: shuffle(pool).slice(0, 12) });
+  });
+
   /** Challenge a friend on one of my courses. */
   router.post("/learners/:learnerId/duels", async (req, res) => {
     const learner = await d.loadLearner(req, res);
