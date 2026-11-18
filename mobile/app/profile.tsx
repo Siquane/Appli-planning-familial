@@ -45,6 +45,7 @@ export default function ProfileScreen() {
   const { data: status, refetch } = useCalendarStatus();
   const disconnect = useDisconnectCalendar();
   const plan = usePlan().data;
+  const isChild = useAuthStore((st) => st.user?.familyRole === "child");
   const { data: constraints } = useConstraints();
   const packLabel = plan?.packs.budget.active && plan.packs.meals.active ? "Passerelle+" : plan?.packs.budget.active ? "Budget+" : plan?.packs.meals.active ? "Repas+" : "Découvrir Passerelle+";
   const [connecting, setConnecting] = useState<string | null>(null);
@@ -164,6 +165,9 @@ export default function ProfileScreen() {
         />
       </Pressable>
 
+      {/* Un compte enfant ne gère ni les agendas, ni les achats, ni les horaires de la famille. */}
+      {!isChild && (
+        <>
       <View style={{ gap: space.sm }}>
         <Text weight="medium" size={13} tone="muted">
           Synchronisation calendrier
@@ -225,6 +229,9 @@ export default function ProfileScreen() {
           <ChevronRightIcon size={14} color={color.neutral500} />
         </Card>
       </Pressable>
+
+        </>
+      )}
 
       <Pressable onPress={() => router.push("/recurring-tasks")}>
         <Card row style={{ alignItems: "center" }}>

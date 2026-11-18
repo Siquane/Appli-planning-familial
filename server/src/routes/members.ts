@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db";
+import { deleteChildAccount } from "../lib/childAccess";
 import { requireAuth } from "../middleware/auth";
 import { patchSchema } from "../lib/validation";
 
@@ -111,6 +112,9 @@ membersRouter.patch("/:id", async (req, res) => {
 membersRouter.delete("/:id", async (req, res) => {
   const existing = await prisma.familyMember.findFirst({ where: { id: req.params.id, userId: req.userId } });
   if (!existing) return res.status(404).json({ error: "Not found" });
+  // Son accès enfant (et ses documents) part avec lui.
+  const child = await prisma.user.findUnique({ where: { childMemberId: existing.id }, select: { id: true } });
+  if (child) await deleteChildAccount(child.id);
   await prisma.familyMember.delete({ where: { id: existing.id } });
   res.status(204).end();
 });

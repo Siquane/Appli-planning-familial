@@ -87,6 +87,18 @@ export default function LoginScreen() {
           </Text>
         </Link>
       </View>
+
+      {/* Moins de 15 ans : l'accès est créé par un parent, avec un code. */}
+      <View style={{ flexDirection: "row", justifyContent: "center", gap: space.sm }}>
+        <Text tone="muted" size={13}>
+          Moins de 15 ans ?
+        </Text>
+        <Link href="/(auth)/child-code">
+          <Text tone="accent" size={13} weight="medium">
+            J'ai un code enfant
+          </Text>
+        </Link>
+      </View>
     </Screen>
   );
 }

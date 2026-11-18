@@ -7,6 +7,7 @@ import { INVITE_TTL_DAYS, InviteError, MAX_FAMILY_ACCOUNTS, findLiveInvite, gene
 import { contentCounts, eraseContent, totalOf } from "../lib/familyJoin";
 import { loginLimiter } from "../middleware/rateLimits";
 import { publicUser } from "./auth";
+import { CHILD_MIN_AGE, childAgeProblem, deleteChildAccount, ensureChildAccount, newChildCode } from "../lib/childAccess";
 
 // The accounts around one family, and the code to add someone.
 
@@ -72,9 +73,14 @@ familyRouter.delete("/invite", async (req, res) => {
 });
 
 // The owner removes an account from the family. That account keeps existing,
-// on its own and without the family's data.
+// on its own and without the family's data. A child account is deleted.
 familyRouter.delete("/accounts/:id", async (req, res) => {
   if (!ownerOnly(req, res)) return;
+  const child = await prisma.user.findFirst({ where: { id: String(req.params.id), familyOwnerId: req.familyId!, familyRole: "child" } });
+  if (child) {
+    await deleteChildAccount(child.id);
+    return res.status(204).end();
+  }
   const { count } = await prisma.user.updateMany({
     where: { id: String(req.params.id), familyOwnerId: req.familyId! },
     data: { familyOwnerId: null, familyRole: "owner" },
@@ -140,4 +146,55 @@ familyRouter.post("/join", loginLimiter, async (req, res) => {
     return tx.user.update({ where: { id: accountId }, data: { familyOwnerId: invite.ownerId, familyRole: invite.role, familyNotice: null } });
   });
   res.json({ user: publicUser(joined) });
+});
+
+// ---------------------------------------------------------------------------
+// Accès des enfants (8 à 14 ans) : un adulte de la famille le crée depuis la
+// fiche du membre, ce qui vaut accord parental. L'enfant se connecte avec un
+// code à usage unique (POST /auth/child-code). Voir lib/childAccess.ts.
+
+const childProblemText = {
+  unknown: "Indique d'abord l'âge ou la date de naissance de ce membre (fiche du membre).",
+  too_young: `L'accès enfant est possible à partir de ${CHILD_MIN_AGE} ans.`,
+  too_old: "À partir de 15 ans, il crée son propre compte avec le code famille.",
+} as const;
+
+familyRouter.get("/children", async (req, res) => {
+  const familyId = req.familyId!;
+  const [members, accounts] = await Promise.all([
+    prisma.familyMember.findMany({ where: { userId: familyId }, orderBy: [{ order: "asc" }, { name: "asc" }] }),
+    prisma.user.findMany({ where: { familyOwnerId: familyId, familyRole: "child" }, select: { id: true, childMemberId: true, createdAt: true } }),
+  ]);
+  res.json({
+    children: members
+      .map((m) => {
+        const account = accounts.find((a) => a.childMemberId === m.id);
+        const problem = childAgeProblem(m);
+        // Les membres trop âgés ou trop jeunes n'apparaissent que s'ils ont déjà un accès.
+        if (!account && (problem === "too_old" || problem === "too_young")) return null;
+        return { memberId: m.id, name: m.name, accountId: account?.id ?? null, problem: account ? null : problem, problemText: account || !problem ? null : childProblemText[problem] };
+      })
+      .filter(Boolean),
+  });
+});
+
+// Crée l'accès (si besoin) et un code à usage unique, valable 24 h.
+familyRouter.post("/children/:memberId/code", async (req, res) => {
+  const familyId = req.familyId!;
+  const member = await prisma.familyMember.findFirst({ where: { id: String(req.params.memberId), userId: familyId } });
+  if (!member) return res.status(404).json({ error: "Ce membre ne fait pas partie de ta famille." });
+  const already = await prisma.user.findUnique({ where: { childMemberId: member.id } });
+  const problem = already ? null : childAgeProblem(member);
+  if (problem) return res.status(400).json({ error: childProblemText[problem], code: `child_${problem}` });
+  const account = await ensureChildAccount(familyId, member);
+  const { code, expiresAt } = await newChildCode(account.id);
+  res.status(201).json({ code, expiresAt: expiresAt.toISOString(), accountId: account.id });
+});
+
+// Supprime l'accès de l'enfant, avec son budget et ses documents.
+familyRouter.delete("/children/:memberId", async (req, res) => {
+  const account = await prisma.user.findFirst({ where: { childMemberId: String(req.params.memberId), familyOwnerId: req.familyId!, familyRole: "child" } });
+  if (!account) return res.status(404).json({ error: "Ce membre n'a pas d'accès." });
+  await deleteChildAccount(account.id);
+  res.status(204).end();
 });

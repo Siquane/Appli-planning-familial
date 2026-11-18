@@ -139,7 +139,7 @@ export default function HomeScreen() {
       </View>
 
       {/* Discret, sous la liste : un simple lien vers « Replanifier ». */}
-      {flexibleCount > 0 && (
+      {flexibleCount > 0 && user?.familyRole !== "child" && (
         <Pressable
           onPress={() => router.push("/replan")}
           accessibilityRole="button"

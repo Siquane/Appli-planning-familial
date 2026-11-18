@@ -10,6 +10,7 @@ import { sendLoginCode, sendPasswordResetCode } from "../services/mailer";
 import { accountLimiter, loginLimiter } from "../middleware/rateLimits";
 import { InviteError, findLiveInvite } from "../lib/family";
 import { heirCandidates, leaveFamilyBehind } from "../lib/familyHandover";
+import { consumeChildCode } from "../lib/childAccess";
 
 export const authRouter = Router();
 
@@ -77,6 +78,19 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
     return res.status(401).json({ error: "Email ou mot de passe incorrect" });
+  }
+  const tokens = await issueTokens(user.id, user.email);
+  res.json({ user: publicUser(user), ...tokens });
+});
+
+// Connexion d'un enfant avec le code donné par un parent (lib/childAccess.ts).
+authRouter.post("/child-code", loginLimiter, async (req, res) => {
+  const parsed = z.object({ code: z.string().trim().min(1).max(40) }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Saisis le code donné par ton parent." });
+  const accountId = await consumeChildCode(parsed.data.code);
+  const user = accountId ? await prisma.user.findUnique({ where: { id: accountId } }) : null;
+  if (!user || user.familyRole !== "child" || !user.familyOwnerId) {
+    return res.status(401).json({ error: "Ce code n'est pas valable ou a expiré. Demande un nouveau code à ton parent.", code: "invalid_child_code" });
   }
   const tokens = await issueTokens(user.id, user.email);
   res.json({ user: publicUser(user), ...tokens });
@@ -332,15 +346,19 @@ async function issueTokens(userId: string, email: string) {
   return { accessToken, refreshToken };
 }
 
-export function publicUser(user: { id: string; email: string; name: string; initials: string; familyOwnerId: string | null; familyRole: string; familyNotice?: string | null }) {
+export function publicUser(user: { id: string; email: string; name: string; initials: string; familyOwnerId: string | null; familyRole: string; familyNotice?: string | null; childMemberId?: string | null }) {
+  const child = user.familyRole === "child";
   return {
     id: user.id,
-    email: user.email,
+    // L'adresse technique d'un compte enfant n'est jamais montrée.
+    email: child ? "" : user.email,
+    /** Compte enfant : le membre de la famille qu'il est. */
+    childMemberId: child ? (user.childMemberId ?? null) : null,
     name: user.name,
     initials: user.initials,
     /** The family's id (the owner's): what the store identifies the subscription with. */
     familyId: user.familyOwnerId ?? user.id,
-    /** "owner" | "full" | "planning". */
+    /** "owner" | "full" | "planning" | "child". */
     familyRole: user.familyOwnerId ? user.familyRole : "owner",
     /** One-time message after the family changed hands (see lib/familyHandover.ts), null otherwise. */
     familyNotice: parseNotice(user.familyNotice),

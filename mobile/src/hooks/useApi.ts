@@ -37,7 +37,8 @@ export function useUpdateMember() {
 /** Account-wide consent to store diets, allergies and foods to limit (RGPD). */
 export function useFoodConsent() {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["food-consent"], queryFn: () => membersApi.foodConsent().then((r) => r.consentedAt), enabled });
+  const isChild = useAuthStore((st) => st.user?.familyRole === "child");
+  return useQuery({ queryKey: ["food-consent"], queryFn: () => membersApi.foodConsent().then((r) => r.consentedAt), enabled: enabled && !isChild });
 }
 
 export function useSetFoodConsent() {
@@ -502,6 +503,28 @@ export function useInvitePerson() {
   });
 }
 
+export function useChildAccesses() {
+  const enabled = useEnabled();
+  const role = useAuthStore((st) => st.user?.familyRole);
+  return useQuery({ queryKey: ["family", "children"], queryFn: () => familyApi.children().then((r) => r.children), enabled: enabled && role !== "child" });
+}
+
+export function useChildCode() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (memberId: string) => familyApi.childCode(memberId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["family"] }),
+  });
+}
+
+export function useRemoveChildAccess() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (memberId: string) => familyApi.removeChild(memberId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["family"] }),
+  });
+}
+
 export function useMemberShareLinks() {
   const enabled = useEnabled();
   return useQuery({ queryKey: ["share", "members"], queryFn: () => shareApi.memberLinks().then((r) => r.links), enabled });
@@ -525,7 +548,8 @@ export function useRemoveSharedPerson() {
 
 export function useCalendarStatus() {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["calendar-status"], queryFn: () => calendarApi.status(), enabled });
+  const isChild = useAuthStore((st) => st.user?.familyRole === "child");
+  return useQuery({ queryKey: ["calendar-status"], queryFn: () => calendarApi.status(), enabled: enabled && !isChild });
 }
 
 export function useDisconnectCalendar() {

@@ -13,6 +13,7 @@ import { isChild, starsLabel, weekKey } from "../../src/lib/stars";
 import { errorText } from "../../src/lib/errors";
 import { useDeleteTask, useMembers, useStars, useTasks, useToggleStar } from "../../src/hooks/useApi";
 import { useToastStore } from "../../src/state/toastStore";
+import { useAuthStore } from "../../src/state/authStore";
 import { color, space, gutter } from "../../src/theme/tokens";
 import { categoryColor, formatDuration, priorityLabel, WEEKDAYS_FULL } from "../../src/lib/weekdays";
 import { seriesOf } from "../../src/lib/taskSeries";
@@ -27,6 +28,8 @@ export default function TaskDetailScreen() {
   const week = weekKey();
   const { data: starsState } = useStars(week);
   const toggleStar = useToggleStar();
+  const user = useAuthStore((s) => s.user);
+  const viewerIsChild = user?.familyRole === "child";
 
   if (!task) {
     return (
@@ -39,6 +42,8 @@ export default function TaskDetailScreen() {
     );
   }
 
+  // Un enfant ne modifie que les tâches où il est indiqué (le serveur le vérifie aussi).
+  const canEdit = !viewerIsChild || (!!user?.childMemberId && task.memberIds.includes(user.childMemberId));
   const assigned = task.memberIds.map((mid) => members.find((m) => m.id === mid)).filter((m): m is NonNullable<typeof m> => !!m);
 
   const siblings = seriesOf(tasks, task);
@@ -72,7 +77,12 @@ export default function TaskDetailScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title={task.title} onBack={() => router.back()} onDuplicate={() => router.push(`/task/new?duplicate=${task.id}`)} onEdit={() => router.push(`/task/new?edit=${task.id}`)} onDelete={onDelete} />
+      <TopBar
+        title={task.title}
+        onBack={() => router.back()}
+        onDuplicate={() => router.push(`/task/new?duplicate=${task.id}`)}
+        {...(canEdit ? { onEdit: () => router.push(`/task/new?edit=${task.id}`), onDelete } : {})}
+      />
       <View style={{ padding: gutter, gap: space.md }}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
           <Tag label={task.category} tint={categoryColor(task.category)} />
@@ -119,7 +129,7 @@ export default function TaskDetailScreen() {
           </View>
         )}
 
-        {(task.stars ?? 1) > 0 && assigned.some((m) => isChild(m)) && (
+        {(task.stars ?? 1) > 0 && !viewerIsChild && assigned.some((m) => isChild(m)) && (
           <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Étoiles cette semaine · {starsLabel(task.stars ?? 1)} par enfant

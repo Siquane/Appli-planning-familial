@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { verifyAccessToken } from "../lib/jwt";
 import { resolveSpace, type FamilyRole } from "../lib/family";
+import { childAllowed } from "../lib/childAccess";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -18,6 +19,8 @@ declare global {
       familyId?: string;
       privateId?: string;
       familyRole?: FamilyRole;
+      /** Compte enfant : son membre de la famille. */
+      childMemberId?: string | null;
     }
   }
 }
@@ -41,7 +44,11 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   req.familyId = space.familyId;
   req.privateId = space.privateId;
   req.familyRole = space.role;
+  req.childMemberId = space.childMemberId ?? null;
   req.userId = space.familyId;
+  if (space.role === "child" && !childAllowed(req.method, `${req.baseUrl}${req.path}`)) {
+    return res.status(403).json({ error: "Demande à un parent de le faire.", code: "child_forbidden" });
+  }
   next();
 }
 

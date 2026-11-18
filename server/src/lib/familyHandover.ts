@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { deleteChildAccountsOf } from "./childAccess";
 
 // When the creator of a family deletes their account, the family does not have
 // to disappear: its data (every row keyed by the owner's id) moves to another
@@ -38,6 +39,8 @@ export async function leaveFamilyBehind(ownerId: string, ownerName: string, heir
   if (others.length === 0) return;
 
   if (!heirId) {
+    // Sans adulte pour reprendre la famille, les accès des enfants disparaissent avec elle.
+    await deleteChildAccountsOf(ownerId);
     await prisma.user.updateMany({
       where: { familyOwnerId: ownerId },
       data: { familyOwnerId: null, familyRole: "owner", familyNotice: notice({ kind: "detached", from: ownerName }) },

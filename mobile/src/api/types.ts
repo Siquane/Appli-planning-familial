@@ -1,4 +1,4 @@
-export type FamilyRole = "owner" | "full" | "planning";
+export type FamilyRole = "owner" | "full" | "planning" | "child";
 
 export interface User {
   id: string;
@@ -10,6 +10,8 @@ export interface User {
   familyRole?: FamilyRole;
   /** One-time message after the family changed hands; closed with familyApi.dismissNotice. */
   familyNotice?: FamilyNotice | null;
+  /** Compte enfant (moins de 15 ans, créé par un parent) : le membre de la famille qu'il est. */
+  childMemberId?: string | null;
 }
 
 export type FamilyNotice =

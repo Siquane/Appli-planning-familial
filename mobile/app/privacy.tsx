@@ -11,6 +11,7 @@ import { TopBar } from "../src/components/TopBar";
 import { Accordion } from "../src/components/Accordion";
 import { useFoodConsent, useSetFoodConsent } from "../src/hooks/useApi";
 import { deleteAccount } from "../src/lib/account";
+import { useAuthStore } from "../src/state/authStore";
 import { ApiError } from "../src/api/client";
 import { useToastStore } from "../src/state/toastStore";
 import { space, gutter } from "../src/theme/tokens";
@@ -37,6 +38,7 @@ export const PRIVACY_POLICY_URL = "https://claude.ai/artifact/6q5yK3yYE2SmCnZAMq
 // What Passerelle stores, where it goes, and the user's rights (RGPD): withdraw
 // the health-data consent, delete the account.
 export default function PrivacyScreen() {
+  const isChild = useAuthStore((st) => st.user?.familyRole === "child");
   const { data: consentedAt } = useFoodConsent();
   const setConsent = useSetFoodConsent();
   const [password, setPassword] = useState("");
@@ -153,7 +155,7 @@ export default function PrivacyScreen() {
 
         <Accordion title="Partage en famille">
           <Section title="Qui voit quoi">
-            Avec un code famille, d'autres personnes (dès 15 ans) ont leur propre compte autour de la même famille. Profil Complet : tout est partagé. Profil Planning : le planning, les repas, les courses, les recettes et les notes « Famille » sont partagés ; le budget, les documents et les notes « Perso » restent personnels.
+            Avec un code famille, d'autres personnes (dès 15 ans) ont leur propre compte autour de la même famille. Profil Complet : tout est partagé. Profil Planning : le planning, les repas, les courses, les recettes et les notes « Famille » sont partagés ; le budget, les documents et les notes « Perso » restent personnels. Enfants de 8 à 14 ans : leur accès est créé par un parent depuis leur fiche, ce qui vaut accord parental ; ils se connectent avec un code, sans e-mail ni mot de passe, partagent le planning et ont leur propre budget et leurs propres documents, que les parents peuvent voir. Un parent peut supprimer cet accès à tout moment, avec ce qu'il contient.
           </Section>
           <Section title="Santé et régimes">
             Les régimes et allergies enregistrés avec ton accord sont visibles de tous les comptes de la famille.
@@ -175,7 +177,7 @@ export default function PrivacyScreen() {
           </Section>
         </Accordion>
 
-        <Card style={{ gap: space.sm }}>
+        {!isChild && <Card style={{ gap: space.sm }}>
           <Text size={15} weight="medium">
             Données de santé et régimes
           </Text>
@@ -185,7 +187,7 @@ export default function PrivacyScreen() {
               : "Pas d'accord donné : les régimes, allergies et aliments à limiter ne sont pas enregistrés. Tu peux le donner depuis la fiche d'un membre (onglet Famille, rubrique Repas)."}
           </Text>
           {consentedAt ? <Button label="Retirer mon accord et effacer ces données" variant="secondary" block loading={setConsent.isPending} onPress={onWithdraw} /> : null}
-        </Card>
+        </Card>}
 
         <Button label="Lire la politique de confidentialité complète" variant="ghost" block onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})} />
 
@@ -198,6 +200,16 @@ export default function PrivacyScreen() {
           </Text>
         </Card>
 
+        {isChild ? (
+          <Card style={{ gap: space.sm }}>
+            <Text size={15} weight="medium">
+              Supprimer mon accès
+            </Text>
+            <Text size={13} tone="muted">
+              Ton accès a été créé par un parent. Pour le supprimer, avec ton budget et tes documents, demande-lui : Famille → ta fiche → « Supprimer l'accès ».
+            </Text>
+          </Card>
+        ) : (
         <Accordion title="Supprimer mon compte">
           <Text size={13} tone="muted">
             Efface définitivement tes données. Si d'autres comptes partagent ta famille, un adulte peut la reprendre avant ton départ. Saisis ton mot de passe pour confirmer.
@@ -205,6 +217,7 @@ export default function PrivacyScreen() {
           <TextField label="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
           <Button label="Supprimer mon compte" variant="secondary" block loading={deleting} disabled={!password} onPress={onDelete} />
         </Accordion>
+        )}
       </KeyboardScrollView>
       {heirChoices ? (
         <HeirPickerModal

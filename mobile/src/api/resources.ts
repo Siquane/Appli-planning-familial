@@ -111,7 +111,19 @@ export const familyApi = {
   removeAccount: (id: string) => api.delete<void>(`/family/accounts/${id}`),
   leave: () => api.post<void>("/family/leave"),
   dismissNotice: () => api.delete<void>("/family/notice"),
+  /** Accès des enfants (8 à 14 ans), créés par un parent. */
+  children: () => api.get<{ children: ChildAccess[] }>("/family/children"),
+  childCode: (memberId: string) => api.post<{ code: string; expiresAt: string; accountId: string }>(`/family/children/${memberId}/code`, {}),
+  removeChild: (memberId: string) => api.delete<void>(`/family/children/${memberId}`),
 };
+
+export interface ChildAccess {
+  memberId: string;
+  name: string;
+  accountId: string | null;
+  problem: "unknown" | "too_young" | "too_old" | null;
+  problemText: string | null;
+}
 
 export const planApi = {
   get: () => api.get<Plan>("/plan"),
