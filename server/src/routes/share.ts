@@ -57,6 +57,7 @@ shareRouter.get("/public/:token", async (req, res) => {
       weekday: t.weekday,
       time: t.time,
       recurring: t.recurring,
+      appointmentDate: t.appointmentDate,
       members: t.members.map((m) => m.member.name),
     })),
   });

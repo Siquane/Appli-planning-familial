@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 import { useToastStore } from "../state/toastStore";
 import type { Member, Task, Weekday } from "../api/types";
 import { whoLabel } from "../widgets/snapshot";
+import { dayKey, parseDay, reminderText, remindAt } from "./appointments";
 
 // How long before a recurring task's time its reminder fires.
 const REMINDER_LEAD_MINUTES = 10;
@@ -197,9 +198,13 @@ export async function syncEveningDigest(tasks: Task[], enabled: boolean): Promis
   );
 }
 
-/** Les tâches d'un jour qui vont dans les récaps (case « Dans les récaps »), dans l'ordre de l'heure. */
+/**
+ * Les tâches de la semaine type d'un jour qui vont dans les récaps (case
+ * « Dans les récaps »), dans l'ordre de l'heure. Les rendez-vous (datés) ont
+ * leurs propres notifications (syncAppointmentNotifications).
+ */
 export function digestTasks(tasks: Task[], weekday: Weekday): Task[] {
-  return tasks.filter((t) => t.weekday === weekday && t.inDigest !== false).sort((a, b) => a.time.localeCompare(b.time));
+  return tasks.filter((t) => t.weekday === weekday && t.inDigest !== false && !t.appointmentDate).sort((a, b) => a.time.localeCompare(b.time));
 }
 
 // ---------------------------------------------------------------------------
@@ -259,6 +264,72 @@ export async function syncMorningDigest(tasks: Task[], members: Member[], enable
         trigger: { type: Notifications.SchedulableTriggerInputTypes.WEEKLY, weekday: toExpoWeekday(day), hour, minute, channelId: MORNING_CHANNEL },
       });
     })
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Rendez-vous : notifications à une date précise. Le rappel choisi (1 h avant
+// ou la veille à 20 h) et, si le récap du matin est activé, un « Rendez-vous
+// aujourd'hui » à l'heure du récap le jour J. Recalculé à chaque changement.
+
+const APPOINTMENT_ID_PREFIX = "rdv:";
+const APPOINTMENT_DAY_ID_PREFIX = "rdvday:";
+/** Android garde un nombre limité d'alarmes : on ne prévoit que les plus proches. */
+const APPOINTMENT_MAX_SCHEDULED = 40;
+
+export interface PlannedNotification {
+  identifier: string;
+  date: Date;
+  title: string;
+  body: string;
+}
+
+/** Les notifications des rendez-vous à venir, des plus proches aux plus lointaines. */
+export function appointmentNotifications(tasks: Task[], members: Member[], morning: { enabled: boolean; time: string }, now: Date = new Date()): PlannedNotification[] {
+  const upcoming = tasks.filter((t) => t.appointmentDate && t.appointmentDate >= dayKey(now));
+  const planned: PlannedNotification[] = [];
+  for (const t of upcoming) {
+    const at = remindAt(t, now);
+    if (at) planned.push({ identifier: `${APPOINTMENT_ID_PREFIX}${t.id}`, date: at, title: "Rendez-vous", body: reminderText(t) });
+  }
+  if (morning.enabled) {
+    const [h, m] = morning.time.split(":").map(Number);
+    const days = [...new Set(upcoming.filter((t) => t.inDigest !== false).map((t) => t.appointmentDate!))];
+    for (const day of days) {
+      const at = parseDay(day);
+      at.setHours(h, m, 0, 0);
+      if (at <= now) continue;
+      const lines = upcoming
+        .filter((t) => t.appointmentDate === day && t.inDigest !== false)
+        .sort((a, b) => a.time.localeCompare(b.time))
+        .map((t) => {
+          const who = whoLabel(t.memberIds ?? [], members);
+          return `${t.time} ${t.title}${t.location?.trim() ? ` · ${t.location.trim()}` : ""}${who ? ` · ${who}` : ""}`;
+        });
+      planned.push({ identifier: `${APPOINTMENT_DAY_ID_PREFIX}${day}`, date: at, title: lines.length > 1 ? `${lines.length} rendez-vous aujourd'hui` : "Rendez-vous aujourd'hui", body: lines.join("\n") });
+    }
+  }
+  return planned.sort((a, b) => a.date.getTime() - b.date.getTime()).slice(0, APPOINTMENT_MAX_SCHEDULED);
+}
+
+export async function syncAppointmentNotifications(tasks: Task[], members: Member[], morning: { enabled: boolean; time: string }): Promise<void> {
+  if (Platform.OS === "web") return;
+  if (!(await hasNotificationPermission())) return;
+
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    scheduled
+      .filter((req) => req.identifier?.startsWith(APPOINTMENT_ID_PREFIX) || req.identifier?.startsWith(APPOINTMENT_DAY_ID_PREFIX))
+      .map((req) => Notifications.cancelScheduledNotificationAsync(req.identifier))
+  );
+  await Promise.all(
+    appointmentNotifications(tasks, members, morning).map((n) =>
+      Notifications.scheduleNotificationAsync({
+        identifier: n.identifier,
+        content: { title: n.title, body: n.body, data: { url: "/home" } },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: n.date },
+      })
+    )
   );
 }
 

@@ -12,7 +12,8 @@ export type WidgetName = (typeof WIDGET_NAMES)[number];
 export interface WidgetSnapshot {
   savedAt: string;
   /** `who`: first names of the assigned members (« Léa, Tom », « Léa +2 »); absent in older snapshots. */
-  tasks: { title: string; time: string; weekday: Weekday; who?: string }[];
+  /** `day` : date d'un rendez-vous (« AAAA-MM-JJ »), absent pour la semaine type. */
+  tasks: { title: string; time: string; weekday: Weekday; who?: string; day?: string | null }[];
   /** Dinners of the week, recipe titles already resolved. */
   dinners: { weekday: Weekday; title: string }[];
   budget: { month: string; spentCents: number; capCents: number | null } | null;
@@ -40,7 +41,7 @@ export function buildSnapshot(
   const caps = budget?.byCategory.filter((c) => c.limitCents !== null) ?? [];
   return {
     savedAt: now.toISOString(),
-    tasks: tasks.map((t) => ({ title: t.title, time: t.time, weekday: t.weekday, who: whoLabel(t.memberIds ?? [], members) })),
+    tasks: tasks.map((t) => ({ title: t.title, time: t.time, weekday: t.weekday, who: whoLabel(t.memberIds ?? [], members), day: t.appointmentDate ?? null })),
     dinners: meals
       .filter((m) => m.type === "dîner")
       .map((m) => ({ weekday: m.weekday, title: (m.recipeId ? recipes.find((r) => r.id === m.recipeId)?.title : null) ?? m.title }))

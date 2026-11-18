@@ -83,7 +83,7 @@ export default function SavingsScreen() {
           </Text>
           <TextField label="Nom" value={name} onChangeText={setName} placeholder="Ex. Vacances d'été, Noël…" />
           <TextField label="Montant à atteindre (€)" value={target} onChangeText={setTarget} keyboardType="decimal-pad" placeholder="1 200" />
-          <DateField label="Pour quand ? (facultatif)" value={deadline} onChange={setDeadline} />
+          <DateField label="Pour quand ? (facultatif)" value={deadline} onChange={setDeadline} future />
           <Button
             label={premium ? "Créer l'objectif" : "Créer l'objectif · Budget+"}
             variant="primary"

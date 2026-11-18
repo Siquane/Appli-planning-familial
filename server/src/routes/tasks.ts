@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
-import { dateForWeekday } from "../lib/dates";
+import { dateForWeekday, mondayOfWeek } from "../lib/dates";
 import { Constraints, getProposals, SchedulableTask, Weekday } from "../lib/scheduling";
 import { syncTaskToCalendar, unsyncTaskFromCalendar } from "../services/calendarSync";
 import type { Task } from "@prisma/client";
@@ -35,6 +35,9 @@ function serializeTask(task: TaskWithMembers) {
     seriesId: task.seriesId,
     stars: task.stars,
     inDigest: task.inDigest,
+    appointmentDate: task.appointmentDate,
+    location: task.location,
+    remind: task.remind,
   };
 }
 
@@ -63,7 +66,22 @@ const taskSchema = z.object({
   inDigest: z.boolean().default(true),
   // Généré par l'appli (elle doit pouvoir créer une série hors connexion).
   seriesId: z.string().min(8).max(40).regex(/^[A-Za-z0-9_-]+$/).nullable().optional(),
+  // Rendez-vous : date précise ; le jour de la semaine en est déduit.
+  appointmentDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine((d) => new Date(`${d}T12:00:00Z`).toISOString().slice(0, 10) === d, "Date invalide")
+    .nullable()
+    .optional(),
+  location: z.string().max(200).default(""),
+  remind: z.enum(["hour", "eve"]).nullable().optional(),
 });
+
+/** Jour de la semaine (0 = lundi) et date stockée d'un rendez-vous. */
+function appointmentFields(day: string) {
+  const date = new Date(`${day}T12:00:00Z`);
+  return { weekday: (date.getUTCDay() + 6) % 7, date, recurring: false, flexible: false };
+}
 
 async function loadOwnedTask(userId: string, id: string) {
   return prisma.task.findFirst({ where: { id, userId }, include });
@@ -106,6 +124,10 @@ tasksRouter.post("/", async (req, res) => {
       seriesId: d.seriesId ?? null,
       stars: d.stars,
       inDigest: d.inDigest,
+      location: d.location,
+      remind: d.appointmentDate ? (d.remind ?? null) : null,
+      appointmentDate: d.appointmentDate ?? null,
+      ...(d.appointmentDate ? appointmentFields(d.appointmentDate) : {}),
       members: { create: d.memberIds.map((memberId) => ({ memberId })) },
     },
     include,
@@ -133,6 +155,7 @@ tasksRouter.patch("/:id", async (req, res) => {
     data: {
       ...rest,
       date: d.weekday !== undefined ? dateForWeekday(d.weekday as Weekday) : undefined,
+      ...(d.appointmentDate ? appointmentFields(d.appointmentDate) : {}),
       ...(memberIds ? { members: { deleteMany: {}, create: memberIds.map((memberId) => ({ memberId })) } } : {}),
     },
     include,
@@ -211,6 +234,15 @@ const autoSlotSchema = z.object({
   duration: z.number().int().min(1).max(24 * 60).optional(),
 });
 
+/** Les rendez-vous d'une autre semaine ne gênent pas le placement de cette semaine. */
+function notOtherWeeks() {
+  const monday = mondayOfWeek(new Date());
+  const key = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return { OR: [{ appointmentDate: null }, { appointmentDate: { gte: key(monday), lte: key(sunday) } }] };
+}
+
 /** Plages de la famille + horaires de travail du compte qui demande. */
 async function schedulingConstraints(familyId: string, accountId: string): Promise<Constraints | null> {
   const [family, account] = await Promise.all([
@@ -230,7 +262,7 @@ tasksRouter.post("/auto-slot", async (req, res) => {
   const d = parsed.data;
 
   const [tasks, constraints] = await Promise.all([
-    prisma.task.findMany({ where: { userId: req.userId }, include }),
+    prisma.task.findMany({ where: { userId: req.userId, ...notOtherWeeks() }, include }),
     schedulingConstraints(req.userId!, req.accountId ?? req.userId!),
   ]);
   if (!constraints) return res.status(400).json({ error: "Constraints not set up" });
@@ -263,7 +295,7 @@ tasksRouter.post("/auto-slot", async (req, res) => {
 // "Replanifier ma semaine" — top-3 scored slot proposals for every flexible task.
 tasksRouter.get("/replan/proposals", async (req, res) => {
   const [tasks, constraints] = await Promise.all([
-    prisma.task.findMany({ where: { userId: req.userId }, include }),
+    prisma.task.findMany({ where: { userId: req.userId, ...notOtherWeeks() }, include }),
     schedulingConstraints(req.userId!, req.accountId ?? req.userId!),
   ]);
   if (!constraints) return res.status(400).json({ error: "Constraints not set up" });

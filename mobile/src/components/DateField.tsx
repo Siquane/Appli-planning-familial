@@ -17,11 +17,14 @@ interface Props {
   value: Date | null;
   onChange: (value: Date) => void;
   placeholder?: string;
+  /** Dates à venir permises (rendez-vous, échéance). Par défaut : jusqu'à aujourd'hui (naissance, dépense). */
+  future?: boolean;
 }
 
 // Same pattern as TimeField: Android's native dialog dismisses itself,
 // iOS's spinner is wrapped in a bottom-sheet modal with an explicit confirm.
-export function DateField({ label, value, onChange, placeholder = "Choisir une date" }: Props) {
+export function DateField({ label, value, onChange, placeholder = "Choisir une date", future = false }: Props) {
+  const maximumDate = future ? undefined : new Date();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(() => value ?? new Date());
 
@@ -68,7 +71,7 @@ export function DateField({ label, value, onChange, placeholder = "Choisir une d
       </Pressable>
 
       {open && Platform.OS === "android" && (
-        <DateTimePicker value={draft} mode="date" display="calendar" maximumDate={new Date()} onChange={handleChange} />
+        <DateTimePicker value={draft} mode="date" display="calendar" maximumDate={maximumDate} onChange={handleChange} />
       )}
 
       {Platform.OS === "ios" && (
@@ -78,7 +81,7 @@ export function DateField({ label, value, onChange, placeholder = "Choisir une d
               style={{ backgroundColor: color.surface, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, padding: space.md }}
               onPress={(e) => e.stopPropagation()}
             >
-              <DateTimePicker value={draft} mode="date" display="spinner" maximumDate={new Date()} onChange={handleChange} textColor={color.text} />
+              <DateTimePicker value={draft} mode="date" display="spinner" maximumDate={maximumDate} onChange={handleChange} textColor={color.text} />
               <Button label="Valider" variant="primary" block onPress={confirmIOS} style={{ marginTop: space.sm }} />
             </Pressable>
           </Pressable>

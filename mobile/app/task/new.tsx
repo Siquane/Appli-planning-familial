@@ -24,6 +24,7 @@ import { parseDuration, splitDuration } from "../../src/lib/duration";
 import type { Category, Priority, Task, Weekday } from "../../src/api/types";
 import { errorText } from "../../src/lib/errors";
 import { goBack, useBackFallback } from "../../src/lib/navigation";
+import { AppointmentForm } from "../../src/screens/AppointmentForm";
 
 const CATEGORIES: Category[] = ["École", "Travail", "Maison", "Santé", "Loisirs"];
 const DURATIONS = [15, 30, 45, 60, 90, 120];
@@ -34,8 +35,10 @@ const PRIORITIES: { key: Priority; label: string }[] = [
 ];
 
 export default function TaskFormScreen() {
-  const { edit, duplicate, title: prefillTitle, category: prefillCategory, recurring: prefillRecurring, duration: prefillDuration, member: prefillMember } =
-    useLocalSearchParams<{ edit?: string; duplicate?: string; title?: string; category?: string; recurring?: string; duration?: string; member?: string }>();
+  const { edit, duplicate, title: prefillTitle, category: prefillCategory, recurring: prefillRecurring, duration: prefillDuration, member: prefillMember, kind: prefillKind } =
+    useLocalSearchParams<{ edit?: string; duplicate?: string; title?: string; category?: string; recurring?: string; duration?: string; member?: string; kind?: string }>();
+  // Tâche de la semaine type, ou rendez-vous à une date précise.
+  const [kind, setKind] = useState<"task" | "appointment">(prefillKind === "appointment" ? "appointment" : "task");
   const { data: tasks = [] } = useTasks();
   const { data: members = [] } = useMembers();
   const createTask = useCreateTask();
@@ -205,10 +208,25 @@ export default function TaskFormScreen() {
     }
   }
 
+  const kindSwitch =
+    !existing && !source ? (
+      <View style={{ flexDirection: "row", gap: space.xs }}>
+        <Chip label="Tâche" selected={kind === "task"} onPress={() => setKind("task")} fill />
+        <Chip label="Rendez-vous" selected={kind === "appointment"} onPress={() => setKind("appointment")} fill />
+      </View>
+    ) : null;
+
+  const appointmentForm = existing ? !!existing.appointmentDate : source ? !!source.appointmentDate : kind === "appointment";
+  if (appointmentForm) {
+    return <AppointmentForm existing={existing} source={source} prefillTitle={title} prefillMember={memberIds[0]} kindSwitch={kindSwitch} />;
+  }
+
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Modifier la tâche" : source ? "Dupliquer la tâche" : "Nouvelle tâche"} onBack={() => goBack()} save={{ onPress: onSave, disabled: !isValid, loading: saving }} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.section }} showsVerticalScrollIndicator={false}>
+        {kindSwitch}
+
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Devoirs de Léo" />
 
         <View style={{ gap: space.sm }}>

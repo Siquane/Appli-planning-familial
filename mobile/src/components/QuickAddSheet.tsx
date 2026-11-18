@@ -2,13 +2,14 @@ import { Modal, Pressable, View } from "react-native";
 import { router, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "./Text";
-import { BookIcon, CalendarIcon, DocumentIcon, MealIcon, NoteIcon, WalletIcon } from "./icons";
+import { BookIcon, CalendarIcon, ClockIcon, DocumentIcon, MealIcon, NoteIcon, WalletIcon } from "./icons";
 import { color, radius, space } from "../theme/tokens";
 
 type Item = { label: string; hint: string; href: Href; Icon: (p: { size: number; color: string }) => React.JSX.Element };
 
 export const QUICK_ADD_ITEMS: Item[] = [
   { label: "Tâche", hint: "Planning de la famille", href: "/task/new", Icon: CalendarIcon },
+  { label: "Rendez-vous", hint: "À une date précise", href: "/task/new?kind=appointment", Icon: ClockIcon },
   { label: "Dépense", hint: "Budget du mois", href: "/expense/new", Icon: WalletIcon },
   { label: "Document", hint: "Ordonnance, assurance…", href: "/document/new", Icon: DocumentIcon },
   { label: "Recette", hint: "Livre de recettes", href: "/recipe/new", Icon: BookIcon },

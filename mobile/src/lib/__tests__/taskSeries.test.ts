@@ -21,6 +21,9 @@ const task = (id: string, weekday: Weekday, time = "18:00", seriesId: string | n
   seriesId,
   stars: 1,
   inDigest: true,
+  appointmentDate: null,
+  location: "",
+  remind: null,
 });
 
 describe("newSeriesId", () => {
