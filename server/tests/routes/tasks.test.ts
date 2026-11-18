@@ -203,3 +203,32 @@ describe("tasks done", () => {
     expect((await request(app).delete(`/tasks/${task.id}/done?day=2026-11-17`).set(b)).status).toBe(404);
   });
 });
+
+describe("appointments", () => {
+  it("stores a dated appointment and derives its weekday", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    // 3 décembre 2026 = un jeudi.
+    const res = await request(app)
+      .post("/tasks")
+      .set(auth)
+      .send({ ...baseTask, title: "Dentiste", weekday: 0, appointmentDate: "2026-12-03", location: "Cabinet Dupont", remind: "eve", recurring: true, flexible: true });
+    expect(res.status).toBe(201);
+    expect(res.body.task).toMatchObject({ weekday: 3, appointmentDate: "2026-12-03", location: "Cabinet Dupont", remind: "eve", recurring: false, flexible: false });
+
+    const moved = await request(app).patch(`/tasks/${res.body.task.id}`).set(auth).send({ appointmentDate: "2026-12-07" });
+    expect(moved.body.task).toMatchObject({ weekday: 0, appointmentDate: "2026-12-07", location: "Cabinet Dupont" });
+  });
+
+  it("rejects an impossible date", async () => {
+    const { accessToken } = await signup(app);
+    const res = await request(app).post("/tasks").set(authHeader(accessToken)).send({ ...baseTask, appointmentDate: "2026-02-30" });
+    expect(res.status).toBe(400);
+  });
+
+  it("an ordinary task has no date", async () => {
+    const { accessToken } = await signup(app);
+    const res = await request(app).post("/tasks").set(authHeader(accessToken)).send({ ...baseTask, remind: "hour" });
+    expect(res.body.task).toMatchObject({ appointmentDate: null, location: "", remind: null });
+  });
+});

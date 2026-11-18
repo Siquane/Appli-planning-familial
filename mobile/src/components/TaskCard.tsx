@@ -5,7 +5,7 @@ import { Text } from "./Text";
 import { Card } from "./Card";
 import { Tag } from "./Tag";
 import { AvatarStack } from "./Avatar";
-import { ClockIcon, RecurringIcon } from "./icons";
+import { ClockIcon, PinIcon, RecurringIcon } from "./icons";
 import { DoneCheck } from "./Playful";
 import { color, space } from "../theme/tokens";
 import { categoryColor, formatDuration } from "../lib/weekdays";
@@ -60,9 +60,18 @@ export function TaskCard({ task, members, done, onToggleDone }: { task: Task; me
               {task.title}
             </Text>
           </View>
+          {task.appointmentDate && task.location?.trim() ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+              <PinIcon size={11} color={color.neutral500} />
+              <Text size={11} tone="faint" numberOfLines={1} style={{ flexShrink: 1 }}>
+                {task.location.trim()}
+              </Text>
+            </View>
+          ) : null}
           <View style={{ flexDirection: "row", gap: space.sm, alignItems: "center" }}>
+            {task.appointmentDate && <Tag label="Rendez-vous" variant="outline" />}
             <Tag label={task.category} tint={categoryColor(task.category)} />
-            {task.priority === "high" && <Tag label="Priorité haute" variant="outline" />}
+            {task.priority === "high" && !task.appointmentDate && <Tag label="Priorité haute" variant="outline" />}
           </View>
         </View>
 

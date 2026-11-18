@@ -110,6 +110,15 @@ export const CalendarIcon = makeIcon(
   16,
 );
 
+// Lieu (rendez-vous)
+export const PinIcon = makeIcon(
+  [
+  { kind: "path", d: "M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z", tint: true },
+  { kind: "dot", cx: 12, cy: 9.8, r: 2.2 },
+  ],
+  16,
+);
+
 // Time
 export const ClockIcon = makeIcon(
   [

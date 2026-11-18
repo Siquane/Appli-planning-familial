@@ -336,3 +336,13 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - **Horaires de travail par compte** : champs `workDays Int[]`, `workStart`, `workEnd` sur `User` (le compte, `req.accountId`), migration `20261118110000_work_hours`. `GET/PATCH /constraints` renvoie et accepte `work` / `workDays`, `workStart`, `workEnd` en plus des plages de la famille.
 - Moteur : aucun créneau pendant le travail les jours cochés ; la **durée** de la tâche compte (ne déborde ni sur le travail, ni sur le déjeuner, le sommeil ou « ne pas déranger ») ; une tâche existante bloque toute sa durée ; une tâche sans membre bloque tout le monde. Créneaux 17:30, 18:30, 19:30 ajoutés. Même règles pour le placement automatique (`/tasks/auto-slot`, accepte `duration`).
 - Appli : nouvel écran **« Mes horaires »** (`app/schedule.tsx`, depuis Profil et depuis « Replanifier ma semaine ») : jours + heures de travail, et sommeil / déjeuner / ne pas déranger (avant, modifiables seulement à l'inscription). JS seulement, pas de nouvel APK (runtime "8").
+
+## Rendez-vous datés et semaines (18/11/2026)
+
+- **Rendez-vous** = une tâche avec `appointmentDate` (« AAAA-MM-JJ »), `location` et `remind` ("hour" = 1 h avant, "eve" = veille 20 h, ou null). Migration `20261118150000_appointments`. Le serveur déduit `weekday` de la date et force `recurring`/`flexible` à false. Les tâches sans date restent la « semaine type », affichées chaque semaine (les tâches ponctuelles existantes ne changent pas).
+- Appli : choix **Tâche / Rendez-vous** en haut de « Nouvelle tâche » (formulaire `src/screens/AppointmentForm.tsx` : titre, date, heure, durée, lieu, catégorie, pour qui, rappel, notes). Aussi dans le « + » (`/task/new?kind=appointment`).
+- **Planning** : flèches ‹ › pour changer de semaine (« Cette semaine », « Semaine prochaine », « Semaine du … »), numéros des jours sous la barre, « Revenir à cette semaine ». Un RDV n'apparaît que dans sa semaine (`lib/appointments.ts` : `tasksOn`, `inWeek`). Carte : étiquette « Rendez-vous » + lieu.
+- Notifications : les RDV sortent des récaps hebdomadaires (`digestTasks`) et ont leurs propres notifications datées (`syncAppointmentNotifications`, ids `rdv:` et `rdvday:`) : le rappel choisi et, si le récap du matin est activé, « Rendez-vous aujourd'hui » à l'heure du récap le jour J. 40 au maximum, recalculées à chaque ouverture/changement.
+- Carte « Aujourd'hui » et widgets : un RDV ne compte que le jour de sa date. Replanifier / placement auto : seuls les RDV de la semaine en cours bloquent des créneaux.
+- `DateField` accepte `future` (dates à venir) ; corrige au passage l'échéance des objectifs d'épargne, qui ne permettait que des dates passées.
+- JS seulement (runtime "8"), plus le serveur.

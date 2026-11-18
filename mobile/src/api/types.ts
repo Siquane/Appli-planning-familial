@@ -110,6 +110,11 @@ export interface Task {
   stars: number;
   /** Apparaît dans le récap du soir et du matin (vrai par défaut). */
   inDigest: boolean;
+  /** Rendez-vous : date précise « AAAA-MM-JJ » (null = tâche de la semaine type). */
+  appointmentDate: string | null;
+  location: string;
+  /** Rappel d'un rendez-vous : 1 h avant ou la veille à 20 h. */
+  remind: "hour" | "eve" | null;
 }
 
 /** Une tâche cochée « faite » un jour donné (« AAAA-MM-JJ »). */

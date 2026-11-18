@@ -1,5 +1,6 @@
 import type { Meal, MonthlyBudget, Recipe, Task, Weekday } from "../api/types";
 import { formatEuros } from "./money";
+import { dayKey } from "./appointments";
 
 export interface TodaySummary {
   taskCount: number;
@@ -23,8 +24,10 @@ export function todaySummary(
   meals: Meal[],
   recipes: Recipe[],
   budget: MonthlyBudget | undefined,
+  todayDate: string = dayKey(new Date()),
 ): TodaySummary {
-  const todays = tasks.filter((t) => t.weekday === today).sort((a, b) => a.time.localeCompare(b.time));
+  // Un rendez-vous ne compte que le jour de sa date.
+  const todays = tasks.filter((t) => (t.appointmentDate ? t.appointmentDate === todayDate : t.weekday === today)).sort((a, b) => a.time.localeCompare(b.time));
   const next = todays.find((t) => t.time >= time) ?? null;
   const meal = meals.find((m) => m.weekday === today && m.type === "dîner");
   const dinner = meal ? (meal.recipeId ? recipes.find((r) => r.id === meal.recipeId)?.title ?? meal.title : meal.title) || null : null;

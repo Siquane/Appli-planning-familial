@@ -2,6 +2,7 @@ import type { Weekday } from "../api/types";
 import { formatEuros } from "../lib/money";
 import { jsDayToWeekday, WEEKDAYS_FULL } from "../lib/weekdays";
 import { nowTime } from "../lib/today";
+import { dayKey } from "../lib/appointments";
 import type { WidgetSnapshot } from "./snapshot";
 
 // Plain text for each widget, kept apart from the drawing so it can be tested.
@@ -22,6 +23,13 @@ export interface WidgetContent {
   example?: string[];
 }
 
+/** Ce qui a lieu aujourd'hui : la semaine type, plus les rendez-vous datés d'aujourd'hui. */
+function todayTasks(s: WidgetSnapshot, now: Date) {
+  const today = jsDayToWeekday(now.getDay());
+  const date = dayKey(now);
+  return s.tasks.filter((t) => (t.day ? t.day === date : t.weekday === today)).sort((a, b) => a.time.localeCompare(b.time));
+}
+
 function monthOf(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
@@ -29,7 +37,7 @@ function monthOf(d: Date) {
 export function summaryContent(s: WidgetSnapshot, now: Date): WidgetContent {
   const today = jsDayToWeekday(now.getDay());
   const time = nowTime(now);
-  const todays = s.tasks.filter((t) => t.weekday === today).sort((a, b) => a.time.localeCompare(b.time));
+  const todays = todayTasks(s, now);
   const next = todays.find((t) => t.time >= time);
   const n = `${todays.length} tâche${todays.length > 1 ? "s" : ""}`;
   const taskLine = todays.length === 0 ? "Rien de prévu aujourd'hui" : next ? `${next.time} ${next.title}` : `${n} · journée terminée`;
@@ -58,7 +66,7 @@ export function summaryContent(s: WidgetSnapshot, now: Date): WidgetContent {
 export function tasksContent(s: WidgetSnapshot, now: Date, max = 6): WidgetContent {
   const today = jsDayToWeekday(now.getDay());
   const time = nowTime(now);
-  const todays = s.tasks.filter((t) => t.weekday === today).sort((a, b) => a.time.localeCompare(b.time));
+  const todays = todayTasks(s, now);
   // Keep the upcoming ones in view when the day is busy.
   const firstUpcoming = Math.max(0, todays.findIndex((t) => t.time >= time));
   const start = todays.every((t) => t.time < time) ? Math.max(0, todays.length - max) : Math.min(firstUpcoming, Math.max(0, todays.length - max));

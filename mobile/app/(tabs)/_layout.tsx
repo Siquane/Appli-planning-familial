@@ -3,7 +3,7 @@ import { AppState } from "react-native";
 import { router, Tabs } from "expo-router";
 import { CustomTabBar } from "../../src/components/CustomTabBar";
 import { useMembers, useTasks } from "../../src/hooks/useApi";
-import { syncBirthdayReminders, syncEveningDigest, syncMorningDigest, syncTaskReminders } from "../../src/lib/notifications";
+import { syncBirthdayReminders, syncEveningDigest, syncMorningDigest, syncTaskReminders, syncAppointmentNotifications } from "../../src/lib/notifications";
 import { useSettingsStore } from "../../src/state/settingsStore";
 import { useWidgetSync } from "../../src/widgets/sync";
 import { takeWidgetRoute } from "../../src/widgets/links";
@@ -80,6 +80,9 @@ export default function TabsLayout() {
   const morningTime = useSettingsStore((s) => s.morningTime);
   useEffect(() => {
     if (tasks && digestHydrated) syncMorningDigest(tasks, members ?? [], morningDigest, morningTime);
+  }, [tasks, members, digestHydrated, morningDigest, morningTime]);
+  useEffect(() => {
+    if (tasks && digestHydrated) syncAppointmentNotifications(tasks, members ?? [], { enabled: morningDigest, time: morningTime });
   }, [tasks, members, digestHydrated, morningDigest, morningTime]);
 
   return (

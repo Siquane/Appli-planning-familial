@@ -6,7 +6,8 @@ import { Card } from "../../src/components/Card";
 import { Tag } from "../../src/components/Tag";
 import { TopBar } from "../../src/components/TopBar";
 import { Avatar } from "../../src/components/Avatar";
-import { CalendarIcon, ClockIcon, DeadlineIcon, StarIcon } from "../../src/components/icons";
+import { CalendarIcon, ClockIcon, DeadlineIcon, PinIcon, StarIcon } from "../../src/components/icons";
+import { shortDate } from "../../src/lib/appointments";
 import { Button } from "../../src/components/Button";
 import { isChild, starsLabel, weekKey } from "../../src/lib/stars";
 import { errorText } from "../../src/lib/errors";
@@ -73,16 +74,22 @@ export default function TaskDetailScreen() {
     <Screen scroll={false} padded={false}>
       <TopBar title={task.title} onBack={() => router.back()} onDuplicate={() => router.push(`/task/new?duplicate=${task.id}`)} onEdit={() => router.push(`/task/new?edit=${task.id}`)} onDelete={onDelete} />
       <View style={{ padding: gutter, gap: space.md }}>
-        <View style={{ flexDirection: "row", gap: space.sm }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
           <Tag label={task.category} tint={categoryColor(task.category)} />
           {task.priority === "high" && <Tag label={priorityLabel(task.priority)} variant="outline" />}
+          {task.appointmentDate && <Tag label="Rendez-vous" variant="outline" />}
+          {task.remind && <Tag label={task.remind === "eve" ? "Rappel la veille" : "Rappel 1 h avant"} variant="neutral" />}
           {task.recurring && <Tag label="Récurrente" variant="neutral" />}
           {task.reminder && <Tag label="Rappel activé" variant="neutral" />}
           {task.flexible && <Tag label="Flexible" variant="neutral" />}
         </View>
 
         <Card style={{ gap: space.sm }}>
-          <Row icon={<CalendarIcon size={16} color={color.neutral400} />} label={WEEKDAYS_FULL[task.weekday]} />
+          <Row
+            icon={<CalendarIcon size={16} color={color.neutral400} />}
+            label={task.appointmentDate ? `${WEEKDAYS_FULL[task.weekday]} ${shortDate(task.appointmentDate)} ${task.appointmentDate.slice(0, 4)}` : WEEKDAYS_FULL[task.weekday]}
+          />
+          {task.appointmentDate && task.location?.trim() ? <Row icon={<PinIcon size={16} color={color.neutral400} />} label={task.location.trim()} /> : null}
           {siblings.length > 1 && (
             <Text size={13} tone="muted">
               Tous les jours de cette tâche : {describeSchedule(schedule)}

@@ -1,7 +1,8 @@
 // Only the pure date helpers are tested here; the native module is stubbed.
 jest.mock("expo-notifications", () => ({ setNotificationHandler: jest.fn() }));
 
-import { daysUntilBirthday, nextBirthdayOccurrence, reminderMoment, toExpoWeekday } from "../notifications";
+import { appointmentNotifications, daysUntilBirthday, digestTasks, nextBirthdayOccurrence, reminderMoment, toExpoWeekday } from "../notifications";
+import type { Task } from "../../api/types";
 
 describe("toExpoWeekday", () => {
   it("maps the app's Lun..Dim convention onto Expo's Dim..Sam (1..7)", () => {
@@ -45,5 +46,29 @@ describe("nextBirthdayOccurrence / daysUntilBirthday", () => {
 
   it("returns 0 for a birthday that is today", () => {
     expect(daysUntilBirthday("2016-03-10", from)).toBe(0);
+  });
+});
+
+describe("appointments", () => {
+  const base = { category: "Santé", date: "", duration: 30, priority: "medium", deadlineWeekday: null, recurring: false, reminder: false, flexible: false, synced: false, notes: "", externalProvider: null, seriesId: null, stars: 1, inDigest: true } as const;
+  const rdv: Task = { ...base, memberIds: [], id: "r1", title: "Dentiste", weekday: 3, time: "14:30", appointmentDate: "2026-12-03", location: "Cabinet Dupont", remind: "eve" };
+  const weekly: Task = { ...base, memberIds: [], id: "w1", title: "Piscine", weekday: 3, time: "18:00", appointmentDate: null, location: "", remind: null };
+  const now = new Date(2026, 10, 18, 15, 0);
+
+  it("keeps appointments out of the weekly recaps", () => {
+    expect(digestTasks([rdv, weekly], 3).map((t) => t.id)).toEqual(["w1"]);
+  });
+
+  it("plans the reminder and the morning recap of the day", () => {
+    const planned = appointmentNotifications([rdv, weekly], [], { enabled: true, time: "09:00" }, now);
+    expect(planned).toEqual([
+      { identifier: "rdv:r1", date: new Date(2026, 11, 2, 20, 0), title: "Rendez-vous", body: "Demain 14:30 · Dentiste (Cabinet Dupont)" },
+      { identifier: "rdvday:2026-12-03", date: new Date(2026, 11, 3, 9, 0), title: "Rendez-vous aujourd'hui", body: "14:30 Dentiste · Cabinet Dupont" },
+    ]);
+  });
+
+  it("skips past appointments and the morning recap when it is off", () => {
+    expect(appointmentNotifications([{ ...rdv, appointmentDate: "2026-11-10" }], [], { enabled: true, time: "09:00" }, now)).toEqual([]);
+    expect(appointmentNotifications([{ ...rdv, remind: null }], [], { enabled: false, time: "09:00" }, now)).toEqual([]);
   });
 });

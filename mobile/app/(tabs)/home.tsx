@@ -10,7 +10,8 @@ import { WeekStrip } from "../../src/components/WeekStrip";
 import { TaskCard } from "../../src/components/TaskCard";
 import { TabHeader } from "../../src/components/PageHeader";
 import { TodayCard } from "../../src/components/TodayCard";
-import { ReshuffleIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
+import { ChevronLeftIcon, ChevronRightIcon, ReshuffleIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
+import { shiftWeek, shortDate, tasksOn, weekRange, weekTitle } from "../../src/lib/appointments";
 import { useMembers, useTaskDone, useTasks, useToggleTaskDone } from "../../src/hooks/useApi";
 import { DayRing, EmptyState } from "../../src/components/Playful";
 import { useToastStore } from "../../src/state/toastStore";
@@ -28,16 +29,23 @@ export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
   const today = todayWeekday();
   const [selected, setSelected] = useState<Weekday>(today);
+  // 0 = cette semaine, 1 = la suivante, -1 = la précédente…
+  const [weekOffset, setWeekOffset] = useState(0);
+  const currentWeek = weekKey();
+  const week = shiftWeek(currentWeek, weekOffset);
+  const isCurrentWeek = weekOffset === 0;
   const { data: tasks = [], isLoading, refetch, isRefetching } = useTasks();
   const { data: members = [] } = useMembers();
 
-  const dayTasks = useMemo(
-    () => tasks.filter((t) => t.weekday === selected).sort((a, b) => a.time.localeCompare(b.time)),
-    [tasks, selected]
-  );
+  // Semaine type (chaque semaine) + rendez-vous datés de cette semaine.
+  const dayTasks = useMemo(() => tasksOn(tasks, selected, week), [tasks, selected, week]);
 
-  // Coches « fait » de la semaine affichée (la semaine en cours).
-  const week = weekKey();
+  function goToWeek(offset: number) {
+    setWeekOffset(offset);
+    if (offset === 0) setSelected(today);
+  }
+
+  // Coches « fait » de la semaine affichée.
   const day = dayOfWeek(week, selected);
   const { data: doneMarks = [] } = useTaskDone(week);
   const toggleDone = useToggleTaskDone(week);
@@ -48,7 +56,7 @@ export default function HomeScreen() {
   function onToggle(taskId: string) {
     const done = !doneIds.has(taskId);
     // Dernière tâche du jour cochée : petite célébration.
-    if (done && doneCount + 1 === dayTasks.length) useToastStore.getState().show(selected === today ? "Tout est fait pour aujourd'hui, bravo la famille !" : "Tout est fait pour ce jour-là, bravo !", "party");
+    if (done && doneCount + 1 === dayTasks.length) useToastStore.getState().show(selected === today && isCurrentWeek ? "Tout est fait pour aujourd'hui, bravo la famille !" : "Tout est fait pour ce jour-là, bravo !", "party");
     toggleDone.mutate({ taskId, day, done }, { onError: (e) => useToastStore.getState().show(errorText(e, "enregistrer la tâche")) });
   }
 
@@ -72,7 +80,32 @@ export default function HomeScreen() {
 
       <TodayCard />
 
-      <WeekStrip selected={selected} onSelect={setSelected} today={today} />
+      <View style={{ gap: space.sm }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+          <Pressable onPress={() => goToWeek(weekOffset - 1)} accessibilityRole="button" accessibilityLabel="Semaine précédente" hitSlop={10} style={{ padding: space.xs }}>
+            <ChevronLeftIcon size={18} color={color.neutral400} />
+          </Pressable>
+          <View style={{ flex: 1, alignItems: "center" }}>
+            <Text weight="medium" size={15}>
+              {weekTitle(week, currentWeek)}
+            </Text>
+            <Text size={11} tone="faint">
+              {weekRange(week)}
+            </Text>
+          </View>
+          <Pressable onPress={() => goToWeek(weekOffset + 1)} accessibilityRole="button" accessibilityLabel="Semaine suivante" hitSlop={10} style={{ padding: space.xs }}>
+            <ChevronRightIcon size={18} color={color.neutral400} />
+          </Pressable>
+        </View>
+        <WeekStrip selected={selected} onSelect={setSelected} today={isCurrentWeek ? today : null} week={week} />
+        {!isCurrentWeek && (
+          <Pressable onPress={() => goToWeek(0)} accessibilityRole="button" style={{ alignSelf: "center", paddingVertical: space.xs }}>
+            <Text size={13} tone="accent">
+              Revenir à cette semaine
+            </Text>
+          </Pressable>
+        )}
+      </View>
 
       {upcomingBirthday && (
         <Card row style={{ alignItems: "center", backgroundColor: color.accent900 }}>
@@ -88,7 +121,7 @@ export default function HomeScreen() {
 
       <View style={{ gap: space.sm }}>
         <Text weight="medium" size={15} tone="muted">
-          {WEEKDAYS_FULL[selected]}
+          {WEEKDAYS_FULL[selected]} {shortDate(day)}
         </Text>
         {!isLoading && dayTasks.length === 0 && (
           <Card>

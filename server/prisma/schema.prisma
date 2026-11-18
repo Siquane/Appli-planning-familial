@@ -172,6 +172,12 @@ model Task {
   stars            Int      @default(1)
   // Apparaît dans le récap du soir et du matin (décochable par tâche).
   inDigest         Boolean  @default(true)
+  // Rendez-vous : une date précise « AAAA-MM-JJ » (null = tâche de la semaine
+  // type, affichée chaque semaine). weekday est alors le jour de cette date.
+  appointmentDate  String?
+  location         String   @default("")
+  // Rappel d'un rendez-vous : "hour" (1 h avant), "eve" (la veille à 20 h) ou null.
+  remind           String?
   externalEventId  String?
   externalProvider String?
   createdAt        DateTime @default(now())
