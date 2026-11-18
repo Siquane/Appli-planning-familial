@@ -12,6 +12,7 @@ import { getStorage, removeObjects } from "../lib/storage";
 import { beforeParisDay, parisDay, weekdayOf } from "../lib/cervelle/days";
 import { mountOrganize } from "./cervelleOrganize";
 import { mountBadges } from "./cervelleBadges";
+import { mountStars } from "./cervelleStars";
 import { mountDuels } from "./cervelleDuels";
 import { mountWeekly } from "./cervelleWeekly";
 import * as shop from "../lib/cervelle/shop";
@@ -1029,6 +1030,8 @@ cervelleRouter.post("/learners/:learnerId/chest", async (req, res) => {
     data: { chestDay: today, coins: { increment: CHEST_COINS } },
   });
   if (opened.count === 0) return res.status(409).json({ error: "Coffre déjà ouvert aujourd'hui. Reviens demain !" });
+  // Chemin d'étoiles: the open chest counts for the month.
+  await prisma.starEvent.create({ data: { learnerId: learner.id, key: `chest:${today}`, day: today } }).catch(() => undefined);
   const updated = await prisma.learner.findUniqueOrThrow({ where: { id: learner.id } });
   res.json({ coins: CHEST_COINS, learner: serializeLearner(updated) });
 });
@@ -1233,5 +1236,6 @@ cervelleRouter.delete("/learners/:learnerId/exam-reviews/:examId", async (req, r
 // Agenda, tâches, habitudes, journal, minuteur, statistiques et amis.
 mountOrganize(cervelleRouter, { loadLearner, parentOnly, serializeLearner, missionState, underDailyLimit, recordUsage, aiConfigured, decodeFiles });
 mountBadges(cervelleRouter, { loadLearner });
+mountStars(cervelleRouter, { loadLearner });
 mountDuels(cervelleRouter, { loadLearner });
 mountWeekly(cervelleRouter, { loadLearner });

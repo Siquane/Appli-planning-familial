@@ -615,6 +615,7 @@ model Learner {
   challengesOut  Challenge[]     @relation("ChallengeFrom")
   challengesIn   Challenge[]     @relation("ChallengeTo")
   badges         LearnerBadge[]
+  starEvents     StarEvent[]
   duelsOut       QuizDuel[]      @relation("DuelFrom")
   duelsIn        QuizDuel[]      @relation("DuelTo")
 
@@ -925,6 +926,22 @@ model Cheer {
 }
 
 // « Qui travaille le plus cette semaine ? » between two friends.
+/// « Chemin d'étoiles »: things that happen once — a chest opened that day
+/// (key « chest:2026-11-18 », its stars), a step's reward paid (key
+/// « step:2026-11:14 », its coins and item). Unique key: paid once.
+model StarEvent {
+  id        String   @id @default(cuid())
+  learnerId String
+  learner   Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  key       String
+  day       String
+  coins     Int      @default(0)
+  item      String?
+  createdAt DateTime @default(now())
+
+  @@unique([learnerId, key])
+}
+
 /// A quiz duel between two friends: the same 10 questions (QCM, vrai/faux)
 /// taken from the challenger's course; the best score wins coins.
 model QuizDuel {

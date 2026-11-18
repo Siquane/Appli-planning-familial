@@ -9,12 +9,13 @@
 //   normal      always on sale;
 //   saison      on sale only between two dates each year, kept forever once bought;
 //   legendaire  very expensive, a long-term goal;
-//   badge       not for sale: unlocked by earning a badge (src/lib/cervelle/badges.ts).
+//   badge       not for sale: unlocked by earning a badge (src/lib/cervelle/badges.ts);
+//   chemin      not for sale: the prize at the end of a month's « chemin d'étoiles » (stars.ts).
 
 export type Slot = "tete" | "visage" | "cou" | "tenue" | "main" | "couleur" | "decor";
 export const SLOTS: Slot[] = ["tete", "visage", "cou", "tenue", "main", "couleur", "decor"];
 
-export type Kind = "normal" | "saison" | "legendaire" | "badge";
+export type Kind = "normal" | "saison" | "legendaire" | "badge" | "chemin";
 
 export interface CatalogItem {
   id: string;
@@ -32,6 +33,7 @@ const n = (id: string, name: string, slot: Slot, price: number): CatalogItem => 
 const s = (id: string, name: string, slot: Slot, price: number, from: string, to: string): CatalogItem => ({ id, name, slot, price, kind: "saison", season: [from, to] });
 const l = (id: string, name: string, slot: Slot, price: number): CatalogItem => ({ id, name, slot, price, kind: "legendaire" });
 const b = (id: string, name: string, slot: Slot, key: string, label: string): CatalogItem => ({ id, name, slot, price: 0, kind: "badge", badge: { key, label } });
+const c = (id: string, name: string, slot: Slot): CatalogItem => ({ id, name, slot, price: 0, kind: "chemin" });
 
 export const SHOP: CatalogItem[] = [
   // Tête
@@ -97,6 +99,12 @@ export const SHOP: CatalogItem[] = [
   l("galaxie", "Galaxie", "couleur", 800),
   b("dore", "Doré", "couleur", "memoire:3", "Mémoire d'éléphant en or"),
 
+  // Chemin d'étoiles : le cadeau du 50e palier, un par thème du mois
+  c("casque_astronaute", "Casque d'astronaute", "tete"),
+  c("tuba", "Masque et tuba", "visage"),
+  c("couronne_feuilles", "Couronne de feuilles", "tete"),
+  c("cape_etoiles", "Cape étoilée", "tenue"),
+
   // Décor
   n("classe", "Salle de classe", "decor", 120),
   n("bibliotheque", "Bibliothèque", "decor", 150),
@@ -116,7 +124,7 @@ export const FREE = SHOP.filter((i) => i.kind === "normal" && i.price === 0).map
 
 /** On sale on `day` (« YYYY-MM-DD »)? Badge items never are. */
 export function onSale(item: CatalogItem, day: string): boolean {
-  if (item.kind === "badge") return false;
+  if (item.kind === "badge" || item.kind === "chemin") return false;
   if (item.kind !== "saison" || !item.season) return true;
   const md = day.slice(5);
   const [from, to] = item.season;

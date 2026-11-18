@@ -300,6 +300,11 @@ const SEASON_NAMES: Record<string, string> = { printemps: "Printemps", ete: "Ét
 /** A stored badge key in words: « Photographe (argent) », « Automne 2026 », « Noël 2026 ». */
 export function BADGE_LABELS(key: string): string {
   const [a, b, c] = key.split(":");
+  if (a === "chemin") {
+    const [y, m] = b.split("-").map(Number);
+    const months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+    return `Chemin d'étoiles de ${months[m - 1]} ${y}`;
+  }
   if (a === "saison") return `${SEASON_NAMES[b] ?? b} ${c}`;
   if (a === "fete") return fetesOf(Number(c)).find((f) => f.id === b)?.label ?? key;
   const s = SUCCESSES.find((x) => x.id === a);
