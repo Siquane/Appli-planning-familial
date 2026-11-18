@@ -496,6 +496,20 @@ export interface StarsState {
   completions: { taskId: string; memberId: string; stars: number }[];
   rewards: Reward[];
   history: { id: string; kind: "earned" | "spent"; memberId: string; title: string; stars: number; createdAt: string }[];
+  /** Demandes d'échange des enfants : en attente, puis les dernières réponses. */
+  requests?: RewardRequest[];
+}
+
+export interface RewardRequest {
+  id: string;
+  memberId: string;
+  rewardId: string | null;
+  title: string;
+  cost: number;
+  status: "pending" | "accepted" | "declined";
+  note: string;
+  createdAt: string;
+  decidedAt: string | null;
 }
 
 /** Budget+ : catégorie nettement plus chère que la moyenne des 3 mois précédents. */

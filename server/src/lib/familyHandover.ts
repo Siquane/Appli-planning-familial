@@ -84,6 +84,7 @@ export async function leaveFamilyBehind(ownerId: string, ownerName: string, heir
     prisma.starCompletion.updateMany(move),
     prisma.reward.updateMany(move),
     prisma.rewardRedemption.updateMany(move),
+    prisma.rewardRequest.updateMany(move),
     // Seules les notes « Famille » passent à l'héritier ; les notes perso partent avec le compte.
     prisma.note.updateMany({ where: { userId: ownerId, shared: true }, data: { userId: heirId } }),
     prisma.familyInvite.deleteMany({ where: { ownerId } }),

@@ -209,6 +209,10 @@ export const starsApi = {
   removeReward: (id: string) => api.delete<void>(`/stars/rewards/${id}`),
   redeem: (id: string, memberId: string) => api.post<{ balance: number }>(`/stars/rewards/${id}/redeem`, { memberId }),
   removeHistory: (id: string) => api.delete<void>(`/stars/history/${id}`),
+  /** Enfant : demander une récompense. Adulte : accepter ou refuser. */
+  requestReward: (id: string) => api.post<{ request: { id: string; status: string } }>(`/stars/rewards/${id}/request`, {}),
+  acceptRequest: (id: string) => api.post<{ balance: number }>(`/stars/requests/${id}/accept`, {}),
+  declineRequest: (id: string, note: string) => api.post<void>(`/stars/requests/${id}/decline`, { note }),
 };
 
 export const notesApi = {

@@ -12,7 +12,7 @@ import { TextField } from "../src/components/TextField";
 import { Button } from "../src/components/Button";
 import { TopBar } from "../src/components/TopBar";
 import { GiftIcon, StarIcon, TrashIcon } from "../src/components/icons";
-import { useAddReward, useMembers, useRedeemReward, useRemoveReward, useRemoveStarHistory, useStars } from "../src/hooks/useApi";
+import { useAcceptRewardRequest, useAddReward, useDeclineRewardRequest, useMembers, useRedeemReward, useRemoveReward, useRemoveStarHistory, useRequestReward, useStars } from "../src/hooks/useApi";
 import { isChild, starsLabel, weekKey } from "../src/lib/stars";
 import { errorText } from "../src/lib/errors";
 import { useToastStore } from "../src/state/toastStore";
@@ -30,14 +30,58 @@ export default function StarsScreen() {
   const removeReward = useRemoveReward();
   const redeem = useRedeemReward();
   const removeHistory = useRemoveStarHistory();
+  const requestReward = useRequestReward();
+  const acceptRequest = useAcceptRewardRequest();
+  const declineRequest = useDeclineRewardRequest();
+  const [decliningId, setDecliningId] = useState<string | null>(null);
+  const [declineNote, setDeclineNote] = useState("");
 
   const children = members.filter((m) => isChild(m));
   // Un compte enfant regarde ses étoiles : c'est un adulte qui valide, ajoute les récompenses et fait les échanges.
   const viewerIsChild = useAuthStore((s) => s.user?.familyRole === "child");
+  const viewerMemberId = useAuthStore((s) => s.user?.childMemberId ?? null);
   const [selected, setSelected] = useState<string | null>(null);
   useEffect(() => {
+    // Un enfant voit d'abord ses propres récompenses.
+    if (viewerIsChild && viewerMemberId && children.some((c) => c.id === viewerMemberId)) {
+      if (selected !== viewerMemberId) setSelected(viewerMemberId);
+      return;
+    }
     if (!selected || !children.some((c) => c.id === selected)) setSelected(children[0]?.id ?? null);
-  }, [children, selected]);
+  }, [children, selected, viewerIsChild, viewerMemberId]);
+
+  const requests = state?.requests ?? [];
+  const pending = requests.filter((r) => r.status === "pending");
+  const myRequests = viewerIsChild ? requests.filter((r) => r.memberId === viewerMemberId) : [];
+
+  async function onRequest(rewardId: string, rewardTitle: string) {
+    try {
+      await requestReward.mutateAsync(rewardId);
+      toast(`Demande envoyée pour « ${rewardTitle} ». Ton parent va répondre.`);
+    } catch (e) {
+      toast(errorText(e, "envoyer la demande"));
+    }
+  }
+
+  async function onAccept(id: string, who: string, what: string) {
+    try {
+      await acceptRequest.mutateAsync(id);
+      toast(`« ${what} » accepté pour ${who}.`);
+    } catch (e) {
+      toast(errorText(e, "accepter la demande"));
+    }
+  }
+
+  async function onDecline(id: string) {
+    try {
+      await declineRequest.mutateAsync({ id, note: declineNote.trim() });
+      setDecliningId(null);
+      setDeclineNote("");
+      toast("Demande refusée.");
+    } catch (e) {
+      toast(errorText(e, "refuser la demande"));
+    }
+  }
 
   const [title, setTitle] = useState("");
   const [cost, setCost] = useState("");
@@ -106,6 +150,52 @@ export default function StarsScreen() {
           </Card>
         )}
 
+        {!viewerIsChild && pending.length > 0 && (
+          <View style={{ gap: space.sm }}>
+            <Text weight="medium" size={13} tone="muted">
+              Demandes ({pending.length})
+            </Text>
+            {pending.map((r) => (
+              <Card key={r.id} style={{ gap: space.sm, borderColor: color.pillar3, borderWidth: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+                  <GiftIcon size={18} color={color.pillar4} />
+                  <Text size={15} style={{ flex: 1 }}>
+                    {nameOf(r.memberId)} demande « {r.title} »
+                  </Text>
+                  <Text size={13} tone="muted" mono>
+                    {r.cost} ★
+                  </Text>
+                </View>
+                <Text size={11} tone="faint">
+                  {nameOf(r.memberId)} a {starsLabel(balanceOf(r.memberId))}.
+                </Text>
+                {decliningId === r.id ? (
+                  <View style={{ gap: space.sm }}>
+                    <TextField label="Un petit mot (facultatif)" value={declineNote} onChangeText={setDeclineNote} placeholder="Ex. Ce week-end plutôt" maxLength={200} />
+                    <View style={{ flexDirection: "row", gap: space.sm }}>
+                      <Button label="Annuler" variant="ghost" style={{ flex: 1 }} onPress={() => setDecliningId(null)} />
+                      <Button label="Refuser" variant="secondary" style={{ flex: 1 }} needsNetwork loading={declineRequest.isPending} onPress={() => onDecline(r.id)} />
+                    </View>
+                  </View>
+                ) : (
+                  <View style={{ flexDirection: "row", gap: space.sm }}>
+                    <Button label="Refuser" variant="secondary" style={{ flex: 1 }} onPress={() => { setDecliningId(r.id); setDeclineNote(""); }} />
+                    <Button
+                      label="Accepter"
+                      variant="primary"
+                      style={{ flex: 1 }}
+                      needsNetwork
+                      disabled={balanceOf(r.memberId) < r.cost}
+                      loading={acceptRequest.isPending && acceptRequest.variables === r.id}
+                      onPress={() => onAccept(r.id, nameOf(r.memberId), r.title)}
+                    />
+                  </View>
+                )}
+              </Card>
+            ))}
+          </View>
+        )}
+
         {children.length > 0 && (
           <View style={{ gap: space.sm }}>
             {children.map((m) => {
@@ -162,6 +252,15 @@ export default function StarsScreen() {
                     {chosen && missing > 0 ? ` · encore ${missing} pour ${chosen.name}` : ""}
                   </Text>
                 </View>
+                {viewerIsChild && chosen && chosen.id === viewerMemberId && (
+                  requests.some((q) => q.status === "pending" && q.rewardId === r.id && q.memberId === viewerMemberId) ? (
+                    <Text size={11} tone="accent">
+                      Demandée
+                    </Text>
+                  ) : missing <= 0 ? (
+                    <Button label="Demander" variant="primary" needsNetwork loading={requestReward.isPending && requestReward.variables === r.id} onPress={() => onRequest(r.id, r.title)} />
+                  ) : null
+                )}
                 {chosen && !viewerIsChild && (
                   <Button label="Échanger" variant={missing > 0 ? "secondary" : "primary"} disabled={missing > 0} needsNetwork onPress={() => onRedeem(r.id, r.title, r.cost)} />
                 )}
@@ -182,6 +281,33 @@ export default function StarsScreen() {
             </View>
           </Card>}
         </View>
+
+        {myRequests.length > 0 && (
+          <View style={{ gap: space.sm }}>
+            <Text weight="medium" size={13} tone="muted">
+              Mes demandes
+            </Text>
+            <Card>
+              {myRequests.map((r, i) => (
+                <View key={r.id} style={{ paddingVertical: space.sm, gap: 2, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: color.divider }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+                    <Text size={13} style={{ flex: 1 }} numberOfLines={1}>
+                      {r.title} · {r.cost} ★
+                    </Text>
+                    <Text size={11} tone={r.status === "declined" ? "muted" : "accent"}>
+                      {r.status === "pending" ? "En attente" : r.status === "accepted" ? "Acceptée 🎉" : "Pas cette fois"}
+                    </Text>
+                  </View>
+                  {r.status === "declined" && r.note ? (
+                    <Text size={11} tone="faint">
+                      « {r.note} »
+                    </Text>
+                  ) : null}
+                </View>
+              ))}
+            </Card>
+          </View>
+        )}
 
         {(state?.history ?? []).length > 0 && (
           <View style={{ gap: space.sm }}>

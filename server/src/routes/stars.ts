@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { isChild, isMondayKey } from "../lib/stars";
+import { pushToAccounts } from "../lib/familyAlerts";
 
 // Étoiles des enfants : un adulte (tout compte connecté a 15 ans ou plus)
 // coche une tâche faite, les étoiles s'ajoutent ; elles s'échangent contre
@@ -32,7 +33,7 @@ starsRouter.get("/", async (req, res) => {
   const parsed = week.safeParse(req.query.week);
   if (!parsed.success) return res.status(400).json({ error: "Semaine invalide" });
   const familyId = req.userId!;
-  const [members, completions, rewards, history, totals] = await Promise.all([
+  const [members, completions, rewards, history, totals, requests] = await Promise.all([
     prisma.familyMember.findMany({ where: { userId: familyId }, orderBy: { order: "asc" } }),
     prisma.starCompletion.findMany({ where: { userId: familyId, week: parsed.data } }),
     prisma.reward.findMany({ where: { userId: familyId }, orderBy: { cost: "asc" } }),
@@ -41,6 +42,11 @@ starsRouter.get("/", async (req, res) => {
       prisma.rewardRedemption.findMany({ where: { userId: familyId }, orderBy: { createdAt: "desc" }, take: 30 }),
     ]),
     balances(familyId),
+    // Demandes en attente, et les 10 dernières réponses.
+    Promise.all([
+      prisma.rewardRequest.findMany({ where: { userId: familyId, status: "pending" }, orderBy: { createdAt: "asc" } }),
+      prisma.rewardRequest.findMany({ where: { userId: familyId, status: { not: "pending" } }, orderBy: { decidedAt: "desc" }, take: 10 }),
+    ]).then(([p, d]) => [...p, ...d]),
   ]);
   const children = members.filter((m) => isChild(m));
   const events = [
@@ -60,6 +66,17 @@ starsRouter.get("/", async (req, res) => {
     completions: completions.filter((c) => c.taskId).map((c) => ({ taskId: c.taskId!, memberId: c.memberId, stars: c.stars })),
     rewards: rewards.map((r) => ({ id: r.id, title: r.title, cost: r.cost })),
     history: events,
+    requests: requests.map((r) => ({
+      id: r.id,
+      memberId: r.memberId,
+      rewardId: r.rewardId,
+      title: r.title,
+      cost: r.cost,
+      status: r.status,
+      note: r.note,
+      createdAt: r.createdAt.toISOString(),
+      decidedAt: r.decidedAt?.toISOString() ?? null,
+    })),
   });
 });
 
@@ -138,5 +155,79 @@ starsRouter.delete("/history/:id", async (req, res) => {
     prisma.starCompletion.deleteMany({ where: { id: req.params.id, userId: req.userId } }),
     prisma.rewardRedemption.deleteMany({ where: { id: req.params.id, userId: req.userId } }),
   ]);
+  res.status(204).end();
+});
+
+// ---------------------------------------------------------------------------
+// Demandes d'échange : un compte enfant demande une récompense quand il a
+// assez d'étoiles ; les adultes sont prévenus et acceptent ou refusent.
+
+const starsLabel = (n: number) => `${n} étoile${n > 1 ? "s" : ""}`;
+
+/** Les comptes adultes de la famille (pas les enfants). */
+async function adultAccounts(familyId: string): Promise<string[]> {
+  const rows = await prisma.user.findMany({
+    where: { OR: [{ id: familyId }, { familyOwnerId: familyId }], NOT: { familyRole: "child" } },
+    select: { id: true },
+  });
+  return rows.map((r) => r.id);
+}
+
+const notify = (accountIds: string[], body: string) => pushToAccounts(accountIds, body, "/stars").catch((e) => console.error("Reward request push failed:", e));
+
+starsRouter.post("/rewards/:id/request", async (req, res) => {
+  if (req.familyRole !== "child" || !req.childMemberId) return res.status(403).json({ error: "Seul l'enfant fait une demande ; un adulte peut échanger directement." });
+  const familyId = req.userId!;
+  const memberId = req.childMemberId;
+  const reward = await prisma.reward.findFirst({ where: { id: req.params.id, userId: familyId } });
+  if (!reward) return res.status(404).json({ error: "Cette récompense n'existe plus." });
+  const member = await childOf(familyId, memberId);
+  if (!member) return res.status(400).json({ error: "Les étoiles sont pour les enfants de moins de 15 ans" });
+  const t = (await balances(familyId)).get(memberId) ?? { earned: 0, spent: 0 };
+  const balance = t.earned - t.spent;
+  if (balance < reward.cost) {
+    return res.status(409).json({ error: `Il te manque ${starsLabel(reward.cost - balance)}.`, code: "not_enough_stars" });
+  }
+  const pending = await prisma.rewardRequest.findFirst({ where: { userId: familyId, memberId, rewardId: reward.id, status: "pending" } });
+  if (pending) return res.status(409).json({ error: "Tu as déjà demandé cette récompense : ton parent va répondre.", code: "already_requested" });
+  const request = await prisma.rewardRequest.create({ data: { userId: familyId, memberId, rewardId: reward.id, title: reward.title, cost: reward.cost } });
+  await notify(await adultAccounts(familyId), `${member.name} demande : ${reward.title} (${starsLabel(reward.cost)}).`);
+  res.status(201).json({ request: { id: request.id, status: request.status } });
+});
+
+async function pendingRequest(familyId: string, id: string) {
+  return prisma.rewardRequest.findFirst({ where: { id, userId: familyId, status: "pending" }, include: { member: { select: { name: true } } } });
+}
+
+async function childAccountOf(memberId: string): Promise<string[]> {
+  const child = await prisma.user.findUnique({ where: { childMemberId: memberId }, select: { id: true } });
+  return child ? [child.id] : [];
+}
+
+starsRouter.post("/requests/:id/accept", async (req, res) => {
+  const familyId = req.userId!;
+  const request = await pendingRequest(familyId, req.params.id);
+  if (!request) return res.status(404).json({ error: "Cette demande a déjà reçu une réponse." });
+  const t = (await balances(familyId)).get(request.memberId) ?? { earned: 0, spent: 0 };
+  const balance = t.earned - t.spent;
+  if (balance < request.cost) {
+    return res.status(409).json({ error: `Il manque maintenant ${starsLabel(request.cost - balance)} à ${request.member.name}.`, code: "not_enough_stars" });
+  }
+  await prisma.$transaction([
+    prisma.rewardRedemption.create({ data: { userId: familyId, memberId: request.memberId, rewardId: request.rewardId, title: request.title, cost: request.cost } }),
+    prisma.rewardRequest.update({ where: { id: request.id }, data: { status: "accepted", decidedAt: new Date() } }),
+  ]);
+  await notify(await childAccountOf(request.memberId), `Accepté : ${request.title} ! Bravo 🎉`);
+  res.json({ balance: balance - request.cost });
+});
+
+starsRouter.post("/requests/:id/decline", async (req, res) => {
+  const parsed = z.object({ note: z.string().trim().max(200).default("") }).safeParse(req.body ?? {});
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
+  const familyId = req.userId!;
+  const request = await pendingRequest(familyId, req.params.id);
+  if (!request) return res.status(404).json({ error: "Cette demande a déjà reçu une réponse." });
+  await prisma.rewardRequest.update({ where: { id: request.id }, data: { status: "declined", note: parsed.data.note, decidedAt: new Date() } });
+  await notify(await childAccountOf(request.memberId), `Pas cette fois pour ${request.title}${parsed.data.note ? ` : ${parsed.data.note}` : "."}`);
   res.status(204).end();
 });

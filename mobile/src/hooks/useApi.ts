@@ -615,6 +615,9 @@ export const useAddReward = () => useStarsMutation((d: { title: string; cost: nu
 export const useRemoveReward = () => useStarsMutation((id: string) => starsApi.removeReward(id));
 export const useRedeemReward = () => useStarsMutation((d: { rewardId: string; memberId: string }) => starsApi.redeem(d.rewardId, d.memberId));
 export const useRemoveStarHistory = () => useStarsMutation((id: string) => starsApi.removeHistory(id));
+export const useRequestReward = () => useStarsMutation((rewardId: string) => starsApi.requestReward(rewardId));
+export const useAcceptRewardRequest = () => useStarsMutation((id: string) => starsApi.acceptRequest(id));
+export const useDeclineRewardRequest = () => useStarsMutation((d: { id: string; note: string }) => starsApi.declineRequest(d.id, d.note));
 
 // Notes (Famille + Perso), partagées entre les comptes : rafraîchies comme les autres listes partagées.
 export function useNotes() {
