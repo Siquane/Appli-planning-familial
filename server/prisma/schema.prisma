@@ -615,6 +615,8 @@ model Learner {
   challengesOut  Challenge[]     @relation("ChallengeFrom")
   challengesIn   Challenge[]     @relation("ChallengeTo")
   badges         LearnerBadge[]
+  duelsOut       QuizDuel[]      @relation("DuelFrom")
+  duelsIn        QuizDuel[]      @relation("DuelTo")
 
   @@index([userId])
 }
@@ -923,6 +925,28 @@ model Cheer {
 }
 
 // « Qui travaille le plus cette semaine ? » between two friends.
+/// A quiz duel between two friends: the same 10 questions (QCM, vrai/faux)
+/// taken from the challenger's course; the best score wins coins.
+model QuizDuel {
+  id            String    @id @default(cuid())
+  fromId        String
+  from          Learner   @relation("DuelFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  toId          String
+  to            Learner   @relation("DuelTo", fields: [toId], references: [id], onDelete: Cascade)
+  revisionTitle String
+  questionIds   String[]
+  fromScore     Int?
+  toScore       Int?
+  // "open" | "done" | "expired"
+  status        String    @default("open")
+  winnerId      String?
+  createdAt     DateTime  @default(now())
+  endedAt       DateTime?
+
+  @@index([fromId, createdAt])
+  @@index([toId, createdAt])
+}
+
 model Challenge {
   id          String   @id @default(cuid())
   fromId      String
