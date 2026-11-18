@@ -16,10 +16,18 @@ jobs:
     # Une machine GitHub compile plus lentement que les serveurs d'Expo (1er essai arrêté à 60 min).
     timeout-minutes: 150
     env:
-      GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx6g -XX:MaxMetaspaceSize=1g" -Dorg.gradle.daemon=false
+      # La machine GitHub n'a que 7 Go : Gradle limité à 3 Go, 2 tâches à la fois,
+      # compilateur Kotlin dans le même processus (le 2e essai s'est arrêté net,
+      # sans journal : manque de mémoire).
+      GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx3g -XX:MaxMetaspaceSize=768m" -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2 -Dorg.gradle.parallel=false -Dkotlin.compiler.execution.strategy=in-process
       # Téléphones Android récents seulement (arm64) : 4 fois moins de code natif à compiler.
       ORG_GRADLE_PROJECT_reactNativeArchitectures: arm64-v8a
     steps:
+      - name: Mémoire d'appoint et place disque
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost || true
+          sudo fallocate -l 10G /swapfile2 && sudo chmod 600 /swapfile2 && sudo mkswap /swapfile2 && sudo swapon /swapfile2
+          free -h && df -h /
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -43,7 +51,17 @@ jobs:
         run: node scripts/configure-updates.js
       - name: Build Android APK (preview, sur GitHub)
         working-directory: mobile
-        run: eas build --platform android --profile preview --non-interactive --local --output "$GITHUB_WORKSPACE/passerelle.apk"
+        shell: bash
+        run: |
+          set -o pipefail
+          eas build --platform android --profile preview --non-interactive --local --output "$GITHUB_WORKSPACE/passerelle.apk" 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
+      - name: Garder le journal de compilation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: journal-compilation
+          path: build.log
+          retention-days: 7
       - name: Runtime de l'APK
         id: meta
         run: echo "runtime=$(node -p "require('./mobile/app.json').expo.runtimeVersion")" >> "$GITHUB_OUTPUT"

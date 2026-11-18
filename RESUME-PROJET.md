@@ -325,4 +325,5 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Replanifier : jusqu'à 6 propositions (2 heures par jour au plus, `getProposals(…, 6, 2)`) et « Choisir un autre moment » (jour + heure libres).
 - Widget « Ajouter une tâche » : 3 × 1 au minimum (`minWidth` 180dp), le texte tient en entier. Reste en runtime "8" : aucun APK runtime "8" n'existe encore.
 - Workflow « APK sur GitHub » : 1er essai arrêté par la limite de 60 min ; limite portée à 150 min et compilation arm64 seulement (`ORG_GRADLE_PROJECT_reactNativeArchitectures`).
+- APK sur GitHub, 2e essai (18/11) : arrêt net après 70 min sans journal (manque de mémoire probable, machine GitHub à 7 Go). Workflow réglé : Gradle 3 Go, 2 tâches, Kotlin dans le même processus, 10 Go de mémoire d'appoint (swap), journal `build.log` gardé en artefact « journal-compilation » même en cas d'échec.
 
