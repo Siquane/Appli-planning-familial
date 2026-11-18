@@ -12,6 +12,7 @@ import { getStorage, removeObjects } from "../lib/storage";
 import { beforeParisDay, parisDay, weekdayOf } from "../lib/cervelle/days";
 import { mountOrganize } from "./cervelleOrganize";
 import { mountBadges } from "./cervelleBadges";
+import { mountWeekly } from "./cervelleWeekly";
 import * as shop from "../lib/cervelle/shop";
 import { applyAnswer, combinedMastery, displayedMastery, revisionProgress, type Mastery } from "../lib/cervelle/mastery";
 import { localGrade, normalizeAnswer, sameOrder } from "../lib/cervelle/grading";
@@ -1231,3 +1232,4 @@ cervelleRouter.delete("/learners/:learnerId/exam-reviews/:examId", async (req, r
 // Agenda, tâches, habitudes, journal, minuteur, statistiques et amis.
 mountOrganize(cervelleRouter, { loadLearner, parentOnly, serializeLearner, missionState, underDailyLimit, recordUsage, aiConfigured, decodeFiles });
 mountBadges(cervelleRouter, { loadLearner });
+mountWeekly(cervelleRouter, { loadLearner });
