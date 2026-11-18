@@ -118,7 +118,7 @@ export default function StatementImportScreen() {
             />
             {slow && (
               <Text size={13} tone="faint" center>
-                Le serveur se réveille, ça peut prendre une minute.
+                Passerelle se réveille, ça peut prendre jusqu'à une minute…
               </Text>
             )}
           </>
@@ -142,7 +142,7 @@ export default function StatementImportScreen() {
                 <View style={{ flexDirection: "row", alignItems: "flex-start", gap: space.xs }}>
                   <WarningIcon size={16} color={color.danger} />
                   <Text size={13} tone="danger" style={{ flex: 1 }}>
-                    Le total lu ({formatEuros(result.check.readDebitsCents)}) ne correspond pas à celui du relevé ({formatEuros(result.check.expectedDebitsCents ?? 0)}) : il manque peut-être une ligne.
+                    Le total lu ({formatEuros(result.check.readDebitsCents)}) ne correspond pas à celui du relevé ({formatEuros(result.check.expectedDebitsCents ?? 0)}) : il manque peut-être une ligne. Compare avec ton relevé avant d'importer.
                   </Text>
                 </View>
               )}

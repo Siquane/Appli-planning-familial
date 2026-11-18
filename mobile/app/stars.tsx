@@ -91,7 +91,7 @@ export default function StarsScreen() {
       <TopBar title="Étoiles et récompenses" onBack={() => router.back()} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <Text size={13} tone="faint">
-          Les enfants de moins de 15 ans gagnent des étoiles quand un adulte coche « C'est fait » sur la fiche d'une tâche qui leur est assignée. Les étoiles s'échangent contre les récompenses que vous choisissez.
+          Les enfants de moins de 15 ans gagnent des étoiles quand un adulte coche « C'est fait » sur la fiche d'une tâche qui leur est assignée. Les étoiles s'échangent contre les récompenses que tu choisis.
         </Text>
 
         {!isLoading && children.length === 0 && (

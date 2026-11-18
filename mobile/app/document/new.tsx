@@ -65,7 +65,7 @@ export default function DocumentFormScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title={existing ? "Modifier le document" : "Nouveau document"} onBack={() => router.back()} />
+      <TopBar title={existing ? "Modifier le document" : "Nouveau document"} onBack={() => router.back()} save={{ onPress: onSave, disabled: !isValid, loading: saving, needsNetwork: true }} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         {!existing && (
           <View style={{ gap: space.sm }}>
@@ -105,7 +105,7 @@ export default function DocumentFormScreen() {
         {members.length > 0 && (
           <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
-              Concerne (optionnel)
+              Concerne (facultatif)
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
               {members.map((m) => (

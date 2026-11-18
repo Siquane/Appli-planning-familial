@@ -69,7 +69,7 @@ export default function BudgetSettingsScreen() {
           <Button label="Ajouter une dépense récurrente" icon={<PlusIcon size={18} color={color.text} />} variant="secondary" block onPress={() => router.push("/expense/recurring")} />
         </Section>
 
-        <Section title="Plafonds mensuels" hint="Valables tous les mois. Laisser vide pour ne pas en mettre.">
+        <Section title="Plafonds mensuels" hint="Valables tous les mois. Laisse vide si tu n'en veux pas.">
           <Card style={{ gap: space.sm }}>
             {options.map((o) => {
               const limit = budgets.find((b) => b.category === o.value)?.limitCents ?? null;

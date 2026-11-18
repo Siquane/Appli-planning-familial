@@ -97,7 +97,7 @@ export default function TaskDetailScreen() {
         {assigned.length > 0 && (
           <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
-              Assigné à
+              Assignée à
             </Text>
             <View style={{ flexDirection: "row", gap: space.sm }}>
               {assigned.map((m) => (
@@ -112,7 +112,7 @@ export default function TaskDetailScreen() {
           </View>
         )}
 
-        {assigned.some((m) => isChild(m)) && (
+        {(task.stars ?? 1) > 0 && assigned.some((m) => isChild(m)) && (
           <View style={{ gap: space.sm }}>
             <Text weight="medium" size={13} tone="muted">
               Étoiles cette semaine · {starsLabel(task.stars ?? 1)} par enfant

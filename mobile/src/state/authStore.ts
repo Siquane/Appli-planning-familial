@@ -113,7 +113,7 @@ async function postWithRetry(path: string, body: unknown): Promise<Record<string
 async function authRequest(path: string, body: unknown) {
   const data = await postWithRetry(path, body);
   if (typeof data.accessToken !== "string" || typeof data.refreshToken !== "string" || !data.user) {
-    throw new Error("Le serveur met parfois quelques secondes à se réveiller. Réessaie dans un instant.");
+    throw new Error("Passerelle met parfois jusqu'à une minute à se réveiller. Réessaie dans un instant.");
   }
   return data as unknown as { user: User; accessToken: string; refreshToken: string };
 }

@@ -4,7 +4,7 @@
 export function statusMessage(status: number): string {
   if (status === 401) return "Session expirée, reconnecte-toi.";
   if (status === 403) return "Tu n'as pas accès à cette action.";
-  if (status === 404) return "Introuvable : l'élément a peut-être été supprimé. Actualise l'écran.";
+  if (status === 404) return "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran.";
   if (status === 413) return "Fichier trop lourd. Choisis un fichier plus petit.";
   if (status === 429) return "Trop de demandes d'un coup. Réessaie dans une minute.";
   if (status >= 500) return "Le serveur rencontre un souci. Réessaie dans un instant.";

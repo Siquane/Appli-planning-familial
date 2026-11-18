@@ -108,6 +108,8 @@ export interface Task {
   seriesId: string | null;
   /** Étoiles gagnées par un enfant assigné quand la tâche est faite (1 à 5). */
   stars: number;
+  /** Apparaît dans le récap du soir et du matin (vrai par défaut). */
+  inDigest: boolean;
 }
 
 /** Une tâche cochée « faite » un jour donné (« AAAA-MM-JJ »). */
@@ -508,3 +510,22 @@ export interface DebitCalendar {
   passedCents: number;
   upcomingCents: number;
 }
+
+export type NoteColor = "default" | "cyan" | "blue" | "lavender" | "violet" | "green" | "amber";
+
+/** « Famille » (shared) : vue par tous les comptes ; « Perso » : par son auteur seulement. */
+export interface Note {
+  id: string;
+  title: string;
+  body: string;
+  shared: boolean;
+  color: NoteColor;
+  pinned: boolean;
+  /** Écrite par ce compte. */
+  mine: boolean;
+  authorName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NoteInput = Pick<Note, "title" | "body" | "shared" | "color" | "pinned">;

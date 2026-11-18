@@ -73,7 +73,7 @@ export default function SavingsScreen() {
 
         {!isLoading && goals.length === 0 && premium && (
           <Text size={13} tone="muted" center>
-            Aucun objectif pour l'instant.
+            Aucun objectif pour l'instant. Vacances, Noël, voiture : crée le premier juste en dessous.
           </Text>
         )}
 
@@ -83,7 +83,7 @@ export default function SavingsScreen() {
           </Text>
           <TextField label="Nom" value={name} onChangeText={setName} placeholder="Ex. Vacances d'été, Noël…" />
           <TextField label="Montant à atteindre (€)" value={target} onChangeText={setTarget} keyboardType="decimal-pad" placeholder="1 200" />
-          <DateField label="Pour quand ? (optionnel)" value={deadline} onChange={setDeadline} />
+          <DateField label="Pour quand ? (facultatif)" value={deadline} onChange={setDeadline} />
           <Button
             label={premium ? "Créer l'objectif" : "Créer l'objectif · Budget+"}
             variant="primary"

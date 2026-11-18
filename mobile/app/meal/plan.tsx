@@ -81,7 +81,7 @@ export default function MealPlanScreen() {
     try {
       const res = await generate.mutateAsync({ slots, preferences: prefs, kind: "week" });
       if (res.meals.length === 0) {
-        useToastStore.getState().show("Aucune proposition reçue, réessaie.");
+        useToastStore.getState().show("Claude n'a rien proposé cette fois. Réessaie dans un instant.");
         return;
       }
       setProposal(res.meals);
@@ -206,7 +206,7 @@ export default function MealPlanScreen() {
             disabled={!!rerolling || proposal.length === 0}
           />
           <Button
-            label={weeksLeft > 0 ? "Tout regénérer (compte comme une génération)" : "Tout regénérer · Repas+"}
+            label={weeksLeft > 0 ? "Tout régénérer (compte comme une génération)" : "Tout régénérer · Repas+"}
             variant="secondary"
             block
             onPress={weeksLeft > 0 ? onGenerate : () => router.push("/premium")}
@@ -297,8 +297,8 @@ export default function MealPlanScreen() {
           onSelect={(v) => v && update("useMyRecipes", v as MealPlanPreferences["useMyRecipes"])}
         />
 
-        <TextField label="Envies (optionnel)" value={prefs.wishes} onChangeText={(v) => update("wishes", v)} placeholder="Ex. plats d'hiver, une soirée pizza le vendredi…" />
-        <TextField label="À éviter (optionnel)" value={prefs.avoid} onChangeText={(v) => update("avoid", v)} placeholder="Ex. champignons, poivrons…" />
+        <TextField label="Envies (facultatif)" value={prefs.wishes} onChangeText={(v) => update("wishes", v)} placeholder="Ex. plats d'hiver, une soirée pizza le vendredi…" />
+        <TextField label="À éviter (facultatif)" value={prefs.avoid} onChangeText={(v) => update("avoid", v)} placeholder="Ex. champignons, poivrons…" />
 
         <Button
           label={weeksLeft <= 0 ? "Repas+ pour générer" : slots.length ? `Proposer ${slots.length} repas` : "Rien à proposer"}

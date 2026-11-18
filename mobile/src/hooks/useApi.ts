@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi } from "../api/resources";
-import type { MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskDoneMark, TaskInput, Tint, Weekday } from "../api/types";
+import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi, notesApi } from "../api/resources";
+import type { NoteInput, MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskDoneMark, TaskInput, Tint, Weekday } from "../api/types";
 import { useAuthStore } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
 import { buildCategoryOptions } from "../lib/money";
@@ -575,3 +575,18 @@ export const useAddReward = () => useStarsMutation((d: { title: string; cost: nu
 export const useRemoveReward = () => useStarsMutation((id: string) => starsApi.removeReward(id));
 export const useRedeemReward = () => useStarsMutation((d: { rewardId: string; memberId: string }) => starsApi.redeem(d.rewardId, d.memberId));
 export const useRemoveStarHistory = () => useStarsMutation((id: string) => starsApi.removeHistory(id));
+
+// Notes (Famille + Perso), partagées entre les comptes : rafraîchies comme les autres listes partagées.
+export function useNotes() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["notes"], queryFn: () => notesApi.list().then((r) => r.notes), enabled, refetchInterval: SHARED_REFRESH_MS });
+}
+
+function useNotesMutation<T, R>(fn: (input: T) => Promise<R>) {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: fn, onSettled: () => qc.invalidateQueries({ queryKey: ["notes"] }) });
+}
+
+export const useCreateNote = () => useNotesMutation((data: NoteInput) => notesApi.create(data).then((r) => r.note));
+export const useUpdateNote = () => useNotesMutation(({ id, data }: { id: string; data: Partial<NoteInput> }) => notesApi.update(id, data).then((r) => r.note));
+export const useDeleteNote = () => useNotesMutation((id: string) => notesApi.remove(id));

@@ -1,11 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { Meal, Member, MonthlyBudget, Recipe, ShoppingItem, Task, Weekday } from "../api/types";
+import type { Meal, Member, MonthlyBudget, Note, Recipe, ShoppingItem, Task, Weekday } from "../api/types";
+import { noteHeading, notePreview, sortNotes } from "../lib/notes";
 
 // What the home-screen widgets show. The app saves it on the phone each time
 // its data changes; the widgets read it, even when the app is closed. Times
 // ("next task", "tonight") are worked out when the widget draws, not here.
 
-export const WIDGET_NAMES = ["Resume", "Taches", "Menu", "Courses", "AjoutTache"] as const;
+export const WIDGET_NAMES = ["Resume", "Taches", "Menu", "Courses", "AjoutTache", "Notes"] as const;
 export type WidgetName = (typeof WIDGET_NAMES)[number];
 
 export interface WidgetSnapshot {
@@ -17,7 +18,12 @@ export interface WidgetSnapshot {
   budget: { month: string; spentCents: number; capCents: number | null } | null;
   /** Items still to buy. */
   shopping: string[];
+  /** Les dernières notes (épinglées d'abord) ; absent dans les anciens résumés. */
+  notes?: { id: string; heading: string; preview: string; pinned: boolean; shared: boolean }[];
 }
+
+/** Nombre de notes gardées pour le widget (il en affiche autant que sa taille le permet). */
+export const WIDGET_NOTES = 4;
 
 const KEY = "widget:snapshot:v1";
 
@@ -29,6 +35,7 @@ export function buildSnapshot(
   shopping: ShoppingItem[],
   members: Member[] = [],
   now: Date = new Date(),
+  notes: Note[] = [],
 ): WidgetSnapshot {
   const caps = budget?.byCategory.filter((c) => c.limitCents !== null) ?? [];
   return {
@@ -42,6 +49,9 @@ export function buildSnapshot(
       ? { month: budget.month, spentCents: budget.totalCents, capCents: caps.length > 0 ? caps.reduce((sum, c) => sum + (c.limitCents ?? 0), 0) : null }
       : null,
     shopping: shopping.filter((i) => !i.checked).map((i) => i.label),
+    notes: sortNotes(notes)
+      .slice(0, WIDGET_NOTES)
+      .map((n) => ({ id: n.id, heading: noteHeading(n), preview: notePreview(n, 80), pinned: n.pinned, shared: n.shared })),
   };
 }
 

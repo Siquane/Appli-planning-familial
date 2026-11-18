@@ -20,14 +20,14 @@ export default function RecurringTasksScreen() {
       <TopBar title="Tâches récurrentes" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: gutter, gap: space.sm }} showsVerticalScrollIndicator={false}>
         <Text tone="muted" size={13} style={{ marginBottom: space.sm }}>
-          Tape sur une tâche pour la modifier ou la supprimer.
+          Touche une tâche pour la modifier ou la supprimer.
         </Text>
 
         {recurring.length === 0 && (
           <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
             <RecurringIcon size={22} color={color.neutral600} />
             <Text tone="muted" size={13} center style={{ marginTop: space.sm }}>
-              Aucune tâche récurrente pour l'instant.
+              Aucune tâche récurrente pour l'instant. Coche « Récurrente » en créant une tâche pour la retrouver ici.
             </Text>
           </Card>
         )}

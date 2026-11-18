@@ -162,7 +162,7 @@ export default function FamilyAccessScreen() {
             {toErase ? (
               <View style={{ gap: space.sm }}>
                 <Text size={13}>
-                  Ton compte contient {toErase}. Pour rejoindre la famille, cela sera effacé définitivement. Saisis ton mot de passe pour confirmer.
+                  Ton compte contient {toErase}. Rejoindre cette famille effacera tout cela définitivement. Saisis ton mot de passe pour confirmer.
                 </Text>
                 <TextField label="Mot de passe" value={joinPassword} onChangeText={setJoinPassword} secureTextEntry />
               </View>
@@ -185,7 +185,7 @@ export default function FamilyAccessScreen() {
               Inviter quelqu'un
             </Text>
             <Text size={13} tone="faint">
-              À partir de 15 ans. Il crée son compte dans l'appli avec « J'ai un code famille ». Pour un plus jeune enfant, utilise plutôt le lien de partage du planning.
+              À partir de 15 ans. La personne crée son compte dans l'appli avec « J'ai un code famille ». Pour un enfant plus jeune, partage plutôt le lien du planning.
             </Text>
 
             {family?.invite && !family.invite.expired ? (

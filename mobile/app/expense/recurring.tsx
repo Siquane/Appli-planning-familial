@@ -104,7 +104,7 @@ export default function RecurringExpenseFormScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title={existing ? "Dépense récurrente" : "Nouvelle dépense récurrente"} onBack={() => router.back()} onDelete={existing ? onDelete : undefined} />
+      <TopBar title={existing ? "Dépense récurrente" : "Nouvelle dépense récurrente"} onBack={() => router.back()} onDelete={existing ? onDelete : undefined} save={{ onPress: onSave, disabled: !isValid, loading: saving }} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Card>
           <Text size={13} tone="muted">
@@ -122,7 +122,7 @@ export default function RecurringExpenseFormScreen() {
         <ChipPicker label="Catégorie" options={options} selected={category} onSelect={(v) => v && setCategory(v)} />
 
         {members.length > 0 && (
-          <ChipPicker label="Pour qui ? (optionnel)" options={members.map((m) => ({ value: m.id, label: m.name }))} selected={memberId} onSelect={setMemberId} optional />
+          <ChipPicker label="Pour qui ? (facultatif)" options={members.map((m) => ({ value: m.id, label: m.name }))} selected={memberId} onSelect={setMemberId} optional />
         )}
 
         {hint && (
