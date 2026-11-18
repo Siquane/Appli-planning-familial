@@ -22,10 +22,10 @@ describe("Cervelle — badges", () => {
     expect(empty.status).toBe(200);
     expect(empty.body.coinsEarned).toBe(0);
     expect(empty.body.successes.every((s: { tier: number }) => s.tier === 0)).toBe(true);
-    expect(empty.body.records.map((r: { id: string }) => r.id)).toEqual(["serie", "interro", "temps", "questions"]);
+    expect(empty.body.records.map((r: { id: string }) => r.id)).toEqual(["serie", "notions", "temps", "questions"]);
 
     const revision = await prisma.revision.create({ data: { learnerId, title: "Les volcans", subject: "SVT", status: "ready" } });
-    await prisma.studySession.create({ data: { learnerId, revisionId: revision.id, mode: "qcm", correct: 10, total: 10, seconds: 300, day: parisDay() } });
+    await prisma.studySession.create({ data: { learnerId, revisionId: revision.id, mode: "a_revoir", correct: 6, total: 10, seconds: 300, day: parisDay() } });
     const before = (await prisma.learner.findUniqueOrThrow({ where: { id: learnerId } })).coins;
 
     const first = await request(app).get("/cervelle/learners/me/badges").set(child);

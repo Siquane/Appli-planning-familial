@@ -13,12 +13,12 @@ export interface BadgeStats {
   revisions: number;
   /** Distinct subjects among those revisions. */
   subjects: number;
-  /** QCM sessions answered without a mistake. */
-  perfectQuizzes: number;
+  /** « À revoir » sessions: going back over one's mistakes. */
+  reviews: number;
   /** Notions (leaves) marked « Maîtrisé ». */
   mastered: number;
-  /** Best interro, out of 20 (0 when none). */
-  bestInterro20: number;
+  /** QCM or interros done again on a course already practised (trying again to understand). */
+  retakes: number;
   bestStreak: number;
   /** Timer sessions of 5 minutes or more. */
   focusSessions: number;
@@ -49,9 +49,11 @@ const plural = (n: number, one: string, many: string) => (n > 1 ? many : one);
 
 export const SUCCESSES: SuccessDef[] = [
   { id: "photographe", label: "Photographe", icon: "camera", shape: "round", stat: "revisions", tiers: [1, 10, 50], unit: (n) => plural(n, "cours en photo", "cours en photo"), describe: (t) => `Prendre ${t} ${plural(t, "cours", "cours")} en photo.` },
-  { id: "sans_faute", label: "Sans-faute", icon: "checkmark-done", shape: "shield", stat: "perfectQuizzes", tiers: [1, 5, 20], unit: (n) => plural(n, "QCM parfait", "QCM parfaits"), describe: (t) => `Faire ${t} ${plural(t, "QCM", "QCM")} sans aucune faute.` },
+  // Ids kept from the first version (badges already earned stay valid); what they reward
+  // follows the project's rule: learning and work, not marks.
+  { id: "sans_faute", label: "Correcteur", icon: "refresh", shape: "shield", stat: "reviews", tiers: [1, 5, 20], unit: (n) => plural(n, "révision de tes erreurs", "révisions de tes erreurs"), describe: (t) => `Revoir tes erreurs (« À revoir ») ${t} fois.` },
   { id: "memoire", label: "Mémoire d'éléphant", icon: "bulb", shape: "flower", stat: "mastered", tiers: [10, 50, 200], unit: (n) => plural(n, "notion maîtrisée", "notions maîtrisées"), describe: (t) => `Avoir ${t} notions « Maîtrisé ».` },
-  { id: "as_interro", label: "As de l'interro", icon: "ribbon", shape: "star", stat: "bestInterro20", tiers: [15, 18, 20], unit: (n) => plural(n, "point", "points"), describe: (t) => `Avoir ${t}/20 ou plus à une interro de Cervelle.` },
+  { id: "as_interro", label: "Persévérant", icon: "repeat", shape: "star", stat: "retakes", tiers: [1, 5, 15], unit: (n) => plural(n, "nouvel essai", "nouveaux essais"), describe: (t) => `Refaire un QCM ou une interro pour mieux comprendre, ${t} fois.` },
   { id: "regulier", label: "Régulier", icon: "flame", shape: "diamond", stat: "bestStreak", tiers: [3, 7, 30], unit: (n) => plural(n, "jour de série", "jours de série"), describe: (t) => `Réviser ${t} jours de suite.` },
   { id: "concentre", label: "Concentré", icon: "timer", shape: "hexagon", stat: "focusSessions", tiers: [5, 25, 100], unit: (n) => plural(n, "séance de minuteur", "séances de minuteur"), describe: (t) => `Finir ${t} séances de minuteur (5 minutes ou plus).` },
   { id: "explorateur", label: "Explorateur", icon: "compass", shape: "round", stat: "subjects", tiers: [3, 5, 8], unit: (n) => plural(n, "matière", "matières"), describe: (t) => `Réviser ${t} matières différentes.` },
@@ -67,7 +69,7 @@ export const SEASON_DAYS = 10;
 
 export const RECORDS = [
   { id: "serie", label: "Plus longue série", icon: "flame", stat: "bestStreak" as const, unit: (n: number) => plural(n, "jour", "jours") },
-  { id: "interro", label: "Meilleure interro", icon: "ribbon", stat: "bestInterro20" as const, unit: () => "/20" },
+  { id: "notions", label: "Notions apprises", icon: "bulb", stat: "mastered" as const, unit: (n: number) => plural(n, "notion", "notions") },
   { id: "temps", label: "Temps de révision", icon: "time", stat: "minutes" as const, unit: () => "" },
   { id: "questions", label: "Questions répondues", icon: "help-circle", stat: "answers" as const, unit: (n: number) => plural(n, "question", "questions") },
 ];

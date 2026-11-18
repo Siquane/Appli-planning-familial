@@ -974,6 +974,8 @@ model QuizDuel {
   // "open" | "done" | "expired"
   status        String    @default("open")
   winnerId      String?
+  /// Who got the progress bonus (better than in their own previous duel).
+  progressIds   String[]  @default([])
   createdAt     DateTime  @default(now())
   endedAt       DateTime?
 

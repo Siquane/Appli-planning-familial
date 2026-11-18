@@ -222,6 +222,21 @@ describe("Cervelle — quiz, mastery and game", () => {
     expect(bad.body).toMatchObject({ correct: false, expected: "Jupiter → Saturne → Uranus → Neptune" });
   });
 
+  it("rewards progress and reviewing mistakes, never the mark alone", async () => {
+    const { auth, learnerId } = await parentWithChild();
+    const revision = await readyRevision(auth, learnerId);
+    const url = `/cervelle/learners/${learnerId}/sessions`;
+    const send = (mode: string, correct: number) => request(app).post(url).set(auth).send({ revisionId: revision.id, mode, seconds: 300, correct, total: 10 });
+    // A first interro, even 20/20: the work only (5).
+    expect((await send("interro", 10)).body.session.coins).toBe(5);
+    // Then: worse → work only; better than last time → +10.
+    expect((await send("qcm", 4)).body.session.coins).toBe(5);
+    expect((await send("qcm", 3)).body.session.coins).toBe(5);
+    expect((await send("qcm", 6)).body.session.coins).toBe(15);
+    // Going over one's mistakes always earns the bonus.
+    expect((await send("a_revoir", 2)).body.session.coins).toBe(15);
+  });
+
   it("records sessions: streak, best scores, coins, missions and the chest", async () => {
     const { auth, learnerId } = await parentWithChild();
     const revision = await readyRevision(auth, learnerId);
@@ -234,7 +249,8 @@ describe("Cervelle — quiz, mastery and game", () => {
     expect(read.body.session.coins).toBe(3);
 
     const quiz = await request(app).post(`${url}/sessions`).set(auth).send({ revisionId: revision.id, mode: "interro", seconds: 300, correct: 9, total: 10 });
-    expect(quiz.body.session).toMatchObject({ percent: 90, score20: 18, coins: 15 });
+    // A first interro: 5 coins for the work, no bonus for the mark.
+    expect(quiz.body.session).toMatchObject({ percent: 90, score20: 18, coins: 5 });
     // Three missions: one on the revisions, the timer, and one more.
     const ids = quiz.body.missions.list.map((m: { id: string }) => m.id);
     expect(ids).toHaveLength(3);

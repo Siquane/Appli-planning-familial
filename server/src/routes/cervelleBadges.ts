@@ -13,19 +13,26 @@ import { FOCUS_MIN_SECONDS } from "../lib/cervelle/game";
 
 export async function badgeStats(learner: Learner): Promise<{ stats: BadgeStats; studyDays: string[] }> {
   const id = learner.id;
-  const [revisions, scored, mastered, focusSessions, answers, time, days] = await Promise.all([
+  const [revisions, scored, mastered, focusSessions, answers, time, reviews, days] = await Promise.all([
     prisma.revision.findMany({ where: { learnerId: id, status: "ready" }, select: { id: true, subject: true, examDate: true } }),
     prisma.studySession.findMany({ where: { learnerId: id, mode: { in: ["qcm", "interro"] }, total: { gt: 0 } }, select: { mode: true, correct: true, total: true, day: true, revisionId: true } }),
     prisma.notion.count({ where: { revision: { learnerId: id }, mastery: "mastered", children: { none: {} } } }),
     prisma.studySession.count({ where: { learnerId: id, mode: "minuteur", seconds: { gte: FOCUS_MIN_SECONDS } } }),
     prisma.attempt.count({ where: { learnerId: id } }),
     prisma.studySession.aggregate({ where: { learnerId: id }, _sum: { seconds: true } }),
+    prisma.studySession.count({ where: { learnerId: id, mode: "a_revoir", total: { gt: 0 } } }),
     prisma.studySession.groupBy({ by: ["day"], where: { learnerId: id } }),
   ]);
 
   const subjects = new Set(revisions.map((r) => r.subject.trim().toLowerCase()).filter(Boolean));
-  const perfectQuizzes = scored.filter((s) => s.mode === "qcm" && s.correct === s.total).length;
-  const bestInterro20 = Math.max(0, ...scored.filter((s) => s.mode === "interro").map((s) => Math.round((s.correct / s.total) * 20)));
+  // A QCM or interro done again on a course already practised in that mode.
+  const seen = new Set<string>();
+  let retakes = 0;
+  for (const s of [...scored].sort((a, b) => a.day.localeCompare(b.day))) {
+    const k = `${s.revisionId}:${s.mode}`;
+    if (s.revisionId && seen.has(k)) retakes++;
+    seen.add(k);
+  }
   const preparedExams = revisions.filter((r) => {
     if (!r.examDate) return false;
     const examDay = parisDay(r.examDate);
@@ -36,9 +43,9 @@ export async function badgeStats(learner: Learner): Promise<{ stats: BadgeStats;
     stats: {
       revisions: revisions.length,
       subjects: subjects.size,
-      perfectQuizzes,
+      reviews,
       mastered,
-      bestInterro20,
+      retakes,
       bestStreak: Math.max(learner.bestStreak, learner.streak),
       focusSessions,
       preparedExams,

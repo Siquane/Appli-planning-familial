@@ -5,7 +5,7 @@ const none = { quizzes: [], interros: 0, studyDays: [], chests: 0, wins: 0, badg
 
 describe("Cervelle — chemin d'étoiles", () => {
   it("counts stars from revising, regularity, missions, duels and badges", () => {
-    const s = starsOf({ ...none, quizzes: [{ correct: 9, total: 10 }, { correct: 5, total: 10 }], interros: 1, studyDays: ["2026-11-02", "2026-11-02", "2026-11-03"], chests: 2, wins: 1, badges: 1 });
+    const s = starsOf({ ...none, quizzes: [{ mode: "a_revoir", total: 6 }, { mode: "qcm", total: 5 }], interros: 1, studyDays: ["2026-11-02", "2026-11-02", "2026-11-03"], chests: 2, wins: 1, badges: 1 });
     expect(s).toEqual({ revision: 3 + 2, regularite: 2, missions: 6, defis: 3 + 2, total: 5 + 2 + 6 + 5 });
   });
 
