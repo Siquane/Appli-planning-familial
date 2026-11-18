@@ -8,6 +8,8 @@ import { useAuthStore } from "../state/authStore";
 import { useToastStore } from "../state/toastStore";
 import { errorText } from "../lib/errors";
 import { space } from "../theme/tokens";
+import { router } from "expo-router";
+import { enterChildSpace, exitChildSpace } from "../lib/childSpace";
 
 // Fiche d'un enfant de 8 à 14 ans : un parent crée son accès à Passerelle
 // (ce qui vaut accord parental) et lui donne un code à usage unique.
@@ -45,6 +47,7 @@ export function ChildAccessCard({ memberId }: { memberId: string }) {
         onPress: () =>
           remove.mutate(memberId, {
             onSuccess: () => {
+              exitChildSpace();
               setCode(null);
               useToastStore.getState().show(`Accès de ${entry!.name} supprimé.`);
             },
@@ -89,6 +92,28 @@ export function ChildAccessCard({ memberId }: { memberId: string }) {
               needsNetwork
               onPress={onCreate}
             />
+          )}
+          {hasAccess && (
+            <View style={{ flexDirection: "row", gap: space.sm }}>
+              <Button
+                label="Son budget"
+                variant="secondary"
+                style={{ flex: 1 }}
+                onPress={() => {
+                  enterChildSpace(memberId, entry.name);
+                  router.navigate("/(tabs)/budget");
+                }}
+              />
+              <Button
+                label="Ses documents"
+                variant="secondary"
+                style={{ flex: 1 }}
+                onPress={() => {
+                  enterChildSpace(memberId, entry.name);
+                  router.push("/documents");
+                }}
+              />
+            </View>
           )}
           {hasAccess && <Button label="Supprimer l'accès" variant="ghost" block onPress={onRemove} loading={remove.isPending} needsNetwork />}
         </>

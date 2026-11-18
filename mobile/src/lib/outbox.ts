@@ -1,3 +1,4 @@
+import { useChildSpaceStore } from "../state/childSpaceStore";
 import { AppState } from "react-native";
 import { api, ApiError, API_URL, setBeforeRead } from "../api/client";
 import { queryClient } from "./queryClient";
@@ -39,6 +40,9 @@ export interface Write<T> {
 
 /** Sends a change, or queues it when the server can't be reached (or earlier changes are still waiting: order matters). */
 export async function writeOrQueue<T>(w: Write<T>): Promise<T> {
+  // « Espace de Jules » : une file d'attente rejouée plus tard perdrait l'espace
+  // visé (elle irait dans son propre budget). On envoie tout de suite, ou rien.
+  if (useChildSpaceStore.getState().memberId) return w.send();
   const store = useOutboxStore.getState();
   const queue = () => {
     store.enqueue({ id: newTempId(), method: w.method, path: w.path, body: w.body, entity: w.entity, tempId: w.tempId, foldable: w.foldable, at: Date.now() });

@@ -106,6 +106,32 @@ describe("child accounts", () => {
   });
 });
 
+describe("parents see the child's space", () => {
+  it("an adult reads and writes the child's budget with X-Child-Space; the child sees it too", async () => {
+    const { auth, member } = await familyWithChild();
+    const { childAuth } = await childLogin(auth, member.id);
+    expect((await request(app).post("/expenses").set(childAuth).send({ label: "Bonbons", amountCents: 250, category: "loisirs", date: "2026-11-10" })).status).toBe(201);
+
+    const space = { ...auth, "X-Child-Space": member.id };
+    const seen = await request(app).get("/expenses?month=2026-11").set(space);
+    expect(JSON.stringify(seen.body)).toContain("Bonbons");
+    // Sans l'en-tête, le parent voit son propre budget.
+    expect(JSON.stringify((await request(app).get("/expenses?month=2026-11").set(auth)).body)).not.toContain("Bonbons");
+
+    expect((await request(app).post("/expenses").set(space).send({ label: "Argent de poche", amountCents: 500, category: "divers", date: "2026-11-11" })).status).toBe(201);
+    expect(JSON.stringify((await request(app).get("/expenses?month=2026-11").set(childAuth)).body)).toContain("Argent de poche");
+  });
+
+  it("refuses another family's child and a child using the header", async () => {
+    const { auth, member } = await familyWithChild();
+    const { childAuth } = await childLogin(auth, member.id);
+    const stranger = await signup(app);
+    expect((await request(app).get("/expenses?month=2026-11").set({ ...authHeader(stranger.accessToken), "X-Child-Space": member.id })).status).toBe(404);
+    // L'en-tête n'a aucun effet pour un enfant (il reste dans son espace).
+    expect((await request(app).get("/expenses?month=2026-11").set({ ...childAuth, "X-Child-Space": member.id })).status).toBe(200);
+  });
+});
+
 describe("childAllowed", () => {
   it("reads everything but sharing and billing; writes only their own space", () => {
     expect(childAllowed("GET", "/tasks")).toBe(true);

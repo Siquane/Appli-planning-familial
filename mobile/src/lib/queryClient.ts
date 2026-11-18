@@ -4,6 +4,7 @@ import { QueryClient, focusManager } from "@tanstack/react-query";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import type { PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
 import { useOutboxStore } from "../state/outboxStore";
+import { PRIVATE_QUERY_KEYS, useChildSpaceStore } from "../state/childSpaceStore";
 
 // Cached data must outlive the persisted copy, or restored entries would be
 // garbage-collected right away.
@@ -32,12 +33,17 @@ export const persistOptions: Omit<PersistQueryClientOptions, "queryClient"> = {
   buster: "v1",
   dehydrateOptions: {
     // Documents carry signed file links that expire after an hour: never keep them.
-    shouldDehydrateQuery: (query) => query.state.status === "success" && query.queryKey[0] !== "documents",
+    // Pendant « Espace de Jules », le budget de l'enfant ne doit pas rester sur le téléphone à la place du sien.
+    shouldDehydrateQuery: (query) =>
+      query.state.status === "success" &&
+      query.queryKey[0] !== "documents" &&
+      !(useChildSpaceStore.getState().memberId && PRIVATE_QUERY_KEYS.includes(String(query.queryKey[0]))),
   },
 };
 
 /** On sign-out: forget everything, in memory and on the phone. */
 export async function clearQueryCache() {
+  useChildSpaceStore.getState().set(null);
   queryClient.clear();
   // Changes still waiting belong to the account that is leaving.
   await useOutboxStore.getState().clear();

@@ -12,6 +12,7 @@ import { DocumentRow } from "../src/components/DocumentRow";
 import { PlusIcon } from "../src/components/icons";
 import { MoreLink } from "../src/components/MoreLink";
 import { PrivateNote } from "../src/components/PrivateNote";
+import { ChildSpaceBanner } from "../src/components/ChildSpaceBanner";
 import { useDocuments, useMembers, usePlan } from "../src/hooks/useApi";
 
 import { categoryLabel, DOCUMENT_CATEGORIES } from "../src/lib/documentUpload";
@@ -35,6 +36,7 @@ export default function DocumentsScreen() {
     <Screen scroll={false} padded={false}>
       <TopBar title="Documents" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: gutter, gap: space.sm }} showsVerticalScrollIndicator={false}>
+        <ChildSpaceBanner />
         <PrivateNote what="documents" />
         <Button
           label={full ? "Documents illimités · voir les offres" : "Ajouter un document"}

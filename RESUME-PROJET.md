@@ -363,3 +363,8 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Famille dissoute sans héritier → comptes enfants supprimés ; ils ne comptent pas dans la limite de 6 comptes.
 - Appli enfant : pas d'onglet Repas (barre : Planning | + | Budget, Famille), pas de Recette/Repas dans le « + », Famille sans gestion (ajout de membres, comptes, partage), étoiles en lecture seule, pas de « Replanifier », Profil sans agendas/Passerelle+/Mes horaires, Confidentialité : « demande à ton parent » pour supprimer.
 - À venir (PR 2) : « Espace de Jules » pour que les parents voient ses documents, dépenses et épargne. Idées validées pour plus tard : demande d'échange d'étoiles, argent de poche automatique.
+
+## Espace de l'enfant côté parents — PR 2 (18/11/2026)
+
+- En-tête **`X-Child-Space: <memberId>`** : dans `requireAuth`, un adulte de la même famille (pas un enfant) voit `req.privateId` remplacé par le compte enfant → budget (toutes les routes `privateSpace`) et documents de l'enfant, en lecture et en écriture. Enfant inconnu ou d'une autre famille → 404 `child_space_not_found`. L'en-tête est ignoré pour un compte enfant.
+- Appli : `src/state/childSpaceStore.ts` (non persisté) + `src/lib/childSpace.ts` (`enterChildSpace` / `exitChildSpace` oublient les requêtes budget/documents). Fiche du membre → « Son budget » / « Ses documents » ; bandeau `ChildSpaceBanner` « Espace de Jules · Revenir à mon espace » sur Budget et Documents. Le client ajoute l'en-tête ; le cache persistant ne garde pas ces données, et les écritures ne passent pas par la file hors connexion pendant ce mode.
