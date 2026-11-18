@@ -132,7 +132,8 @@ export function glow(c: string, blur = 12) {
 export const radius = { sm: 6, md: 14, lg: 18 } as const;
 
 // Spacing scale, in steps of 4. `gutter` is the side margin of every screen.
-export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
+// `section` : écart entre les rubriques d'un formulaire (Titre, Durée, Priorité…).
+export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, section: 36 } as const;
 export const gutter = 22;
 
 // React Native has no box-shadow; these translate the token *intent*

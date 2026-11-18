@@ -63,7 +63,7 @@ export default function ScheduleScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title="Mes horaires" onBack={() => goBack("/profile")} save={{ onPress: onSave, loading: update.isPending, disabled: !constraints, needsNetwork: true }} />
-      <ScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: gutter, gap: space.section }} showsVerticalScrollIndicator={false}>
         <Text size={13} tone="faint">
           Passerelle ne propose jamais de tâche pendant ces heures (« Replanifier ma semaine », placement automatique).
         </Text>

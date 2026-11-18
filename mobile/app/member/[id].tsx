@@ -97,7 +97,7 @@ export default function MemberScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={member.name} onBack={() => router.back()} save={{ onPress: onSave, disabled: !name.trim() || ageInvalid, loading: update.isPending }} />
-      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.section }} showsVerticalScrollIndicator={false}>
         <Card style={{ gap: space.md }}>
           <TextField label="Prénom" value={name} onChangeText={setName} />
           <TextField label="Âge (facultatif)" value={age} onChangeText={setAge} keyboardType="number-pad" placeholder="Ex. 8" />

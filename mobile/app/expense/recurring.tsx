@@ -105,7 +105,7 @@ export default function RecurringExpenseFormScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <TopBar title={existing ? "Dépense récurrente" : "Nouvelle dépense récurrente"} onBack={() => router.back()} onDelete={existing ? onDelete : undefined} save={{ onPress: onSave, disabled: !isValid, loading: saving }} />
-      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.section }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Card>
           <Text size={13} tone="muted">
             Ajoutée automatiquement chaque mois, à partir de ce mois-ci. Un jour 29, 30 ou 31 passe au dernier jour des mois plus courts.
