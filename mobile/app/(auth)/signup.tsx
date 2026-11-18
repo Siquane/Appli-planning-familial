@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View } from "react-native";
 import { Pressable } from "../../src/components/Touchable";
 import { CheckIcon } from "../../src/components/icons";
-import { router, Link } from "expo-router";
+import { router, Link, useLocalSearchParams } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
 import { TextField } from "../../src/components/TextField";
@@ -18,7 +18,9 @@ export default function SignupScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   // Joining a family with the code a parent gave. Any account needs the confirmation of being 15 or older.
-  const [hasCode, setHasCode] = useState(false);
+  // « Rejoindre une famille » depuis l'écran de connexion : champ du code déjà ouvert.
+  const { code: withCode } = useLocalSearchParams<{ code?: string }>();
+  const [hasCode, setHasCode] = useState(withCode === "1");
   const [code, setCode] = useState("");
   const [age15, setAge15] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,10 +44,10 @@ export default function SignupScreen() {
     <Screen keyboard style={{ justifyContent: "center", gap: space.lg }}>
       <View style={{ gap: space.xs }}>
         <Text heading weight="semibold" size={28}>
-          Créer un compte
+          {hasCode ? "Rejoindre une famille" : "Créer un compte"}
         </Text>
         <Text tone="muted" size={15}>
-          Quelques infos pour démarrer.
+          {hasCode ? "Crée ton compte avec le code donné par un parent." : "Quelques infos pour démarrer."}
         </Text>
       </View>
 

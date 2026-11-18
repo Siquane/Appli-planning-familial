@@ -75,6 +75,18 @@ export default function LoginScreen() {
           </Text>
         </Link>
       </View>
+
+      {/* Un ado (15 ans et plus) invité par un parent : création de compte avec le champ du code déjà ouvert. */}
+      <View style={{ flexDirection: "row", justifyContent: "center", gap: space.sm }}>
+        <Text tone="muted" size={13}>
+          Tu as un code famille ?
+        </Text>
+        <Link href={{ pathname: "/(auth)/signup", params: { code: "1" } }}>
+          <Text tone="accent" size={13} weight="medium">
+            Rejoindre une famille
+          </Text>
+        </Link>
+      </View>
     </Screen>
   );
 }
