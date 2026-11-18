@@ -12,6 +12,7 @@ import { getStorage, removeObjects } from "../lib/storage";
 import { beforeParisDay, parisDay, weekdayOf } from "../lib/cervelle/days";
 import { mountOrganize } from "./cervelleOrganize";
 import { mountBadges } from "./cervelleBadges";
+import * as shop from "../lib/cervelle/shop";
 import { applyAnswer, combinedMastery, displayedMastery, revisionProgress, type Mastery } from "../lib/cervelle/mastery";
 import { localGrade, normalizeAnswer, sameOrder } from "../lib/cervelle/grading";
 import {
@@ -1030,12 +1031,28 @@ cervelleRouter.post("/learners/:learnerId/chest", async (req, res) => {
   res.json({ coins: CHEST_COINS, learner: serializeLearner(updated) });
 });
 
+const badgeKeysOf = async (learnerId: string) => (await prisma.learnerBadge.findMany({ where: { learnerId }, select: { key: true } })).map((x) => x.key);
+
 cervelleRouter.get("/learners/:learnerId/shop", async (req, res) => {
   const learner = await loadLearner(req, res);
   if (!learner) return;
+  const badgeKeys = await badgeKeysOf(learner.id);
+  const today = parisDay();
   res.json({
     coins: learner.coins,
-    items: SHOP.map((i) => ({ ...i, owned: learner.owned.includes(i.id), equipped: learner.equipped.includes(i.id) })),
+    items: SHOP.map((i) => ({
+      id: i.id,
+      name: i.name,
+      slot: i.slot,
+      price: i.price,
+      kind: i.kind,
+      season: i.season ?? null,
+      badge: i.badge?.label ?? null,
+      onSale: shop.onSale(i, today),
+      owned: shop.owns(i, learner.owned, badgeKeys),
+      equipped: learner.equipped.includes(i.id) || (shop.FREE.includes(i.id) && !learner.equipped.some((e) => shopItem(e)?.slot === i.slot)),
+    })),
+    outfits: shop.readOutfits(learner.outfits),
   });
 });
 
@@ -1044,7 +1061,9 @@ cervelleRouter.post("/learners/:learnerId/shop/:itemId/buy", async (req, res) =>
   if (!learner) return;
   const item = shopItem(String(req.params.itemId));
   if (!item) return res.status(404).json({ error: "Objet introuvable" });
-  if (learner.owned.includes(item.id)) return res.status(409).json({ error: "Tu l'as déjà !" });
+  if (shop.owns(item, learner.owned, await badgeKeysOf(learner.id))) return res.status(409).json({ error: "Tu l'as déjà !" });
+  if (item.kind === "badge") return res.status(400).json({ error: `Il se gagne avec le badge « ${item.badge?.label} ».` });
+  if (!shop.onSale(item, parisDay())) return res.status(400).json({ error: "Pas en vente en ce moment : il revient chaque année à la même période." });
   // Conditional update so the coins can't go below zero with two taps at once.
   const bought = await prisma.learner.updateMany({
     where: { id: learner.id, coins: { gte: item.price }, NOT: { owned: { has: item.id } } },
@@ -1059,10 +1078,39 @@ cervelleRouter.post("/learners/:learnerId/shop/:itemId/buy", async (req, res) =>
 cervelleRouter.post("/learners/:learnerId/shop/:itemId/equip", async (req, res) => {
   const learner = await loadLearner(req, res);
   if (!learner) return;
-  const id = String(req.params.itemId);
-  if (!learner.owned.includes(id)) return res.status(400).json({ error: "Achète-le d'abord." });
+  const item = shopItem(String(req.params.itemId));
+  if (!item) return res.status(404).json({ error: "Objet introuvable" });
+  if (!shop.owns(item, learner.owned, await badgeKeysOf(learner.id))) return res.status(400).json({ error: item.kind === "badge" ? `Gagne d'abord le badge « ${item.badge?.label} ».` : "Achète-le d'abord." });
   const wear = req.body?.on !== false;
-  const equipped = wear ? equip(learner.equipped, id) : learner.equipped.filter((e) => e !== id);
+  const equipped = wear ? equip(learner.equipped, item.id) : learner.equipped.filter((e) => e !== item.id);
+  const updated = await prisma.learner.update({ where: { id: learner.id }, data: { equipped } });
+  res.json({ learner: serializeLearner(updated) });
+});
+
+const outfitIndex = (raw: string) => {
+  const i = Number(raw) - 1;
+  return Number.isInteger(i) && i >= 0 && i < shop.OUTFITS ? i : null;
+};
+
+/** Saves what Cervelle wears now as outfit 1, 2 or 3. */
+cervelleRouter.put("/learners/:learnerId/shop/outfits/:n", async (req, res) => {
+  const learner = await loadLearner(req, res);
+  if (!learner) return;
+  const i = outfitIndex(String(req.params.n));
+  if (i === null) return res.status(404).json({ error: "Tenue introuvable" });
+  const outfits = shop.readOutfits(learner.outfits);
+  outfits[i] = shop.cleanOutfit(learner.equipped, learner.owned, await badgeKeysOf(learner.id));
+  await prisma.learner.update({ where: { id: learner.id }, data: { outfits } });
+  res.json({ outfits });
+});
+
+cervelleRouter.post("/learners/:learnerId/shop/outfits/:n/wear", async (req, res) => {
+  const learner = await loadLearner(req, res);
+  if (!learner) return;
+  const i = outfitIndex(String(req.params.n));
+  const saved = i === null ? null : shop.readOutfits(learner.outfits)[i];
+  if (!saved) return res.status(404).json({ error: "Tenue vide" });
+  const equipped = shop.cleanOutfit(saved, learner.owned, await badgeKeysOf(learner.id));
   const updated = await prisma.learner.update({ where: { id: learner.id }, data: { equipped } });
   res.json({ learner: serializeLearner(updated) });
 });

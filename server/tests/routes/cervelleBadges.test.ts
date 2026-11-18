@@ -46,4 +46,36 @@ describe("Cervelle — badges", () => {
     expect(seen.body.newCount).toBe(0);
     expect(seen.body.successes.find((s: { id: string }) => s.id === "photographe").isNew).toBe(false);
   });
+
+  it("dresses Cervelle: badge items, seasons, colours and saved outfits", async () => {
+    const { learnerId, child } = await family();
+    await prisma.learner.update({ where: { id: learnerId }, data: { coins: 500 } });
+    const url = "/cervelle/learners/me/shop";
+
+    expect((await request(app).post(`${url}/couronne_or/buy`).set(child)).status).toBe(400);
+    expect((await request(app).post(`${url}/couronne_or/equip`).set(child)).status).toBe(400);
+    await prisma.learnerBadge.create({ data: { learnerId, key: "regulier:3" } });
+    expect((await request(app).post(`${url}/couronne_or/equip`).set(child)).status).toBe(200);
+
+    expect((await request(app).post(`${url}/bleu/buy`).set(child)).status).toBe(200);
+    expect((await request(app).post(`${url}/lunettes/buy`).set(child)).status).toBe(200);
+    const shop = await request(app).get(url).set(child);
+    const find = (id: string) => shop.body.items.find((i: { id: string }) => i.id === id);
+    expect(find("couronne_or")).toMatchObject({ kind: "badge", owned: true, equipped: true, badge: "Régulier en or" });
+    expect(find("bleu")).toMatchObject({ owned: true, equipped: true });
+    expect(find("rose")).toMatchObject({ owned: true, equipped: false });
+    expect(shop.body.coins).toBe(500 - 80 - 40);
+
+    // Save outfit 1, change, then put outfit 1 back on.
+    const saved = await request(app).put(`${url}/outfits/1`).set(child);
+    expect(saved.body.outfits[0].sort()).toEqual(["bleu", "couronne_or", "lunettes"]);
+    await request(app).post(`${url}/rose/equip`).set(child);
+    await request(app).post(`${url}/lunettes/equip`).set(child).send({ on: false });
+    const plain = await request(app).get(url).set(child);
+    expect(plain.body.items.find((i: { id: string }) => i.id === "rose").equipped).toBe(true);
+    const worn = await request(app).post(`${url}/outfits/1/wear`).set(child);
+    expect(worn.body.learner.equipped.sort()).toEqual(["bleu", "couronne_or", "lunettes"]);
+    expect((await request(app).post(`${url}/outfits/2/wear`).set(child)).status).toBe(404);
+    expect((await request(app).put(`${url}/outfits/4`).set(child)).status).toBe(404);
+  });
 });
