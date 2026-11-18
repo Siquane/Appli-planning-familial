@@ -593,8 +593,23 @@ model Learner {
   cheersReceived Cheer[]         @relation("CheerTo")
   challengesOut  Challenge[]     @relation("ChallengeFrom")
   challengesIn   Challenge[]     @relation("ChallengeTo")
+  badges         LearnerBadge[]
 
   @@index([userId])
+}
+
+/// A badge a child earned (see src/lib/cervelle/badges.ts for the keys).
+/// Stored once, so it pays its coins once; seenAt clears the red dot.
+model LearnerBadge {
+  id        String    @id @default(cuid())
+  learnerId String
+  learner   Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  key       String
+  coins     Int       @default(0)
+  earnedAt  DateTime  @default(now())
+  seenAt    DateTime?
+
+  @@unique([learnerId, key])
 }
 
 model LearnerCode {
