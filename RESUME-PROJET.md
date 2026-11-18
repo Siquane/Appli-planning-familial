@@ -329,3 +329,10 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 
 - APK sur GitHub, 3e essai : machine arrêtée net après 26 min, sans journal. PR #61 : plus de place disque (on garde le SDK Android), swap 4 Go, journal + état mémoire/disque envoyés toutes les 2 min dans une pré-version `journal-<n°>` (`suivi.txt`).
 - **4e essai réussi (18/11, 30 min) → APK runtime "8"** : https://github.com/Siquane/Appli-planning-familial/releases/download/apk-4/passerelle.apk (page : https://github.com/Siquane/Appli-planning-familial/releases/tag/apk-4). Contient tout jusqu'à la PR #61. Arm64 seulement (téléphones Android récents). À installer à la place de l'APK runtime "7" ; si « Application non installée », désinstaller l'ancienne version d'abord. Pour les prochains APK : relancer ce workflow depuis main.
+
+## Horaires de travail et replanification (18/11/2026)
+
+- Retour utilisatrice : « Replanifier » proposait 8 h, 9 h, 10 h en semaine alors qu'elle travaille de 9 h à 17 h 30. Le moteur (`server/src/lib/scheduling.ts`) ne connaissait que sommeil / déjeuner / ne pas déranger, ne regardait que l'heure de début des autres tâches, et ignorait les tâches sans membre.
+- **Horaires de travail par compte** : champs `workDays Int[]`, `workStart`, `workEnd` sur `User` (le compte, `req.accountId`), migration `20261118110000_work_hours`. `GET/PATCH /constraints` renvoie et accepte `work` / `workDays`, `workStart`, `workEnd` en plus des plages de la famille.
+- Moteur : aucun créneau pendant le travail les jours cochés ; la **durée** de la tâche compte (ne déborde ni sur le travail, ni sur le déjeuner, le sommeil ou « ne pas déranger ») ; une tâche existante bloque toute sa durée ; une tâche sans membre bloque tout le monde. Créneaux 17:30, 18:30, 19:30 ajoutés. Même règles pour le placement automatique (`/tasks/auto-slot`, accepte `duration`).
+- Appli : nouvel écran **« Mes horaires »** (`app/schedule.tsx`, depuis Profil et depuis « Replanifier ma semaine ») : jours + heures de travail, et sommeil / déjeuner / ne pas déranger (avant, modifiables seulement à l'inscription). JS seulement, pas de nouvel APK (runtime "8").

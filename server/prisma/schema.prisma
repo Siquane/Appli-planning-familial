@@ -20,6 +20,11 @@ model User {
   budgetUntil          DateTime?
   // Free trial of Budget+: started once per account, lasts BUDGET_TRIAL_DAYS (lib/plan.ts).
   budgetTrialStartedAt DateTime?
+  // Horaires de travail de CE compte (0 = lundi … 6 = dimanche ; vide = aucun) :
+  // « Replanifier » ne propose rien pendant ces heures.
+  workDays             Int[]         @default([])
+  workStart            String        @default("09:00")
+  workEnd              String        @default("17:30")
   // Family sharing. A family is the data of its creator (the « owner »); other
   // accounts join it with a code (see lib/family.ts). null = this account is
   // its own family's owner. Roles of a joiner: "full" shares everything,

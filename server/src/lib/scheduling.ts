@@ -10,10 +10,13 @@
 export const WEEKDAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"] as const;
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-const TIME_POOL = ["08:00", "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+const TIME_POOL = ["08:00", "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00"];
 const MORNING = new Set(["08:00", "09:00", "10:00", "11:00"]);
 const MIDDAY = new Set(["12:00", "14:00", "15:00", "16:00"]);
-const EVENING = new Set(["17:00", "18:00", "19:00", "20:00"]);
+const EVENING = new Set(["17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00"]);
+
+/** Durée prise par défaut quand une tâche n'en a pas. */
+const DEFAULT_DURATION = 30;
 
 export type Priority = "high" | "medium" | "low";
 
@@ -24,6 +27,15 @@ export interface Constraints {
   lunchEnd: string;
   dndStart: string;
   dndEnd: string;
+  /** Horaires de travail du compte qui replanifie (aucune proposition pendant ces heures). */
+  work?: WorkHours | null;
+}
+
+export interface WorkHours {
+  /** 0 = lundi … 6 = dimanche ; vide = pas d'horaires. */
+  days: number[];
+  start: string;
+  end: string;
 }
 
 export interface SchedulableTask {
@@ -33,6 +45,8 @@ export interface SchedulableTask {
   priority: Priority;
   deadlineWeekday: Weekday | null;
   memberIds: string[];
+  /** Minutes. */
+  duration?: number;
 }
 
 export interface Candidate {
@@ -47,11 +61,21 @@ function toMin(t: string): number {
   return h * 60 + (m || 0);
 }
 
-function inRange(min: number, start: string, end: string): boolean {
+/** Le créneau [from, to[ (minutes) chevauche-t-il la plage start → end (qui peut passer minuit) ? */
+function overlaps(from: number, to: number, start: string, end: string): boolean {
   const s = toMin(start);
   const e = toMin(end);
-  if (s <= e) return min >= s && min < e;
-  return min >= s || min < e;
+  if (s === e) return false;
+  const ranges = s < e ? [[s, e]] : [[s, 24 * 60], [0, e]];
+  return ranges.some(([a, b]) => from < b && to > a);
+}
+
+const durationOf = (t: SchedulableTask) => Math.max(1, t.duration || DEFAULT_DURATION);
+
+/** Deux tâches se gênent si elles concernent la même personne, ou si l'une ne concerne personne en particulier. */
+function sharePeople(a: SchedulableTask, b: SchedulableTask): boolean {
+  if (a.memberIds.length === 0 || b.memberIds.length === 0) return true;
+  return a.memberIds.some((m) => b.memberIds.includes(m));
 }
 
 export function scoreCandidate(
@@ -61,16 +85,22 @@ export function scoreCandidate(
   allTasks: SchedulableTask[],
   constraints: Constraints
 ): Candidate | null {
-  const tMin = toMin(time);
-  if (inRange(tMin, constraints.lunchStart, constraints.lunchEnd)) return null;
-  if (inRange(tMin, constraints.dndStart, constraints.dndEnd)) return null;
-  if (inRange(tMin, constraints.sleepStart, constraints.sleepEnd)) return null;
+  const from = toMin(time);
+  const to = from + durationOf(task);
+  if (overlaps(from, to, constraints.lunchStart, constraints.lunchEnd)) return null;
+  if (overlaps(from, to, constraints.dndStart, constraints.dndEnd)) return null;
+  if (overlaps(from, to, constraints.sleepStart, constraints.sleepEnd)) return null;
+  const work = constraints.work;
+  const workDay = !!work && work.days.includes(weekday);
+  if (workDay && overlaps(from, to, work!.start, work!.end)) return null;
   if (task.deadlineWeekday != null && weekday > task.deadlineWeekday) return null;
 
-  const memberIds = task.memberIds;
-  const conflict = allTasks.some(
-    (t) => t.id !== task.id && t.weekday === weekday && t.time === time && t.memberIds.some((m) => memberIds.includes(m))
-  );
+  // Une tâche déjà prévue bloque toute sa durée, pas seulement son heure de début.
+  const conflict = allTasks.some((t) => {
+    if (t.id === task.id || t.weekday !== weekday || !sharePeople(t, task)) return false;
+    const start = toMin(t.time);
+    return from < start + durationOf(t) && to > start;
+  });
   if (conflict) return null;
 
   let score = 0;
@@ -97,6 +127,7 @@ export function scoreCandidate(
   const loadOnDay = allTasks.filter((t) => t.id !== task.id && t.weekday === weekday).length;
   score += Math.max(0, 2 - loadOnDay);
   if (loadOnDay === 0) reasons.push("Journée encore dégagée.");
+  if (workDay) reasons.push("En dehors de tes horaires de travail.");
   reasons.push("Respecte la pause déjeuner et les plages de repos.");
   reasons.push("Aucun conflit avec le planning existant.");
   return { weekday, time, score, reasons };

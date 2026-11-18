@@ -176,7 +176,7 @@ export const recurringExpensesApi = {
 
 export const constraintsApi = {
   get: () => api.get<{ constraints: Constraints }>("/constraints"),
-  update: (data: Partial<Pick<Constraints, "sleepStart" | "sleepEnd" | "lunchStart" | "lunchEnd" | "dndStart" | "dndEnd">>) =>
+  update: (data: Partial<Pick<Constraints, "sleepStart" | "sleepEnd" | "lunchStart" | "lunchEnd" | "dndStart" | "dndEnd"> & { workDays: number[]; workStart: string; workEnd: string }>) =>
     api.patch<{ constraints: Constraints }>("/constraints", data),
 };
 

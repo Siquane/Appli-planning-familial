@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { dateForWeekday } from "../lib/dates";
-import { getProposals, SchedulableTask, Weekday } from "../lib/scheduling";
+import { Constraints, getProposals, SchedulableTask, Weekday } from "../lib/scheduling";
 import { syncTaskToCalendar, unsyncTaskFromCalendar } from "../services/calendarSync";
 import type { Task } from "@prisma/client";
 import { patchSchema } from "../lib/validation";
@@ -208,7 +208,18 @@ const autoSlotSchema = z.object({
   priority: z.enum(["high", "medium", "low"]).default("medium"),
   deadlineWeekday: z.number().int().min(0).max(6).nullable().optional(),
   memberIds: z.array(z.string()).default([]),
+  duration: z.number().int().min(1).max(24 * 60).optional(),
 });
+
+/** Plages de la famille + horaires de travail du compte qui demande. */
+async function schedulingConstraints(familyId: string, accountId: string): Promise<Constraints | null> {
+  const [family, account] = await Promise.all([
+    prisma.constraints.findUnique({ where: { userId: familyId } }),
+    prisma.user.findUnique({ where: { id: accountId }, select: { workDays: true, workStart: true, workEnd: true } }),
+  ]);
+  if (!family) return null;
+  return { ...family, work: account ? { days: account.workDays, start: account.workStart, end: account.workEnd } : null };
+}
 
 // Called when a task is created with no day picked: reuses the same scoring
 // engine as "Replanifier ma semaine" to pick the single best slot up front,
@@ -220,7 +231,7 @@ tasksRouter.post("/auto-slot", async (req, res) => {
 
   const [tasks, constraints] = await Promise.all([
     prisma.task.findMany({ where: { userId: req.userId }, include }),
-    prisma.constraints.findUnique({ where: { userId: req.userId } }),
+    schedulingConstraints(req.userId!, req.accountId ?? req.userId!),
   ]);
   if (!constraints) return res.status(400).json({ error: "Constraints not set up" });
 
@@ -231,6 +242,7 @@ tasksRouter.post("/auto-slot", async (req, res) => {
     priority: t.priority as SchedulableTask["priority"],
     deadlineWeekday: (t.deadlineWeekday ?? null) as Weekday | null,
     memberIds: t.members.map((m) => m.memberId),
+    duration: t.duration,
   }));
 
   const draft: SchedulableTask = {
@@ -240,6 +252,7 @@ tasksRouter.post("/auto-slot", async (req, res) => {
     priority: d.priority,
     deadlineWeekday: (d.deadlineWeekday ?? null) as Weekday | null,
     memberIds: d.memberIds,
+    duration: d.duration,
   };
 
   const [best] = getProposals(draft, schedulable, constraints, 1);
@@ -251,7 +264,7 @@ tasksRouter.post("/auto-slot", async (req, res) => {
 tasksRouter.get("/replan/proposals", async (req, res) => {
   const [tasks, constraints] = await Promise.all([
     prisma.task.findMany({ where: { userId: req.userId }, include }),
-    prisma.constraints.findUnique({ where: { userId: req.userId } }),
+    schedulingConstraints(req.userId!, req.accountId ?? req.userId!),
   ]);
   if (!constraints) return res.status(400).json({ error: "Constraints not set up" });
 
@@ -262,6 +275,7 @@ tasksRouter.get("/replan/proposals", async (req, res) => {
     priority: t.priority as SchedulableTask["priority"],
     deadlineWeekday: (t.deadlineWeekday ?? null) as Weekday | null,
     memberIds: t.members.map((m) => m.memberId),
+    duration: t.duration,
   }));
 
   const flexible = tasks.filter((t) => t.flexible);

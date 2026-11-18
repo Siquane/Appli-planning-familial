@@ -133,6 +133,14 @@ export interface Constraints {
   lunchEnd: string;
   dndStart: string;
   dndEnd: string;
+  /** Horaires de travail du compte connecté (0 = lundi … 6 = dimanche). */
+  work: WorkHours;
+}
+
+export interface WorkHours {
+  days: number[];
+  start: string;
+  end: string;
 }
 
 export interface ReplanCandidate {

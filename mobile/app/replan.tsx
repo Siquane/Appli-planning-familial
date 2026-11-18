@@ -9,7 +9,9 @@ import { Card } from "../src/components/Card";
 import { Button } from "../src/components/Button";
 import { TopBar } from "../src/components/TopBar";
 import { ReshuffleIcon } from "../src/components/icons";
-import { useReplanProposals, useUpdateTask } from "../src/hooks/useApi";
+import { useConstraints, useReplanProposals, useUpdateTask } from "../src/hooks/useApi";
+import { workSummary } from "../src/lib/workHours";
+import { Pressable } from "../src/components/Touchable";
 import { useToastStore } from "../src/state/toastStore";
 import { color, space, gutter } from "../src/theme/tokens";
 import { WEEKDAYS_FULL, WEEKDAYS_SHORT } from "../src/lib/weekdays";
@@ -17,6 +19,8 @@ import type { ReplanCandidate, Weekday } from "../src/api/types";
 
 export default function ReplanScreen() {
   const { data: proposals = [], isLoading } = useReplanProposals();
+  const { data: constraints } = useConstraints();
+  const work = workSummary(constraints?.work);
   const updateTask = useUpdateTask();
 
   function apply(taskId: string, title: string, candidate: Pick<ReplanCandidate, "weekday" | "time">) {
@@ -36,6 +40,12 @@ export default function ReplanScreen() {
             Passerelle propose de meilleurs créneaux pour tes tâches flexibles, en tenant compte de tes contraintes.
           </Text>
         </View>
+
+        <Pressable onPress={() => router.push("/schedule")} accessibilityRole="link">
+          <Text size={13} tone={work ? "faint" : "accent"}>
+            {work ? `Ton travail : ${work} · Modifier` : "Indique tes horaires de travail pour ne rien recevoir pendant ces heures →"}
+          </Text>
+        </Pressable>
 
         {!isLoading && proposals.length === 0 && (
           <Card style={{ alignItems: "center", paddingVertical: space.xl }}>

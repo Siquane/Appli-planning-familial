@@ -10,8 +10,9 @@ import { Button } from "../src/components/Button";
 import { TextField } from "../src/components/TextField";
 import { updateName } from "../src/lib/account";
 import { Avatar } from "../src/components/Avatar";
-import { CalendarIcon, ChevronRightIcon, RecurringIcon, SparkleIcon } from "../src/components/icons";
-import { useCalendarStatus, useDisconnectCalendar, usePlan } from "../src/hooks/useApi";
+import { CalendarIcon, ChevronRightIcon, ClockIcon, RecurringIcon, SparkleIcon } from "../src/components/icons";
+import { workSummary } from "../src/lib/workHours";
+import { useCalendarStatus, useConstraints, useDisconnectCalendar, usePlan } from "../src/hooks/useApi";
 import { useAuthStore } from "../src/state/authStore";
 import { useToastStore } from "../src/state/toastStore";
 import { connectAppleCalendar, startOAuthConnect } from "../src/lib/calendarConnect";
@@ -44,6 +45,7 @@ export default function ProfileScreen() {
   const { data: status, refetch } = useCalendarStatus();
   const disconnect = useDisconnectCalendar();
   const plan = usePlan().data;
+  const { data: constraints } = useConstraints();
   const packLabel = plan?.packs.budget.active && plan.packs.meals.active ? "Passerelle+" : plan?.packs.budget.active ? "Budget+" : plan?.packs.meals.active ? "Repas+" : "Découvrir Passerelle+";
   const [connecting, setConnecting] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
@@ -206,6 +208,19 @@ export default function ProfileScreen() {
           <SparkleIcon size={20} color={color.accent400} />
           <Text size={15} style={{ flex: 1, marginLeft: space.sm }}>
             {packLabel}
+          </Text>
+          <ChevronRightIcon size={14} color={color.neutral500} />
+        </Card>
+      </Pressable>
+
+      <Pressable onPress={() => router.push("/schedule")}>
+        <Card row style={{ alignItems: "center" }}>
+          <ClockIcon size={16} color={color.neutral400} />
+          <Text size={15} style={{ flex: 1, marginLeft: space.sm }}>
+            Mes horaires
+          </Text>
+          <Text size={11} tone="faint" style={{ marginRight: space.sm }}>
+            {workSummary(constraints?.work) ?? "Travail, sommeil, déjeuner"}
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />
         </Card>
