@@ -40,6 +40,14 @@ export default function SignupScreen() {
     }
   }
 
+  // Dit ce qui manque plutôt qu'un bouton simplement grisé.
+  const missing: string[] = [];
+  if (!name.trim()) missing.push("ton nom");
+  if (!email.trim()) missing.push("ton adresse e-mail");
+  if (password.length < 8) missing.push("un mot de passe de 8 caractères minimum");
+  if (!age15) missing.push("la case « J'ai 15 ans ou plus »");
+  if (hasCode && !code.trim()) missing.push("le code famille");
+
   return (
     <Screen keyboard style={{ justifyContent: "center", gap: space.lg }}>
       <View style={{ gap: space.xs }}>
@@ -106,7 +114,12 @@ export default function SignupScreen() {
             {error}
           </Text>
         )}
-        <Button label={hasCode ? "Rejoindre la famille" : "Créer mon compte"} variant="primary" block onPress={onSubmit} loading={loading} disabled={!email || !password || !name || !age15 || (hasCode && !code.trim())} />
+        <Button label={hasCode ? "Rejoindre la famille" : "Créer mon compte"} variant="primary" block onPress={onSubmit} loading={loading} disabled={missing.length > 0} />
+        {missing.length > 0 && (
+          <Text tone="muted" size={13} center>
+            Il manque : {missing.join(", ")}.
+          </Text>
+        )}
         {slow && (
           <Text tone="muted" size={13} center>
             Passerelle se réveille, ça peut prendre jusqu'à une minute…
