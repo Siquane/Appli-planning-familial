@@ -25,8 +25,13 @@ jobs:
     steps:
       - name: Mémoire d'appoint et place disque
         run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost || true
-          sudo fallocate -l 10G /swapfile2 && sudo chmod 600 /swapfile2 && sudo mkswap /swapfile2 && sudo swapon /swapfile2
+          # 3e essai : la machine a lâché après 26 min sans journal (disque ou mémoire).
+          # On garde le SDK Android (/usr/local/lib/android), on enlève le reste du superflu.
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost \
+            /usr/share/swift /opt/hostedtoolcache/CodeQL /usr/local/share/powershell \
+            /usr/local/share/chromium /usr/local/lib/heroku /opt/microsoft /opt/google || true
+          sudo docker image prune --all --force > /dev/null 2>&1 || true
+          sudo fallocate -l 4G /swapfile2 && sudo chmod 600 /swapfile2 && sudo mkswap /swapfile2 && sudo swapon /swapfile2
           free -h && df -h /
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,8 +57,20 @@ jobs:
       - name: Build Android APK (preview, sur GitHub)
         working-directory: mobile
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -o pipefail
+          # Journal envoyé toutes les 2 min dans une pré-version GitHub « journal-N » :
+          # lisible même si la machine s'arrête net (les journaux GitHub sont alors perdus).
+          TAG="journal-${{ github.run_number }}"
+          gh release create "$TAG" --prerelease --target "$GITHUB_SHA" --title "Journal compilation n°${{ github.run_number }}" --notes "Suivi en direct de la compilation." || true
+          (
+            while sleep 120; do
+              { date -u; free -h; df -h /; echo; tail -n 300 "$GITHUB_WORKSPACE/build.log"; } > "$GITHUB_WORKSPACE/suivi.txt" 2>&1
+              gh release upload "$TAG" "$GITHUB_WORKSPACE/suivi.txt" --clobber > /dev/null 2>&1 || true
+            done
+          ) &
           eas build --platform android --profile preview --non-interactive --local --output "$GITHUB_WORKSPACE/passerelle.apk" 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
       - name: Garder le journal de compilation
         if: always()
