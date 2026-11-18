@@ -11,6 +11,7 @@ import { Button } from "../../src/components/Button";
 import { TabHeader } from "../../src/components/PageHeader";
 import { ChevronRightIcon, DocumentIcon, GiftIcon, NoteIcon, ProfileIcon, StarIcon } from "../../src/components/icons";
 import { useCreateMember, useMembers } from "../../src/hooks/useApi";
+import { useAuthStore } from "../../src/state/authStore";
 import type { Tint } from "../../src/api/types";
 import { color, space, gutter } from "../../src/theme/tokens";
 
@@ -26,10 +27,14 @@ const LINKS: { label: string; href: Href; Icon: (p: { size: number; color: strin
   { label: "Partager le planning", href: "/share", Icon: ProfileIcon },
 ];
 
+// Ce qu'un compte enfant ne gère pas.
+const ADULT_ONLY = ["Comptes de la famille", "Partager le planning"];
+
 // « Famille » tab: who's in the family, and what belongs to everyone.
 export default function FamilleTab() {
   const { data: members = [] } = useMembers();
   const createMember = useCreateMember();
+  const isChild = useAuthStore((s) => s.user?.familyRole === "child");
   const [name, setName] = useState("");
 
   function addMember() {
@@ -47,9 +52,11 @@ export default function FamilleTab() {
           <Text weight="medium" size={13} tone="muted">
             Membres ({members.length})
           </Text>
-          <Text size={13} tone="faint">
-            Touche un membre pour ses goûts, son régime et ses allergies : les menus générés en tiennent compte.
-          </Text>
+          {!isChild && (
+            <Text size={13} tone="faint">
+              Touche un membre pour ses goûts, son régime et ses allergies, ou pour créer l'accès d'un enfant à Passerelle.
+            </Text>
+          )}
           <Card>
             {members.length === 0 && (
               <Text size={13} tone="muted">
@@ -59,7 +66,8 @@ export default function FamilleTab() {
             {members.map((m, i) => (
               <Pressable
                 key={m.id}
-                onPress={() => router.push(`/member/${m.id}`)}
+                onPress={isChild ? undefined : () => router.push(`/member/${m.id}`)}
+                disabled={isChild}
                 accessibilityLabel={`Fiche de ${m.name}`}
                 style={{ flexDirection: "row", alignItems: "center", gap: space.sm, paddingVertical: space.sm, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: color.divider }}
               >
@@ -72,20 +80,20 @@ export default function FamilleTab() {
                     {m.age} ans
                   </Text>
                 )}
-                <ChevronRightIcon size={14} color={color.neutral500} />
+                {!isChild && <ChevronRightIcon size={14} color={color.neutral500} />}
               </Pressable>
             ))}
           </Card>
-          <View style={{ flexDirection: "row", gap: space.sm }}>
+          {!isChild && <View style={{ flexDirection: "row", gap: space.sm }}>
             <View style={{ flex: 1 }}>
               <TextField value={name} onChangeText={setName} placeholder="Prénom" accessibilityLabel="Prénom du nouveau membre" onSubmitEditing={addMember} returnKeyType="done" />
             </View>
             <Button label="Ajouter" variant="secondary" onPress={addMember} disabled={!name.trim() || createMember.isPending} />
-          </View>
+          </View>}
         </View>
 
         <View style={{ gap: space.sm }}>
-          {LINKS.map(({ label, href, Icon }) => (
+          {LINKS.filter((l) => !isChild || !ADULT_ONLY.includes(l.label)).map(({ label, href, Icon }) => (
             <Pressable key={label} onPress={() => router.push(href)}>
               <Card row style={{ alignItems: "center" }}>
                 <Icon size={16} color={color.neutral400} />

@@ -37,6 +37,8 @@ interface AuthState {
   hydrate: () => Promise<void>;
   signUp: (email: string, password: string, name: string, consent: { age15: boolean; code?: string }) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  /** Enfant : connexion avec le code donné par un parent. */
+  signInWithChildCode: (code: string) => Promise<void>;
   signOut: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (email: string, code: string, password: string) => Promise<void>;
@@ -165,6 +167,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signIn: async (email, password) => {
     const data = await authRequest("/auth/login", { email, password });
+    await persist(data.user, data.accessToken, data.refreshToken);
+    set({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
+  },
+
+  signInWithChildCode: async (code) => {
+    const data = await authRequest("/auth/child-code", { code });
     await persist(data.user, data.accessToken, data.refreshToken);
     set({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
   },

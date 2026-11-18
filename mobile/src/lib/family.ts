@@ -2,7 +2,7 @@ import type { FamilyNotice, FamilyRole } from "../api/types";
 
 // Words and small rules of the « Comptes de la famille » screen.
 
-export const ROLE_LABEL: Record<FamilyRole, string> = { owner: "Créé la famille", full: "Complet", planning: "Planning" };
+export const ROLE_LABEL: Record<FamilyRole, string> = { owner: "Créé la famille", full: "Complet", planning: "Planning", child: "Enfant" };
 
 export const ROLE_EXPLANATION = {
   full: "Partage tout avec toi : planning, repas, budget et documents. Pour un conjoint avec qui tu gères tout ensemble.",

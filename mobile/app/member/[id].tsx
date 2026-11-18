@@ -11,6 +11,7 @@ import { ChipPicker } from "../../src/components/ChipPicker";
 import { TextField } from "../../src/components/TextField";
 import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
+import { ChildAccessCard } from "../../src/components/ChildAccessCard";
 import { Accordion } from "../../src/components/Accordion";
 import { MealIcon } from "../../src/components/icons";
 import { useFoodConsent, useMembers, useSetFoodConsent, useUpdateMember } from "../../src/hooks/useApi";
@@ -107,6 +108,8 @@ export default function MemberScreen() {
             </Text>
           ) : null}
         </Card>
+
+        <ChildAccessCard memberId={member.id} />
 
         <Accordion
           title="Repas"

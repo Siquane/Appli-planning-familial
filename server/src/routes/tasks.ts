@@ -87,6 +87,12 @@ async function loadOwnedTask(userId: string, id: string) {
   return prisma.task.findFirst({ where: { id, userId }, include });
 }
 
+/** Un enfant ne modifie ou supprime que les tâches qui le concernent. */
+function childCannotEdit(req: import("express").Request, task: TaskWithMembers): boolean {
+  return req.familyRole === "child" && !task.members.some((m) => m.memberId === req.childMemberId);
+}
+const CHILD_EDIT_ERROR = { error: "Tu peux modifier seulement les tâches où tu es indiqué. Demande à un parent.", code: "child_forbidden" };
+
 async function applyCalendarSideEffects(task: Task) {
   if (task.synced) {
     const { externalEventId, externalProvider } = await syncTaskToCalendar(task);
@@ -147,6 +153,7 @@ tasksRouter.patch("/:id", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await loadOwnedTask(req.userId!, req.params.id);
   if (!existing) return res.status(404).json({ error: "Not found" });
+  if (childCannotEdit(req, existing)) return res.status(403).json(CHILD_EDIT_ERROR);
   const d = parsed.data;
 
   const { memberIds, ...rest } = d;
@@ -218,6 +225,7 @@ tasksRouter.delete("/:id/done", async (req, res) => {
 tasksRouter.delete("/:id", async (req, res) => {
   const existing = await loadOwnedTask(req.userId!, req.params.id);
   if (!existing) return res.status(404).json({ error: "Not found" });
+  if (childCannotEdit(req, existing)) return res.status(403).json(CHILD_EDIT_ERROR);
   try {
     await unsyncTaskFromCalendar(existing);
   } catch (e) {

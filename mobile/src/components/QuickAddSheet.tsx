@@ -2,6 +2,7 @@ import { Modal, Pressable, View } from "react-native";
 import { router, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "./Text";
+import { useAuthStore } from "../state/authStore";
 import { BookIcon, CalendarIcon, ClockIcon, DocumentIcon, MealIcon, NoteIcon, WalletIcon } from "./icons";
 import { color, radius, space } from "../theme/tokens";
 
@@ -18,7 +19,11 @@ export const QUICK_ADD_ITEMS: Item[] = [
 ];
 
 // Opened by the central « + » of the tab bar: one tap to reach any "add" form.
+// Un compte enfant n'ajoute ni recettes ni repas.
+const CHILD_HIDDEN = ["Recette", "Repas"];
+
 export function QuickAddSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const isChild = useAuthStore((s) => s.user?.familyRole === "child");
   const insets = useSafeAreaInsets();
 
   function go(href: Href) {
@@ -43,7 +48,7 @@ export function QuickAddSheet({ visible, onClose }: { visible: boolean; onClose:
           <Text heading weight="semibold" size={17} style={{ marginBottom: space.sm }}>
             Ajouter
           </Text>
-          {QUICK_ADD_ITEMS.map(({ label, hint, href, Icon }) => (
+          {QUICK_ADD_ITEMS.filter((i) => !isChild || !CHILD_HIDDEN.includes(i.label)).map(({ label, hint, href, Icon }) => (
             <Pressable
               key={label}
               onPress={() => go(href)}

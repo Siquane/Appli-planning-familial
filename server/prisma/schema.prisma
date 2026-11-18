@@ -34,6 +34,11 @@ model User {
   familyOwner          User?         @relation("FamilyAccounts", fields: [familyOwnerId], references: [id], onDelete: SetNull)
   familyAccounts       User[]        @relation("FamilyAccounts")
   familyRole           String        @default("owner")
+  // Compte « enfant » (moins de 15 ans) créé par un parent pour ce membre de la
+  // famille : connexion par code, pas d'e-mail ni de mot de passe utilisables.
+  childMemberId        String?       @unique
+  childMember          FamilyMember? @relation("ChildAccount", fields: [childMemberId], references: [id], onDelete: Cascade)
+  childLoginCodes      ChildLoginCode[]
   familyInvite         FamilyInvite?
   // One-time message (JSON) shown at the next opening after the family changed hands; see lib/familyHandover.ts.
   familyNotice         String?
@@ -125,6 +130,7 @@ model FamilyMember {
   order    Int       @default(0)
   // Lien public de son planning (« /share/m/<jeton> »), créé à la demande.
   shareToken String?  @unique
+  childAccount User?   @relation("ChildAccount")
 
   // Food preferences, used to tailor generated menus. Sent to Claude
   // without the member's name (see services/mealPlanner.ts).
@@ -1022,4 +1028,17 @@ model Note {
   updatedAt DateTime @updatedAt
 
   @@index([userId, updatedAt])
+}
+
+// Code à usage unique qu'un parent donne à son enfant pour connecter Passerelle
+// sur son téléphone (valable CHILD_CODE_TTL_HOURS). Seule l'empreinte est gardée.
+model ChildLoginCode {
+  id        String   @id @default(cuid())
+  accountId String
+  account   User     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  codeHash  String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([accountId])
 }

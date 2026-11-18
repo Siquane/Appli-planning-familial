@@ -5,7 +5,7 @@ const inDays = (n: number) => new Date(NOW.getTime() + n * 86_400_000).toISOStri
 
 describe("family screen texts", () => {
   it("names the roles", () => {
-    expect(ROLE_LABEL).toEqual({ owner: "Créé la famille", full: "Complet", planning: "Planning" });
+    expect(ROLE_LABEL).toEqual({ owner: "Créé la famille", full: "Complet", planning: "Planning", child: "Enfant" });
   });
 
   it("says how long a code is still valid", () => {

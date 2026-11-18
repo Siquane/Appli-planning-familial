@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { AppState } from "react-native";
 import { router, Tabs } from "expo-router";
+import { useAuthStore } from "../../src/state/authStore";
 import { CustomTabBar } from "../../src/components/CustomTabBar";
 import { useMembers, useTasks } from "../../src/hooks/useApi";
 import { syncBirthdayReminders, syncEveningDigest, syncMorningDigest, syncTaskReminders, syncAppointmentNotifications } from "../../src/lib/notifications";
@@ -18,6 +19,7 @@ import { queryClient } from "../../src/lib/queryClient";
 let handledAlert: string | null = null;
 
 export default function TabsLayout() {
+  const isChild = useAuthStore((s) => s.user?.familyRole === "child");
   const { data: tasks } = useTasks();
   const { data: members } = useMembers();
   useWidgetSync();
@@ -89,7 +91,8 @@ export default function TabsLayout() {
     <>
     <Tabs tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="home" options={{ title: "Planning" }} />
-      <Tabs.Screen name="repas" options={{ title: "Repas" }} />
+      {/* Un compte enfant n'a pas l'onglet Repas. */}
+      <Tabs.Screen name="repas" options={{ title: "Repas", href: isChild ? null : undefined }} />
       <Tabs.Screen name="budget" options={{ title: "Budget" }} />
       <Tabs.Screen name="famille" options={{ title: "Famille" }} />
     </Tabs>

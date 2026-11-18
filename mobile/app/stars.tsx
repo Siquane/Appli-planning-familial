@@ -16,6 +16,7 @@ import { useAddReward, useMembers, useRedeemReward, useRemoveReward, useRemoveSt
 import { isChild, starsLabel, weekKey } from "../src/lib/stars";
 import { errorText } from "../src/lib/errors";
 import { useToastStore } from "../src/state/toastStore";
+import { useAuthStore } from "../src/state/authStore";
 import { color, space, gutter } from "../src/theme/tokens";
 
 const toast = (m: string) => useToastStore.getState().show(m);
@@ -31,6 +32,8 @@ export default function StarsScreen() {
   const removeHistory = useRemoveStarHistory();
 
   const children = members.filter((m) => isChild(m));
+  // Un compte enfant regarde ses étoiles : c'est un adulte qui valide, ajoute les récompenses et fait les échanges.
+  const viewerIsChild = useAuthStore((s) => s.user?.familyRole === "child");
   const [selected, setSelected] = useState<string | null>(null);
   useEffect(() => {
     if (!selected || !children.some((c) => c.id === selected)) setSelected(children[0]?.id ?? null);
@@ -159,15 +162,17 @@ export default function StarsScreen() {
                     {chosen && missing > 0 ? ` · encore ${missing} pour ${chosen.name}` : ""}
                   </Text>
                 </View>
-                {chosen && (
+                {chosen && !viewerIsChild && (
                   <Button label="Échanger" variant={missing > 0 ? "secondary" : "primary"} disabled={missing > 0} needsNetwork onPress={() => onRedeem(r.id, r.title, r.cost)} />
                 )}
-                <Button variant="icon" icon={<TrashIcon size={16} color={color.neutral400} />} accessibilityLabel={`Supprimer ${r.title}`} onPress={() => onRemoveReward(r.id, r.title)} />
+                {!viewerIsChild && (
+                  <Button variant="icon" icon={<TrashIcon size={16} color={color.neutral400} />} accessibilityLabel={`Supprimer ${r.title}`} onPress={() => onRemoveReward(r.id, r.title)} />
+                )}
               </Card>
             );
           })}
 
-          <Card style={{ gap: space.sm }}>
+          {!viewerIsChild && <Card style={{ gap: space.sm }}>
             <TextField label="Nouvelle récompense" value={title} onChangeText={setTitle} placeholder="Ex. Sortie cinéma" maxLength={80} />
             <View style={{ flexDirection: "row", alignItems: "flex-end", gap: space.sm }}>
               <View style={{ flex: 1 }}>
@@ -175,7 +180,7 @@ export default function StarsScreen() {
               </View>
               <Button label="Ajouter" variant="primary" disabled={!canAdd} loading={addReward.isPending} needsNetwork onPress={onAdd} />
             </View>
-          </Card>
+          </Card>}
         </View>
 
         {(state?.history ?? []).length > 0 && (
@@ -189,7 +194,7 @@ export default function StarsScreen() {
                 return (
                   <Pressable
                     key={h.id}
-                    onLongPress={() => onRemoveHistory(h.id, label)}
+                    onLongPress={viewerIsChild ? undefined : () => onRemoveHistory(h.id, label)}
                     accessibilityHint="Appui long pour effacer"
                     style={{ flexDirection: "row", alignItems: "center", gap: space.sm, paddingVertical: space.sm, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: color.divider }}
                   >
@@ -207,9 +212,11 @@ export default function StarsScreen() {
                 );
               })}
             </Card>
-            <Text size={11} tone="faint">
-              Appui long sur une ligne pour l'effacer (erreur de coche ou d'échange).
-            </Text>
+            {!viewerIsChild && (
+              <Text size={11} tone="faint">
+                Appui long sur une ligne pour l'effacer (erreur de coche ou d'échange).
+              </Text>
+            )}
           </View>
         )}
       </KeyboardScrollView>

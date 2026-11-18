@@ -12,7 +12,7 @@ import { prisma } from "../db";
 // Packs, trial and meal quotas always belong to the owner: one subscription
 // for the whole family.
 
-export type FamilyRole = "owner" | "full" | "planning";
+export type FamilyRole = "owner" | "full" | "planning" | "child";
 export type JoinRole = "full" | "planning";
 
 export const INVITE_TTL_DAYS = 7;
@@ -27,11 +27,18 @@ export interface Space {
   /** Where this account's budget and documents live. */
   privateId: string;
   role: FamilyRole;
+  /** Compte enfant : le membre de la famille qu'il est. */
+  childMemberId?: string | null;
 }
 
 export async function resolveSpace(accountId: string): Promise<Space | null> {
-  const user = await prisma.user.findUnique({ where: { id: accountId }, select: { id: true, familyOwnerId: true, familyRole: true } });
+  const user = await prisma.user.findUnique({ where: { id: accountId }, select: { id: true, familyOwnerId: true, familyRole: true, childMemberId: true } });
   if (!user) return null;
+  if (user.familyRole === "child") {
+    // Un compte enfant sans famille n'a plus lieu d'être (il est supprimé avec elle).
+    if (!user.familyOwnerId) return null;
+    return { accountId: user.id, familyId: user.familyOwnerId, privateId: user.id, role: "child", childMemberId: user.childMemberId };
+  }
   if (!user.familyOwnerId) return { accountId: user.id, familyId: user.id, privateId: user.id, role: "owner" };
   const role: FamilyRole = user.familyRole === "planning" ? "planning" : "full";
   return { accountId: user.id, familyId: user.familyOwnerId, privateId: role === "planning" ? user.id : user.familyOwnerId, role };
@@ -69,7 +76,8 @@ export async function findLiveInvite(input: string) {
   const invite = await prisma.familyInvite.findUnique({ where: { code }, include: { owner: { select: { id: true, name: true } } } });
   if (!invite) throw new InviteError("Ce code famille n'existe pas ou a été remplacé. Demande-en un nouveau.");
   if (invite.expiresAt < new Date()) throw new InviteError("Ce code famille a expiré. Demande-en un nouveau.");
-  const accounts = await prisma.user.count({ where: { OR: [{ id: invite.ownerId }, { familyOwnerId: invite.ownerId }] } });
+  // Les comptes enfants ne comptent pas dans la limite.
+  const accounts = await prisma.user.count({ where: { OR: [{ id: invite.ownerId }, { familyOwnerId: invite.ownerId, familyRole: { not: "child" } }] } });
   if (accounts >= MAX_FAMILY_ACCOUNTS) throw new InviteError(`Cette famille est complète (${MAX_FAMILY_ACCOUNTS} comptes au plus).`);
   return invite;
 }
