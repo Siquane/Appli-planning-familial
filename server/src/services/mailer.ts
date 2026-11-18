@@ -2,8 +2,14 @@ import { env, isMailConfigured } from "../env";
 
 const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
 
+/** L'appli d'où vient la demande : nom de l'expéditeur et texte des e-mails. */
+export type AppName = "passerelle" | "cervelle";
+const BRAND: Record<AppName, string> = { passerelle: "Passerelle", cervelle: "Cervelle" };
+
 export interface Mail {
   to: { email: string; name?: string };
+  /** Nom affiché de l'expéditeur ; par défaut MAIL_FROM_NAME. */
+  senderName?: string;
   subject: string;
   text: string;
   html: string;
@@ -26,7 +32,7 @@ async function brevoTransport(mail: Mail): Promise<void> {
     method: "POST",
     headers: { "api-key": env.brevo.apiKey, "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({
-      sender: { email: env.brevo.senderEmail, name: env.brevo.senderName },
+      sender: { email: env.brevo.senderEmail, name: mail.senderName ?? env.brevo.senderName },
       to: [mail.to],
       subject: mail.subject,
       textContent: mail.text,
@@ -49,17 +55,34 @@ export function sendMail(mail: Mail) {
   return transport(mail);
 }
 
-export function sendPasswordResetCode(to: { email: string; name: string }, code: string, validMinutes: number) {
+export function sendPasswordResetCode(to: { email: string; name: string }, code: string, validMinutes: number, app: AppName = "passerelle") {
+  const brand = BRAND[app];
   const text =
     `Bonjour ${to.name},\n\n` +
-    `Voici ton code pour réinitialiser ton mot de passe Passerelle : ${code}\n\n` +
+    `Voici ton code pour réinitialiser ton mot de passe ${brand} : ${code}\n\n` +
     `Il est valable ${validMinutes} minutes. Si tu n'as rien demandé, ignore simplement cet e-mail.`;
   const html =
     `<p>Bonjour ${escapeHtml(to.name)},</p>` +
-    `<p>Voici ton code pour réinitialiser ton mot de passe Passerelle :</p>` +
+    `<p>Voici ton code pour réinitialiser ton mot de passe ${brand} :</p>` +
     `<p style="font-size:28px;font-weight:600;letter-spacing:6px;font-family:monospace">${code}</p>` +
     `<p>Il est valable ${validMinutes} minutes. Si tu n'as rien demandé, ignore simplement cet e-mail.</p>`;
-  return sendMail({ to, subject: `${code} — ton code Passerelle`, text, html });
+  return sendMail({ to, senderName: app === "passerelle" ? undefined : brand, subject: `${code} — ton code ${brand}`, text, html });
+}
+
+/** Code de connexion sans mot de passe (ou de création de compte si l'adresse est nouvelle). */
+export function sendLoginCode(to: { email: string; name?: string }, code: string, validMinutes: number, app: AppName = "cervelle") {
+  const brand = BRAND[app];
+  const hello = to.name ? `Bonjour ${to.name},` : "Bonjour,";
+  const text =
+    `${hello}\n\n` +
+    `Voici ton code pour te connecter à ${brand} : ${code}\n\n` +
+    `Il est valable ${validMinutes} minutes. Si tu n'as rien demandé, ignore simplement cet e-mail.`;
+  const html =
+    `<p>${escapeHtml(hello)}</p>` +
+    `<p>Voici ton code pour te connecter à ${brand} :</p>` +
+    `<p style="font-size:28px;font-weight:600;letter-spacing:6px;font-family:monospace">${code}</p>` +
+    `<p>Il est valable ${validMinutes} minutes. Si tu n'as rien demandé, ignore simplement cet e-mail.</p>`;
+  return sendMail({ to, senderName: app === "passerelle" ? undefined : brand, subject: `${code} — ton code ${brand}`, text, html });
 }
 
 function escapeHtml(s: string) {

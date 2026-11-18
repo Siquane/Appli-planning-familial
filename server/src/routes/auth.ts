@@ -6,7 +6,7 @@ import { prisma } from "../db";
 import { removeObjects } from "../lib/storage";
 import { generateRefreshToken, hashRefreshToken, signAccessToken, verifyAccessToken } from "../lib/jwt";
 import { requireAuth } from "../middleware/auth";
-import { sendPasswordResetCode } from "../services/mailer";
+import { sendLoginCode, sendPasswordResetCode } from "../services/mailer";
 import { accountLimiter, loginLimiter } from "../middleware/rateLimits";
 import { InviteError, findLiveInvite } from "../lib/family";
 import { heirCandidates, leaveFamilyBehind } from "../lib/familyHandover";
@@ -49,21 +49,23 @@ authRouter.post("/signup", accountLimiter, async (req, res) => {
     }
   }
 
-  const passwordHash = await bcrypt.hash(password, 12);
-  const user = await prisma.user.create({
-    data: {
-      email,
-      passwordHash,
-      name,
-      initials: initialsFor(name),
-      constraints: { create: {} },
-      ...(join ? { familyOwnerId: join.ownerId, familyRole: join.role } : {}),
-    },
-  });
-
+  const user = await createAccount({ email, passwordHash: await bcrypt.hash(password, 12), name, join });
   const tokens = await issueTokens(user.id, user.email);
   res.status(201).json({ user: publicUser(user), ...tokens });
 });
+
+function createAccount(a: { email: string; passwordHash: string; name: string; join?: { ownerId: string; role: string } | null }) {
+  return prisma.user.create({
+    data: {
+      email: a.email,
+      passwordHash: a.passwordHash,
+      name: a.name,
+      initials: initialsFor(a.name),
+      constraints: { create: {} },
+      ...(a.join ? { familyOwnerId: a.join.ownerId, familyRole: a.join.role } : {}),
+    },
+  });
+}
 
 const loginSchema = z.object({ email: z.string().email(), password: z.string() });
 
@@ -93,7 +95,8 @@ function findUserByEmail(email: string) {
   return prisma.user.findFirst({ where: { email: { equals: email.trim(), mode: "insensitive" } } });
 }
 
-const forgotSchema = z.object({ email: z.string().trim().email("Adresse e-mail invalide") });
+const appSchema = z.enum(["passerelle", "cervelle"]).default("passerelle");
+const forgotSchema = z.object({ email: z.string().trim().email("Adresse e-mail invalide"), app: appSchema });
 
 authRouter.post("/forgot-password", accountLimiter, async (req, res) => {
   const parsed = forgotSchema.safeParse(req.body);
@@ -115,7 +118,7 @@ authRouter.post("/forgot-password", accountLimiter, async (req, res) => {
   });
 
   try {
-    await sendPasswordResetCode({ email: user.email, name: user.name }, code, RESET_CODE_TTL_MINUTES);
+    await sendPasswordResetCode({ email: user.email, name: user.name }, code, RESET_CODE_TTL_MINUTES, parsed.data.app);
   } catch (err) {
     console.error("[auth] password reset mail failed", err);
     await prisma.passwordResetCode.deleteMany({ where: { userId: user.id } });
@@ -160,6 +163,76 @@ authRouter.post("/reset-password", loginLimiter, async (req, res) => {
 
   const tokens = await issueTokens(user.id, user.email);
   res.json({ user: publicUser(user), ...tokens });
+});
+
+// --- Sign in (or sign up) with a 6-digit e-mail code, no password ----------
+// Used by the Cervelle app. The code proves the address: for a new address,
+// the verify step creates the account (name + age15 required).
+
+const LOGIN_CODE_TTL_MINUTES = 15;
+const LOGIN_MAX_ATTEMPTS = 5;
+
+const emailCodeSchema = z.object({ email: z.string().trim().email("Adresse e-mail invalide"), app: appSchema.default("cervelle") });
+
+authRouter.post("/email-code", accountLimiter, async (req, res) => {
+  const parsed = emailCodeSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" });
+  const email = parsed.data.email.toLowerCase();
+
+  // Same answer whether the address has an account or not.
+  const recent = await prisma.emailLoginCode.findFirst({ where: { email, createdAt: { gt: new Date(Date.now() - RESET_RESEND_COOLDOWN_MS) } } });
+  if (recent) return res.json({ ok: true });
+
+  const user = await findUserByEmail(email);
+  const code = crypto.randomInt(0, 1_000_000).toString().padStart(6, "0");
+  await prisma.emailLoginCode.deleteMany({ where: { email } });
+  await prisma.emailLoginCode.create({ data: { email, codeHash: hashResetCode(code), expiresAt: new Date(Date.now() + LOGIN_CODE_TTL_MINUTES * 60_000) } });
+  try {
+    await sendLoginCode({ email: user?.email ?? parsed.data.email, name: user?.name }, code, LOGIN_CODE_TTL_MINUTES, parsed.data.app);
+  } catch (err) {
+    console.error("[auth] login code mail failed", err);
+    await prisma.emailLoginCode.deleteMany({ where: { email } });
+    return res.status(500).json({ error: "L'e-mail n'a pas pu être envoyé. Réessaie dans un instant." });
+  }
+  res.json({ ok: true });
+});
+
+const emailCodeVerifySchema = z.object({
+  email: z.string().trim().email("Adresse e-mail invalide"),
+  code: z.string().trim().regex(/^\d{6}$/, "Le code contient 6 chiffres"),
+  /** Only for a new address. */
+  name: z.string().trim().max(60).optional(),
+  age15: z.boolean().optional(),
+});
+
+authRouter.post("/email-code/verify", loginLimiter, async (req, res) => {
+  const parsed = emailCodeVerifySchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" });
+  const email = parsed.data.email.toLowerCase();
+  const invalid = () => res.status(400).json({ error: "Ce code ne marche pas ou a expiré. Demande un nouveau code." });
+
+  const stored = await prisma.emailLoginCode.findFirst({ where: { email }, orderBy: { createdAt: "desc" } });
+  if (!stored || stored.expiresAt < new Date() || stored.attempts >= LOGIN_MAX_ATTEMPTS) return invalid();
+  const matches = crypto.timingSafeEqual(Buffer.from(hashResetCode(parsed.data.code)), Buffer.from(stored.codeHash));
+  if (!matches) {
+    await prisma.emailLoginCode.update({ where: { id: stored.id }, data: { attempts: { increment: 1 } } });
+    return invalid();
+  }
+
+  let user = await findUserByEmail(email);
+  let created = false;
+  if (!user) {
+    // New address: the code stays valid while the app asks for the name.
+    const name = parsed.data.name?.trim();
+    if (!name) return res.status(400).json({ error: "Indique ton prénom pour créer ton compte.", code: "needs_profile" });
+    if (parsed.data.age15 !== true) return res.status(400).json({ error: "Pour créer un compte, il faut avoir 15 ans ou plus.", code: "needs_profile" });
+    // No password: a random one nobody knows. « Mot de passe oublié » can set one later.
+    user = await createAccount({ email: parsed.data.email.trim(), passwordHash: await bcrypt.hash(crypto.randomBytes(32).toString("hex"), 12), name });
+    created = true;
+  }
+  await prisma.emailLoginCode.deleteMany({ where: { email } });
+  const tokens = await issueTokens(user.id, user.email);
+  res.status(created ? 201 : 200).json({ user: publicUser(user), created, ...tokens });
 });
 
 authRouter.post("/refresh", async (req, res) => {
