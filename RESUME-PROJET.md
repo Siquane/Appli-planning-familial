@@ -346,3 +346,10 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Carte « Aujourd'hui » et widgets : un RDV ne compte que le jour de sa date. Replanifier / placement auto : seuls les RDV de la semaine en cours bloquent des créneaux.
 - `DateField` accepte `future` (dates à venir) ; corrige au passage l'échéance des objectifs d'épargne, qui ne permettait que des dates passées.
 - JS seulement (runtime "8"), plus le serveur.
+
+## Liens de partage par membre (18/11/2026)
+
+- L'ancien lien de partage renvoyait du JSON brut (`/share/public/:token`) et seulement les tâches `synced` (synchro agenda), donc une liste vide. Il est conservé côté serveur mais n'est plus proposé dans l'appli.
+- **Un lien par membre** : `FamilyMember.shareToken` (migration `20261118160000_member_share_links`). `GET /share/members` crée les jetons à la demande, `POST /share/members/:id/reset` en fait un nouveau (l'ancien cesse de marcher).
+- `GET /share/m/:token?week=AAAA-MM-JJ` = **page web** aux couleurs Passerelle (`server/src/lib/sharePage.ts`) : semaine jour par jour des tâches où ce membre est dans « Pour qui ? » + ses rendez-vous de la semaine, flèches semaine précédente/suivante, aujourd'hui mis en avant (heure de Paris). Pas de notes. `noindex`, `no-store`.
+- Écran « Partager le planning » : une carte par membre (« Partager le lien », « Nouveau lien »).

@@ -55,3 +55,47 @@ describe("share", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("member share links", () => {
+  it("shows one member's week as a web page, and a reset link revokes the old one", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    const jules = (await request(app).post("/members").set(auth).send({ name: "Jules", initials: "J" })).body.member;
+    const lea = (await request(app).post("/members").set(auth).send({ name: "Léa", initials: "L" })).body.member;
+    await request(app).post("/tasks").set(auth).send({ title: "Piscine <b>", category: "Loisirs", weekday: 2, time: "17:00", memberIds: [jules.id] });
+    await request(app).post("/tasks").set(auth).send({ title: "Danse", category: "Loisirs", weekday: 2, time: "18:00", memberIds: [lea.id] });
+    await request(app).post("/tasks").set(auth).send({ title: "Dentiste", category: "Santé", weekday: 0, time: "14:30", appointmentDate: "2026-12-03", location: "Cabinet", memberIds: [jules.id] });
+
+    const links = (await request(app).get("/share/members").set(auth)).body.links;
+    const link = links.find((l: { memberId: string }) => l.memberId === jules.id);
+    expect(link.token).toMatch(/^[A-Za-z0-9_-]{16}$/);
+    // Le même jeton tant qu'on ne le renouvelle pas.
+    expect((await request(app).get("/share/members").set(auth)).body.links.find((l: { memberId: string }) => l.memberId === jules.id).token).toBe(link.token);
+
+    const page = await request(app).get(`/share/m/${link.token}?week=2026-11-30`);
+    expect(page.status).toBe(200);
+    expect(page.headers["content-type"]).toMatch(/html/);
+    expect(page.text).toContain("Planning de Jules");
+    expect(page.text).toContain("Piscine &lt;b&gt;");
+    expect(page.text).toContain("Dentiste");
+    expect(page.text).toContain("Cabinet");
+    expect(page.text).not.toContain("Danse");
+
+    // Le rendez-vous n'apparaît pas une autre semaine.
+    const other = await request(app).get(`/share/m/${link.token}?week=2026-12-07`);
+    expect(other.text).not.toContain("Dentiste");
+    expect(other.text).toContain("Piscine");
+
+    const reset = await request(app).post(`/share/members/${jules.id}/reset`).set(auth);
+    expect(reset.body.token).not.toBe(link.token);
+    expect((await request(app).get(`/share/m/${link.token}`)).status).toBe(404);
+    expect((await request(app).get(`/share/m/${reset.body.token}`)).status).toBe(200);
+  });
+
+  it("does not reset another family's member", async () => {
+    const a = await signup(app);
+    const b = await signup(app);
+    const m = (await request(app).post("/members").set(authHeader(a.accessToken)).send({ name: "Jules", initials: "J" })).body.member;
+    expect((await request(app).post(`/share/members/${m.id}/reset`).set(authHeader(b.accessToken))).status).toBe(404);
+  });
+});

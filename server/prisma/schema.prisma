@@ -123,6 +123,8 @@ model FamilyMember {
   age      Int?
   birthday DateTime?
   order    Int       @default(0)
+  // Lien public de son planning (« /share/m/<jeton> »), créé à la demande.
+  shareToken String?  @unique
 
   // Food preferences, used to tailor generated menus. Sent to Claude
   // without the member's name (see services/mealPlanner.ts).
