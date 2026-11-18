@@ -83,7 +83,7 @@ async function cervelleAuth(req: Request, res: Response, next: NextFunction) {
 
   if (token.startsWith("cv_")) {
     const device = await prisma.learnerDevice.findUnique({ where: { tokenHash: sha256(token) }, include: { learner: { select: { userId: true } } } });
-    if (!device) return res.status(401).json({ error: "Ce téléphone n'est plus relié. Demande un nouveau code à tes parents.", code: "device_revoked" });
+    if (!device) return res.status(401).json({ error: "Ce téléphone a été déconnecté. Demande un nouveau code à tes parents.", code: "device_revoked" });
     if (Date.now() - device.lastSeenAt.getTime() > 60 * 60 * 1000) {
       await prisma.learnerDevice.update({ where: { id: device.id }, data: { lastSeenAt: new Date() } });
     }
@@ -95,10 +95,10 @@ async function cervelleAuth(req: Request, res: Response, next: NextFunction) {
   try {
     accountId = verifyAccessToken(token).sub;
   } catch {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    return res.status(401).json({ error: "Tu as été déconnecté. Reconnecte-toi pour continuer." });
   }
   const space = await resolveSpace(accountId);
-  if (!space) return res.status(401).json({ error: "Invalid or expired token" });
+  if (!space) return res.status(401).json({ error: "Tu as été déconnecté. Reconnecte-toi pour continuer." });
   req.cervelle = { kind: "parent", familyId: space.familyId };
   next();
 }
@@ -153,7 +153,7 @@ export const recordUsage = (familyId: string, kind: keyof typeof DAILY_LIMITS) =
 
 export function aiConfigured(res: Response) {
   if (isMealAiConfigured()) return true;
-  res.status(503).json({ error: "Les révisions ne sont pas encore activées sur le serveur (clé Claude manquante)." });
+  res.status(503).json({ error: "Cervelle ne peut pas préparer de révision pour le moment. Préviens tes parents." });
   return false;
 }
 
@@ -197,7 +197,7 @@ cervelleRouter.put("/child/push", async (req, res) => {
   const caller = req.cervelle!;
   if (caller.kind !== "child") return res.status(403).json({ error: "Réservé au téléphone de l'enfant." });
   const parsed = childPushSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Jeton de notification invalide" });
+  if (!parsed.success) return res.status(400).json({ error: "Ça n'a pas marché. Réessaie dans un instant." });
   const { token, readyAlert } = parsed.data;
   await prisma.$transaction([
     // A phone handed to another child (or relinked) keeps only its newest link.
@@ -698,7 +698,7 @@ cervelleRouter.post("/learners/:learnerId/revisions/:revisionId/retry", async (r
   if (!revision) return;
   if (revision.status !== "failed") return res.status(409).json({ error: "Cette révision n'a pas échoué." });
   const files = await loadStoredFiles(revision.photoKeys);
-  if (!files) return res.status(410).json({ error: "Les photos n'ont pas été gardées. Recrée la révision avec les photos." });
+  if (!files) return res.status(410).json({ error: "Je n'ai plus les photos de ce cours. Ajoute une nouvelle révision avec les photos." });
   if (!(await underDailyLimit(req.cervelle!.familyId, "revision", res))) return;
   await recordUsage(req.cervelle!.familyId, "revision");
   await prisma.revision.update({ where: { id: revision.id }, data: { status: "processing", error: null } });
@@ -799,9 +799,9 @@ cervelleRouter.get("/learners/:learnerId/quiz", async (req, res) => {
   const learner = await loadLearner(req, res);
   if (!learner) return;
   const mode = String(req.query.mode ?? "qcm") as QuizMode;
-  if (!QUIZ_MODES.includes(mode)) return res.status(400).json({ error: "Mode inconnu" });
+  if (!QUIZ_MODES.includes(mode)) return res.status(400).json({ error: "Ça n'a pas marché. Réessaie dans un instant." });
   const revisionId = typeof req.query.revisionId === "string" ? req.query.revisionId : null;
-  if (!revisionId && mode !== "a_revoir") return res.status(400).json({ error: "Choisis une révision" });
+  if (!revisionId && mode !== "a_revoir") return res.status(400).json({ error: "Ça n'a pas marché. Réessaie dans un instant." });
   if (revisionId && !(await prisma.revision.findFirst({ where: { id: revisionId, learnerId: learner.id, status: "ready" } }))) {
     return res.status(404).json({ error: "Révision introuvable" });
   }
@@ -936,7 +936,7 @@ cervelleRouter.post("/learners/:learnerId/sessions", async (req, res) => {
   const parsed = sessionSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const d = parsed.data;
-  if (d.correct > d.total) return res.status(400).json({ error: "Score incohérent" });
+  if (d.correct > d.total) return res.status(400).json({ error: "Ça n'a pas marché. Réessaie dans un instant." });
   const revision = d.revisionId ? await prisma.revision.findFirst({ where: { id: d.revisionId, learnerId: learner.id } }) : null;
   if (d.revisionId && !revision) return res.status(404).json({ error: "Révision introuvable" });
 

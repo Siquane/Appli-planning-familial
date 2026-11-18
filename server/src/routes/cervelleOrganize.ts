@@ -235,7 +235,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
         methods: z.array(z.string().max(40)).max(12),
       })
       .safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: "Résultat invalide" });
+    if (!parsed.success) return res.status(400).json({ error: "Ça n'a pas marché. Réessaie dans un instant." });
     const updated = await prisma.learner.update({ where: { id: learner.id }, data: { studyProfile: { ...parsed.data, at: new Date().toISOString() } } });
     res.json({ learner: serializeLearner(updated) });
   });
@@ -543,7 +543,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
     }
     // Conditional on the state read above, so two taps can't pay twice.
     const changed = await prisma.todoItem.updateMany({ where: { id: todo.id, doneAt: todo.doneAt }, data: data as Prisma.TodoItemUpdateManyMutationInput });
-    if (changed.count === 0) return res.status(409).json({ error: "Tâche déjà modifiée, recharge la liste." });
+    if (changed.count === 0) return res.status(409).json({ error: "Cette tâche a changé entre-temps. Réessaie." });
     const after = coins || xp ? await grant(learner.id, coins, xp) : learner;
     const updated = await prisma.todoItem.findUniqueOrThrow({ where: { id: todo.id } });
     res.json({
@@ -738,7 +738,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
     const other = await prisma.learner.findUnique({ where: { friendCode: code } });
     if (!other) return res.status(404).json({ error: "Aucun élève avec ce code. Vérifie les lettres." });
     if (other.id === learner.id) return res.status(400).json({ error: "C'est ton propre code !" });
-    if (other.userId === learner.userId) return res.status(400).json({ error: "Vous êtes de la même famille : vous êtes déjà dans ton classement." });
+    if (other.userId === learner.userId) return res.status(400).json({ error: "C'est quelqu'un de ta famille : vous êtes déjà dans le même classement." });
     const exists = await prisma.friendship.findFirst({ where: { OR: [{ fromId: learner.id, toId: other.id }, { fromId: other.id, toId: learner.id }] } });
     if (exists) return res.status(409).json({ error: exists.fromApproved && exists.toApproved ? "Vous êtes déjà amis !" : "Demande déjà envoyée. Vos parents doivent dire oui." });
     const count = await prisma.friendship.count({ where: { OR: [{ fromId: learner.id }, { toId: learner.id }] } });

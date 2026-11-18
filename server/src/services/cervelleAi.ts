@@ -60,7 +60,7 @@ function fileBlocks(files: CourseFile[]): Anthropic.Beta.BetaContentBlockParam[]
 
 function wrapApiError(e: unknown): never {
   if (e instanceof Anthropic.RateLimitError) throw new CervelleAiError("Trop de demandes en même temps. Réessaie dans une minute.");
-  if (e instanceof Anthropic.AuthenticationError) throw new CervelleAiError("Clé API Claude invalide côté serveur.");
+  if (e instanceof Anthropic.AuthenticationError) throw new CervelleAiError("Cervelle ne peut pas préparer de révision pour le moment. Préviens tes parents.");
   if (e instanceof Anthropic.BadRequestError) throw new CervelleAiError("Ces fichiers n'ont pas pu être lus. Essaie avec d'autres photos.");
   if (e instanceof Anthropic.APIError) throw new CervelleAiError("Le service est indisponible pour le moment. Réessaie dans quelques minutes.");
   throw e;
