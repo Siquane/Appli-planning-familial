@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { View } from "react-native";
+import { Switch, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { Pressable } from "../../src/components/Touchable";
 import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
 import { Screen } from "../../src/components/Screen";
 import { Text } from "../../src/components/Text";
@@ -22,6 +23,7 @@ import { WEEKDAYS_SHORT } from "../../src/lib/weekdays";
 import { parseDuration, splitDuration } from "../../src/lib/duration";
 import type { Category, Priority, Task, Weekday } from "../../src/api/types";
 import { errorText } from "../../src/lib/errors";
+import { goBack, useBackFallback } from "../../src/lib/navigation";
 
 const CATEGORIES: Category[] = ["École", "Travail", "Maison", "Santé", "Loisirs"];
 const DURATIONS = [15, 30, 45, 60, 90, 120];
@@ -40,6 +42,7 @@ export default function TaskFormScreen() {
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   const autoSlotTask = useAutoSlotTask();
+  useBackFallback();
 
   const existing: Task | undefined = useMemo(() => tasks.find((t) => t.id === edit), [tasks, edit]);
   // En modification, on travaille sur toute la série (tous les jours créés ensemble).
@@ -80,6 +83,7 @@ export default function TaskFormScreen() {
   const [memberIds, setMemberIds] = useState<string[]>(prefillMember ? [prefillMember] : []);
   const [notes, setNotes] = useState("");
   const [stars, setStars] = useState(1);
+  const [inDigest, setInDigest] = useState(true);
 
   // Rempli une seule fois : un rafraîchissement de la liste (toutes les
   // minutes avec la famille partagée) ne doit pas écraser la saisie.
@@ -103,6 +107,7 @@ export default function TaskFormScreen() {
     setMemberIds(existing.memberIds);
     setNotes(existing.notes);
     setStars(existing.stars ?? 1);
+    setInDigest(existing.inDigest ?? true);
   }, [existing]);
 
   // « Dupliquer » : on recopie la tâche source dans un formulaire de
@@ -129,6 +134,7 @@ export default function TaskFormScreen() {
     setMemberIds(source.memberIds);
     setNotes(source.notes);
     setStars(source.stars ?? 1);
+    setInDigest(source.inDigest ?? true);
   }, [source]);
 
   function toggleMember(id: string) {
@@ -160,7 +166,7 @@ export default function TaskFormScreen() {
   const saving = savingSeries || createTask.isPending || updateTask.isPending || autoSlotTask.isPending;
 
   async function onSave() {
-    const base = { title: title.trim(), category, duration, priority, deadlineWeekday, recurring, reminder, memberIds, notes, stars };
+    const base = { title: title.trim(), category, duration, priority, deadlineWeekday, recurring, reminder, memberIds, notes, stars, inDigest };
     try {
       if (existing) {
         setSavingSeries(true);
@@ -191,7 +197,7 @@ export default function TaskFormScreen() {
         }
         useToastStore.getState().show(weekdays.length > 1 ? "Tâches créées." : "Tâche créée.");
       }
-      router.back();
+      goBack();
     } catch (e) {
       useToastStore.getState().show(errorText(e, "enregistrer la tâche"));
     } finally {
@@ -201,7 +207,7 @@ export default function TaskFormScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title={existing ? "Modifier la tâche" : source ? "Dupliquer la tâche" : "Nouvelle tâche"} onBack={() => router.back()} />
+      <TopBar title={existing ? "Modifier la tâche" : source ? "Dupliquer la tâche" : "Nouvelle tâche"} onBack={() => goBack()} save={{ onPress: onSave, disabled: !isValid, loading: saving }} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <TextField label="Titre" value={title} onChangeText={setTitle} placeholder="Ex. Devoirs de Léo" />
 
@@ -232,7 +238,7 @@ export default function TaskFormScreen() {
           )}
           {autoPlacement && (
             <Text tone="faint" size={13}>
-              Aucun jour choisi : Passerelle sélectionnera elle-même le meilleur créneau de la semaine selon la priorité, l'échéance et les tâches déjà planifiées.
+              Aucun jour choisi : Passerelle trouvera le meilleur créneau de la semaine selon la priorité, l'échéance et ce qui est déjà prévu.
             </Text>
           )}
         </View>
@@ -304,7 +310,7 @@ export default function TaskFormScreen() {
 
         <View style={{ gap: space.sm }}>
           <Text size={13} tone="muted">
-            Échéance (optionnel)
+            Échéance (facultatif)
           </Text>
           <View style={{ flexDirection: "row", gap: space.xs }}>
             <Chip label="Aucune" selected={deadlineWeekday === null} onPress={() => setDeadlineWeekday(null)} size="sm" fill />
@@ -317,7 +323,7 @@ export default function TaskFormScreen() {
         {members.length > 0 && (
           <View style={{ gap: space.sm }}>
             <Text size={13} tone="muted">
-              Assigné à
+              Pour qui ?
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
               {members.map((m) => (
@@ -332,12 +338,12 @@ export default function TaskFormScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: space.xs }}>
               <StarIcon size={14} color={color.pillar3} />
               <Text size={13} tone="muted">
-                Étoiles gagnées quand c'est fait : {starsLabel(stars)}
+                Étoiles gagnées quand c'est fait : {stars === 0 ? "aucune" : starsLabel(stars)}
               </Text>
             </View>
             <View style={{ flexDirection: "row", gap: space.xs }}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <Chip key={n} label={`${n} ★`} selected={stars === n} onPress={() => setStars(n)} size="sm" fill />
+              {[0, 1, 2, 3, 4, 5].map((n) => (
+                <Chip key={n} label={n === 0 ? "Aucune" : `${n} ★`} selected={stars === n} onPress={() => setStars(n)} size="sm" fill />
               ))}
             </View>
           </View>
@@ -346,7 +352,7 @@ export default function TaskFormScreen() {
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.sm }}>
           <Chip label="Récurrente" selected={recurring} onPress={() => setRecurring((v) => !v)} size="sm" />
           {!autoPlacement && (
-            <Chip label="Flexible (replanifiable)" selected={flexible} onPress={() => setFlexible((v) => !v)} size="sm" />
+            <Chip label="Flexible (Passerelle peut la déplacer)" selected={flexible} onPress={() => setFlexible((v) => !v)} size="sm" />
           )}
         </View>
 
@@ -359,6 +365,26 @@ export default function TaskFormScreen() {
             }}
           />
         )}
+
+        <Pressable
+          onPress={() => setInDigest((v) => !v)}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: inDigest }}
+          style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}
+        >
+          <View style={{ flex: 1 }}>
+            <Text size={15}>Dans les récaps</Text>
+            <Text size={11} tone="faint">
+              Récap du soir (tâches du lendemain) et du matin (tâches du jour). Décoche pour une tâche évidente, comme le coucher.
+            </Text>
+          </View>
+          <Switch
+            value={inDigest}
+            onValueChange={setInDigest}
+            trackColor={{ false: color.neutral700, true: color.accent700 }}
+            thumbColor={inDigest ? color.accent300 : color.neutral300}
+          />
+        </Pressable>
 
         <TextField label="Notes" value={notes} onChangeText={setNotes} multiline placeholder="Détails, lieu, contexte..." />
 

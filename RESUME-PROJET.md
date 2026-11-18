@@ -296,3 +296,36 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - L'accueil (membres, plages protégées…) n'était retenu que sur le téléphone (`passerelle.onboarded` dans SecureStore) : il revenait après chaque réinstallation.
 - `app/index.tsx` : si l'accueil n'a pas été vu sur ce téléphone, l'appli regarde le compte (`accountIsSetUp` dans `src/state/onboardingStore.ts`) : compte qui a rejoint une famille, ou qui a des membres ou des tâches → directement au Planning (et l'accueil est noté comme vu). Sans réponse en 10 s (serveur endormi, pas de réseau) → l'accueil, comme avant.
 
+## Notes et widget « Notes » (17/11/2026, `runtimeVersion` "8")
+
+- Famille → **Notes** (`app/notes.tsx`, filtres Toutes / Famille / Perso) et « Note » dans le menu « + ». Écran d'une note : `app/note/[id].tsx` (`/note/new` pour en créer une) : titre facultatif, texte, **Famille** (tous les comptes la voient et la modifient) ou **Perso** (seul l'auteur la voit), couleur, épinglage.
+- Serveur : modèle `Note` (migration `20261117170000_notes`), routes `/notes`. Une note Famille vit dans l'espace de la famille (`userId` = famille), une note Perso chez son auteur (`userId` = son compte) : quitter la famille ou supprimer son compte n'emporte que ses notes perso. Seul l'auteur peut rendre perso une note Famille. La passation de famille transfère les notes Famille ; « rejoindre une famille » efface les notes Famille de l'ancien compte.
+- **Widget « Notes »** (6ᵉ widget, 3 × 2) : les 4 dernières notes (épinglées d'abord), un appui ouvre la note (`passerelle://widget/note/<id>`), « + » ouvre `/note/new`, le titre ouvre la liste. Aperçu `assets/widgets/notes.png`. Nouveau widget natif → **`runtimeVersion` "8"** : lancer « EAS Build (Android preview) » depuis main et installer le nouvel APK.
+- Retour depuis un écran ouvert par un widget : `goBack()` / `useBackFallback()` (`src/lib/navigation.ts`, PR #52).
+
+## Récap du matin et case « Dans les récaps » (17/11/2026)
+
+- **Récap du matin** (`syncMorningDigest`, `src/lib/notifications.ts`) : chaque matin à **9 h par défaut** (heure réglable et interrupteur dans Notifications, préférences du téléphone dans `settingsStore`), toutes les tâches du jour, une par ligne avec qui les fait (« 08:20 École · Jules »). Canal Android `morning` en importance haute : bannière en haut de l'écran avec son, liste complète en dépliant. Un appui ouvre le Planning. Pas de vrai plein écran (réservé par Android aux réveils et appels).
+- **Case « Dans les récaps »** sur chaque tâche (`Task.inDigest`, vrai par défaut, migration `20261117180000_task_in_digest`) : décochée, la tâche n'apparaît ni dans le récap du soir ni dans celui du matin ; elle reste au Planning et garde son rappel.
+- Pas de nouvel APK (JS seulement, runtime "8").
+
+## Quota Expo épuisé → APK compilé sur GitHub (17/11/2026)
+
+- Le compte Expo gratuit a utilisé toutes ses compilations Android de novembre (remise à zéro le 1er décembre) : « EAS Build (Android preview) » échoue avec « This account has used its Android builds from the Free plan this month ».
+- Nouveau workflow **« APK sur GitHub (sans quota Expo) »** (`.github/workflows/apk-github.yml`) : `eas build --local` sur une machine GitHub (Java 17, SDK Android de la machine), même clé de signature (récupérée chez Expo) et même canal de mises à jour. L'APK est publié dans une **Release GitHub** (`apk-<n°>`, fichier `passerelle.apk`, lien en fin de journal). Environ 20–30 min sur les 2 000 min/mois GitHub.
+- APK runtime "8" (notes + widget Notes, récap du matin) : à compiler avec ce workflow puis à installer.
+
+## Retouches du 17/11/2026 (soir)
+
+- Bouton « Enregistrer » en haut à droite des 8 formulaires (`TopBar` prop `save`), visible clavier ouvert.
+- Bouton principal (dégradé) sans rebord épais (il faisait une bande violette décalée, surtout en thème clair) ; les boutons secondaires gardent le rebord.
+- Profil : un seul interrupteur « Apparence » (Sombre / Clair) sur une ligne.
+- Planning : `edges={["top"]}` (la barre d'onglets gère déjà le bas ; avant, une bande vide coupait la liste au-dessus des onglets).
+- Étoiles : une tâche peut valoir **0 étoile** (« Aucune ») ; elle n'affiche alors pas « C'est fait » pour les enfants.
+- Replanifier : jusqu'à 6 propositions (2 heures par jour au plus, `getProposals(…, 6, 2)`) et « Choisir un autre moment » (jour + heure libres).
+- Widget « Ajouter une tâche » : 3 × 1 au minimum (`minWidth` 180dp), le texte tient en entier. Reste en runtime "8" : aucun APK runtime "8" n'existe encore.
+- Workflow « APK sur GitHub » : 1er essai arrêté par la limite de 60 min ; limite portée à 150 min et compilation arm64 seulement (`ORG_GRADLE_PROJECT_reactNativeArchitectures`).
+- APK sur GitHub, 2e essai (18/11) : arrêt net après 70 min sans journal (manque de mémoire probable, machine GitHub à 7 Go). Workflow réglé : Gradle 3 Go, 2 tâches, Kotlin dans le même processus, 10 Go de mémoire d'appoint (swap), journal `build.log` gardé en artefact « journal-compilation » même en cas d'échec.
+
+- APK sur GitHub, 3e essai : machine arrêtée net après 26 min, sans journal. PR #61 : plus de place disque (on garde le SDK Android), swap 4 Go, journal + état mémoire/disque envoyés toutes les 2 min dans une pré-version `journal-<n°>` (`suivi.txt`).
+- **4e essai réussi (18/11, 30 min) → APK runtime "8"** : https://github.com/Siquane/Appli-planning-familial/releases/download/apk-4/passerelle.apk (page : https://github.com/Siquane/Appli-planning-familial/releases/tag/apk-4). Contient tout jusqu'à la PR #61. Arm64 seulement (téléphones Android récents). À installer à la place de l'APK runtime "7" ; si « Application non installée », désinstaller l'ancienne version d'abord. Pour les prochains APK : relancer ce workflow depuis main.

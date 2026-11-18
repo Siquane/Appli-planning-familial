@@ -54,6 +54,7 @@ export async function eraseContent(userId: string): Promise<void> {
     prisma.shoppingItem.deleteMany({ where }),
     prisma.expenseCategory.deleteMany({ where }),
     prisma.starCompletion.deleteMany({ where }),
+    prisma.note.deleteMany({ where: { userId, shared: true } }),
     prisma.rewardRedemption.deleteMany({ where }),
     prisma.reward.deleteMany({ where }),
     prisma.categoryBudget.deleteMany({ where }),

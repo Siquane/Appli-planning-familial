@@ -1,0 +1,235 @@
+<title>Textes de Passerelle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout : colonne de lecture unique, une carte par texte (avant → après), barre de sélection collante en bas */
+:root {
+  --bg: #070912;
+  --card: #0F1426;
+  --line: #1E2740;
+  --fg: #E8F4FF;
+  --muted: #8A9BB8;
+  --faint: #5B6A86;
+  --cyan: #22E5FF;
+  --blue: #3FB8FF;
+  --violet: #9B5CFF;
+  --warn: #FFB547;
+  --del: #FF7A90;
+  --grad: linear-gradient(90deg, var(--cyan), var(--blue) 50%, var(--violet));
+  --display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --text: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--text); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 120px;
+}
+.wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; }
+header { padding-top: 40px; display: flex; flex-direction: column; gap: 14px; }
+.brand { font-family: var(--display); font-weight: 700; letter-spacing: .28em; font-size: 12px; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; width: max-content; }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 6vw, 40px); line-height: 1.1; margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); margin: 0; max-width: 62ch; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13px; color: var(--muted); }
+.stats b { color: var(--fg); font-family: var(--display); font-size: 18px; font-variant-numeric: tabular-nums; margin-right: 4px; }
+
+.voice { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.voice h2 { margin: 0; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px 20px; margin: 0; padding: 0; list-style: none; }
+.rules li { font-size: 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rules li span { color: var(--muted); font-size: 13px; }
+
+section { display: flex; flex-direction: column; gap: 14px; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 21px; margin: 0; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+h2 .count { font-family: var(--text); font-weight: 500; font-size: 13px; color: var(--faint); }
+.intro { color: var(--muted); margin: 0; font-size: 14px; max-width: 62ch; }
+
+.item { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; transition: opacity .2s, border-color .2s; }
+.item.off { opacity: .45; }
+.item.decide { border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
+.item input { grid-row: 1 / span 5; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--cyan); cursor: pointer; }
+.item input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; min-width: 0; }
+.id { font-family: var(--display); font-weight: 700; font-size: 12px; color: var(--bg); background: var(--grad); border-radius: 6px; padding: 1px 7px; }
+.decide .id { background: var(--warn); }
+.loc { font-family: var(--mono); font-size: 12px; color: var(--faint); overflow-wrap: anywhere; }
+.row { display: grid; grid-template-columns: 52px 1fr; gap: 10px; min-width: 0; font-size: 14.5px; }
+.row > span:first-child { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); padding-top: 3px; }
+.before { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--del) 70%, transparent); min-width: 0; overflow-wrap: anywhere; }
+.after { color: var(--fg); font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+.after mark { background: color-mix(in srgb, var(--cyan) 18%, transparent); color: var(--fg); border-radius: 3px; padding: 0 2px; }
+.why { font-size: 13px; color: var(--muted); grid-column: 2; min-width: 0; }
+
+.notes { background: transparent; border: 1px dashed var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--muted); }
+.notes h2 { color: var(--fg); }
+.notes ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.notes b { color: var(--fg); font-weight: 500; }
+
+.bar { position: fixed; left: 0; right: 0; bottom: 0; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--line);
+  padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.bar-in { max-width: 760px; margin: 0 auto; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.bar-txt { font-size: 14px; color: var(--muted); }
+.bar-txt b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+button { font: 600 14px var(--text); border-radius: 10px; padding: 9px 14px; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--fg); }
+button.primary { border: 0; background: var(--grad); color: #070912; }
+button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+#out { width: 100%; font: 12px var(--mono); background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+@media (prefers-reduced-motion: reduce) { .item { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">PASSERELLE</div>
+    <h1>Relecture des textes de l'appli</h1>
+    <p class="lede">J'ai relu les quelque 1 100 textes de l'appli mobile. La base est bonne : le ton est chaleureux, les confirmations disent ce qui va se passer et la plupart des erreurs expliquent quoi faire. Les corrections portent surtout sur des « vous » restés en route, des mots techniques et quelques messages trop secs.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="voice">
+    <h2>Les règles retenues</h2>
+    <ul class="rules">
+      <li>Tutoiement partout <span>Y compris l'onboarding et les états vides.</span></li>
+      <li>« Touche » pour les gestes <span>Plutôt que « Tape », « Appuie » ou « Toucher ».</span></li>
+      <li>« (facultatif) » <span>Partout où on lit « (optionnel) ».</span></li>
+      <li>On ne parle pas du serveur <span>C'est « Passerelle » qui se réveille ou qui arrive bientôt.</span></li>
+      <li>Une erreur dit quoi faire <span>Ce qui s'est passé, puis l'action pour s'en sortir.</span></li>
+      <li>Un état vide montre le chemin <span>Pourquoi c'est vide, et comment le remplir.</span></li>
+    </ul>
+  </div>
+
+  <div id="sections"></div>
+
+  <div class="notes">
+    <h2>Notes pour la suite</h2>
+    <ul>
+      <li><b>Pluriels.</b> Ils sont gérés à la main (<code>jour${n > 1 ? "s" : ""}</code>) dans une quinzaine d'endroits. Si une autre langue arrive un jour, passer par <code>Intl.PluralRules</code> évitera d'en oublier.</li>
+      <li><b>Espaces insécables.</b> Avant « : », « ? », « ! », « % » et « € », une espace insécable (U+00A0 ou U+202F) éviterait qu'un signe se retrouve seul en début de ligne sur les petits écrans.</li>
+      <li><b>Longueur.</b> Les boutons tiennent tous sous 30 caractères. Les nouveaux textes d'états vides restent sous 110 caractères pour tenir en trois lignes sur un téléphone.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="bar">
+  <div class="bar-in">
+    <div class="bar-txt"><b id="kept">0</b> changements retenus sur <b id="total">0</b></div>
+    <div class="btns">
+      <button type="button" id="all">Tout cocher</button>
+      <button type="button" class="primary" id="copy">Copier ma sélection</button>
+    </div>
+    <textarea id="out" rows="2" readonly hidden></textarea>
+  </div>
+</div>
+
+<script>
+const SECTIONS = [
+  { key: "T", title: "Tutoiement", intro: "L'appli tutoie presque partout. Ces textes vouvoient encore, souvent au tout premier écran qu'on voit.", items: [
+    ["T1", "app/(onboarding)/constraints.tsx:45", "Vos plages protégées", "<mark>Tes</mark> plages protégées", ""],
+    ["T2", "app/(onboarding)/notifications.tsx:29", "Restez au courant", "<mark>Reste</mark> au courant", ""],
+    ["T3", "app/(onboarding)/recurring-tasks.tsx:114", "Vos tâches récurrentes", "<mark>Tes</mark> tâches récurrentes", ""],
+    ["T4", "app/(onboarding)/welcome.tsx:22", "Organisez le planning de toute la famille en quelques minutes : membres, contraintes, synchronisation.", "Organise le planning de toute la famille en quelques minutes. On commence par les membres, les horaires à protéger et les tâches qui reviennent chaque semaine.", "Premier écran de l'appli : il donne le ton. Il annonce aussi les vraies étapes qui suivent, avec des mots de tous les jours."],
+    ["T5", "app/(tabs)/home.tsx:104", "Rien de prévu ce jour-là. Profitez-en, ou ajoutez une tâche avec le « + ».", "Rien de prévu ce jour-là. <mark>Profites-en</mark>, ou <mark>ajoute</mark> une tâche avec le « + ».", ""],
+    ["T6", "app/stars.tsx:94", "…contre les récompenses que vous choisissez.", "…contre les récompenses que <mark>tu choisis</mark>.", ""],
+    ["T7", "src/screens/RecipesBody.tsx:22", "Ajoutez votre première recette, ou importez-la depuis un lien.", "<mark>Ajoute ta</mark> première recette, ou <mark>importe-la</mark> depuis un lien.", ""],
+    ["T8", "src/screens/ShoppingBody.tsx:73", "Ajoutez des articles, ou générez la liste depuis le menu de la semaine.", "<mark>Ajoute</mark> des articles, ou <mark>génère</mark> la liste depuis le menu de la semaine.", ""],
+    ["T9", "app/budget-settings.tsx:72", "Valables tous les mois. Laisser vide pour ne pas en mettre.", "Valables tous les mois. <mark>Laisse vide si tu n'en veux pas.</mark>", "L'infinitif sonne comme une notice ; le reste de l'écran parle à la personne."],
+  ]},
+  { key: "C", title: "Cohérence des mots", intro: "Le même geste ou la même idée s'écrit de plusieurs façons selon l'écran.", items: [
+    ["C1", "app/recurring-tasks.tsx:23", "Tape sur une tâche pour la modifier ou la supprimer.", "<mark>Touche</mark> une tâche pour la modifier ou la supprimer.", "« Tape sur » est un anglicisme. L'onglet Famille dit déjà « Touche un membre »."],
+    ["C2", "app/suggestions.tsx:70", "…pour l'âge de chaque membre — appuie sur une suggestion pour la créer, tu choisiras ensuite le jour et l'heure.", "…pour l'âge de chaque membre. <mark>Touche</mark> une suggestion pour la créer : tu choisiras ensuite le jour et l'heure.", ""],
+    ["C3", "src/widgets/views.tsx:64", "Exemple — appuie pour remplir", "Exemple · <mark>touche</mark> pour remplir", ""],
+    ["C4", "login.tsx:63, signup.tsx:110, forgot-password.tsx:100, statement-import.tsx:121, authStore.ts:116", "Le serveur démarre, ça peut prendre jusqu'à une minute… / Le serveur se réveille, ça peut prendre une minute. / Le serveur met parfois quelques secondes à se réveiller.", "<mark>Passerelle se réveille</mark>, ça peut prendre jusqu'à une minute…", "Trois versions du même message, dont une qui annonce « quelques secondes » au lieu d'une minute. Une seule formulation, sans parler de serveur. Pour l'erreur d'authStore : « Passerelle met parfois jusqu'à une minute à se réveiller. Réessaie dans un instant. »"],
+    ["C5", "11 champs : document/new, expense/new, expense/recurring, meal/edit, meal/plan (×2), recipe/new (×2), savings, task/new", "(optionnel)", "<mark>(facultatif)</mark>", "La fiche membre dit déjà « Âge (facultatif) ». C'est le mot courant en français dans un formulaire."],
+    ["C6", "app/share.tsx:55", "Partager mon planning", "Partager <mark>le</mark> planning", "Le lien qui mène à cet écran (onglet Famille) dit « Partager le planning ». Le titre doit reprendre le même nom."],
+    ["C7", "app/meal/plan.tsx:209", "Tout regénérer (compte comme une génération) / Tout regénérer · Repas+", "Tout <mark>régénérer</mark> (compte comme une génération) / Tout <mark>régénérer</mark> · Repas+", "Orthographe. La liste de courses écrit déjà « régénère »."],
+    ["C8", "app/task/new.tsx:320, app/task/[id].tsx:100", "Assigné à", "Formulaire : <mark>Pour qui ?</mark> · Fiche : <mark>Assignée à</mark>", "Le formulaire de dépense demande déjà « Pour qui ? », plus naturel. Sur la fiche, « tâche » est féminin."],
+    ["C9", "app/premium.tsx:63", "L'achat n'a pas abouti.", "L'achat n'a pas abouti. <mark>Aucun montant n'a été prélevé.</mark>", "billing.ts a déjà cette version rassurante. L'écran Premium affiche la version courte au moment où on s'inquiète le plus pour son argent."],
+  ]},
+  { key: "E", title: "Erreurs trop sèches", intro: "Ces messages disent ce qui a raté, mais pas quoi faire ensuite.", items: [
+    ["E1", "app/profile.tsx:100", "Échec de connexion.", "Impossible de connecter Apple Calendar. Autorise l'accès au calendrier dans les réglages du téléphone, puis réessaie.", "« Connexion » se lit comme un problème de réseau ou de compte. Ici, c'est presque toujours l'autorisation calendrier."],
+    ["E2", "app/recipe/new.tsx:51", "Import impossible.", "Impossible de lire cette recette. Vérifie le lien, ou saisis-la à la main.", ""],
+    ["E3", "app/premium.tsx:88", "La restauration a échoué.", "Impossible de restaurer tes achats. Vérifie ta connexion et le compte Play Store utilisé, puis réessaie.", ""],
+    ["E4", "app/budget-report.tsx:198", "L'export a échoué.", "L'export a échoué. <mark>Vérifie ta connexion et réessaie.</mark>", "Même message que dans exportExpenses.ts, qui donne déjà la piste."],
+    ["E5", "app/member/[id].tsx:106", "Âge entre 0 et 120 ans.", "L'âge doit être compris entre 0 et 120 ans.", "Sous un champ en erreur, une phrase complète se lit mieux qu'une étiquette."],
+    ["E6", "src/lib/errors.ts:7", "Introuvable : l'élément a peut-être été supprimé. Actualise l'écran.", "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran.", "« L'élément » est un mot de développeur. « Entre-temps » explique le cas le plus fréquent : quelqu'un de la famille l'a supprimé."],
+    ["E7", "app/meal/plan.tsx:84", "Aucune proposition reçue, réessaie.", "Claude n'a rien proposé cette fois. Réessaie dans un instant.", ""],
+    ["E8", "app/statement-import.tsx:145", "…ne correspond pas à celui du relevé (…) : il manque peut-être une ligne.", "…ne correspond pas à celui du relevé (…) : il manque peut-être une ligne. <mark>Compare avec ton relevé avant d'importer.</mark>", ""],
+  ]},
+  { key: "V", title: "États vides sans piste", intro: "Ces écrans disent que c'est vide, sans dire comment les remplir.", items: [
+    ["V1", "app/(tabs)/budget.tsx:243", "Porte-monnaie au repos 💤 · Aucune dépense ce mois-ci.", "Porte-monnaie au repos 💤 · Aucune dépense ce mois-ci. <mark>Ajoute la première avec le « + », ou importe un relevé.</mark>", ""],
+    ["V2", "app/recurring-tasks.tsx:30", "Aucune tâche récurrente pour l'instant.", "Aucune tâche récurrente pour l'instant. <mark>Coche « Récurrente » en créant une tâche pour la retrouver ici.</mark>", ""],
+    ["V3", "app/replan.tsx:40", "Aucune tâche flexible à réajuster pour l'instant.", "Aucune tâche flexible pour l'instant. <mark>Coche « Flexible » sur une tâche pour que Passerelle puisse la déplacer.</mark>", ""],
+    ["V4", "app/savings.tsx:76", "Aucun objectif pour l'instant.", "Aucun objectif pour l'instant. <mark>Vacances, Noël, voiture : crée le premier juste en dessous.</mark>", ""],
+    ["V5", "app/documents.tsx:74", "Rien dans ce tiroir · Aucun document pour ce filtre.", "Rien dans ce tiroir · Aucun document dans cette catégorie. <mark>Choisis « Tous » pour tout revoir.</mark>", "« Filtre » est un mot d'interface ; à l'écran, la personne a touché une catégorie."],
+  ]},
+  { key: "J", title: "Mots techniques et tournures", intro: "Des mots qui viennent du code ou de la conception, et deux tournures bancales.", items: [
+    ["J1", "app/(onboarding)/constraints.tsx:48", "Passerelle évite de proposer des tâches pendant ces créneaux (format HH:MM).", "Passerelle évite de proposer des tâches pendant ces créneaux. <mark>Écris les heures comme 21:00.</mark>", "« HH:MM » est une notation de développeur. Un exemple se comprend tout de suite."],
+    ["J2", "app/(onboarding)/recurring-tasks.tsx:117", "Elles se replaceront automatiquement chaque semaine dans la grille.", "Elles reviennent toutes seules chaque semaine dans le planning.", "Personne n'a encore vu de « grille » à cette étape."],
+    ["J3", "app/profile.tsx:92, 184", "Pas encore activé sur le serveur / La synchronisation ${name} n'est pas encore activée sur le serveur.", "<mark>Bientôt disponible</mark> / La synchronisation avec ${name} <mark>arrive bientôt.</mark>", "Le bouton dit déjà « Bientôt ». Le texte dessous doit dire la même chose, sans le serveur."],
+    ["J4", "app/profile.tsx:97", "Apple Calendar n'est disponible que sur iOS/Android.", "Apple Calendar n'est disponible que dans l'appli mobile.", "Ce message s'affiche sur la version web : la personne a besoin de savoir où aller, pas le nom des systèmes."],
+    ["J5", "app/task/new.tsx:349", "Flexible (replanifiable)", "Flexible <mark>(Passerelle peut la déplacer)</mark>", ""],
+    ["J6", "app/task/new.tsx:235", "Aucun jour choisi : Passerelle sélectionnera elle-même le meilleur créneau de la semaine selon la priorité, l'échéance et les tâches déjà planifiées.", "Aucun jour choisi : Passerelle <mark>trouvera</mark> le meilleur créneau de la semaine selon la priorité, l'échéance et <mark>ce qui est déjà prévu</mark>.", ""],
+    ["J7", "app/(tabs)/budget.tsx:112", "Au-dessus de d'habitude (… en moyenne)", "<mark>Plus que d'habitude</mark> (… en moyenne)", "« Au-dessus de d'habitude » n'est pas correct."],
+    ["J8", "app/family-access.tsx:165", "Ton compte contient … . Pour rejoindre la famille, cela sera effacé définitivement. Saisis ton mot de passe pour confirmer.", "Ton compte contient … . <mark>Rejoindre cette famille effacera tout cela définitivement.</mark> Saisis ton mot de passe pour confirmer.", "Action irréversible : la conséquence passe en premier, à la voix active."],
+    ["J9", "app/family-access.tsx:188", "À partir de 15 ans. Il crée son compte dans l'appli avec « J'ai un code famille ». Pour un plus jeune enfant, utilise plutôt le lien de partage du planning.", "À partir de 15 ans. <mark>La personne</mark> crée son compte dans l'appli avec « J'ai un code famille ». Pour un enfant plus jeune, <mark>partage plutôt le lien du planning.</mark>", "« Il » suppose que la personne invitée est un homme ; souvent, c'est une conjointe ou une ado."],
+  ]},
+  { key: "D", title: "À décider", decide: true, intro: "Ici, le texte seul ne suffit pas : il faut d'abord trancher une question de produit.", items: [
+    ["D1", "app/birthdays.tsx:48, app/suggestions.tsx:76, app/(tabs)/famille.tsx:40", "Ajoute d'abord des membres dans ton profil. / Aucun membre pour l'instant.", "Ajouter un bouton <mark>« Ajouter un membre »</mark> dans l'onglet Famille, puis : « Aucun membre pour l'instant. Ajoute les personnes de ta famille pour leur attribuer des tâches. » et « Ajoute d'abord des membres dans l'onglet Famille. »", "On ne peut créer des membres que pendant l'onboarding. Le Profil n'a pas de rubrique Membres : le texte envoie donc vers un écran qui n'existe pas, et une famille qui s'agrandit est bloquée."],
+    ["D2", "app/documents.tsx:40", "Ajouter un document · Passerelle+", "<mark>Documents illimités · voir les offres</mark>", "Repas+ et Budget+ débloquent aussi les documents illimités. Citer seulement Passerelle+ pousse vers l'offre la plus chère, et le bouton mène de toute façon à l'écran des offres."],
+    ["D3", "src/lib/family.ts:5", "Créateur", "Écriture neutre, par exemple <mark>« Créé la famille »</mark>", "Le badge s'affiche à côté du prénom, que ce soit une femme ou un homme. Une tournure verbale évite de choisir un genre."],
+  ]},
+];
+
+const LS = "passerelle-ux-copy-off";
+let off = new Set();
+try { off = new Set(JSON.parse(localStorage.getItem(LS) || "[]")); } catch (e) {}
+const save = () => { try { localStorage.setItem(LS, JSON.stringify([...off])); } catch (e) {} };
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const all = SECTIONS.flatMap(s => s.items.map(i => i[0]));
+
+document.getElementById("sections").outerHTML = SECTIONS.map(s => `
+  <section>
+    <h2>${s.title}<span class="count">${s.items.length} ${s.items.length > 1 ? "textes" : "texte"}</span></h2>
+    <p class="intro">${s.intro}</p>
+    ${s.items.map(([id, loc, before, after, why]) => `
+      <label class="item${s.decide ? " decide" : ""}" data-id="${id}">
+        <input type="checkbox" id="cb-${id}" ${off.has(id) ? "" : "checked"} aria-label="Retenir ${id}">
+        <div class="meta"><span class="id">${id}</span><span class="loc">${esc(loc)}</span></div>
+        <div class="row"><span>Avant</span><span class="before">${esc(before)}</span></div>
+        <div class="row"><span>Après</span><span class="after">${after}</span></div>
+        ${why ? `<div class="why">${why}</div>` : ""}
+      </label>`).join("")}
+  </section>`).join("");
+
+const stats = SECTIONS.map(s => `<span><b>${s.items.length}</b>${s.title.toLowerCase()}</span>`).join("");
+document.getElementById("stats").innerHTML = stats;
+document.getElementById("total").textContent = all.length;
+
+function refresh() {
+  document.querySelectorAll(".item").forEach(el => el.classList.toggle("off", off.has(el.dataset.id)));
+  document.getElementById("kept").textContent = all.length - off.size;
+}
+document.addEventListener("change", e => {
+  const el = e.target.closest(".item"); if (!el) return;
+  e.target.checked ? off.delete(el.dataset.id) : off.add(el.dataset.id);
+  save(); refresh();
+});
+document.getElementById("all").onclick = () => {
+  off.clear(); document.querySelectorAll(".item input").forEach(i => i.checked = true); save(); refresh();
+};
+document.getElementById("copy").onclick = () => {
+  const keep = all.filter(id => !off.has(id));
+  const txt = off.size === 0 ? "Applique tous les changements de la relecture des textes."
+    : `Applique : ${keep.join(", ")}. Écarte : ${[...off].join(", ")}.`;
+  const out = document.getElementById("out");
+  out.value = txt; out.hidden = false;
+  const btn = document.getElementById("copy");
+  const done = ok => { btn.textContent = ok ? "Copié" : "Sélectionne le texte ci-dessous"; setTimeout(() => btn.textContent = "Copier ma sélection", 2200); };
+  if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => done(true), () => { out.select(); done(false); });
+  else { out.select(); done(false); }
+};
+refresh();
+</script>

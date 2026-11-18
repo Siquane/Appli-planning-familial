@@ -29,7 +29,8 @@ interface Props {
 // flattens under the finger, so the button sinks when pressed.
 export function Button({ label, onPress, variant = "secondary", block, disabled, loading, icon, trailing, style, accessibilityLabel, needsNetwork }: Props) {
   const isIcon = variant === "icon";
-  const chunky = variant === "primary" || variant === "secondary";
+  // Le bouton principal (dégradé) reste plat : le rebord épais se voyait mal sous le dégradé.
+  const chunky = variant === "secondary";
   // A disabled primary button drops the gradient (too murky once faded) for a
   // plain surface with readable grey text, so it still reads clearly.
   const flatPrimary = variant === "primary" && !!disabled && !loading;
@@ -60,11 +61,11 @@ export function Button({ label, onPress, variant = "secondary", block, disabled,
           paddingVertical: isIcon ? 0 : variant === "primary" ? space.sm + 2 : space.sm,
           backgroundColor: flatPrimary ? color.neutral900 : pressed && (variant === "secondary" || isIcon) ? color.pressed : "transparent",
           boxShadow: variant === "primary" && !disabled ? glow(color.glowSoft, 14) : undefined,
-          opacity: disabled && !flatPrimary ? 0.45 : 1,
+          opacity: disabled && !flatPrimary ? 0.45 : variant === "primary" && sunk ? 0.85 : 1,
           ...(chunky
             ? {
                 borderBottomWidth: sunk ? 1 : 4,
-                borderBottomColor: variant === "primary" && !flatPrimary ? color.edge : color.edgeSoft,
+                borderBottomColor: color.edgeSoft,
                 transform: [{ translateY: sunk ? 3 : 0 }],
               }
             : null),

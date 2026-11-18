@@ -45,7 +45,7 @@ export default function BirthdaysScreen() {
           <Card style={{ alignItems: "center", paddingVertical: space.xl }}>
             <GiftIcon size={22} color={color.neutral600} />
             <Text tone="muted" size={13} center style={{ marginTop: space.sm }}>
-              Ajoute d'abord des membres dans ton profil.
+              Ajoute d'abord des membres dans l'onglet Famille.
             </Text>
           </Card>
         )}

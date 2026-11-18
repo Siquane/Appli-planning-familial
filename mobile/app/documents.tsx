@@ -37,7 +37,7 @@ export default function DocumentsScreen() {
       <ScrollView contentContainerStyle={{ padding: gutter, gap: space.sm }} showsVerticalScrollIndicator={false}>
         <PrivateNote what="documents" />
         <Button
-          label={full ? "Ajouter un document · Passerelle+" : "Ajouter un document"}
+          label={full ? "Documents illimités · voir les offres" : "Ajouter un document"}
           icon={<PlusIcon size={18} color={color.text} />}
           variant="secondary"
           block
@@ -71,7 +71,7 @@ export default function DocumentsScreen() {
         {!isLoading && visible.length === 0 && (
           <Card>
             {filtered ? (
-              <EmptyState title="Rien dans ce tiroir" detail="Aucun document pour ce filtre." />
+              <EmptyState title="Rien dans ce tiroir" detail="Aucun document dans cette catégorie. Choisis « Tous » pour tout revoir." />
             ) : (
               <EmptyState title="Classeur tout neuf 🗂️" detail="Ordonnances, assurances, papiers de l'école… tout au même endroit." />
             )}

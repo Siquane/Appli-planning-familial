@@ -3,6 +3,7 @@ import { TRIAL_REMINDER_DAYS, trialReminderDate } from "./premium";
 import { Platform } from "react-native";
 import { useToastStore } from "../state/toastStore";
 import type { Member, Task, Weekday } from "../api/types";
+import { whoLabel } from "../widgets/snapshot";
 
 // How long before a recurring task's time its reminder fires.
 const REMINDER_LEAD_MINUTES = 10;
@@ -163,7 +164,7 @@ const DIGEST_MAX_LISTED = 3;
 
 /** Text announcing `weekday`'s tasks, or null when nothing is planned that day. */
 export function digestBody(tasks: Task[], weekday: Weekday): string | null {
-  const day = tasks.filter((t) => t.weekday === weekday).sort((a, b) => a.time.localeCompare(b.time));
+  const day = digestTasks(tasks, weekday);
   if (day.length === 0) return null;
   const listed = day.slice(0, DIGEST_MAX_LISTED).map((t) => `${t.time} ${t.title}`);
   const more = day.length - listed.length;
@@ -191,6 +192,71 @@ export async function syncEveningDigest(tasks: Task[], enabled: boolean): Promis
         identifier: `${DIGEST_ID_PREFIX}${evening}`,
         content: { title: "Demain", body },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.WEEKLY, weekday: toExpoWeekday(evening), hour: DIGEST_HOUR, minute: 0 },
+      });
+    })
+  );
+}
+
+/** Les tâches d'un jour qui vont dans les récaps (case « Dans les récaps »), dans l'ordre de l'heure. */
+export function digestTasks(tasks: Task[], weekday: Weekday): Task[] {
+  return tasks.filter((t) => t.weekday === weekday && t.inDigest !== false).sort((a, b) => a.time.localeCompare(b.time));
+}
+
+// ---------------------------------------------------------------------------
+// Récap du matin : chaque matin (9 h par défaut), toutes les tâches du jour,
+// une par ligne avec qui la fait. Canal Android « important » : la
+// notification descend en bannière avec un son ; dépliée, elle montre tout.
+
+const MORNING_ID_PREFIX = "morning:";
+export const MORNING_CHANNEL = "morning";
+const MORNING_MAX_LINES = 12;
+
+/** « 08:00 École · Jules » par ligne, ou null quand rien n'est prévu. */
+export function morningBody(tasks: Task[], members: Member[], weekday: Weekday): string | null {
+  const day = digestTasks(tasks, weekday);
+  if (day.length === 0) return null;
+  const lines = day.slice(0, MORNING_MAX_LINES).map((t) => {
+    const who = whoLabel(t.memberIds ?? [], members);
+    return `${t.time} ${t.title}${who ? ` · ${who}` : ""}`;
+  });
+  const more = day.length - lines.length;
+  if (more > 0) lines.push(`… et ${more} autre${more > 1 ? "s" : ""}`);
+  return lines.join("\n");
+}
+
+export function morningTitle(tasks: Task[], weekday: Weekday): string {
+  const n = digestTasks(tasks, weekday).length;
+  return `Aujourd'hui : ${n} tâche${n > 1 ? "s" : ""}`;
+}
+
+export async function syncMorningDigest(tasks: Task[], members: Member[], enabled: boolean, time: string): Promise<void> {
+  if (Platform.OS === "web") return;
+  if (!(await hasNotificationPermission())) return;
+
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    scheduled
+      .filter((req) => req.identifier?.startsWith(MORNING_ID_PREFIX))
+      .map((req) => Notifications.cancelScheduledNotificationAsync(req.identifier))
+  );
+  if (!enabled) return;
+
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync(MORNING_CHANNEL, {
+      name: "Récap du matin",
+      importance: Notifications.AndroidImportance.HIGH,
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    }).catch(() => {});
+  }
+  const [hour, minute] = time.split(":").map(Number);
+  await Promise.all(
+    ([0, 1, 2, 3, 4, 5, 6] as Weekday[]).map(async (day) => {
+      const body = morningBody(tasks, members, day);
+      if (!body) return;
+      await Notifications.scheduleNotificationAsync({
+        identifier: `${MORNING_ID_PREFIX}${day}`,
+        content: { title: morningTitle(tasks, day), body, data: { url: "/home" }, priority: Notifications.AndroidNotificationPriority.MAX },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.WEEKLY, weekday: toExpoWeekday(day), hour, minute, channelId: MORNING_CHANNEL },
       });
     })
   );

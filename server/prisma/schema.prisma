@@ -63,6 +63,8 @@ model User {
   importRules         ImportRule[]
   capAlerts           CapAlert[]
   driftAlerts         DriftAlert[]
+  notes               Note[]               @relation("NoteSpace")
+  authoredNotes       Note[]               @relation("NoteAuthor")
   starCompletions     StarCompletion[]
   rewards             Reward[]
   rewardRedemptions   RewardRedemption[]
@@ -149,6 +151,8 @@ model Task {
   seriesId         String?
   // Étoiles gagnées par un enfant (moins de 15 ans) quand la tâche est faite.
   stars            Int      @default(1)
+  // Apparaît dans le récap du soir et du matin (décochable par tâche).
+  inDigest         Boolean  @default(true)
   externalEventId  String?
   externalProvider String?
   createdAt        DateTime @default(now())
@@ -564,6 +568,8 @@ model Learner {
   chestDay     String?
   owned        String[]      @default([])
   equipped     String[]      @default([])
+  /// Up to 3 saved outfits (lists of item ids), see src/lib/cervelle/shop.ts.
+  outfits      Json          @default("[]")
   // Timer lengths the child chose (minutes); null = the default for their level.
   focusMinutes Int?
   breakMinutes Int?
@@ -589,8 +595,23 @@ model Learner {
   cheersReceived Cheer[]         @relation("CheerTo")
   challengesOut  Challenge[]     @relation("ChallengeFrom")
   challengesIn   Challenge[]     @relation("ChallengeTo")
+  badges         LearnerBadge[]
 
   @@index([userId])
+}
+
+/// A badge a child earned (see src/lib/cervelle/badges.ts for the keys).
+/// Stored once, so it pays its coins once; seenAt clears the red dot.
+model LearnerBadge {
+  id        String    @id @default(cuid())
+  learnerId String
+  learner   Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  key       String
+  coins     Int       @default(0)
+  earnedAt  DateTime  @default(now())
+  seenAt    DateTime?
+
+  @@unique([learnerId, key])
 }
 
 model LearnerCode {
@@ -912,4 +933,25 @@ model TaskDone {
   createdAt DateTime @default(now())
 
   @@unique([taskId, day])
+}
+
+// Notes. Une note « Famille » vit dans l'espace de la famille (userId = id de
+// la famille) et tous ses comptes la voient ; une note « Perso » vit chez son
+// auteur (userId = son compte) et lui seul la voit. Quitter la famille ou
+// supprimer son compte n'emporte donc que ses notes perso.
+model Note {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("NoteSpace", fields: [userId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    User?    @relation("NoteAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  shared    Boolean  @default(true)
+  title     String   @default("")
+  body      String   @default("")
+  color     String   @default("default")
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, updatedAt])
 }

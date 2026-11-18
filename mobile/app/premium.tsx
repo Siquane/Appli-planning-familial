@@ -60,7 +60,7 @@ export default function PremiumScreen() {
         useToastStore.getState().show("Merci ! Ton offre est active.", "sparkle");
       }
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "L'achat n'a pas abouti.");
+      useToastStore.getState().show(e instanceof Error ? e.message : "L'achat n'a pas abouti. Aucun montant n'a été prélevé.");
     } finally {
       setBusy(null);
     }
@@ -85,7 +85,7 @@ export default function PremiumScreen() {
       await qc.invalidateQueries();
       useToastStore.getState().show("Achats restaurés.");
     } catch (e) {
-      useToastStore.getState().show(e instanceof Error ? e.message : "La restauration a échoué.");
+      useToastStore.getState().show(e instanceof Error ? e.message : "Impossible de restaurer tes achats. Vérifie ta connexion et le compte Play Store utilisé, puis réessaie.");
     } finally {
       setBusy(null);
     }

@@ -109,7 +109,7 @@ export default function BudgetScreen() {
             {forecast.usualCents !== null && (
               <Text size={13} tone={forecast.projectedCents > forecast.usualCents * 1.05 ? "danger" : "faint"}>
                 {forecast.projectedCents > forecast.usualCents * 1.05
-                  ? `Au-dessus de d'habitude (${formatEuros(roundEuros(forecast.usualCents))} en moyenne)`
+                  ? `Plus que d'habitude (${formatEuros(roundEuros(forecast.usualCents))} en moyenne)`
                   : `D'habitude : ${formatEuros(roundEuros(forecast.usualCents))} en moyenne`}
               </Text>
             )}
@@ -240,7 +240,7 @@ export default function BudgetScreen() {
 
         {!isLoading && expenses.length === 0 && (
           <Card>
-            <EmptyState title="Porte-monnaie au repos 💤" detail="Aucune dépense ce mois-ci." />
+            <EmptyState title="Porte-monnaie au repos 💤" detail="Aucune dépense ce mois-ci. Ajoute la première avec le « + », ou importe un relevé." />
           </Card>
         )}
 

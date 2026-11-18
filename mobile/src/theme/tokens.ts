@@ -48,6 +48,8 @@ const dark = {
   grid: "rgba(34,229,255,0.05)",
   // Texte et icônes posés sur le dégradé (boutons principaux).
   onGradient: "#070912",
+  // Couleur de note « ambre ».
+  amber: "#ffb547",
   // Rebord « épais » sous les boutons, qui s'écrase quand on appuie.
   edge: "#4b2f9e",
   edgeSoft: "#1e2740",
@@ -100,6 +102,7 @@ const light: Palette = {
   scrim: "rgba(11,21,48,0.45)",
   grid: "rgba(8,150,179,0.06)",
   onGradient: "#0b1530",
+  amber: "#b56d00",
   edge: "#5a2fb8",
   edgeSoft: "#c2c9dc",
 };

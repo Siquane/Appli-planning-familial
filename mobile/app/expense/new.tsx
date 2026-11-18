@@ -107,7 +107,7 @@ export default function ExpenseFormScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title={existing ? "Modifier la dépense" : "Nouvelle dépense"} onBack={() => router.back()} onDelete={existing ? onDelete : undefined} />
+      <TopBar title={existing ? "Modifier la dépense" : "Nouvelle dépense"} onBack={() => router.back()} onDelete={existing ? onDelete : undefined} save={{ onPress: onSave, disabled: !isValid, loading: saving }} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {existing?.recurringId && (
           <Card>
@@ -124,7 +124,7 @@ export default function ExpenseFormScreen() {
         <ChipPicker label="Catégorie" options={options} selected={category} onSelect={(v) => v && setCategory(v)} />
 
         {members.length > 0 && (
-          <ChipPicker label="Pour qui ? (optionnel)" options={members.map((m) => ({ value: m.id, label: m.name }))} selected={memberId} onSelect={setMemberId} optional />
+          <ChipPicker label="Pour qui ? (facultatif)" options={members.map((m) => ({ value: m.id, label: m.name }))} selected={memberId} onSelect={setMemberId} optional />
         )}
 
         <DateField label="Date" value={date} onChange={setDate} />
