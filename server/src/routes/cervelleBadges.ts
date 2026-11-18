@@ -2,7 +2,7 @@ import type { Learner } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import type { Request, Response, Router } from "express";
 import { prisma } from "../db";
-import { coinsFor, computeBadges, type BadgeStats } from "../lib/cervelle/badges";
+import { BADGE_LABELS, coinsFor, computeBadges, type BadgeStats } from "../lib/cervelle/badges";
 import { parisDay } from "../lib/cervelle/days";
 import { FOCUS_MIN_SECONDS } from "../lib/cervelle/game";
 
@@ -79,11 +79,28 @@ export function mountBadges(router: Router, d: { loadLearner: (req: Request, res
     const view = computeBadges(stats, studyDays, parisDay());
     const { added, coins } = await award(learner.id, view.earnedKeys);
     const unseen = new Set((await prisma.learnerBadge.findMany({ where: { learnerId: learner.id, seenAt: null }, select: { key: true } })).map((b) => b.key));
+    // Badges of the « chemin d'étoiles », earned at the end of a month's path.
+    const paths = (await prisma.learnerBadge.findMany({ where: { learnerId: learner.id, key: { startsWith: "chemin:" } }, orderBy: { key: "desc" } })).map((b) => ({
+      key: b.key,
+      family: "chemin" as const,
+      label: BADGE_LABELS(b.key),
+      icon: "star",
+      shape: "star" as const,
+      earned: true,
+      when: "past" as const,
+      days: 1,
+      needs: 1,
+      from: `${b.key.slice(7)}-01`,
+      to: `${b.key.slice(7)}-28`,
+      hint: "Arriver au bout du chemin d'étoiles du mois.",
+      coins: 0,
+      isNew: !b.seenAt,
+    }));
     const isNew = (prefix: string) => [...unseen].some((k) => k === prefix || k.startsWith(`${prefix}:`));
     res.json({
       records: view.records,
       successes: view.successes.map((s) => ({ ...s, isNew: s.tier > 0 && isNew(s.id) })),
-      windows: view.windows.map((w) => ({ ...w, isNew: w.earned && unseen.has(w.key) })),
+      windows: [...paths, ...view.windows.map((w) => ({ ...w, isNew: w.earned && unseen.has(w.key) }))],
       newCount: unseen.size,
       earnedCount: view.earnedKeys.length,
       coinsEarned: coins,
