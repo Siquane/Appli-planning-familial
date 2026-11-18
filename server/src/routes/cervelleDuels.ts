@@ -15,8 +15,11 @@ const DUEL_DAYS = 7;
 
 const answersSchema = z.object({ answers: z.array(z.object({ questionId: z.string().min(1).max(40), answer: z.string().max(10) })).max(DUEL_QUESTIONS) });
 
-async function areFriends(a: string, b: string) {
-  return !!(await prisma.friendship.findFirst({ where: { fromApproved: true, toApproved: true, OR: [{ fromId: a, toId: b }, { fromId: b, toId: a }] } }));
+/** Approved friends, or brothers and sisters (same family account). */
+async function areFriends(a: Learner, b: string) {
+  if (a.id === b) return false;
+  if (await prisma.learner.count({ where: { id: b, userId: a.userId } })) return true;
+  return !!(await prisma.friendship.findFirst({ where: { fromApproved: true, toApproved: true, OR: [{ fromId: a.id, toId: b }, { fromId: b, toId: a.id }] } }));
 }
 
 /** Who won, from both scores: an id, "draw", or null while someone hasn't played. */
@@ -42,7 +45,7 @@ export function mountDuels(router: Router, d: { loadLearner: (req: Request, res:
     if (!learner) return;
     const friendId = String(req.body?.friendId ?? "");
     const revisionId = String(req.body?.revisionId ?? "");
-    if (!(await areFriends(learner.id, friendId))) return res.status(404).json({ error: "Ami introuvable" });
+    if (!(await areFriends(learner, friendId))) return res.status(404).json({ error: "Ami introuvable" });
     const revision = await prisma.revision.findFirst({ where: { id: revisionId, learnerId: learner.id, status: "ready" }, select: { title: true } });
     if (!revision) return res.status(404).json({ error: "Révision introuvable" });
     const pool = await prisma.question.findMany({ where: { revisionId, type: { in: ["qcm", "vrai_faux"] } }, select: { id: true } });

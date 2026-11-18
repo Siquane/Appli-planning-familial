@@ -71,6 +71,13 @@ describe("Cervelle — défis quiz", () => {
     const revisionId = await course(lea.learnerId, 3);
     expect((await request(app).post("/cervelle/learners/me/duels").set(lea.child).send({ friendId: tom.learnerId, revisionId })).status).toBe(400);
     expect(duelWinner("a", 5, "b", 5)).toBe("draw");
+    // Brothers and sisters can duel without being « friends ».
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    const a = (await request(app).post("/cervelle/learners").set(auth).send({ name: "Zoé", level: "college" })).body.learner.id as string;
+    const b = (await request(app).post("/cervelle/learners").set(auth).send({ name: "Max", level: "college" })).body.learner.id as string;
+    const rid = await course(a, 6);
+    expect((await request(app).post(`/cervelle/learners/${a}/duels`).set(auth).send({ friendId: b, revisionId: rid })).status).toBe(201);
     expect(duelWinner("a", 5, "b", null)).toBeNull();
   });
 });
