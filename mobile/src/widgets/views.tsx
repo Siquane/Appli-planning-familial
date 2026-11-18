@@ -1,4 +1,4 @@
-import { FlexWidget, TextWidget } from "react-native-android-widget";
+import { FlexWidget, SvgWidget, TextWidget } from "react-native-android-widget";
 import { darkColor as color } from "../theme/tokens";
 import type { WidgetContent } from "./content";
 import type { WidgetSnapshot } from "./snapshot";
@@ -72,6 +72,14 @@ export function WidgetCard({ content, accent, uri }: { content: WidgetContent; a
   );
 }
 
+/**
+ * Rond + « + » dessinés ensemble : un « + » en texte n'est jamais centré
+ * (sa police lui ajoute de l'espace au-dessus et au-dessous).
+ */
+export function plusCircleSvg(stroke: string): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.6" fill="none" stroke="${stroke}" stroke-width="1.6"/><path d="M12 7.2v9.6M7.2 12h9.6" stroke="${stroke}" stroke-width="2" stroke-linecap="round"/></svg>`;
+}
+
 export function SignedOutCard() {
   return (
     <WidgetCard
@@ -103,9 +111,7 @@ export function AddTaskCard() {
         flexGap: 10,
       }}
     >
-      <FlexWidget style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: accent, alignItems: "center", justifyContent: "center" }}>
-        <TextWidget text="+" style={{ fontSize: 22, fontWeight: "600", color: accent }} />
-      </FlexWidget>
+      <SvgWidget svg={plusCircleSvg(accent)} style={{ width: 34, height: 34 }} />
       <TextWidget text="Ajouter une tâche" maxLines={1} truncate="END" style={{ fontSize: 16, fontWeight: "700", color: color.text as Hex }} />
     </FlexWidget>
   );
@@ -135,13 +141,7 @@ export function NotesCard({ notes }: { notes: NonNullable<WidgetSnapshot["notes"
         <FlexWidget clickAction="OPEN_URI" clickActionData={{ uri: widgetUri("notes") }} style={{ flex: 1 }}>
           <TextWidget text="Notes" maxLines={1} style={{ fontSize: TITLE_SIZE, fontWeight: "700", color: accent }} />
         </FlexWidget>
-        <FlexWidget
-          clickAction="OPEN_URI"
-          clickActionData={{ uri: widgetUri("add-note") }}
-          style={{ width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: accent, alignItems: "center", justifyContent: "center" }}
-        >
-          <TextWidget text="+" style={{ fontSize: 19, fontWeight: "600", color: accent }} />
-        </FlexWidget>
+        <SvgWidget clickAction="OPEN_URI" clickActionData={{ uri: widgetUri("add-note") }} svg={plusCircleSvg(accent)} style={{ width: 30, height: 30 }} />
       </FlexWidget>
       {notes.length === 0 && (
         <FlexWidget clickAction="OPEN_URI" clickActionData={{ uri: widgetUri("add-note") }} style={{ width: "match_parent", flexDirection: "column", flexGap: 4 }}>
