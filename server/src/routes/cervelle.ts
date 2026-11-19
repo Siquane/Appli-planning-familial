@@ -108,7 +108,7 @@ async function cervelleAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 export function parentOnly(req: Request, res: Response, next: NextFunction) {
-  if (req.cervelle?.kind !== "parent") return res.status(403).json({ error: "Réservé aux parents." });
+  if (req.cervelle?.kind !== "parent") return res.status(403).json({ error: "Seul un parent peut faire ça." });
   next();
 }
 
@@ -118,15 +118,15 @@ export async function loadLearner(req: Request, res: Response): Promise<Learner 
   const id = String(req.params.learnerId);
   if (caller.kind === "child") {
     if (id !== "me" && id !== caller.learnerId) {
-      res.status(404).json({ error: "Profil introuvable" });
+      res.status(404).json({ error: "Ce profil n'existe plus. Il a peut-être été supprimé." });
       return null;
     }
     const learner = await prisma.learner.findUnique({ where: { id: caller.learnerId } });
-    if (!learner) res.status(404).json({ error: "Profil introuvable" });
+    if (!learner) res.status(404).json({ error: "Ce profil n'existe plus. Il a peut-être été supprimé." });
     return learner;
   }
   const learner = await prisma.learner.findFirst({ where: { id, userId: caller.familyId } });
-  if (!learner) res.status(404).json({ error: "Profil introuvable" });
+  if (!learner) res.status(404).json({ error: "Ce profil n'existe plus. Il a peut-être été supprimé." });
   return learner;
 }
 
@@ -199,7 +199,7 @@ const childPushSchema = z.object({
 /** The child's phone registers its Expo push token (null = notifications refused or turned off). */
 cervelleRouter.put("/child/push", async (req, res) => {
   const caller = req.cervelle!;
-  if (caller.kind !== "child") return res.status(403).json({ error: "Réservé au téléphone de l'enfant." });
+  if (caller.kind !== "child") return res.status(403).json({ error: "Ça se fait depuis le téléphone de l'enfant." });
   const parsed = childPushSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Ça n'a pas marché. Réessaie dans un instant." });
   const { token, readyAlert } = parsed.data;
@@ -296,7 +296,7 @@ cervelleRouter.post("/learners", parentOnly, async (req, res) => {
   const familyId = req.cervelle!.familyId;
   const d = parsed.data;
   if (d.memberId && !(await prisma.familyMember.findFirst({ where: { id: d.memberId, userId: familyId } }))) {
-    return res.status(400).json({ error: "Membre de la famille introuvable" });
+    return res.status(400).json({ error: "Cette personne n'est plus dans la famille Passerelle." });
   }
   if ((await prisma.learner.count({ where: { userId: familyId } })) >= 8) return res.status(400).json({ error: "8 profils au plus par famille." });
   const learner = await prisma.learner.create({ data: { userId: familyId, name: d.name, level: d.level, grade: d.grade, color: d.color, memberId: d.memberId ?? null } });
@@ -310,7 +310,7 @@ cervelleRouter.patch("/learners/:learnerId", parentOnly, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const d = parsed.data;
   if (d.memberId && !(await prisma.familyMember.findFirst({ where: { id: d.memberId, userId: learner.userId } }))) {
-    return res.status(400).json({ error: "Membre de la famille introuvable" });
+    return res.status(400).json({ error: "Cette personne n'est plus dans la famille Passerelle." });
   }
   const updated = await prisma.learner.update({ where: { id: learner.id }, data: d });
   res.json({ learner: serializeLearner(updated) });
@@ -476,7 +476,7 @@ cervelleRouter.get("/learners/:learnerId/programme", async (req, res) => {
 async function loadRevision(req: Request, res: Response, learner: Learner) {
   const revision = await prisma.revision.findFirst({ where: { id: String(req.params.revisionId), learnerId: learner.id } });
   if (!revision) {
-    res.status(404).json({ error: "Révision introuvable" });
+    res.status(404).json({ error: "Cette révision n'existe plus. Elle a peut-être été supprimée." });
     return null;
   }
   return failStale(revision);
@@ -807,7 +807,7 @@ cervelleRouter.get("/learners/:learnerId/quiz", async (req, res) => {
   const revisionId = typeof req.query.revisionId === "string" ? req.query.revisionId : null;
   if (!revisionId && mode !== "a_revoir") return res.status(400).json({ error: "Ça n'a pas marché. Réessaie dans un instant." });
   if (revisionId && !(await prisma.revision.findFirst({ where: { id: revisionId, learnerId: learner.id, status: "ready" } }))) {
-    return res.status(404).json({ error: "Révision introuvable" });
+    return res.status(404).json({ error: "Cette révision n'existe plus. Elle a peut-être été supprimée." });
   }
   const now = new Date();
   const scope: Prisma.QuestionWhereInput = revisionId ? { revisionId } : { revision: { learnerId: learner.id, status: "ready" } };
@@ -848,7 +848,7 @@ cervelleRouter.post("/learners/:learnerId/answers", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const { questionId, mode, answer } = parsed.data;
   const question = await prisma.question.findFirst({ where: { id: questionId, revision: { learnerId: learner.id } }, include: { notion: true } });
-  if (!question) return res.status(404).json({ error: "Question introuvable" });
+  if (!question) return res.status(404).json({ error: "Cette question n'existe plus. Recharge le quiz." });
 
   const text = Array.isArray(answer) ? answer.join(" | ") : answer;
   let correct: boolean;
@@ -942,7 +942,7 @@ cervelleRouter.post("/learners/:learnerId/sessions", async (req, res) => {
   const d = parsed.data;
   if (d.correct > d.total) return res.status(400).json({ error: "Ça n'a pas marché. Réessaie dans un instant." });
   const revision = d.revisionId ? await prisma.revision.findFirst({ where: { id: d.revisionId, learnerId: learner.id } }) : null;
-  if (d.revisionId && !revision) return res.status(404).json({ error: "Révision introuvable" });
+  if (d.revisionId && !revision) return res.status(404).json({ error: "Cette révision n'existe plus. Elle a peut-être été supprimée." });
 
   const today = parisDay();
   const percent = d.total > 0 ? Math.round((d.correct / d.total) * 100) : null;
@@ -1025,7 +1025,7 @@ cervelleRouter.post("/learners/:learnerId/chest", async (req, res) => {
   const learner = await loadLearner(req, res);
   if (!learner) return;
   const state = await missionState(learner);
-  if (state.chestOpened) return res.status(409).json({ error: "Coffre déjà ouvert aujourd'hui. Reviens demain !" });
+  if (state.chestOpened) return res.status(409).json({ error: "Tu as déjà ouvert le coffre aujourd'hui. Reviens demain !" });
   if (state.done < state.total) return res.status(400).json({ error: "Termine les missions du jour pour ouvrir le coffre." });
   const today = parisDay();
   // Conditional update: two taps at once can't open it twice.
@@ -1033,7 +1033,7 @@ cervelleRouter.post("/learners/:learnerId/chest", async (req, res) => {
     where: { id: learner.id, OR: [{ chestDay: null }, { chestDay: { not: today } }] },
     data: { chestDay: today, coins: { increment: CHEST_COINS } },
   });
-  if (opened.count === 0) return res.status(409).json({ error: "Coffre déjà ouvert aujourd'hui. Reviens demain !" });
+  if (opened.count === 0) return res.status(409).json({ error: "Tu as déjà ouvert le coffre aujourd'hui. Reviens demain !" });
   // Chemin d'étoiles: the open chest counts for the month.
   await prisma.starEvent.create({ data: { learnerId: learner.id, key: `chest:${today}`, day: today } }).catch(() => undefined);
   const updated = await prisma.learner.findUniqueOrThrow({ where: { id: learner.id } });
@@ -1069,7 +1069,7 @@ cervelleRouter.post("/learners/:learnerId/shop/:itemId/buy", async (req, res) =>
   const learner = await loadLearner(req, res);
   if (!learner) return;
   const item = shopItem(String(req.params.itemId));
-  if (!item) return res.status(404).json({ error: "Objet introuvable" });
+  if (!item) return res.status(404).json({ error: "Cet objet n'est plus dans la boutique." });
   if (shop.owns(item, learner.owned, await badgeKeysOf(learner.id))) return res.status(409).json({ error: "Tu l'as déjà !" });
   if (item.kind === "badge") return res.status(400).json({ error: `Il se gagne avec le badge « ${item.badge?.label} ».` });
   if (!shop.onSale(item, parisDay())) return res.status(400).json({ error: "Pas en vente en ce moment : il revient chaque année à la même période." });
@@ -1078,7 +1078,7 @@ cervelleRouter.post("/learners/:learnerId/shop/:itemId/buy", async (req, res) =>
     where: { id: learner.id, coins: { gte: item.price }, NOT: { owned: { has: item.id } } },
     data: { coins: { decrement: item.price }, owned: { push: item.id } },
   });
-  if (bought.count === 0) return res.status(400).json({ error: `Il te faut ${item.price} pièces.` });
+  if (bought.count === 0) return res.status(400).json({ error: `Il te faut ${item.price} pièces. Révise pour en gagner !` });
   const after = await prisma.learner.findUniqueOrThrow({ where: { id: learner.id } });
   const updated = await prisma.learner.update({ where: { id: learner.id }, data: { equipped: equip(after.equipped, item.id) } });
   res.json({ learner: serializeLearner(updated) });
@@ -1088,7 +1088,7 @@ cervelleRouter.post("/learners/:learnerId/shop/:itemId/equip", async (req, res) 
   const learner = await loadLearner(req, res);
   if (!learner) return;
   const item = shopItem(String(req.params.itemId));
-  if (!item) return res.status(404).json({ error: "Objet introuvable" });
+  if (!item) return res.status(404).json({ error: "Cet objet n'est plus dans la boutique." });
   if (!shop.owns(item, learner.owned, await badgeKeysOf(learner.id))) return res.status(400).json({ error: item.kind === "badge" ? `Gagne d'abord le badge « ${item.badge?.label} ».` : "Achète-le d'abord." });
   const wear = req.body?.on !== false;
   const equipped = wear ? equip(learner.equipped, item.id) : learner.equipped.filter((e) => e !== item.id);
@@ -1106,7 +1106,7 @@ cervelleRouter.put("/learners/:learnerId/shop/outfits/:n", async (req, res) => {
   const learner = await loadLearner(req, res);
   if (!learner) return;
   const i = outfitIndex(String(req.params.n));
-  if (i === null) return res.status(404).json({ error: "Tenue introuvable" });
+  if (i === null) return res.status(404).json({ error: "Cette tenue n'existe plus." });
   const outfits = shop.readOutfits(learner.outfits);
   outfits[i] = shop.cleanOutfit(learner.equipped, learner.owned, await badgeKeysOf(learner.id));
   await prisma.learner.update({ where: { id: learner.id }, data: { outfits } });
@@ -1118,7 +1118,7 @@ cervelleRouter.post("/learners/:learnerId/shop/outfits/:n/wear", async (req, res
   if (!learner) return;
   const i = outfitIndex(String(req.params.n));
   const saved = i === null ? null : shop.readOutfits(learner.outfits)[i];
-  if (!saved) return res.status(404).json({ error: "Tenue vide" });
+  if (!saved) return res.status(404).json({ error: "Mets au moins un objet à Cervelle avant d'enregistrer la tenue." });
   const equipped = shop.cleanOutfit(saved, learner.owned, await badgeKeysOf(learner.id));
   const updated = await prisma.learner.update({ where: { id: learner.id }, data: { equipped } });
   res.json({ learner: serializeLearner(updated) });
@@ -1147,7 +1147,7 @@ cervelleRouter.post("/learners/:learnerId/assistant", async (req, res) => {
   const parsed = assistantSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const { revisionId, messages } = parsed.data;
-  if (messages[0].role !== "user" || messages[messages.length - 1].role !== "user") return res.status(400).json({ error: "La conversation doit finir par ta question." });
+  if (messages[0].role !== "user" || messages[messages.length - 1].role !== "user") return res.status(400).json({ error: "Écris ta question, puis envoie-la." });
   const revision = revisionId ? await prisma.revision.findFirst({ where: { id: revisionId, learnerId: learner.id, status: "ready" } }) : null;
   const familyId = req.cervelle!.familyId;
   if (!(await underDailyLimit(familyId, "assistant", res))) return;
@@ -1198,7 +1198,7 @@ cervelleRouter.post("/learners/:learnerId/exam-reviews", async (req, res) => {
   const files = decodeFiles(parsed.data.files);
   if (typeof files === "string") return res.status(400).json({ error: files });
   const revisionId = parsed.data.revisionId ?? null;
-  if (revisionId && !(await prisma.revision.findFirst({ where: { id: revisionId, learnerId: learner.id } }))) return res.status(404).json({ error: "Révision introuvable" });
+  if (revisionId && !(await prisma.revision.findFirst({ where: { id: revisionId, learnerId: learner.id } }))) return res.status(404).json({ error: "Cette révision n'existe plus. Elle a peut-être été supprimée." });
   const familyId = req.cervelle!.familyId;
   if (!(await underDailyLimit(familyId, "exam", res))) return;
   const exam = await prisma.examReview.create({ data: { learnerId: learner.id, revisionId } });
@@ -1220,7 +1220,7 @@ cervelleRouter.get("/learners/:learnerId/exam-reviews/:examId", async (req, res)
   const learner = await loadLearner(req, res);
   if (!learner) return;
   let exam = await prisma.examReview.findFirst({ where: { id: String(req.params.examId), learnerId: learner.id }, include: { revision: { select: { title: true } } } });
-  if (!exam) return res.status(404).json({ error: "Analyse introuvable" });
+  if (!exam) return res.status(404).json({ error: "Cette copie n'existe plus. Elle a peut-être été supprimée." });
   if (exam.status === "processing" && Date.now() - exam.createdAt.getTime() > PROCESSING_TIMEOUT_MS) {
     exam = await prisma.examReview.update({ where: { id: exam.id }, data: { status: "failed", error: "L'analyse a été interrompue. Renvoie les photos." }, include: { revision: { select: { title: true } } } });
   }
@@ -1231,7 +1231,7 @@ cervelleRouter.delete("/learners/:learnerId/exam-reviews/:examId", async (req, r
   const learner = await loadLearner(req, res);
   if (!learner) return;
   const exam = await prisma.examReview.findFirst({ where: { id: String(req.params.examId), learnerId: learner.id } });
-  if (!exam) return res.status(404).json({ error: "Analyse introuvable" });
+  if (!exam) return res.status(404).json({ error: "Cette copie n'existe plus. Elle a peut-être été supprimée." });
   await prisma.examReview.delete({ where: { id: exam.id } });
   await removeObjects(exam.photoKeys);
   res.status(204).end();

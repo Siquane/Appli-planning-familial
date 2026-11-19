@@ -52,7 +52,7 @@ export function mountGoals(router: Router, d: { loadLearner: (req: Request, res:
     const learner = await d.loadLearner(req, res);
     if (!learner) return;
     const parsed = goalSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: "Objectif invalide" });
+    if (!parsed.success) return res.status(400).json({ error: "Il manque quelque chose : choisis un type d'objectif, un nombre et une récompense." });
     const [min, max] = LIMITS[parsed.data.kind];
     if (parsed.data.target < min || parsed.data.target > max) return res.status(400).json({ error: `Choisis un nombre entre ${min} et ${max}.` });
     if ((await prisma.learnerGoal.count({ where: { learnerId: learner.id } })) >= MAX_GOALS) return res.status(409).json({ error: `${MAX_GOALS} objectifs au plus. Supprimes-en un d'abord.` });
@@ -64,7 +64,7 @@ export function mountGoals(router: Router, d: { loadLearner: (req: Request, res:
     const learner = await d.loadLearner(req, res);
     if (!learner) return;
     const removed = await prisma.learnerGoal.deleteMany({ where: { id: String(req.params.goalId), learnerId: learner.id } });
-    if (removed.count === 0) return res.status(404).json({ error: "Objectif introuvable" });
+    if (removed.count === 0) return res.status(404).json({ error: "Cet objectif n'existe plus. Il a peut-être été supprimé." });
     res.status(204).end();
   });
 }
