@@ -2,7 +2,7 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { app } from "../../src/index";
 import { prisma } from "../../src/db";
-import { duelWinner } from "../../src/routes/cervelleDuels";
+import { mostProgress } from "../../src/routes/cervelleDuels";
 import { authHeader, signup } from "../helpers";
 
 async function child(name: string) {
@@ -26,7 +26,7 @@ async function course(learnerId: string, n: number) {
 }
 
 describe("Cervelle — défis quiz", () => {
-  it("lets two approved friends play the same questions; the best score wins the coins once", async () => {
+  it("lets two approved friends play the same questions; finishing earns coins, progress earns a bonus, never the score", async () => {
     const lea = await child("Léa");
     const tom = await child("Tom");
     const revisionId = await course(lea.learnerId, 12);
@@ -50,27 +50,37 @@ describe("Cervelle — défis quiz", () => {
 
     // Tom answers everything right; Léa gets one wrong.
     const t = await request(app).post(`/cervelle/learners/me/duels/${id}/answers`).set(tom.child).send({ answers: all });
-    expect(t.body).toMatchObject({ score: 10, total: 10, result: null, coins: 0 });
+    expect(t.body).toMatchObject({ score: 10, total: 10, result: null, coins: 10 });
     expect((await request(app).post(`/cervelle/learners/me/duels/${id}/answers`).set(tom.child).send({ answers: all })).status).toBe(409);
 
     const list = await request(app).get("/cervelle/learners/me/duels").set(lea.child);
     expect(list.body.duels[0]).toMatchObject({ theyPlayed: true, theirScore: null, myScore: null, sentByMe: true });
 
     const l = await request(app).post(`/cervelle/learners/me/duels/${id}/answers`).set(lea.child).send({ answers: [{ ...all[0], answer: "nope" }, ...all.slice(1)] });
-    expect(l.body).toMatchObject({ score: 9, theirScore: 10, result: "lost", coins: 0 });
-    expect((await prisma.learner.findUniqueOrThrow({ where: { id: tom.learnerId } })).coins).toBe(before + 20);
+    // First duel for both: no previous score, so no progress bonus; each earned 10 for finishing.
+    expect(l.body).toMatchObject({ score: 9, theirScore: 10, result: "finished", coins: 10 });
+    expect((await prisma.learner.findUniqueOrThrow({ where: { id: tom.learnerId } })).coins).toBe(before + 10);
 
     const done = await request(app).get("/cervelle/learners/me/duels").set(tom.child);
-    expect(done.body.duels[0]).toMatchObject({ status: "done", result: "won", myScore: 10, theirScore: 9, friend: { name: "Léa" } });
+    expect(done.body.duels[0]).toMatchObject({ status: "done", result: "finished", myScore: 10, theirScore: 9, friend: { name: "Léa" } });
+
+    // Second duel: Léa does better than last time (9 → 10), Tom does worse (10 → 5): Léa gets the progress bonus.
+    const id2 = (await request(app).post("/cervelle/learners/me/duels").set(lea.child).send({ friendId: tom.learnerId, revisionId })).body.duel.id as string;
+    const qs2 = (await request(app).get(`/cervelle/learners/me/duels/${id2}`).set(tom.child)).body.questions.map(right);
+    await request(app).post(`/cervelle/learners/me/duels/${id2}/answers`).set(tom.child).send({ answers: qs2.slice(0, 5) });
+    const l2 = await request(app).post(`/cervelle/learners/me/duels/${id2}/answers`).set(lea.child).send({ answers: qs2 });
+    expect(l2.body).toMatchObject({ score: 10, result: "progress", coins: 20 });
   });
 
-  it("refuses a course with too few questions, and knows a draw", async () => {
+  it("refuses a course with too few questions, and shares the progress bonus", async () => {
     const lea = await child("Léa");
     const tom = await child("Tom");
     await prisma.friendship.create({ data: { fromId: lea.learnerId, toId: tom.learnerId, fromApproved: true, toApproved: true } });
     const revisionId = await course(lea.learnerId, 3);
     expect((await request(app).post("/cervelle/learners/me/duels").set(lea.child).send({ friendId: tom.learnerId, revisionId })).status).toBe(400);
-    expect(duelWinner("a", 5, "b", 5)).toBe("draw");
+    expect(mostProgress({ id: "a", gain: 10 }, { id: "b", gain: 10 })).toEqual(["a", "b"]);
+    expect(mostProgress({ id: "a", gain: -10 }, { id: "b", gain: null })).toEqual([]);
+    expect(mostProgress({ id: "a", gain: 20 }, { id: "b", gain: 5 })).toEqual(["a"]);
     // Révision à deux: questions with answers, for my own course only.
     const duo = await request(app).get(`/cervelle/learners/me/revisions/${revisionId}/duo`).set(lea.child);
     expect(duo.status).toBe(400);
@@ -86,6 +96,5 @@ describe("Cervelle — défis quiz", () => {
     const b = (await request(app).post("/cervelle/learners").set(auth).send({ name: "Max", level: "college" })).body.learner.id as string;
     const rid = await course(a, 6);
     expect((await request(app).post(`/cervelle/learners/${a}/duels`).set(auth).send({ friendId: b, revisionId: rid })).status).toBe(201);
-    expect(duelWinner("a", 5, "b", null)).toBeNull();
   });
 });

@@ -20,13 +20,13 @@ export async function monthFacts(learner: Learner, month: string): Promise<Month
   const [sessions, chests, duels, challenges, badges] = await Promise.all([
     prisma.studySession.findMany({ where: { learnerId: id, day: { gte: from, lte: to } }, select: { day: true, mode: true, correct: true, total: true } }),
     prisma.starEvent.count({ where: { learnerId: id, key: { startsWith: "chest:" }, day: { gte: from, lte: to } } }),
-    prisma.quizDuel.findMany({ where: { winnerId: id, endedAt: { gte: since, lt: until } }, select: { endedAt: true } }),
+    prisma.quizDuel.findMany({ where: { progressIds: { has: id }, endedAt: { gte: since, lt: until } }, select: { endedAt: true } }),
     prisma.challenge.findMany({ where: { winnerId: id, week: { gte: addDays(from, -6), lte: to } }, select: { week: true } }),
     prisma.learnerBadge.findMany({ where: { learnerId: id, earnedAt: { gte: since, lt: until }, NOT: { key: { startsWith: "chemin:" } } }, select: { earnedAt: true } }),
   ]);
   const inMonth = (d: Date | null) => !!d && parisDay(d) >= from && parisDay(d) <= to;
   return {
-    quizzes: sessions.filter((s) => ["qcm", "cartes", "a_revoir", "express"].includes(s.mode) && s.total > 0).map((s) => ({ correct: s.correct, total: s.total })),
+    quizzes: sessions.filter((s) => ["qcm", "cartes", "a_revoir", "express"].includes(s.mode) && s.total > 0).map((s) => ({ mode: s.mode, total: s.total })),
     interros: sessions.filter((s) => s.mode === "interro" && s.total > 0).length,
     studyDays: sessions.map((s) => s.day),
     chests,

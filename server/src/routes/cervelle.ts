@@ -21,7 +21,7 @@ import { applyAnswer, combinedMastery, displayedMastery, revisionProgress, type 
 import { localGrade, normalizeAnswer, sameOrder } from "../lib/cervelle/grading";
 import {
   CHEST_COINS,
-  COINS_GREAT_EXAM,
+  COINS_PROGRESS,
   COINS_PER_RIGHT_ANSWER,
   COINS_PER_SESSION,
   COINS_SHEETS_READ,
@@ -953,7 +953,10 @@ cervelleRouter.post("/learners/:learnerId/sessions", async (req, res) => {
     revisionData.sheetsReadAt = new Date();
   } else if (d.total >= 3) {
     coins += COINS_PER_SESSION;
-    if (d.mode === "interro" && percent !== null && percent >= 80) coins += COINS_GREAT_EXAM;
+    // Effort bonus: better than last time on this course (progress, whatever the level), or « à revoir ».
+    const before = d.mode === "interro" ? revision?.examBest : d.mode === "qcm" || d.mode === "cartes" ? revision?.quizBest : null;
+    const progressed = percent !== null && before !== null && before !== undefined && percent > before;
+    if (progressed || d.mode === "a_revoir") coins += COINS_PROGRESS;
     if (percent !== null && (d.mode === "qcm" || d.mode === "cartes") && (revision?.quizBest ?? -1) < percent) revisionData.quizBest = percent;
     if (percent !== null && d.mode === "interro" && (revision?.examBest ?? -1) < percent) revisionData.examBest = percent;
   }

@@ -8,7 +8,8 @@ export const XP_PER_RIGHT_ANSWER = 10;
 export const XP_PER_ANSWER = 2;
 export const COINS_PER_SESSION = 5;
 export const COINS_SHEETS_READ = 3;
-export const COINS_GREAT_EXAM = 10;
+/** Effort bonus: doing better than last time on a course, or going over one's mistakes. Never for a mark alone. */
+export const COINS_PROGRESS = 10;
 export const CHEST_COINS = 20;
 
 const LEVELS = [

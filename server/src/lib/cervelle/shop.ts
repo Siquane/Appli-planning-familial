@@ -70,7 +70,7 @@ export const SHOP: CatalogItem[] = [
   n("noeud", "Nœud papillon", "cou", 50),
   n("collier", "Collier de fleurs", "cou", 55),
   n("echarpe", "Écharpe", "cou", 60),
-  b("medaille", "Médaille d'or", "cou", "as_interro:3", "As de l'interro en or"),
+  b("medaille", "Médaille d'or", "cou", "as_interro:3", "Persévérant en or"),
   b("guirlande", "Guirlande", "cou", "fete:noel", "Noël"),
 
   // Tenue (autour de Cervelle)
@@ -86,7 +86,7 @@ export const SHOP: CatalogItem[] = [
   n("loupe", "Loupe", "main", 60),
   n("baguette", "Baguette magique", "main", 90),
   s("glace", "Glace", "main", 40, "06-15", "08-31"),
-  b("trophee", "Trophée", "main", "sans_faute:3", "Sans-faute en or"),
+  b("trophee", "Trophée", "main", "sans_faute:3", "Correcteur en or"),
   b("appareil", "Appareil photo", "main", "photographe:3", "Photographe en or"),
 
   // Couleur de Cervelle

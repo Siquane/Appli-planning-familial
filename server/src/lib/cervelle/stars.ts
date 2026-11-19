@@ -46,15 +46,15 @@ export function monthRange(month: string): { from: string; to: string } {
 }
 
 export interface MonthFacts {
-  /** Quiz sessions (QCM, cartes, à revoir, express) with their score. */
-  quizzes: { correct: number; total: number }[];
+  /** Quiz sessions (QCM, cartes, à revoir, express): their mode and length. */
+  quizzes: { mode: string; total: number }[];
   /** Interros of Cervelle done. */
   interros: number;
   /** Days with revision this month (any order, duplicates allowed). */
   studyDays: string[];
   /** Days the missions' chest was opened. */
   chests: number;
-  /** Quiz duels and weekly challenges won. */
+  /** Quiz duels where they progressed, and weekly challenges won (time worked). */
   wins: number;
   /** Badges earned this month. */
   badges: number;
@@ -62,7 +62,8 @@ export interface MonthFacts {
 
 export const STAR_RULES = {
   quiz: 1,
-  goodQuiz: 1,
+  /** Effort bonus: going over one's mistakes (« à revoir ») or a long session (10 questions or more). */
+  effort: 1,
   interro: 2,
   day: 1,
   week: 5,
@@ -84,7 +85,8 @@ function weekBonuses(days: string[]): number {
 }
 
 export function starsOf(f: MonthFacts) {
-  const revision = f.quizzes.reduce((n, q) => n + STAR_RULES.quiz + (q.total > 0 && q.correct / q.total >= 0.8 ? STAR_RULES.goodQuiz : 0), 0) + f.interros * STAR_RULES.interro;
+  // Effort, not marks: the bonus rewards reviewing mistakes or a long session, never a score.
+  const revision = f.quizzes.reduce((n, q) => n + STAR_RULES.quiz + (q.mode === "a_revoir" || q.total >= 10 ? STAR_RULES.effort : 0), 0) + f.interros * STAR_RULES.interro;
   const regularite = new Set(f.studyDays).size * STAR_RULES.day + weekBonuses(f.studyDays) * STAR_RULES.week;
   const missions = f.chests * STAR_RULES.chest;
   const defis = f.wins * STAR_RULES.win + f.badges * STAR_RULES.badge;

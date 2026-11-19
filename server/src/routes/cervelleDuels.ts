@@ -5,12 +5,15 @@ import { prisma } from "../db";
 
 // Quiz duels between friends. The challenger picks one of their ready
 // revisions; 10 auto-graded questions (QCM, vrai/faux) are drawn from it and
-// both friends answer the same ones, in any order, within a week. The best
-// score wins DUEL_COINS (a draw: half each), paid once when the second one
-// answers. Only friends both parents approved can duel.
+// both friends answer the same ones, in any order, within a week. Learning
+// and work before marks: each one earns DUEL_FINISH_COINS for playing it
+// through, and when both have played, DUEL_PROGRESS_COINS go to whoever did
+// better than in their own previous duel (both, if they progressed as much).
+// Nobody « wins » on the score. Only friends both parents approved can duel.
 
 export const DUEL_QUESTIONS = 10;
-export const DUEL_COINS = 20;
+export const DUEL_FINISH_COINS = 10;
+export const DUEL_PROGRESS_COINS = 10;
 const DUEL_DAYS = 7;
 
 const answersSchema = z.object({ answers: z.array(z.object({ questionId: z.string().min(1).max(40), answer: z.string().max(10) })).max(DUEL_QUESTIONS) });
@@ -22,11 +25,25 @@ async function areFriends(a: Learner, b: string) {
   return !!(await prisma.friendship.findFirst({ where: { fromApproved: true, toApproved: true, OR: [{ fromId: a.id, toId: b }, { fromId: b, toId: a.id }] } }));
 }
 
-/** Who won, from both scores: an id, "draw", or null while someone hasn't played. */
-export function duelWinner(fromId: string, fromScore: number | null, toId: string, toScore: number | null): string | null {
-  if (fromScore === null || toScore === null) return null;
-  if (fromScore === toScore) return "draw";
-  return fromScore > toScore ? fromId : toId;
+/**
+ * Who progressed most, from each one's gain on their own previous duel (in
+ * points out of 100; null without a previous duel). Returns the ids that get
+ * the progress bonus: none if nobody progressed.
+ */
+export function mostProgress(a: { id: string; gain: number | null }, b: { id: string; gain: number | null }): string[] {
+  const ga = a.gain ?? 0;
+  const gb = b.gain ?? 0;
+  const best = Math.max(ga, gb);
+  if (best <= 0) return [];
+  return [a, b].filter((p) => (p.gain ?? 0) === best).map((p) => p.id);
+}
+
+/** A learner's score (out of 100) in their last finished duel before this one, or null. */
+async function previousScore(learnerId: string, excludeId: string): Promise<number | null> {
+  const last = await prisma.quizDuel.findFirst({ where: { id: { not: excludeId }, status: "done", OR: [{ fromId: learnerId }, { toId: learnerId }] }, orderBy: { endedAt: "desc" } });
+  if (!last || !last.questionIds.length) return null;
+  const score = last.fromId === learnerId ? last.fromScore : last.toScore;
+  return score === null ? null : (score / last.questionIds.length) * 100;
 }
 
 const shuffle = <T,>(a: T[]) => {
@@ -101,7 +118,8 @@ export function mountDuels(router: Router, d: { loadLearner: (req: Request, res:
           // Their score stays hidden until I've played, so I can't aim for it.
           theirScore: myScore === null ? null : theirScore,
           theyPlayed: theirScore !== null,
-          result: x.status !== "done" ? null : x.winnerId === null ? "draw" : x.winnerId === learner.id ? "won" : "lost",
+          // « progress »: I got the progress bonus; « finished »: done, no bonus for me.
+          result: x.status !== "done" ? null : x.progressIds.includes(learner.id) ? "progress" : "finished",
           total: x.questionIds.length,
           createdAt: x.createdAt.toISOString(),
         };
@@ -141,22 +159,27 @@ export function mountDuels(router: Router, d: { loadLearner: (req: Request, res:
     const saved = await prisma.quizDuel.updateMany({ where: { id: duel.id, status: "open", ...(mine ? { fromScore: null } : { toScore: null }) }, data: mine ? { fromScore: score } : { toScore: score } });
     if (saved.count === 0) return res.status(409).json({ error: "Tu as déjà joué ce défi." });
 
+    // Playing it through is what counts: paid now, once (the update above is conditional).
+    await prisma.learner.update({ where: { id: learner.id }, data: { coins: { increment: DUEL_FINISH_COINS } } });
+    let coins = DUEL_FINISH_COINS;
+
     const after = await prisma.quizDuel.findUniqueOrThrow({ where: { id: duel.id } });
-    const winner = duelWinner(after.fromId, after.fromScore, after.toId, after.toScore);
-    let coins = 0;
-    if (winner) {
-      const ended = await prisma.quizDuel.updateMany({ where: { id: duel.id, status: "open" }, data: { status: "done", winnerId: winner === "draw" ? null : winner, endedAt: new Date() } });
-      if (ended.count === 1) {
-        if (winner === "draw") {
-          await prisma.learner.updateMany({ where: { id: { in: [after.fromId, after.toId] } }, data: { coins: { increment: DUEL_COINS / 2 } } });
-          coins = DUEL_COINS / 2;
-        } else {
-          await prisma.learner.update({ where: { id: winner }, data: { coins: { increment: DUEL_COINS } } });
-          coins = winner === learner.id ? DUEL_COINS : 0;
-        }
+    let progressIds: string[] = [];
+    if (after.fromScore !== null && after.toScore !== null) {
+      const n = after.questionIds.length;
+      const gain = async (id: string, score: number) => {
+        const prev = await previousScore(id, after.id);
+        return prev === null ? null : (score / n) * 100 - prev;
+      };
+      progressIds = mostProgress({ id: after.fromId, gain: await gain(after.fromId, after.fromScore) }, { id: after.toId, gain: await gain(after.toId, after.toScore) });
+      const ended = await prisma.quizDuel.updateMany({ where: { id: duel.id, status: "open" }, data: { status: "done", progressIds, winnerId: progressIds.length === 1 ? progressIds[0] : null, endedAt: new Date() } });
+      if (ended.count === 1 && progressIds.length) {
+        await prisma.learner.updateMany({ where: { id: { in: progressIds } }, data: { coins: { increment: DUEL_PROGRESS_COINS } } });
+        if (progressIds.includes(learner.id)) coins += DUEL_PROGRESS_COINS;
       }
     }
     const theirs = mine ? after.toScore : after.fromScore;
-    res.json({ score, total: duel.questionIds.length, theirScore: theirs, result: winner === null ? null : winner === "draw" ? "draw" : winner === learner.id ? "won" : "lost", coins, corrections });
+    const done = after.fromScore !== null && after.toScore !== null;
+    res.json({ score, total: duel.questionIds.length, theirScore: theirs, result: !done ? null : progressIds.includes(learner.id) ? "progress" : "finished", coins, corrections });
   });
 }

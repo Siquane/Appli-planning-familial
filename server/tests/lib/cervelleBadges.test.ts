@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { coinsFor, computeBadges, easter, seasonWindow, tierOf, type BadgeStats } from "../../src/lib/cervelle/badges";
 
-const zero: BadgeStats = { revisions: 0, subjects: 0, perfectQuizzes: 0, mastered: 0, bestInterro20: 0, bestStreak: 0, focusSessions: 0, preparedExams: 0, answers: 0, minutes: 0 };
+const zero: BadgeStats = { revisions: 0, subjects: 0, reviews: 0, mastered: 0, retakes: 0, bestStreak: 0, focusSessions: 0, preparedExams: 0, answers: 0, minutes: 0 };
 
 describe("Cervelle — badges", () => {
   it("counts tiers", () => {
@@ -21,7 +21,7 @@ describe("Cervelle — badges", () => {
   });
 
   it("earns every tier reached, with what is left for the next one", () => {
-    const v = computeBadges({ ...zero, revisions: 12, perfectQuizzes: 1, bestInterro20: 20 }, [], "2026-11-17");
+    const v = computeBadges({ ...zero, revisions: 12, reviews: 1, retakes: 15 }, [], "2026-11-17");
     expect(v.earnedKeys).toEqual(expect.arrayContaining(["photographe:1", "photographe:2", "sans_faute:1", "as_interro:1", "as_interro:2", "as_interro:3"]));
     const photo = v.successes.find((s) => s.id === "photographe")!;
     expect(photo.tier).toBe(2);
