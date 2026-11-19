@@ -22,6 +22,7 @@ import { color, space } from "../../src/theme/tokens";
 import { dayOfWeek, progressLine, todayWeekday, WEEKDAYS_FULL } from "../../src/lib/weekdays";
 import { daysUntilBirthday } from "../../src/lib/notifications";
 import type { Weekday } from "../../src/api/types";
+import { de } from "../../src/lib/elision";
 
 const BIRTHDAY_LOOKAHEAD_DAYS = 7;
 
@@ -112,8 +113,8 @@ export default function HomeScreen() {
           {upcomingBirthday.days === 0 ? <PartyIcon size={18} color={color.accent200} /> : <GiftIcon size={16} color={color.accent200} />}
           <Text size={13} style={{ flex: 1, marginLeft: space.sm }}>
             {upcomingBirthday.days === 0
-              ? `C'est l'anniversaire de ${upcomingBirthday.member.name} aujourd'hui !`
-              : `Anniversaire de ${upcomingBirthday.member.name} dans ${upcomingBirthday.days} jour${upcomingBirthday.days > 1 ? "s" : ""}`}
+              ? `C'est l'anniversaire ${de(upcomingBirthday.member.name)} aujourd'hui !`
+              : `Anniversaire ${de(upcomingBirthday.member.name)} dans ${upcomingBirthday.days} jour${upcomingBirthday.days > 1 ? "s" : ""}`}
           </Text>
           <Button label="Voir" variant="ghost" onPress={() => router.push("/birthdays")} />
         </Card>

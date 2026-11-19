@@ -14,6 +14,7 @@ import { useCreateMember, useMembers } from "../../src/hooks/useApi";
 import { useAuthStore } from "../../src/state/authStore";
 import type { Tint } from "../../src/api/types";
 import { color, space, gutter } from "../../src/theme/tokens";
+import { de } from "../../src/lib/elision";
 
 // Same rotation as onboarding, so new members keep alternating colors.
 const TINTS: Tint[] = ["accent", "accent2", "neutral"];
@@ -68,7 +69,7 @@ export default function FamilleTab() {
                 key={m.id}
                 onPress={isChild ? undefined : () => router.push(`/member/${m.id}`)}
                 disabled={isChild}
-                accessibilityLabel={`Fiche de ${m.name}`}
+                accessibilityLabel={`Fiche ${de(m.name)}`}
                 style={{ flexDirection: "row", alignItems: "center", gap: space.sm, paddingVertical: space.sm, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: color.divider }}
               >
                 <Avatar initials={m.initials} bg={m.tint === "neutral" ? color.neutral700 : color.accent800} fg={m.tint === "neutral" ? color.neutral100 : color.accent100} size={30} />

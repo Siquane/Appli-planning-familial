@@ -13,6 +13,7 @@ import { useMembers, useTasks, useUpdateMember } from "../src/hooks/useApi";
 import { AGE_BRACKETS, bracketForAge, transversalTasksForAge } from "../src/lib/ageTasks";
 import { color, space, gutter } from "../src/theme/tokens";
 import type { Member } from "../src/api/types";
+import { de } from "../src/lib/elision";
 
 function AgeSetter({ member }: { member: Member }) {
   const [value, setValue] = useState("");
@@ -32,7 +33,7 @@ function AgeSetter({ member }: { member: Member }) {
         {member.name}
       </Text>
       <View style={{ width: 64 }}>
-        <TextField value={value} onChangeText={setValue} placeholder="Âge" accessibilityLabel={`Âge de ${member.name}`} keyboardType="number-pad" />
+        <TextField value={value} onChangeText={setValue} placeholder="Âge" accessibilityLabel={`Âge ${de(member.name)}`} keyboardType="number-pad" />
       </View>
       <Button
         label="Valider"
