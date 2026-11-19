@@ -368,3 +368,9 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 
 - En-tête **`X-Child-Space: <memberId>`** : dans `requireAuth`, un adulte de la même famille (pas un enfant) voit `req.privateId` remplacé par le compte enfant → budget (toutes les routes `privateSpace`) et documents de l'enfant, en lecture et en écriture. Enfant inconnu ou d'une autre famille → 404 `child_space_not_found`. L'en-tête est ignoré pour un compte enfant.
 - Appli : `src/state/childSpaceStore.ts` (non persisté) + `src/lib/childSpace.ts` (`enterChildSpace` / `exitChildSpace` oublient les requêtes budget/documents). Fiche du membre → « Son budget » / « Ses documents » ; bandeau `ChildSpaceBanner` « Espace de Jules · Revenir à mon espace » sur Budget et Documents. Le client ajoute l'en-tête ; le cache persistant ne garde pas ces données, et les écritures ne passent pas par la file hors connexion pendant ce mode.
+
+## Demandes d'échange d'étoiles (18/11/2026)
+
+- Modèle `RewardRequest` (migration `20261118180000_reward_requests`) : pending → accepted / declined (+ petit mot du parent).
+- `POST /stars/rewards/:id/request` (compte enfant seulement, s'il a assez d'étoiles, une demande en attente par récompense) → notification aux comptes adultes « Jules demande : Cinéma (20 étoiles). » (lien `/stars`). `POST /stars/requests/:id/accept` (enregistre l'échange, revérifie le solde) et `/decline` `{ note }` → notification au téléphone de l'enfant. `GET /stars` renvoie `requests` (en attente + 10 dernières réponses). La garde enfant autorise seulement la route de demande.
+- Écran Étoiles : l'enfant voit ses récompenses avec « Demander » (ou « Demandée ») et « Mes demandes » ; les adultes ont un bloc « Demandes » avec Accepter / Refuser (mot facultatif).

@@ -4,6 +4,7 @@ import { app } from "../../src/index";
 import { prisma } from "../../src/db";
 import { authHeader, signup } from "../helpers";
 import { childAllowed } from "../../src/lib/childAccess";
+import { setPushSender, type PushMessage } from "../../src/lib/familyAlerts";
 
 async function familyWithChild(age = 10) {
   const parent = await signup(app);
@@ -143,5 +144,54 @@ describe("childAllowed", () => {
     expect(childAllowed("POST", "/family/leave")).toBe(false);
     expect(childAllowed("PUT", "/stars/toggle")).toBe(false);
     expect(childAllowed("POST", "/meals/generate")).toBe(false);
+  });
+});
+
+describe("reward requests", () => {
+  it("the child asks, the parent is notified and accepts; the child is told", async () => {
+    const sent: PushMessage[] = [];
+    setPushSender(async (m) => {
+      sent.push(...m);
+    });
+    try {
+      const { auth, member } = await familyWithChild();
+      await request(app).put("/notifications/push-token").set(auth).send({ token: "ExponentPushToken[parent]" });
+      const task = (await request(app).post("/tasks").set(auth).send({ title: "Ranger", category: "Maison", weekday: 1, time: "18:00", memberIds: [member.id], stars: 5 })).body.task;
+      await request(app).post("/stars/complete").set(auth).send({ taskId: task.id, memberId: member.id, week: "2026-11-16" });
+      const cheap = (await request(app).post("/stars/rewards").set(auth).send({ title: "Dessert", cost: 3 })).body.reward;
+      const dear = (await request(app).post("/stars/rewards").set(auth).send({ title: "Cinéma", cost: 20 })).body.reward;
+      const { childAuth } = await childLogin(auth, member.id);
+      await request(app).put("/notifications/push-token").set(childAuth).send({ token: "ExponentPushToken[child]" });
+
+      // Pas assez d'étoiles pour le cinéma.
+      expect((await request(app).post(`/stars/rewards/${dear.id}/request`).set(childAuth)).body.code).toBe("not_enough_stars");
+      const asked = await request(app).post(`/stars/rewards/${cheap.id}/request`).set(childAuth);
+      expect(asked.status).toBe(201);
+      expect((await request(app).post(`/stars/rewards/${cheap.id}/request`).set(childAuth)).body.code).toBe("already_requested");
+      // Un adulte n'utilise pas cette route ; l'enfant ne peut pas accepter.
+      expect((await request(app).post(`/stars/rewards/${cheap.id}/request`).set(auth)).status).toBe(403);
+      expect((await request(app).post(`/stars/requests/${asked.body.request.id}/accept`).set(childAuth)).status).toBe(403);
+      expect(sent.map((m) => [m.to, m.body])).toEqual([["ExponentPushToken[parent]", "Jules demande : Dessert (3 étoiles)."]]);
+
+      const state = (await request(app).get("/stars?week=2026-11-16").set(auth)).body;
+      expect(state.requests).toEqual([expect.objectContaining({ title: "Dessert", status: "pending", memberId: member.id })]);
+
+      const accepted = await request(app).post(`/stars/requests/${asked.body.request.id}/accept`).set(auth);
+      expect(accepted.body.balance).toBe(2);
+      expect(sent.at(-1)).toMatchObject({ to: "ExponentPushToken[child]", body: "Accepté : Dessert ! Bravo 🎉" });
+      expect((await request(app).post(`/stars/requests/${asked.body.request.id}/accept`).set(auth)).status).toBe(404);
+
+      // Refus avec un petit mot.
+      const again = (await request(app).post(`/stars/rewards/${cheap.id}/request`).set(childAuth));
+      expect(again.status).toBe(409); // plus que 2 étoiles
+      const mini = (await request(app).post("/stars/rewards").set(auth).send({ title: "Autocollant", cost: 1 })).body.reward;
+      const asked2 = (await request(app).post(`/stars/rewards/${mini.id}/request`).set(childAuth)).body.request;
+      expect((await request(app).post(`/stars/requests/${asked2.id}/decline`).set(auth).send({ note: "Ce week-end" })).status).toBe(204);
+      expect(sent.at(-1)).toMatchObject({ to: "ExponentPushToken[child]", body: "Pas cette fois pour Autocollant : Ce week-end" });
+      const childView = (await request(app).get("/stars?week=2026-11-16").set(childAuth)).body;
+      expect(childView.requests.map((r: { status: string }) => r.status).sort()).toEqual(["accepted", "declined"]);
+    } finally {
+      setPushSender(null);
+    }
   });
 });

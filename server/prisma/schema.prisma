@@ -78,6 +78,7 @@ model User {
   starCompletions     StarCompletion[]
   rewards             Reward[]
   rewardRedemptions   RewardRedemption[]
+  rewardRequests      RewardRequest[]
   learners            Learner[]
   aiUsages            AiUsage[]
 }
@@ -152,6 +153,7 @@ model FamilyMember {
   recurringExpenses RecurringExpense[]
   starCompletions   StarCompletion[]
   rewardRedemptions RewardRedemption[]
+  rewardRequests    RewardRequest[]
   learners          Learner[]
 }
 
@@ -540,6 +542,7 @@ model Reward {
   cost        Int
   createdAt   DateTime           @default(now())
   redemptions RewardRedemption[]
+  requests    RewardRequest[]
 
   @@index([userId])
 }
@@ -1041,4 +1044,26 @@ model ChildLoginCode {
   createdAt DateTime @default(now())
 
   @@index([accountId])
+}
+
+// Un enfant (compte enfant) demande à échanger ses étoiles contre une
+// récompense ; un adulte accepte (l'échange est alors enregistré) ou refuse.
+model RewardRequest {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  rewardId  String?
+  reward    Reward?      @relation(fields: [rewardId], references: [id], onDelete: SetNull)
+  title     String
+  cost      Int
+  // "pending" | "accepted" | "declined"
+  status    String       @default("pending")
+  // Petit mot du parent en cas de refus.
+  note      String       @default("")
+  createdAt DateTime     @default(now())
+  decidedAt DateTime?
+
+  @@index([userId, status])
 }

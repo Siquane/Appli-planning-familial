@@ -90,11 +90,13 @@ export async function deleteChildAccountsOf(familyId: string): Promise<void> {
 const READ_BLOCKED = ["/share", "/calendar", "/billing", "/cervelle", "/family/children"];
 const WRITE_BLOCKED = ["/members", "/family", "/share", "/constraints", "/calendar", "/recipes", "/meals", "/shopping", "/stars", "/billing", "/plan", "/cervelle"];
 const WRITE_ALLOWED = ["/family/notice"];
+// Demander une récompense (le reste des étoiles reste aux adultes).
+const WRITE_ALLOWED_PATTERNS = [/^\/stars\/rewards\/[^/]+\/request$/];
 
 const under = (path: string, prefix: string) => path === prefix || path.startsWith(`${prefix}/`);
 
 export function childAllowed(method: string, path: string): boolean {
   if (method === "GET" || method === "HEAD") return !READ_BLOCKED.some((p) => under(path, p));
-  if (WRITE_ALLOWED.some((p) => under(path, p))) return true;
+  if (WRITE_ALLOWED.some((p) => under(path, p)) || WRITE_ALLOWED_PATTERNS.some((r) => r.test(path))) return true;
   return !WRITE_BLOCKED.some((p) => under(path, p));
 }
