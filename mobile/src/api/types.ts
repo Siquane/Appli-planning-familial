@@ -558,3 +558,29 @@ export interface Note {
 }
 
 export type NoteInput = Pick<Note, "title" | "body" | "shared" | "color" | "pinned">;
+
+/** Argent de poche d'un enfant (compte enfant). */
+export interface PocketMoneyRule {
+  amountCents: number;
+  frequency: "weekly" | "monthly";
+  /** weekly : 0 = lundi … 6 = dimanche ; monthly : 1 à 28. */
+  day: number;
+  /** Prochain versement, « AAAA-MM-JJ ». */
+  nextDay: string;
+}
+
+export interface PocketMoneyCredit {
+  id: string;
+  amountCents: number;
+  label: string;
+  day: string;
+  source: "auto" | "manual";
+}
+
+export interface PocketMoney {
+  rule: PocketMoneyRule | null;
+  credits: PocketMoneyCredit[];
+  receivedCents: number;
+  spentCents: number;
+  balanceCents: number;
+}

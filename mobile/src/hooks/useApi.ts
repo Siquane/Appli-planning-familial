@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi, notesApi } from "../api/resources";
+import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi, notesApi, pocketMoneyApi } from "../api/resources";
 import type { NoteInput, MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskDoneMark, TaskInput, Tint, Weekday } from "../api/types";
+import { useChildSpaceStore } from "../state/childSpaceStore";
 import { useAuthStore, useIsChildAccount } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
 import { buildCategoryOptions } from "../lib/money";
@@ -635,3 +636,21 @@ function useNotesMutation<T, R>(fn: (input: T) => Promise<R>) {
 export const useCreateNote = () => useNotesMutation((data: NoteInput) => notesApi.create(data).then((r) => r.note));
 export const useUpdateNote = () => useNotesMutation(({ id, data }: { id: string; data: Partial<NoteInput> }) => notesApi.update(id, data).then((r) => r.note));
 export const useDeleteNote = () => useNotesMutation((id: string) => notesApi.remove(id));
+
+// Argent de poche : pour un compte enfant, ou pour un parent dans « Espace de Jules ».
+export function usePocketMoney() {
+  const enabled = useEnabled();
+  const isChild = useIsChildAccount();
+  const inChildSpace = useChildSpaceStore((st) => !!st.memberId);
+  return useQuery({ queryKey: ["pocket-money"], queryFn: () => pocketMoneyApi.get(), enabled: enabled && (isChild || inChildSpace) });
+}
+
+function usePocketMoneyMutation<V>(fn: (v: V) => Promise<unknown>) {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: fn, onSuccess: () => qc.invalidateQueries({ queryKey: ["pocket-money"] }) });
+}
+
+export const useSetPocketMoneyRule = () => usePocketMoneyMutation((d: { amountCents: number; frequency: "weekly" | "monthly"; day: number }) => pocketMoneyApi.setRule(d));
+export const useRemovePocketMoneyRule = () => usePocketMoneyMutation(() => pocketMoneyApi.removeRule());
+export const useAddPocketMoneyCredit = () => usePocketMoneyMutation((d: { amountCents: number; label: string }) => pocketMoneyApi.addCredit(d));
+export const useRemovePocketMoneyCredit = () => usePocketMoneyMutation((id: string) => pocketMoneyApi.removeCredit(id));

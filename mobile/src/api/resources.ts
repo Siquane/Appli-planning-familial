@@ -49,8 +49,7 @@ import type {
   Task,
   TaskInput,
   Tint,
-  Weekday,
-} from "./types";
+  Weekday, PocketMoney, PocketMoneyCredit } from "./types";
 
 export const membersApi = {
   list: () => api.get<{ members: Member[] }>("/members"),
@@ -213,6 +212,14 @@ export const starsApi = {
   requestReward: (id: string) => api.post<{ request: { id: string; status: string } }>(`/stars/rewards/${id}/request`, {}),
   acceptRequest: (id: string) => api.post<{ balance: number }>(`/stars/requests/${id}/accept`, {}),
   declineRequest: (id: string, note: string) => api.post<void>(`/stars/requests/${id}/decline`, { note }),
+};
+
+export const pocketMoneyApi = {
+  get: () => api.get<PocketMoney>("/pocket-money"),
+  setRule: (data: { amountCents: number; frequency: "weekly" | "monthly"; day: number }) => api.put<void>("/pocket-money/rule", data),
+  removeRule: () => api.delete<void>("/pocket-money/rule"),
+  addCredit: (data: { amountCents: number; label: string }) => api.post<{ credit: PocketMoneyCredit }>("/pocket-money/credits", data),
+  removeCredit: (id: string) => api.delete<void>(`/pocket-money/credits/${id}`),
 };
 
 export const notesApi = {

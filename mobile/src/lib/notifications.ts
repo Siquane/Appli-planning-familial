@@ -2,9 +2,10 @@ import * as Notifications from "expo-notifications";
 import { TRIAL_REMINDER_DAYS, trialReminderDate } from "./premium";
 import { Platform } from "react-native";
 import { useToastStore } from "../state/toastStore";
-import type { Member, Task, Weekday } from "../api/types";
+import type { Member, PocketMoneyRule, Task, Weekday } from "../api/types";
 import { whoLabel } from "../widgets/snapshot";
 import { dayKey, parseDay, reminderText, remindAt } from "./appointments";
+import { formatEuros } from "./money";
 import { de } from "./elision";
 
 // How long before a recurring task's time its reminder fires.
@@ -331,6 +332,50 @@ export async function syncAppointmentNotifications(tasks: Task[], members: Membe
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: n.date },
       })
     )
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Argent de poche (téléphone de l'enfant) : une notification à 9 h les
+// prochains jours de versement. Le versement lui-même est créé par le serveur
+// quand le budget est consulté.
+
+const POCKET_ID_PREFIX = "pocket:";
+const POCKET_NOTIFY_HOUR = 9;
+const POCKET_AHEAD = 4;
+
+/** Les prochains jours de versement à partir de rule.nextDay, à 9 h. */
+export function pocketMoneyMoments(rule: Pick<PocketMoneyRule, "frequency" | "day" | "nextDay"> | null, count = POCKET_AHEAD): Date[] {
+  if (!rule) return [];
+  const out: Date[] = [];
+  let d = parseDay(rule.nextDay);
+  for (let i = 0; i < count; i++) {
+    const at = new Date(d);
+    at.setHours(POCKET_NOTIFY_HOUR, 0, 0, 0);
+    out.push(at);
+    d = rule.frequency === "weekly" ? new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7, 12) : new Date(d.getFullYear(), d.getMonth() + 1, rule.day, 12);
+  }
+  return out;
+}
+
+export async function syncPocketMoneyNotifications(rule: PocketMoneyRule | null): Promise<void> {
+  if (Platform.OS === "web") return;
+  if (!(await hasNotificationPermission())) return;
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    scheduled.filter((req) => req.identifier?.startsWith(POCKET_ID_PREFIX)).map((req) => Notifications.cancelScheduledNotificationAsync(req.identifier))
+  );
+  const now = new Date();
+  await Promise.all(
+    pocketMoneyMoments(rule)
+      .filter((at) => at > now)
+      .map((at, i) =>
+        Notifications.scheduleNotificationAsync({
+          identifier: `${POCKET_ID_PREFIX}${i}`,
+          content: { title: "Argent de poche", body: `+${formatEuros(rule!.amountCents)} d'argent de poche aujourd'hui !`, data: { url: "/pocket-money" } },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at },
+        })
+      )
   );
 }
 

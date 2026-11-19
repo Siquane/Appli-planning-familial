@@ -3,8 +3,8 @@ import { AppState } from "react-native";
 import { router, Tabs } from "expo-router";
 import { useIsChildAccount } from "../../src/state/authStore";
 import { CustomTabBar } from "../../src/components/CustomTabBar";
-import { useMembers, useTasks } from "../../src/hooks/useApi";
-import { syncBirthdayReminders, syncEveningDigest, syncMorningDigest, syncTaskReminders, syncAppointmentNotifications } from "../../src/lib/notifications";
+import { useMembers, useTasks, usePocketMoney } from "../../src/hooks/useApi";
+import { syncBirthdayReminders, syncEveningDigest, syncMorningDigest, syncTaskReminders, syncAppointmentNotifications, syncPocketMoneyNotifications } from "../../src/lib/notifications";
 import { useSettingsStore } from "../../src/state/settingsStore";
 import { useWidgetSync } from "../../src/widgets/sync";
 import { takeWidgetRoute } from "../../src/widgets/links";
@@ -86,6 +86,12 @@ export default function TabsLayout() {
   useEffect(() => {
     if (tasks && digestHydrated) syncAppointmentNotifications(tasks, members ?? [], { enabled: morningDigest, time: morningTime });
   }, [tasks, members, digestHydrated, morningDigest, morningTime]);
+
+  // Téléphone d'un enfant : notification les jours d'argent de poche.
+  const { data: pocketMoney } = usePocketMoney();
+  useEffect(() => {
+    if (isChild && pocketMoney) syncPocketMoneyNotifications(pocketMoney.rule);
+  }, [isChild, pocketMoney]);
 
   return (
     <>
