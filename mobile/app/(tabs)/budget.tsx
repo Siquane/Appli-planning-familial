@@ -10,6 +10,7 @@ import { Card } from "../../src/components/Card";
 import { Button } from "../../src/components/Button";
 import { TabHeader } from "../../src/components/PageHeader";
 import { ChildSpaceBanner } from "../../src/components/ChildSpaceBanner";
+import { PocketMoneyCard } from "../../src/components/PocketMoneyCard";
 import { CalendarIcon, ChartIcon, ChevronLeftIcon, DocumentIcon, ChevronRightIcon, PlusIcon, RecurringIcon, SparkleIcon, TargetIcon, WarningIcon } from "../../src/components/icons";
 import { useDrifts, useExpenseCategories, useForecast, useMembers, useMonthlyBudget, usePlan } from "../../src/hooks/useApi";
 import { budgetToCsv, categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../../src/lib/money";
@@ -44,6 +45,7 @@ export default function BudgetScreen() {
       <ScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <TabHeader title="Budget" />
         <ChildSpaceBanner />
+        <PocketMoneyCard />
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <MonthArrow onPress={() => setMonth(shiftMonth(month, -1))} label="Mois précédent">
             <ChevronLeftIcon size={16} color={color.text} />

@@ -10,8 +10,8 @@ Dernière mise à jour : 19 novembre 2026 (documentation, dépendances, nettoyag
 - **Garde EAS Update** : si `mobile/package.json` ou `app.json` changent sans nouveau `runtimeVersion`, le push n'est pas publié (avertissement) ; le push suivant publiera tout le JS. Un changement natif = nouveau `runtimeVersion` + nouvel APK.
 - **Serveur** : Render (`https://appli-planning-familial-0lyd.onrender.com`), déployé à chaque fusion sur `main` (migrations Prisma au déploiement). Base Neon.
 - **Rôles de compte** : `owner` (créateur), `full` (tout partagé), `planning` (budget/documents perso), `child` (8–14 ans, accès créé par un parent, voir « Accès enfant »).
-- **Fonctions livrées les 17–19/11** : notes + widget Notes, récap du matin, horaires de travail et « Mes horaires », rendez-vous datés et navigation par semaines, liens de partage par membre (page web), accès enfant + « Espace de l'enfant », demandes d'échange d'étoiles, widgets « + » centrés, espacement des formulaires (`space.section`).
-- **Restent à faire / idées validées** : argent de poche automatique (enfant) ; RevenueCat / Play Console (achats) ; synchronisation Google/Outlook (pas activée) ; dépendances natives à monter au prochain APK (voir « Dépendances »).
+- **Fonctions livrées les 17–19/11** : notes + widget Notes, récap du matin, horaires de travail et « Mes horaires », rendez-vous datés et navigation par semaines, liens de partage par membre (page web), accès enfant + « Espace de l'enfant », demandes d'échange d'étoiles, argent de poche automatique, widgets « + » centrés, espacement des formulaires (`space.section`).
+- **Restent à faire / idées validées** : RevenueCat / Play Console (achats) ; synchronisation Google/Outlook (pas activée) ; dépendances natives à monter au prochain APK (voir « Dépendances »).
 - **À faire par l'utilisatrice dans Render** (si pas fait) : `ANTHROPIC_API_KEY`, `LIFETIME_PREMIUM_EMAILS`. Sauvegarde hebdomadaire : 5 secrets GitHub à ajouter. cron-job.org (`/health` toutes les 10 min).
 - Règles : avant de pousser, `git fetch origin main` et partir de main ; migrations datées **après** la dernière de main ; une PR prête à fusionner par changement, fusion seulement après accord.
 
@@ -181,8 +181,8 @@ Mises à jour majeures du serveur : faites le 13/11 au soir (voir « Dépendance
 
 ## Idées notées pour plus tard
 
-Faites depuis : comptes par membre (rôles + accès enfant), étoiles des enfants, thème clair, demandes d'échange d'étoiles.
-Encore à faire : argent de poche automatique, synchronisation Google Agenda, statistiques du budget sur 12 mois, idées cadeaux d'anniversaire, liste de courses en temps réel, version iPhone (99 €/an).
+Faites depuis : comptes par membre (rôles + accès enfant), étoiles des enfants, thème clair, demandes d'échange d'étoiles, argent de poche automatique.
+Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 mois, idées cadeaux d'anniversaire, liste de courses en temps réel, version iPhone (99 €/an).
 
 ## Dépendances et mises à jour (12–13/11/2026)
 
@@ -396,3 +396,10 @@ Encore à faire : argent de poche automatique, synchronisation Google Agenda, st
 - Recettes rafraîchies toutes les 5 min au lieu de 1 min (liste longue, change peu).
 - Démarrage : un compte qui a rejoint une famille (ou un enfant) saute l'accueil sans interroger le serveur.
 - Serveur : les rendez-vous de la semaine pour le placement et les dates de rendez-vous utilisent les jours de Paris (`lib/cervelle/days.ts`) au lieu de l'heure UTC de Render.
+
+## Argent de poche automatique (19/11/2026)
+
+- Modèles `PocketMoneyRule` (une par compte enfant : montant, `weekly` jour 0–6 ou `monthly` jour 1–28, `startDay`) et `PocketMoneyCredit` (`auto` ou `manual`, jour de Paris). Migration `20261119080000_pocket_money`. Logique : `server/src/lib/pocketMoney.ts`.
+- **Pas de tâche programmée** : les versements dus sont créés à la lecture (`catchUpPocketMoney`, verrou `pg_advisory_xact_lock` contre les doublons, 60 au plus d'un coup). Une nouvelle règle commence le lendemain.
+- Routes `/pocket-money` : `GET` (règle + prochain versement, 50 derniers versements, reçu / dépensé = toutes ses dépenses / reste), `PUT|DELETE /rule`, `POST /credits` (ponctuel), `DELETE /credits/:id`. Compte visé = `req.privateId` (l'enfant lui-même, ou un adulte avec `X-Child-Space`) ; seul un adulte écrit (garde enfant).
+- Appli : carte « Mon argent de poche » / « Argent de poche de Jules » en haut du Budget (`PocketMoneyCard`), écran `app/pocket-money.tsx` (réglage semaine/mois + jour, versement ponctuel, historique, appui long pour retirer côté parent). Téléphone de l'enfant : notification locale à 9 h les 4 prochains jours de versement (`syncPocketMoneyNotifications`).

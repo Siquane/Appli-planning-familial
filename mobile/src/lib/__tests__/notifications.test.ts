@@ -1,7 +1,7 @@
 // Only the pure date helpers are tested here; the native module is stubbed.
 jest.mock("expo-notifications", () => ({ setNotificationHandler: jest.fn() }));
 
-import { appointmentNotifications, daysUntilBirthday, digestTasks, nextBirthdayOccurrence, reminderMoment, toExpoWeekday } from "../notifications";
+import { appointmentNotifications, daysUntilBirthday, digestTasks, nextBirthdayOccurrence, pocketMoneyMoments, reminderMoment, toExpoWeekday } from "../notifications";
 import type { Task } from "../../api/types";
 
 describe("toExpoWeekday", () => {
@@ -70,5 +70,13 @@ describe("appointments", () => {
   it("skips past appointments and the morning recap when it is off", () => {
     expect(appointmentNotifications([{ ...rdv, appointmentDate: "2026-11-10" }], [], { enabled: true, time: "09:00" }, now)).toEqual([]);
     expect(appointmentNotifications([{ ...rdv, remind: null }], [], { enabled: false, time: "09:00" }, now)).toEqual([]);
+  });
+});
+
+describe("pocketMoneyMoments", () => {
+  it("weekly and monthly, at 9:00", () => {
+    expect(pocketMoneyMoments({ frequency: "weekly", day: 5, nextDay: "2026-11-21" }, 2)).toEqual([new Date(2026, 10, 21, 9), new Date(2026, 10, 28, 9)]);
+    expect(pocketMoneyMoments({ frequency: "monthly", day: 1, nextDay: "2026-12-01" }, 2)).toEqual([new Date(2026, 11, 1, 9), new Date(2027, 0, 1, 9)]);
+    expect(pocketMoneyMoments(null)).toEqual([]);
   });
 });

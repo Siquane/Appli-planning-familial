@@ -17,4 +17,4 @@ export const useChildSpaceStore = create<ChildSpaceState>((set) => ({
 }));
 
 /** Données propres à un espace (budget et documents) : à oublier quand on change d'espace. */
-export const PRIVATE_QUERY_KEYS = ["documents", "expenses", "expense-categories", "category-budgets", "recurring-expenses", "savings-goals"];
+export const PRIVATE_QUERY_KEYS = ["documents", "expenses", "expense-categories", "category-budgets", "recurring-expenses", "savings-goals", "pocket-money"];

@@ -39,6 +39,8 @@ model User {
   childMemberId        String?       @unique
   childMember          FamilyMember? @relation("ChildAccount", fields: [childMemberId], references: [id], onDelete: Cascade)
   childLoginCodes      ChildLoginCode[]
+  pocketMoneyRule      PocketMoneyRule?    @relation("PocketMoneyRule")
+  pocketMoneyCredits   PocketMoneyCredit[] @relation("PocketMoneyCredits")
   familyInvite         FamilyInvite?
   // One-time message (JSON) shown at the next opening after the family changed hands; see lib/familyHandover.ts.
   familyNotice         String?
@@ -1085,4 +1087,37 @@ model RewardRequest {
   decidedAt DateTime?
 
   @@index([userId, status])
+}
+
+// Argent de poche d'un enfant (compte enfant) : une règle (montant, chaque
+// semaine ou chaque mois) et les versements reçus, automatiques ou ponctuels.
+// Les versements automatiques sont créés à la lecture (pas de tâche programmée).
+model PocketMoneyRule {
+  id          String   @id @default(cuid())
+  accountId   String   @unique
+  account     User     @relation("PocketMoneyRule", fields: [accountId], references: [id], onDelete: Cascade)
+  amountCents Int
+  // "weekly" | "monthly"
+  frequency   String
+  // weekly : 0 = lundi … 6 = dimanche ; monthly : jour du mois 1 à 28.
+  day         Int
+  // Premier jour possible d'un versement, « AAAA-MM-JJ ».
+  startDay    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PocketMoneyCredit {
+  id          String   @id @default(cuid())
+  accountId   String
+  account     User     @relation("PocketMoneyCredits", fields: [accountId], references: [id], onDelete: Cascade)
+  amountCents Int
+  label       String
+  // « AAAA-MM-JJ » (heure de Paris)
+  day         String
+  // "auto" (règle) | "manual" (ajouté par un parent)
+  source      String
+  createdAt   DateTime @default(now())
+
+  @@index([accountId, day])
 }

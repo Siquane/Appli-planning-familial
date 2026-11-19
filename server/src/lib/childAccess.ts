@@ -88,7 +88,7 @@ export async function deleteChildAccountsOf(familyId: string): Promise<void> {
 // Écriture : rien sur ces chemins (gestion de la famille, repas, étoiles,
 // achats, agendas externes, Cervelle). Les tâches sont vérifiées dans leur route.
 const READ_BLOCKED = ["/share", "/calendar", "/billing", "/cervelle", "/family/children"];
-const WRITE_BLOCKED = ["/members", "/family", "/share", "/constraints", "/calendar", "/recipes", "/meals", "/shopping", "/stars", "/billing", "/plan", "/cervelle"];
+const WRITE_BLOCKED = ["/members", "/family", "/share", "/constraints", "/calendar", "/recipes", "/meals", "/shopping", "/stars", "/billing", "/plan", "/cervelle", "/pocket-money"];
 const WRITE_ALLOWED = ["/family/notice"];
 // Demander une récompense (le reste des étoiles reste aux adultes).
 const WRITE_ALLOWED_PATTERNS = [/^\/stars\/rewards\/[^/]+\/request$/];
