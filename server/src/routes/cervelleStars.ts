@@ -71,13 +71,17 @@ export function mountStars(router: Router, d: { loadLearner: (req: Request, res:
     const month = MONTH.test(asked) && asked <= current ? asked : current;
     const stars = starsOf(await monthFacts(learner, month));
 
+    // Read what is already paid first: only the steps newly reached cost a write.
+    const readPaid = async () => new Map((await prisma.starEvent.findMany({ where: { learnerId: learner.id, key: { startsWith: `step:${month}:` } } })).map((e) => [Number(e.key.split(":")[2]), e]));
+    let paidSteps = await readPaid();
     const fresh: { at: number; coins: number; item: string | null }[] = [];
     for (const s of STEPS) {
       if (stars.total < s.at) break;
+      if (paidSteps.has(s.at)) continue;
       const paid = await payStep(learner, month, s.at, s.reward);
       if (paid) fresh.push({ at: s.at, ...paid });
     }
-    const paidSteps = new Map((await prisma.starEvent.findMany({ where: { learnerId: learner.id, key: { startsWith: `step:${month}:` } } })).map((e) => [Number(e.key.split(":")[2]), e]));
+    if (fresh.length) paidSteps = await readPaid();
     const theme = themeOf(month);
     const itemName = (id: string | null) => (id ? (SHOP.find((i) => i.id === id)?.name ?? id) : null);
     res.json({

@@ -38,9 +38,16 @@ export function mountGoals(router: Router, d: { loadLearner: (req: Request, res:
     if (!learner) return;
     const today = parisDay();
     const goals = await prisma.learnerGoal.findMany({ where: { learnerId: learner.id }, orderBy: { createdAt: "asc" } });
+    // Goals of the same kind share one count (the month's stars are the costly one).
+    const byKind = new Map<string, ReturnType<typeof progress>>();
+    const progressOf = (g: LearnerGoal) => {
+      if (!byKind.has(g.kind)) byKind.set(g.kind, progress(learner, g, today));
+      return byKind.get(g.kind)!;
+    };
+    const all = await Promise.all(goals.map(progressOf));
     const out = [];
-    for (const g of goals) {
-      const p = await progress(learner, g, today);
+    for (const [i, g] of goals.entries()) {
+      const p = all[i];
       const reached = p.current >= g.target;
       if (reached && !g.wins.includes(p.period)) await prisma.learnerGoal.update({ where: { id: g.id }, data: { wins: { push: p.period } } });
       out.push({ id: g.id, kind: g.kind, target: g.target, reward: g.reward, current: Math.min(p.current, g.target), label: p.label, until: p.until, reached, wins: reached && !g.wins.includes(p.period) ? g.wins.length + 1 : g.wins.length });
