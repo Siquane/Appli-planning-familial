@@ -2,7 +2,7 @@ import { Modal, Pressable, View } from "react-native";
 import { router, type Href } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "./Text";
-import { useAuthStore } from "../state/authStore";
+import { useIsChildAccount } from "../state/authStore";
 import { BookIcon, CalendarIcon, ClockIcon, DocumentIcon, MealIcon, NoteIcon, WalletIcon } from "./icons";
 import { color, radius, space } from "../theme/tokens";
 
@@ -23,7 +23,7 @@ export const QUICK_ADD_ITEMS: Item[] = [
 const CHILD_HIDDEN = ["Recette", "Repas"];
 
 export function QuickAddSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const isChild = useAuthStore((s) => s.user?.familyRole === "child");
+  const isChild = useIsChildAccount();
   const insets = useSafeAreaInsets();
 
   function go(href: Href) {

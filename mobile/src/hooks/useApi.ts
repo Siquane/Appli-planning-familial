@@ -1,13 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi, notesApi } from "../api/resources";
 import type { NoteInput, MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskDoneMark, TaskInput, Tint, Weekday } from "../api/types";
-import { useAuthStore } from "../state/authStore";
+import { useAuthStore, useIsChildAccount } from "../state/authStore";
 import { uploadPickedFile, type PickedFile } from "../lib/documentUpload";
 import { buildCategoryOptions } from "../lib/money";
 import { offlineExpenses, offlineMeals, offlineShopping, offlineTasks } from "../lib/offlineApi";
 
 // Planning data is shared with the other accounts of the family: look for their changes every minute while the app is open.
 const SHARED_REFRESH_MS = 60_000;
+// Les recettes changent rarement et la liste peut être longue : moins souvent.
+const RECIPES_REFRESH_MS = 5 * 60_000;
 
 function useEnabled() {
   return !!useAuthStore((s) => s.accessToken);
@@ -37,7 +39,7 @@ export function useUpdateMember() {
 /** Account-wide consent to store diets, allergies and foods to limit (RGPD). */
 export function useFoodConsent() {
   const enabled = useEnabled();
-  const isChild = useAuthStore((st) => st.user?.familyRole === "child");
+  const isChild = useIsChildAccount();
   return useQuery({ queryKey: ["food-consent"], queryFn: () => membersApi.foodConsent().then((r) => r.consentedAt), enabled: enabled && !isChild });
 }
 
@@ -63,7 +65,7 @@ export function useDeleteMember() {
 
 export function useRecipes() {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["recipes"], queryFn: () => recipesApi.list().then((r) => r.recipes), enabled, refetchInterval: SHARED_REFRESH_MS });
+  return useQuery({ queryKey: ["recipes"], queryFn: () => recipesApi.list().then((r) => r.recipes), enabled, refetchInterval: RECIPES_REFRESH_MS });
 }
 
 export function useCreateRecipe() {
@@ -548,7 +550,7 @@ export function useRemoveSharedPerson() {
 
 export function useCalendarStatus() {
   const enabled = useEnabled();
-  const isChild = useAuthStore((st) => st.user?.familyRole === "child");
+  const isChild = useIsChildAccount();
   return useQuery({ queryKey: ["calendar-status"], queryFn: () => calendarApi.status(), enabled: enabled && !isChild });
 }
 

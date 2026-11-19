@@ -388,3 +388,11 @@ Encore à faire : argent de poche automatique, synchronisation Google Agenda, st
 - L'autre session qui parlait de `claude/passerelle-continuation-9zzxuo` et du commit `11b892e` se trompait : ni l'une ni l'autre n'existent ; anniversaires et recettes sont dans main depuis longtemps.
 - Sauvegarde hebdomadaire : **5 secrets GitHub encore à ajouter**. cron-job.org (`/health` toutes les 10 min) : à faire si pas fait.
 - Règles : avant de pousser, `git fetch origin main` et fusionner main ; ne jamais redescendre `runtimeVersion` ; migrations datées **après** la dernière de main.
+
+## Nettoyage et vitesse (19/11/2026)
+
+- `useIsChildAccount()` (`src/state/authStore.ts`) remplace les tests de rôle répétés.
+- Widgets : pas de rafraîchissement pendant « Espace de Jules » (sinon ils affichaient le budget de l'enfant).
+- Recettes rafraîchies toutes les 5 min au lieu de 1 min (liste longue, change peu).
+- Démarrage : un compte qui a rejoint une famille (ou un enfant) saute l'accueil sans interroger le serveur.
+- Serveur : les rendez-vous de la semaine pour le placement et les dates de rendez-vous utilisent les jours de Paris (`lib/cervelle/days.ts`) au lieu de l'heure UTC de Render.

@@ -239,3 +239,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user });
   },
 }));
+
+/** Compte enfant (8–14 ans, créé par un parent) : sert à masquer ce qu'il ne gère pas. */
+export function useIsChildAccount(): boolean {
+  return useAuthStore((s) => s.user?.familyRole === "child");
+}

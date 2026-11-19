@@ -2,7 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
-import { dateForWeekday, mondayOfWeek } from "../lib/dates";
+import { dateForWeekday } from "../lib/dates";
+import { addDays as addDayKey, mondayOf, parisDay, weekdayOf } from "../lib/cervelle/days";
 import { Constraints, getProposals, SchedulableTask, Weekday } from "../lib/scheduling";
 import { syncTaskToCalendar, unsyncTaskFromCalendar } from "../services/calendarSync";
 import type { Task } from "@prisma/client";
@@ -79,8 +80,7 @@ const taskSchema = z.object({
 
 /** Jour de la semaine (0 = lundi) et date stockée d'un rendez-vous. */
 function appointmentFields(day: string) {
-  const date = new Date(`${day}T12:00:00Z`);
-  return { weekday: (date.getUTCDay() + 6) % 7, date, recurring: false, flexible: false };
+  return { weekday: weekdayOf(day), date: new Date(`${day}T12:00:00Z`), recurring: false, flexible: false };
 }
 
 async function loadOwnedTask(userId: string, id: string) {
@@ -242,13 +242,10 @@ const autoSlotSchema = z.object({
   duration: z.number().int().min(1).max(24 * 60).optional(),
 });
 
-/** Les rendez-vous d'une autre semaine ne gênent pas le placement de cette semaine. */
+/** Les rendez-vous d'une autre semaine (heure de Paris) ne gênent pas le placement de cette semaine. */
 function notOtherWeeks() {
-  const monday = mondayOfWeek(new Date());
-  const key = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  return { OR: [{ appointmentDate: null }, { appointmentDate: { gte: key(monday), lte: key(sunday) } }] };
+  const monday = mondayOf(parisDay());
+  return { OR: [{ appointmentDate: null }, { appointmentDate: { gte: monday, lte: addDayKey(monday, 6) } }] };
 }
 
 /** Plages de la famille + horaires de travail du compte qui demande. */
