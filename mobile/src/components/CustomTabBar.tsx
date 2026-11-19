@@ -9,7 +9,7 @@ import { Text } from "./Text";
 import { QuickAddSheet } from "./QuickAddSheet";
 import { color, glow, space, gutter } from "../theme/tokens";
 import { GradientFill } from "./Brand";
-import { useAuthStore } from "../state/authStore";
+import { useIsChildAccount } from "../state/authStore";
 
 // The 4 pillars of Passerelle, two on each side of the « + ».
 // Each has its logo colour (cyan → violet); the active one lights up with a
@@ -28,7 +28,7 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
   const [quickAdd, setQuickAdd] = useState(false);
 
   // Un compte enfant n'a pas l'onglet Repas : Planning à gauche, Budget et Famille à droite.
-  const isChild = useAuthStore((s) => s.user?.familyRole === "child");
+  const isChild = useIsChildAccount();
   const routes = state.routes.filter((r: RouteItem) => TABS[r.name] && !(isChild && r.name === "repas"));
   const split = isChild ? 1 : 2;
   const left = routes.slice(0, split);

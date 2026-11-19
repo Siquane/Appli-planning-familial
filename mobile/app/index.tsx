@@ -17,6 +17,11 @@ export default function Index() {
   // configuré (réinstallation, autre téléphone). Dans ce cas, on le saute.
   useEffect(() => {
     if (!user || onboarded) return;
+    // Un compte qui a rejoint une famille (ou un enfant) n'a jamais l'accueil : inutile d'interroger le serveur.
+    if (accountIsSetUp({ familyRole: user.familyRole, members: 0, tasks: 0 })) {
+      complete().then(() => setChecked(true));
+      return;
+    }
     let cancelled = false;
     const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), CHECK_TIMEOUT_MS));
     const lookup = Promise.all([membersApi.list(), tasksApi.list()])

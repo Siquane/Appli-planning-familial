@@ -11,7 +11,7 @@ import { Button } from "../../src/components/Button";
 import { TabHeader } from "../../src/components/PageHeader";
 import { ChevronRightIcon, DocumentIcon, GiftIcon, NoteIcon, ProfileIcon, StarIcon } from "../../src/components/icons";
 import { useCreateMember, useMembers } from "../../src/hooks/useApi";
-import { useAuthStore } from "../../src/state/authStore";
+import { useIsChildAccount } from "../../src/state/authStore";
 import type { Tint } from "../../src/api/types";
 import { color, space, gutter } from "../../src/theme/tokens";
 
@@ -34,7 +34,7 @@ const ADULT_ONLY = ["Comptes de la famille", "Partager le planning"];
 export default function FamilleTab() {
   const { data: members = [] } = useMembers();
   const createMember = useCreateMember();
-  const isChild = useAuthStore((s) => s.user?.familyRole === "child");
+  const isChild = useIsChildAccount();
   const [name, setName] = useState("");
 
   function addMember() {

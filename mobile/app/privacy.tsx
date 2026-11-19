@@ -11,7 +11,7 @@ import { TopBar } from "../src/components/TopBar";
 import { Accordion } from "../src/components/Accordion";
 import { useFoodConsent, useSetFoodConsent } from "../src/hooks/useApi";
 import { deleteAccount } from "../src/lib/account";
-import { useAuthStore } from "../src/state/authStore";
+import { useIsChildAccount } from "../src/state/authStore";
 import { ApiError } from "../src/api/client";
 import { useToastStore } from "../src/state/toastStore";
 import { space, gutter } from "../src/theme/tokens";
@@ -38,7 +38,7 @@ export const PRIVACY_POLICY_URL = "https://claude.ai/artifact/6q5yK3yYE2SmCnZAMq
 // What Passerelle stores, where it goes, and the user's rights (RGPD): withdraw
 // the health-data consent, delete the account.
 export default function PrivacyScreen() {
-  const isChild = useAuthStore((st) => st.user?.familyRole === "child");
+  const isChild = useIsChildAccount();
   const { data: consentedAt } = useFoodConsent();
   const setConsent = useSetFoodConsent();
   const [password, setPassword] = useState("");

@@ -16,7 +16,7 @@ import { useAcceptRewardRequest, useAddReward, useDeclineRewardRequest, useMembe
 import { isChild, starsLabel, weekKey } from "../src/lib/stars";
 import { errorText } from "../src/lib/errors";
 import { useToastStore } from "../src/state/toastStore";
-import { useAuthStore } from "../src/state/authStore";
+import { useAuthStore, useIsChildAccount } from "../src/state/authStore";
 import { color, space, gutter } from "../src/theme/tokens";
 
 const toast = (m: string) => useToastStore.getState().show(m);
@@ -38,7 +38,7 @@ export default function StarsScreen() {
 
   const children = members.filter((m) => isChild(m));
   // Un compte enfant regarde ses étoiles : c'est un adulte qui valide, ajoute les récompenses et fait les échanges.
-  const viewerIsChild = useAuthStore((s) => s.user?.familyRole === "child");
+  const viewerIsChild = useIsChildAccount();
   const viewerMemberId = useAuthStore((s) => s.user?.childMemberId ?? null);
   const [selected, setSelected] = useState<string | null>(null);
   useEffect(() => {

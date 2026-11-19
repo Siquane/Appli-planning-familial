@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { AppState } from "react-native";
 import { router, Tabs } from "expo-router";
-import { useAuthStore } from "../../src/state/authStore";
+import { useIsChildAccount } from "../../src/state/authStore";
 import { CustomTabBar } from "../../src/components/CustomTabBar";
 import { useMembers, useTasks } from "../../src/hooks/useApi";
 import { syncBirthdayReminders, syncEveningDigest, syncMorningDigest, syncTaskReminders, syncAppointmentNotifications } from "../../src/lib/notifications";
@@ -19,7 +19,7 @@ import { queryClient } from "../../src/lib/queryClient";
 let handledAlert: string | null = null;
 
 export default function TabsLayout() {
-  const isChild = useAuthStore((s) => s.user?.familyRole === "child");
+  const isChild = useIsChildAccount();
   const { data: tasks } = useTasks();
   const { data: members } = useMembers();
   useWidgetSync();

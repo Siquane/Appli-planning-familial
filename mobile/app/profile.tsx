@@ -13,7 +13,7 @@ import { Avatar } from "../src/components/Avatar";
 import { CalendarIcon, ChevronRightIcon, ClockIcon, RecurringIcon, SparkleIcon } from "../src/components/icons";
 import { workSummary } from "../src/lib/workHours";
 import { useCalendarStatus, useConstraints, useDisconnectCalendar, usePlan } from "../src/hooks/useApi";
-import { useAuthStore } from "../src/state/authStore";
+import { useAuthStore, useIsChildAccount } from "../src/state/authStore";
 import { useToastStore } from "../src/state/toastStore";
 import { connectAppleCalendar, startOAuthConnect } from "../src/lib/calendarConnect";
 import { color, space } from "../src/theme/tokens";
@@ -45,7 +45,7 @@ export default function ProfileScreen() {
   const { data: status, refetch } = useCalendarStatus();
   const disconnect = useDisconnectCalendar();
   const plan = usePlan().data;
-  const isChild = useAuthStore((st) => st.user?.familyRole === "child");
+  const isChild = useIsChildAccount();
   const { data: constraints } = useConstraints();
   const packLabel = plan?.packs.budget.active && plan.packs.meals.active ? "Passerelle+" : plan?.packs.budget.active ? "Budget+" : plan?.packs.meals.active ? "Repas+" : "Découvrir Passerelle+";
   const [connecting, setConnecting] = useState<string | null>(null);
