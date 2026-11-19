@@ -1,25 +1,24 @@
-# CODING AGENTS: READ THIS FIRST
+# Passerelle
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+Appli de planning familial (Android) : tâches et rendez-vous de la semaine, repas et courses, budget, documents, notes, étoiles des enfants. Une famille partage les mêmes données entre plusieurs comptes ; les enfants de 8 à 14 ans ont un accès créé par un parent.
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+- `mobile/` : appli Expo SDK 58 / React Native 0.88 (expo-router), widgets Android, mises à jour sans APK par EAS Update.
+- `server/` : API Express 5 + Prisma 7 (Postgres Neon), hébergée sur Render.
+- `docs/` : politique de confidentialité, guides (notifications push, achats Android), programmes scolaires de Cervelle.
+- `project/` et `chats/` : maquettes HTML d'origine (Claude Design, « Rythmo App ») et la conversation de conception, gardées comme référence visuelle.
+- `assets/brand/` : logo Passerelle.
 
-## What you should do — IMPORTANT
+**À lire en premier : [`RESUME-PROJET.md`](RESUME-PROJET.md)** (état actuel, décisions, conventions, historique).
 
-**Read the chat transcripts first.** There are 1 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
+## Développement
 
-**Read `project/Rythmo App.dc.html` in full.** The user had this file open when they triggered the handoff, so it's almost certainly the primary design they want built. Read it top to bottom — don't skim. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+```bash
+# Serveur (Postgres local requis)
+cd server && npm install && npm run typecheck && npm test
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+# Appli
+cd mobile && npm install --legacy-peer-deps && npx tsc --noEmit && npx jest
+```
 
-## About the design files
-
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
-
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
-
-## Bundle contents
-
-- `README.md` — this file
-- `chats/` — conversation transcripts (read these!)
-- `project/` — the `Mobile app scoping questions` project files (HTML prototypes, assets, components)
+- Toute modification passe par une PR vers `main`. À la fusion : tests GitHub, déploiement Render, publication EAS Update (canal `preview`).
+- Changement natif (module, widget, `app.json`) : augmenter `runtimeVersion` dans `mobile/app.json` et compiler un APK avec le workflow « APK sur GitHub ».

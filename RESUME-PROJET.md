@@ -1,23 +1,19 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 15 novembre 2026 (tâches en série).
+Dernière mise à jour : 19 novembre 2026 (documentation, dépendances, nettoyage).
 
-## ⚠️ Point de reprise (13/11/2026, soir) — à lire d'abord
+## État actuel (19/11/2026) — à lire d'abord
 
-- **Branche `ccr-b18b6b3c-98hc5q` (jamais fusionnée, partie d'une base du 10/11) reprise entièrement** par la session du 13/11 soir :
-  - PR #16 fusionnée : correctif de perte de session (« Missing bearer token », renouvellement du jeton partagé).
-  - PR #17 fusionnée : 10 nouvelles catégories de dépenses (Factures → Énergie & eau, Autre → Divers ; migration `20261113160000`).
-  - PR #18 fusionnée : menus de la semaine générés par Claude (`POST /meals/generate`, `claude-opus-5-5`). **Nécessite `ANTHROPIC_API_KEY` dans Render** (clé créée par l'utilisatrice sur console.anthropic.com, à ajouter si ce n'est pas fait).
-  - PR « Premium » (voir ci-dessous) : quotas gratuits, packs Budget / Menus / les 2, épargne, alertes 80 %/100 %, bilan 6 mois, prévision, export PDF, abonnements Play Store via RevenueCat, **Premium à vie** pour la famille.
-- **`runtimeVersion` "5"** (PR #25, 14/11) : widgets réductibles jusqu'à 2 × 2 (`minWidth`/`minHeight` 110dp dans `app.json`). Après fusion : lancer « EAS Build (Android preview) » depuis main et installer le nouvel APK ; d'ici là, les APK runtime "4" ne reçoivent plus de mises à jour OTA.
-- **APK définitif runtime "4"** (build n°15 depuis main, 13/11 17 h) : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/091eeef2-0fbe-4a5a-920e-e798ce39ba19 — remplace l'APK runtime "3" (`541514d0…`, périmé).
-- **`runtimeVersion` "4"** avec la PR Premium (modules natifs : `react-native-purchases`, `expo-file-system`, `expo-sharing`). Après sa fusion : lancer « EAS Build (Android preview) » depuis main → **APK définitif**, à installer à la place de l'APK runtime "3".
-- **À faire par l'utilisatrice dans Render** : `ANTHROPIC_API_KEY` (menus) et `LIFETIME_PREMIUM_EMAILS` (son adresse de compte, et celles de la famille, séparées par des virgules) → Premium à vie au redémarrage.
-- RevenueCat / Play Console : pas configurés (sans clé `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`, l'écran Premium affiche « bientôt »). Guide : `docs/achats-android.md`. Profil EAS `production` (.aab) prêt, sur le canal `preview`.
-- L'autre session qui parlait de `claude/passerelle-continuation-9zzxuo` et du commit `11b892e` se trompait : ni l'une ni l'autre n'existent ; anniversaires et recettes sont dans main depuis longtemps.
-- Sauvegarde hebdomadaire : **5 secrets GitHub encore à ajouter**. cron-job.org (`/health` toutes les 10 min) : à faire si pas fait.
-- Règles : avant de pousser, `git fetch origin main` et fusionner main ; ne jamais redescendre `runtimeVersion` ; migrations datées **après** la dernière de main.
+- **Appli** : `runtimeVersion` **"8"**. APK à installer : https://github.com/Siquane/Appli-planning-familial/releases/download/apk-4/passerelle.apk (compilé sur GitHub le 18/11, arm64). Tout ce qui a suivi arrive par **EAS Update** (fermer puis rouvrir l'appli). Ne jamais redescendre `runtimeVersion`.
+- **Nouvel APK** : workflow « APK sur GitHub (sans quota Expo) » (`.github/workflows/apk-github.yml`, ~30 min, release `apk-<n°>`). Le workflow EAS cloud (`eas-build.yml`) dépend du quota gratuit Expo (épuisé en novembre, revient chaque 1er du mois).
+- **Garde EAS Update** : si `mobile/package.json` ou `app.json` changent sans nouveau `runtimeVersion`, le push n'est pas publié (avertissement) ; le push suivant publiera tout le JS. Un changement natif = nouveau `runtimeVersion` + nouvel APK.
+- **Serveur** : Render (`https://appli-planning-familial-0lyd.onrender.com`), déployé à chaque fusion sur `main` (migrations Prisma au déploiement). Base Neon.
+- **Rôles de compte** : `owner` (créateur), `full` (tout partagé), `planning` (budget/documents perso), `child` (8–14 ans, accès créé par un parent, voir « Accès enfant »).
+- **Fonctions livrées les 17–19/11** : notes + widget Notes, récap du matin, horaires de travail et « Mes horaires », rendez-vous datés et navigation par semaines, liens de partage par membre (page web), accès enfant + « Espace de l'enfant », demandes d'échange d'étoiles, widgets « + » centrés, espacement des formulaires (`space.section`).
+- **Restent à faire / idées validées** : argent de poche automatique (enfant) ; RevenueCat / Play Console (achats) ; synchronisation Google/Outlook (pas activée) ; dépendances natives à monter au prochain APK (voir « Dépendances »).
+- **À faire par l'utilisatrice dans Render** (si pas fait) : `ANTHROPIC_API_KEY`, `LIFETIME_PREMIUM_EMAILS`. Sauvegarde hebdomadaire : 5 secrets GitHub à ajouter. cron-job.org (`/health` toutes les 10 min).
+- Règles : avant de pousser, `git fetch origin main` et partir de main ; migrations datées **après** la dernière de main ; une PR prête à fusionner par changement, fusion seulement après accord.
 
 ## Cervelle — appli de révision séparée, même serveur
 
@@ -165,9 +161,9 @@ Mises à jour majeures du serveur : faites le 13/11 au soir (voir « Dépendance
 - Icône de l'onglet Repas : bol fumant (`MealIcon` dans `components/icons.tsx`, PR #12), au lieu de fourchette + couteau. Icônes en couleur unie (pas de dégradé vertical, choix de l'utilisateur).
 - Profil de marque pour les documents produits par Claude : `CLAUDE.md` à la racine (couleurs, logo, format « pages visuelles »).
 
-## APK actuel et installation (13/11/2026)
+## Installation d'un APK (historique du 13/11/2026 ; APK actuel : voir « État actuel »)
 
-- **APK à installer** (runtime "3" : Expo SDK 58, widgets, Sentry, style Passerelle) : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/541514d0-0b8f-4289-b02a-c78da8d7119e
+- APK de l'époque (runtime "3" : Expo SDK 58, widgets, Sentry, style Passerelle) : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/541514d0-0b8f-4289-b02a-c78da8d7119e
 - Liens périmés, à ne plus utiliser : `5a8ba245…` (runtime "1") et `c5add826…` (runtime "2", sessions parallèles du 13/11). Ils ne reçoivent plus de mises à jour.
 - Problème rencontré : « Application non installée » en installant par-dessus une ancienne version (signature différente probable). Solution : **désinstaller l'ancienne appli d'abord**, puis installer. Les données sont sur le serveur ; il faut se reconnecter et réactiver les notifications.
 - Ce qui a été ajouté après la compilation de cet APK (bol de l'onglet Repas, nom modifiable dans le profil, dépendances) arrive par EAS Update **une fois la PR #11 fusionnée** (les mises à jour ne sont publiées que depuis main) : fermer puis rouvrir l'appli une fois.
@@ -185,7 +181,8 @@ Mises à jour majeures du serveur : faites le 13/11 au soir (voir « Dépendance
 
 ## Idées notées pour plus tard
 
-Comptes séparés pour chaque membre de la famille, synchronisation Google Agenda, statistiques du budget sur 12 mois, étoiles pour les tâches des enfants, idées cadeaux d'anniversaire, liste de courses en temps réel, thème clair, version iPhone (99 €/an).
+Faites depuis : comptes par membre (rôles + accès enfant), étoiles des enfants, thème clair, demandes d'échange d'étoiles.
+Encore à faire : argent de poche automatique, synchronisation Google Agenda, statistiques du budget sur 12 mois, idées cadeaux d'anniversaire, liste de courses en temps réel, version iPhone (99 €/an).
 
 ## Dépendances et mises à jour (12–13/11/2026)
 
@@ -196,6 +193,7 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Appli : alignée sur la liste Expo SDK 58 (sauf async-storage gardé en v3, qui fonctionne). `npm audit fix` appliqué ; il reste des alertes faibles/moyennes uniquement dans les outils de test (chaîne jest-expo / jest 29), qui ne partent pas dans l'APK. Elles disparaîtront avec jest 30 quand jest-expo le prendra en charge.
 - **Mises à jour majeures du serveur faites (13/11 soir)** : Prisma 7 (adaptateur `@prisma/adapter-pg`, URL de la base dans `server/prisma.config.ts`, plus dans le schéma ; `migrate diff --to-schema` + `SHADOW_DATABASE_URL` en CI), Express 5, express-rate-limit 8 (`ipKeyGenerator`), TypeScript 7 (`module`/`moduleResolution` = `nodenext`), dotenv 18, bcryptjs 3, nanoid 6, googleapis 190, pdfkit 0.20. `@types/node` gardé en 22 (Node 22 sur Render ; `engines.node >= 22.12`, exigé par Prisma 7). Prisma 7 refuse `db push --force-reset` lancé par une IA sans accord explicite : les tests locaux demandent la variable `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` (texte exact de l'accord de l'utilisatrice) ; la CI n'est pas concernée.
 - Appli, à suivre au prochain APK : `@sentry/react-native` 8.35 (la liste SDK 58 indique 8.28), gesture-handler 3.5. Ne pas les monter sans nouveau `runtimeVersion` (modules natifs).
+- **19/11** : serveur `npm update` (Anthropic SDK 1.10, AWS SDK, msal, express-rate-limit, unpdf, vitest 5.1.1), 0 faille. Appli, JS seulement : TanStack Query 5.108 (+ persister), jest-expo 58.0.15. **À monter au prochain APK (natif)** : expo 58.0.26, expo-router 58.0.32, expo-calendar, expo-file-system, expo-web-browser 58.1, react 19.3.1, reanimated 4.7.2, worklets 0.13.1, svg 15.16.1, datetimepicker 9.3, purchases 11.0.4, Sentry 8.36, gesture-handler 3.5. Pas encore : Prisma 8 (rc), TypeScript 7 côté appli, jest 30 (pas pris en charge par jest-expo).
 
 ## Numéro de version Android (PR #5, 11/11/2026)
 
@@ -374,3 +372,19 @@ Comptes séparés pour chaque membre de la famille, synchronisation Google Agend
 - Modèle `RewardRequest` (migration `20261118180000_reward_requests`) : pending → accepted / declined (+ petit mot du parent).
 - `POST /stars/rewards/:id/request` (compte enfant seulement, s'il a assez d'étoiles, une demande en attente par récompense) → notification aux comptes adultes « Jules demande : Cinéma (20 étoiles). » (lien `/stars`). `POST /stars/requests/:id/accept` (enregistre l'échange, revérifie le solde) et `/decline` `{ note }` → notification au téléphone de l'enfant. `GET /stars` renvoie `requests` (en attente + 10 dernières réponses). La garde enfant autorise seulement la route de demande.
 - Écran Étoiles : l'enfant voit ses récompenses avec « Demander » (ou « Demandée ») et « Mes demandes » ; les adultes ont un bloc « Demandes » avec Accepter / Refuser (mot facultatif).
+
+## Historique : point de reprise du 13/11/2026 (périmé, gardé pour mémoire)
+
+- **Branche `ccr-b18b6b3c-98hc5q` (jamais fusionnée, partie d'une base du 10/11) reprise entièrement** par la session du 13/11 soir :
+  - PR #16 fusionnée : correctif de perte de session (« Missing bearer token », renouvellement du jeton partagé).
+  - PR #17 fusionnée : 10 nouvelles catégories de dépenses (Factures → Énergie & eau, Autre → Divers ; migration `20261113160000`).
+  - PR #18 fusionnée : menus de la semaine générés par Claude (`POST /meals/generate`, `claude-opus-5-5`). **Nécessite `ANTHROPIC_API_KEY` dans Render** (clé créée par l'utilisatrice sur console.anthropic.com, à ajouter si ce n'est pas fait).
+  - PR « Premium » (voir ci-dessous) : quotas gratuits, packs Budget / Menus / les 2, épargne, alertes 80 %/100 %, bilan 6 mois, prévision, export PDF, abonnements Play Store via RevenueCat, **Premium à vie** pour la famille.
+- **`runtimeVersion` "5"** (PR #25, 14/11) : widgets réductibles jusqu'à 2 × 2 (`minWidth`/`minHeight` 110dp dans `app.json`). Après fusion : lancer « EAS Build (Android preview) » depuis main et installer le nouvel APK ; d'ici là, les APK runtime "4" ne reçoivent plus de mises à jour OTA.
+- **APK définitif runtime "4"** (build n°15 depuis main, 13/11 17 h) : https://expo.dev/accounts/siquanes-team/projects/passerelle/builds/091eeef2-0fbe-4a5a-920e-e798ce39ba19 — remplace l'APK runtime "3" (`541514d0…`, périmé).
+- **`runtimeVersion` "4"** avec la PR Premium (modules natifs : `react-native-purchases`, `expo-file-system`, `expo-sharing`). Après sa fusion : lancer « EAS Build (Android preview) » depuis main → **APK définitif**, à installer à la place de l'APK runtime "3".
+- **À faire par l'utilisatrice dans Render** : `ANTHROPIC_API_KEY` (menus) et `LIFETIME_PREMIUM_EMAILS` (son adresse de compte, et celles de la famille, séparées par des virgules) → Premium à vie au redémarrage.
+- RevenueCat / Play Console : pas configurés (sans clé `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`, l'écran Premium affiche « bientôt »). Guide : `docs/achats-android.md`. Profil EAS `production` (.aab) prêt, sur le canal `preview`.
+- L'autre session qui parlait de `claude/passerelle-continuation-9zzxuo` et du commit `11b892e` se trompait : ni l'une ni l'autre n'existent ; anniversaires et recettes sont dans main depuis longtemps.
+- Sauvegarde hebdomadaire : **5 secrets GitHub encore à ajouter**. cron-job.org (`/health` toutes les 10 min) : à faire si pas fait.
+- Règles : avant de pousser, `git fetch origin main` et fusionner main ; ne jamais redescendre `runtimeVersion` ; migrations datées **après** la dernière de main.
