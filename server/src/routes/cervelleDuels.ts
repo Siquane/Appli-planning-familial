@@ -65,7 +65,7 @@ export function mountDuels(router: Router, d: { loadLearner: (req: Request, res:
     const learner = await d.loadLearner(req, res);
     if (!learner) return;
     const revision = await prisma.revision.findFirst({ where: { id: String(req.params.revisionId), learnerId: learner.id, status: "ready" }, select: { title: true } });
-    if (!revision) return res.status(404).json({ error: "Révision introuvable" });
+    if (!revision) return res.status(404).json({ error: "Cette révision n'existe plus. Elle a peut-être été supprimée." });
     const pool = await prisma.question.findMany({ where: { revisionId: String(req.params.revisionId), type: { in: ["qcm", "vrai_faux"] } }, select: { id: true, type: true, prompt: true, choices: true, answer: true, explanation: true } });
     if (pool.length < 4) return res.status(400).json({ error: "Pas assez de questions dans ce cours. Choisis-en un autre." });
     res.json({ title: revision.title, questions: shuffle(pool).slice(0, 12) });
@@ -77,13 +77,13 @@ export function mountDuels(router: Router, d: { loadLearner: (req: Request, res:
     if (!learner) return;
     const friendId = String(req.body?.friendId ?? "");
     const revisionId = String(req.body?.revisionId ?? "");
-    if (!(await areFriends(learner, friendId))) return res.status(404).json({ error: "Ami introuvable" });
+    if (!(await areFriends(learner, friendId))) return res.status(404).json({ error: "Cet ami n'est plus dans ta liste." });
     const revision = await prisma.revision.findFirst({ where: { id: revisionId, learnerId: learner.id, status: "ready" }, select: { title: true } });
-    if (!revision) return res.status(404).json({ error: "Révision introuvable" });
+    if (!revision) return res.status(404).json({ error: "Cette révision n'existe plus. Elle a peut-être été supprimée." });
     const pool = await prisma.question.findMany({ where: { revisionId, type: { in: ["qcm", "vrai_faux"] } }, select: { id: true } });
     if (pool.length < 5) return res.status(400).json({ error: "Pas assez de questions dans ce cours pour un défi. Choisis-en un autre." });
     const open = await prisma.quizDuel.count({ where: { fromId: learner.id, toId: friendId, status: "open" } });
-    if (open >= 3) return res.status(409).json({ error: "Tu as déjà 3 défis en cours avec cet ami. Attends qu'il réponde !" });
+    if (open >= 3) return res.status(409).json({ error: "Tu as déjà 3 défis en cours avec cet ami. Attends sa réponse !" });
     const duel = await prisma.quizDuel.create({
       data: { fromId: learner.id, toId: friendId, revisionTitle: revision.title || "Quiz", questionIds: shuffle(pool.map((q) => q.id)).slice(0, DUEL_QUESTIONS) },
     });
@@ -132,7 +132,7 @@ export function mountDuels(router: Router, d: { loadLearner: (req: Request, res:
     const learner = await d.loadLearner(req, res);
     if (!learner) return;
     const duel = await prisma.quizDuel.findFirst({ where: { id: String(req.params.duelId), OR: [{ fromId: learner.id }, { toId: learner.id }] } });
-    if (!duel) return res.status(404).json({ error: "Défi introuvable" });
+    if (!duel) return res.status(404).json({ error: "Ce défi n'existe plus." });
     const played = (duel.fromId === learner.id ? duel.fromScore : duel.toScore) !== null;
     if (played || duel.status !== "open") return res.status(409).json({ error: "Tu as déjà joué ce défi." });
     const qs = await prisma.question.findMany({ where: { id: { in: duel.questionIds } }, select: { id: true, type: true, prompt: true, choices: true } });
@@ -145,9 +145,9 @@ export function mountDuels(router: Router, d: { loadLearner: (req: Request, res:
     const learner = await d.loadLearner(req, res);
     if (!learner) return;
     const parsed = answersSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: "Réponses invalides" });
+    if (!parsed.success) return res.status(400).json({ error: "Il manque des réponses. Réponds à toutes les questions puis réessaie." });
     const duel = await prisma.quizDuel.findFirst({ where: { id: String(req.params.duelId), status: "open", OR: [{ fromId: learner.id }, { toId: learner.id }] } });
-    if (!duel) return res.status(404).json({ error: "Défi introuvable ou terminé" });
+    if (!duel) return res.status(404).json({ error: "Ce défi est déjà terminé." });
     const mine = duel.fromId === learner.id;
     const qs = await prisma.question.findMany({ where: { id: { in: duel.questionIds } }, select: { id: true, answer: true } });
     const expected = new Map(qs.map((q) => [q.id, q.answer.trim().toLowerCase()]));

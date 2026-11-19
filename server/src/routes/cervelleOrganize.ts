@@ -220,7 +220,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
     const learner = await loadLearner(req, res);
     if (!learner) return;
     const parsed = z.object({ focus: z.number().int().min(5).max(90), pause: z.number().int().min(1).max(30) }).safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: "Durées invalides (5 à 90 min de travail, 1 à 30 min de pause)." });
+    if (!parsed.success) return res.status(400).json({ error: "Choisis entre 5 et 90 minutes de travail, et entre 1 et 30 minutes de pause." });
     const updated = await prisma.learner.update({ where: { id: learner.id }, data: { focusMinutes: parsed.data.focus, breakMinutes: parsed.data.pause } });
     res.json({ learner: serializeLearner(updated) });
   });
@@ -255,9 +255,9 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
     if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
     const b = parsed.data;
     const revision = b.revisionId ? await prisma.revision.findFirst({ where: { id: b.revisionId, learnerId: learner.id } }) : null;
-    if (b.revisionId && !revision) return res.status(404).json({ error: "Révision introuvable" });
+    if (b.revisionId && !revision) return res.status(404).json({ error: "Cette révision n'existe plus. Elle a peut-être été supprimée." });
     const todo = b.todoId ? await prisma.todoItem.findFirst({ where: { id: b.todoId, learnerId: learner.id } }) : null;
-    if (b.todoId && !todo) return res.status(404).json({ error: "Tâche introuvable" });
+    if (b.todoId && !todo) return res.status(404).json({ error: "Cette tâche n'existe plus. Elle a peut-être été supprimée." });
 
     const today = parisDay();
     const already = await prisma.studySession.aggregate({ where: { learnerId: learner.id, day: today, mode: "minuteur" }, _sum: { seconds: true } });
@@ -387,7 +387,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
     const learner = await loadLearner(req, res);
     if (!learner) return;
     const event = await prisma.studyEvent.findFirst({ where: { id: String(req.params.eventId), learnerId: learner.id } });
-    if (!event) return res.status(404).json({ error: "Créneau introuvable" });
+    if (!event) return res.status(404).json({ error: "Ce créneau n'existe plus. Il a peut-être été supprimé." });
     const parsed = eventSchema.safeParse({ ...serializeEvent(event), ...req.body });
     if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
     const updated = await prisma.studyEvent.update({ where: { id: event.id }, data: parsed.data });
@@ -521,7 +521,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
     const learner = await loadLearner(req, res);
     if (!learner) return;
     const todo = await prisma.todoItem.findFirst({ where: { id: String(req.params.todoId), learnerId: learner.id } });
-    if (!todo) return res.status(404).json({ error: "Tâche introuvable" });
+    if (!todo) return res.status(404).json({ error: "Cette tâche n'existe plus. Elle a peut-être été supprimée." });
     const parsed = todoSchema.partial().extend({ done: z.boolean().optional() }).safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
     const { done, ...fields } = parsed.data;
@@ -598,7 +598,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
     if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
     const data = parsed.data.days ? { ...parsed.data, days: [...new Set(parsed.data.days)].sort() } : parsed.data;
     const done = await prisma.habit.updateMany({ where: { id: String(req.params.habitId), learnerId: learner.id }, data });
-    if (done.count === 0) return res.status(404).json({ error: "Habitude introuvable" });
+    if (done.count === 0) return res.status(404).json({ error: "Cette habitude n'existe plus. Elle a peut-être été supprimée." });
     res.status(204).end();
   });
 
@@ -614,7 +614,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
     const learner = await loadLearner(req, res);
     if (!learner) return;
     const habit = await prisma.habit.findFirst({ where: { id: String(req.params.habitId), learnerId: learner.id, archivedAt: null } });
-    if (!habit) return res.status(404).json({ error: "Habitude introuvable" });
+    if (!habit) return res.status(404).json({ error: "Cette habitude n'existe plus. Elle a peut-être été supprimée." });
     const today = parisDay();
     const day = typeof req.body?.day === "string" ? req.body.day : today;
     if (day !== today && day !== addDays(today, -1)) return res.status(400).json({ error: "Tu peux cocher aujourd'hui ou hier seulement." });
@@ -634,7 +634,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
     if (!learner) return;
     const day = typeof req.query.day === "string" ? req.query.day : parisDay();
     const habit = await prisma.habit.findFirst({ where: { id: String(req.params.habitId), learnerId: learner.id } });
-    if (!habit) return res.status(404).json({ error: "Habitude introuvable" });
+    if (!habit) return res.status(404).json({ error: "Cette habitude n'existe plus. Elle a peut-être été supprimée." });
     const check = await prisma.habitCheck.findUnique({ where: { habitId_day: { habitId: habit.id, day } } });
     if (!check) return res.json({ learner: serializeLearner(learner) });
     const gone = await prisma.habitCheck.deleteMany({ where: { id: check.id } });
@@ -759,8 +759,8 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
     if (!learner) return;
     const toId = String(req.body?.toId ?? "");
     const kind = cheerById(String(req.body?.kind ?? ""));
-    if (!kind) return res.status(400).json({ error: "Encouragement inconnu" });
-    if (!(await inCircle(learner, toId))) return res.status(404).json({ error: "Ami introuvable" });
+    if (!kind) return res.status(400).json({ error: "Choisis un encouragement dans la liste." });
+    if (!(await inCircle(learner, toId))) return res.status(404).json({ error: "Cet ami n'est plus dans ta liste." });
     const sent = await prisma.cheer.count({ where: { fromId: learner.id, createdAt: { gte: new Date(Date.now() - 86_400_000) } } });
     if (sent >= CHEERS_PER_DAY) return res.status(429).json({ error: "Tu as envoyé beaucoup d'encouragements aujourd'hui. Reviens demain !" });
     await prisma.cheer.create({ data: { fromId: learner.id, toId, kind: kind.id } });
@@ -779,7 +779,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
     const learner = await loadLearner(req, res);
     if (!learner) return;
     const toId = String(req.body?.toId ?? "");
-    if (!(await inCircle(learner, toId))) return res.status(404).json({ error: "Ami introuvable" });
+    if (!(await inCircle(learner, toId))) return res.status(404).json({ error: "Cet ami n'est plus dans ta liste." });
     const week = mondayOf(parisDay());
     const exists = await prisma.challenge.findFirst({
       where: { week, status: { in: ["pending", "active"] }, OR: [{ fromId: learner.id, toId }, { fromId: toId, toId: learner.id }] },
@@ -797,7 +797,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
         where: { id: String(req.params.challengeId), toId: learner.id, status: "pending", week: mondayOf(parisDay()) },
         data: { status: action === "accept" ? "active" : "declined" },
       });
-      if (done.count === 0) return res.status(404).json({ error: "Défi introuvable ou terminé" });
+      if (done.count === 0) return res.status(404).json({ error: "Ce défi est déjà terminé." });
       res.status(204).end();
     });
   }
@@ -837,7 +837,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
   router.post("/friend-requests/:id/approve", parentOnly, async (req, res) => {
     const familyId = req.cervelle!.familyId;
     const f = await prisma.friendship.findUnique({ where: { id: String(req.params.id) }, include: { from: true, to: true } });
-    if (!f || (f.from.userId !== familyId && f.to.userId !== familyId)) return res.status(404).json({ error: "Demande introuvable" });
+    if (!f || (f.from.userId !== familyId && f.to.userId !== familyId)) return res.status(404).json({ error: "Cette demande n'existe plus. L'autre famille l'a peut-être annulée." });
     const updated = await prisma.friendship.update({
       where: { id: f.id },
       data: { ...(f.from.userId === familyId ? { fromApproved: true } : {}), ...(f.to.userId === familyId ? { toApproved: true } : {}) },
