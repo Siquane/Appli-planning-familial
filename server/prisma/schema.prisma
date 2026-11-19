@@ -633,6 +633,7 @@ model Learner {
   challengesIn   Challenge[]     @relation("ChallengeTo")
   badges         LearnerBadge[]
   starEvents     StarEvent[]
+  goals          LearnerGoal[]
   duelsOut       QuizDuel[]      @relation("DuelFrom")
   duelsIn        QuizDuel[]      @relation("DuelTo")
 
@@ -943,6 +944,22 @@ model Cheer {
 }
 
 // « Qui travaille le plus cette semaine ? » between two friends.
+/// A goal a parent sets: « jours » (days of revision in a week) or
+/// « etoiles » (stars of the month's path), with a real family reward. It
+/// starts again every week / month; `wins` lists the periods reached.
+model LearnerGoal {
+  id        String   @id @default(cuid())
+  learnerId String
+  learner   Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  kind      String
+  target    Int
+  reward    String
+  wins      String[] @default([])
+  createdAt DateTime @default(now())
+
+  @@index([learnerId])
+}
+
 /// « Chemin d'étoiles »: things that happen once — a chest opened that day
 /// (key « chest:2026-11-18 », its stars), a step's reward paid (key
 /// « step:2026-11:14 », its coins and item). Unique key: paid once.
