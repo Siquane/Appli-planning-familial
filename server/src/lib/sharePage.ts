@@ -2,6 +2,7 @@
 // Rendue côté serveur en HTML simple (aucun compte ni appli nécessaire).
 
 import { addDays } from "./cervelle/days";
+import { de } from "./elision";
 
 export interface ShareTask {
   title: string;
@@ -93,7 +94,7 @@ export function renderSharePage({ memberName, week, today, tasks, selfPath }: Sh
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Planning de ${name} · Passerelle</title>
+<title>Planning ${de(name)} · Passerelle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -131,7 +132,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin-top:24px}
 <body>
 <main>
 <div class="brand">PASSERELLE</div>
-<h1>Planning de ${name}</h1>
+<h1>Planning ${de(name)}</h1>
 <div class="weeknav">
 ${nav(addDays(week, -7), "‹", "Semaine précédente")}
 <div class="label"><b>${weekTitle(week, today)}</b><span>${shortDate(week)} – ${shortDate(addDays(week, 6))}</span></div>

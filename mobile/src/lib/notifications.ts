@@ -5,6 +5,7 @@ import { useToastStore } from "../state/toastStore";
 import type { Member, Task, Weekday } from "../api/types";
 import { whoLabel } from "../widgets/snapshot";
 import { dayKey, parseDay, reminderText, remindAt } from "./appointments";
+import { de } from "./elision";
 
 // How long before a recurring task's time its reminder fires.
 const REMINDER_LEAD_MINUTES = 10;
@@ -147,7 +148,7 @@ export async function syncBirthdayReminders(members: Member[]): Promise<void> {
       await Notifications.cancelScheduledNotificationAsync(identifier).catch(() => {});
       await Notifications.scheduleNotificationAsync({
         identifier,
-        content: { title: "Anniversaire", body: `C'est l'anniversaire de ${member.name} aujourd'hui !` },
+        content: { title: "Anniversaire", body: `C'est l'anniversaire ${de(member.name)} aujourd'hui !` },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
       });
     })

@@ -10,6 +10,7 @@ import { errorText } from "../lib/errors";
 import { space } from "../theme/tokens";
 import { router } from "expo-router";
 import { enterChildSpace, exitChildSpace } from "../lib/childSpace";
+import { de } from "../lib/elision";
 
 // Fiche d'un enfant de 8 à 14 ans : un parent crée son accès à Passerelle
 // (ce qui vaut accord parental) et lui donne un code à usage unique.
@@ -39,7 +40,7 @@ export function ChildAccessCard({ memberId }: { memberId: string }) {
   }
 
   function onRemove() {
-    Alert.alert(`Supprimer l'accès de ${entry!.name}`, "Son téléphone sera déconnecté, et son budget et ses documents seront effacés. Le planning ne change pas.", [
+    Alert.alert(`Supprimer l'accès ${de(entry!.name)}`, "Son téléphone sera déconnecté, et son budget et ses documents seront effacés. Le planning ne change pas.", [
       { text: "Annuler", style: "cancel" },
       {
         text: "Supprimer",
@@ -49,7 +50,7 @@ export function ChildAccessCard({ memberId }: { memberId: string }) {
             onSuccess: () => {
               exitChildSpace();
               setCode(null);
-              useToastStore.getState().show(`Accès de ${entry!.name} supprimé.`);
+              useToastStore.getState().show(`Accès ${de(entry!.name)} supprimé.`);
             },
             onError: (e) => useToastStore.getState().show(errorText(e, "supprimer l'accès")),
           }),
@@ -85,7 +86,7 @@ export function ChildAccessCard({ memberId }: { memberId: string }) {
             </View>
           ) : (
             <Button
-              label={hasAccess ? "Nouveau code (autre téléphone)" : `Créer l'accès de ${entry.name}`}
+              label={hasAccess ? "Nouveau code (autre téléphone)" : `Créer l'accès ${de(entry.name)}`}
               variant={hasAccess ? "secondary" : "primary"}
               block
               loading={createCode.isPending}

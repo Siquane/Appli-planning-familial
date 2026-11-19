@@ -15,6 +15,7 @@ import type { MemberShareLink } from "../src/api/resources";
 import { useToastStore } from "../src/state/toastStore";
 import { API_URL } from "../src/api/client";
 import { color, space, gutter } from "../src/theme/tokens";
+import { de } from "../src/lib/elision";
 
 // Page web de la semaine d'un membre (GET /share/m/:token, server/src/routes/share.ts).
 const MEMBER_PAGE_URL = `${API_URL}/share/m`;
@@ -29,14 +30,14 @@ export default function ShareScreen() {
 
   async function onShareLink(l: MemberShareLink) {
     try {
-      await RNShare.share({ message: `Le planning de ${l.name} sur Passerelle : ${MEMBER_PAGE_URL}/${l.token}` });
+      await RNShare.share({ message: `Le planning ${de(l.name)} sur Passerelle : ${MEMBER_PAGE_URL}/${l.token}` });
     } catch {
       // user dismissed the share sheet — nothing to do
     }
   }
 
   function onReset(l: MemberShareLink) {
-    Alert.alert("Nouveau lien", `L'ancien lien du planning de ${l.name} ne fonctionnera plus. Il faudra renvoyer le nouveau.`, [
+    Alert.alert("Nouveau lien", `L'ancien lien du planning ${de(l.name)} ne fonctionnera plus. Il faudra renvoyer le nouveau.`, [
       { text: "Annuler", style: "cancel" },
       {
         text: "Créer un nouveau lien",

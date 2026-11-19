@@ -1,4 +1,5 @@
 import type { FamilyNotice, FamilyRole } from "../api/types";
+import { de } from "./elision";
 
 // Words and small rules of the « Comptes de la famille » screen.
 
@@ -26,7 +27,7 @@ export function shareMessage(code: string, ownerName: string, expiresAt: string,
 
 /** What the screen says to someone who joined. */
 export function joinedSummary(role: FamilyRole, ownerName: string | null): string {
-  const who = ownerName ? `la famille de ${ownerName}` : "une famille";
+  const who = ownerName ? `la famille ${de(ownerName)}` : "une famille";
   return role === "planning"
     ? `Tu fais partie de ${who} avec le profil Planning : tu partages le planning, et ton budget et tes documents restent à toi.`
     : `Tu fais partie de ${who} avec le profil Complet : tu partages tout, budget et documents compris.`;
