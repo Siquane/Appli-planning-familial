@@ -663,6 +663,7 @@ model LearnerCode {
   codeHash  String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+  @@index([learnerId])
 }
 
 model LearnerDevice {
@@ -677,6 +678,7 @@ model LearnerDevice {
   pushToken  String?  @unique
   // The child can turn the « fiches prêtes » notification off on this phone.
   readyAlert Boolean  @default(true)
+  @@index([learnerId])
 }
 
 model Revision {
@@ -792,6 +794,7 @@ model StudySession {
   createdAt  DateTime  @default(now())
 
   @@index([learnerId, createdAt])
+  @@index([learnerId, day])
 }
 
 model ExamReview {

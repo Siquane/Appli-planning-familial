@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import compression from "compression";
 import { env } from "./env";
 import { authRouter } from "./routes/auth";
 import { familyActivity } from "./lib/familyAlerts";
@@ -33,6 +34,8 @@ export const app = express();
 // req.ip (used by the auth rate limits) is the real client address.
 app.set("trust proxy", 1);
 app.use(cors());
+// Gzip JSON answers: revisions, quizzes and plans are text that shrinks well on mobile data.
+app.use(compression());
 // Cervelle receives course photos in the request body (base64): its own,
 // larger limit, mounted before the global 100 kB JSON parser.
 app.use("/cervelle", express.json({ limit: "40mb" }), cervelleRouter);
