@@ -315,7 +315,14 @@ tasksRouter.get("/replan/proposals", async (req, res) => {
     duration: t.duration,
   }));
 
-  const flexible = tasks.filter((t) => t.flexible);
+  // Une tâche déjà cochée « faite » cette semaine (heure de Paris) n'est plus à replanifier.
+  const monday = mondayOf(parisDay());
+  const done = await prisma.taskDone.findMany({
+    where: { task: { userId: req.userId! }, day: { gte: monday, lte: addDayKey(monday, 6) } },
+    select: { taskId: true },
+  });
+  const doneIds = new Set(done.map((d) => d.taskId));
+  const flexible = tasks.filter((t) => t.flexible && !doneIds.has(t.id));
   const proposals = flexible.map((t) => {
     const schedulableTask = schedulable.find((s) => s.id === t.id)!;
     // Plusieurs heures par jour, pour laisser le choix.

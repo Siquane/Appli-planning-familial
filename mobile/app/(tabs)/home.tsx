@@ -61,7 +61,8 @@ export default function HomeScreen() {
     toggleDone.mutate({ taskId, day, done }, { onError: (e) => useToastStore.getState().show(errorText(e, "enregistrer la tâche")) });
   }
 
-  const flexibleCount = tasks.filter((t) => t.flexible).length;
+  // Les tâches déjà faites cette semaine ne se replanifient plus (le serveur les écarte aussi).
+  const flexibleCount = tasks.filter((t) => t.flexible && !(isCurrentWeek && doneMarks.some((m) => m.taskId === t.id))).length;
 
   const upcomingBirthday = useMemo(() => {
     return members
