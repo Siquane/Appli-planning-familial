@@ -154,6 +154,18 @@ describe("GET /tasks/replan/proposals", () => {
     expect(res.body.proposals[0].candidates.length).toBeGreaterThan(0);
   });
 
+  it("leaves out a flexible task already ticked done this week", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    const done = (await request(app).post("/tasks").set(auth).send({ ...baseTask, title: "Faite", flexible: true })).body.task;
+    await request(app).post("/tasks").set(auth).send({ ...baseTask, title: "À faire", flexible: true });
+    const { mondayOf, parisDay } = await import("../../src/lib/cervelle/days");
+    await request(app).put(`/tasks/${done.id}/done`).set(auth).send({ day: mondayOf(parisDay()) });
+
+    const res = await request(app).get("/tasks/replan/proposals").set(auth);
+    expect(res.body.proposals.map((p: { title: string }) => p.title)).toEqual(["À faire"]);
+  });
+
   it("avoids the account's working hours", async () => {
     const { accessToken } = await signup(app);
     const auth = authHeader(accessToken);
