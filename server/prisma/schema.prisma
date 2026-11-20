@@ -624,6 +624,7 @@ model Learner {
   sessions       StudySession[]
   examReviews    ExamReview[]
   homework       HomeworkHelp[]
+  brevetSubjects BrevetSubject[]
   events         StudyEvent[]
   todos          TodoItem[]
   habits         Habit[]
@@ -1147,6 +1148,25 @@ model HomeworkHelp {
   instructions String   @default("")
   questions    Json
   createdAt    DateTime @default(now())
+
+  @@index([learnerId, createdAt])
+}
+
+// Mode Brevet : a mock paper for one subject (francais | maths | histoire |
+// sciences). `exercises` is [{ title, points, documents, questions: [{ prompt,
+// points, correction, advice }] }].
+model BrevetSubject {
+  id        String   @id @default(cuid())
+  learnerId String
+  learner   Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  subject   String
+  // "processing" | "ready" | "failed"
+  status    String   @default("processing")
+  error     String?
+  title     String   @default("")
+  minutes   Int      @default(0)
+  exercises Json
+  createdAt DateTime @default(now())
 
   @@index([learnerId, createdAt])
 }

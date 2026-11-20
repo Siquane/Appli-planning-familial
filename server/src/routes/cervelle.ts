@@ -18,6 +18,7 @@ import { mountDuels } from "./cervelleDuels";
 import { mountWeekly } from "./cervelleWeekly";
 import { mountUsage } from "./cervelleUsage";
 import { mountHomework } from "./cervelleHomework";
+import { mountBrevet } from "./cervelleBrevet";
 import * as shop from "../lib/cervelle/shop";
 import { applyAnswer, combinedMastery, displayedMastery, revisionProgress, type Mastery } from "../lib/cervelle/mastery";
 import { localGrade, normalizeAnswer, sameOrder } from "../lib/cervelle/grading";
@@ -1147,7 +1148,7 @@ const assistantSchema = z.object({
     .max(30),
 });
 
-function courseText(r: Revision): string {
+export function courseText(r: Revision): string {
   const sheets = (Array.isArray(r.sheets) ? r.sheets : []) as { title?: string; essentiel?: string; points?: string[]; retenir?: string }[];
   const body = sheets.map((s) => `## ${s.title ?? ""}\n${s.essentiel ?? ""}\n${(s.points ?? []).map((p) => `- ${p}`).join("\n")}\nÀ retenir : ${s.retenir ?? ""}`).join("\n\n");
   return `# ${r.title} (${r.subject})\n${r.summary}\n\n${body}`.slice(0, 20_000);
@@ -1259,3 +1260,4 @@ mountDuels(cervelleRouter, { loadLearner });
 mountWeekly(cervelleRouter, { loadLearner });
 mountUsage(cervelleRouter, { parentOnly });
 mountHomework(cervelleRouter, { loadLearner, aiConfigured, decodeFiles, fileSchema, underDailyLimit, recordUsage, withUsage });
+mountBrevet(cervelleRouter, { loadLearner, aiConfigured, underDailyLimit, recordUsage, withUsage, courseText });
