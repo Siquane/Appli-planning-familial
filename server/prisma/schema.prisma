@@ -820,6 +820,16 @@ model AiUsage {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   // "revision" | "exam" | "assistant" | "grading" | "timetable"
   kind      String
+  // Cervelle: the child it was for, and what the call really used (filled
+  // once the call ends; 0 for older rows and for other features).
+  learnerId        String?
+  model            String   @default("")
+  inputTokens      Int      @default(0)
+  outputTokens     Int      @default(0)
+  cacheReadTokens  Int      @default(0)
+  cacheWriteTokens Int      @default(0)
+  // Millionths of a dollar.
+  costMicros       Int      @default(0)
   createdAt DateTime @default(now())
 
   @@index([userId, kind, createdAt])

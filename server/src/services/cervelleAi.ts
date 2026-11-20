@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import * as z4 from "zod/v4";
@@ -15,6 +16,69 @@ import { REVISION_ICONS, type Level } from "../lib/cervelle/icons";
 const MODEL = "claude-opus-5-5";
 
 export class CervelleAiError extends Error {}
+
+// ─── Cost meter ───────────────────────────────────────────────────────────
+// Each call adds its tokens to the meter of the request that started it
+// (`metered` wraps the work, background generation included), so the family's
+// AiUsage row holds what the call really cost.
+
+/** $ per million tokens: input, output. Unknown models (a refusal fallback) are priced as Opus 5.5. */
+const PRICES: Record<string, [number, number]> = {
+  "claude-opus-5-5": [4, 20],
+  "claude-opus-5": [5, 25],
+  "claude-opus-4-8": [5, 25],
+  "claude-sonnet-5-5": [2, 10],
+  "claude-haiku-5-5": [0.1, 0.5],
+};
+
+export interface Meter {
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheWrite: number;
+  /** Cost in millionths of a dollar. */
+  micros: number;
+  model: string;
+}
+
+interface UsageLike {
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_input_tokens?: number | null;
+  cache_creation_input_tokens?: number | null;
+}
+
+const meterStore = new AsyncLocalStorage<Meter>();
+
+/** Pure: the cost in micro-dollars of one response's usage. */
+export function costMicros(model: string, u: UsageLike): number {
+  const [inPrice, outPrice] = PRICES[model] ?? PRICES[MODEL];
+  const read = u.cache_read_input_tokens ?? 0;
+  const write = u.cache_creation_input_tokens ?? 0;
+  return Math.round(u.input_tokens * inPrice + write * inPrice * 1.25 + read * inPrice * 0.1 + u.output_tokens * outPrice);
+}
+
+export function meterResponse(response: { model: string; usage: UsageLike }) {
+  const m = meterStore.getStore();
+  if (!m) return;
+  const u = response.usage;
+  m.input += u.input_tokens;
+  m.output += u.output_tokens;
+  m.cacheRead += u.cache_read_input_tokens ?? 0;
+  m.cacheWrite += u.cache_creation_input_tokens ?? 0;
+  m.micros += costMicros(response.model, u);
+  m.model = response.model;
+}
+
+/** Runs `fn` with a fresh meter, then hands what it used to `save` (errors there are ignored). */
+export async function metered<T>(save: (m: Meter) => Promise<unknown>, fn: () => Promise<T>): Promise<T> {
+  const m: Meter = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, micros: 0, model: "" };
+  try {
+    return await meterStore.run(m, fn);
+  } finally {
+    if (m.input || m.output) await save(m).catch(() => {});
+  }
+}
 
 let client: Anthropic | null = null;
 function getClient(): Anthropic {
@@ -178,6 +242,7 @@ export async function generateRevision(input: GenerationInput): Promise<Generate
   } catch (e) {
     wrapApiError(e);
   }
+  if (response) meterResponse(response);
   if (response.stop_reason === "max_tokens") throw new CervelleAiError("Ce cours est trop long d'un coup. Découpe-le en deux révisions.");
   if (response.stop_reason === "refusal" || !response.parsed_output) {
     throw new CervelleAiError("Impossible de préparer cette révision. Essaie avec d'autres photos.");
@@ -275,6 +340,7 @@ Sois juste et bienveillant : accepte une réponse correcte même mal orthographi
   } catch (e) {
     wrapApiError(e);
   }
+  if (response) meterResponse(response);
   if (response.stop_reason === "refusal" || !response.parsed_output) return null;
   return { correct: response.parsed_output.correct, comment: clip(response.parsed_output.commentaire, 400) };
 }
@@ -328,6 +394,7 @@ Si tu ne peux pas lire la copie, mets lisible à false. ${levelLine(p.level, p.g
   } catch (e) {
     wrapApiError(e);
   }
+  if (response) meterResponse(response);
   if (response.stop_reason === "refusal" || !response.parsed_output) throw new CervelleAiError("Impossible d'analyser cette copie. Essaie avec d'autres photos.");
   const out = response.parsed_output;
   if (!out.lisible) throw new CervelleAiError(out.probleme.trim() || "Je n'arrive pas à lire cette copie. Reprends les photos bien à plat.");
@@ -400,6 +467,7 @@ Si ce n'est pas un emploi du temps lisible, mets lisible à false.`,
   } catch (e) {
     wrapApiError(e);
   }
+  if (response) meterResponse(response);
   if (response.stop_reason === "refusal" || !response.parsed_output) throw new CervelleAiError("Impossible de lire cet emploi du temps. Essaie avec une autre photo.");
   const out = response.parsed_output;
   if (!out.lisible) throw new CervelleAiError(out.probleme.trim() || "Je n'arrive pas à lire cet emploi du temps. Reprends la photo bien à plat.");
@@ -436,6 +504,7 @@ Ne demande jamais d'informations personnelles (nom, adresse, école, photo de so
   } catch (e) {
     wrapApiError(e);
   }
+  if (response) meterResponse(response);
   if (response.stop_reason === "refusal") return "Je ne peux pas t'aider sur ce sujet. Parlons plutôt de tes révisions !";
   const text = response.content
     .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text")

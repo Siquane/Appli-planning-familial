@@ -16,6 +16,7 @@ import { mountGoals } from "./cervelleGoals";
 import { mountStars } from "./cervelleStars";
 import { mountDuels } from "./cervelleDuels";
 import { mountWeekly } from "./cervelleWeekly";
+import { mountUsage } from "./cervelleUsage";
 import * as shop from "../lib/cervelle/shop";
 import { applyAnswer, combinedMastery, displayedMastery, revisionProgress, type Mastery } from "../lib/cervelle/mastery";
 import { localGrade, normalizeAnswer, sameOrder } from "../lib/cervelle/grading";
@@ -63,7 +64,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_PDF_BYTES = 15 * 1024 * 1024;
 
 /** Claude calls per family and per day. */
-export const DAILY_LIMITS = { revision: 15, exam: 10, assistant: 120, grading: 400, timetable: 10 } as const;
+export const DAILY_LIMITS = { revision: 15, exam: 10, assistant: 120, grading: 400, timetable: 10, homework: 40, brevet: 5 } as const;
 
 type Caller = { kind: "parent"; familyId: string } | { kind: "child"; familyId: string; learnerId: string; deviceId: string };
 
@@ -153,7 +154,18 @@ export async function underDailyLimit(familyId: string, kind: keyof typeof DAILY
   return true;
 }
 
-export const recordUsage = (familyId: string, kind: keyof typeof DAILY_LIMITS) => prisma.aiUsage.create({ data: { userId: familyId, kind } });
+export const recordUsage = (familyId: string, kind: keyof typeof DAILY_LIMITS, learnerId?: string) => prisma.aiUsage.create({ data: { userId: familyId, kind, learnerId } });
+
+/** Runs an AI call (or background job) and stores what it really used on its usage row. */
+export const withUsage = <T>(usageId: string, fn: () => Promise<T>) =>
+  ai.metered(
+    (m) =>
+      prisma.aiUsage.update({
+        where: { id: usageId },
+        data: { model: m.model, inputTokens: m.input, outputTokens: m.output, cacheReadTokens: m.cacheRead, cacheWriteTokens: m.cacheWrite, costMicros: m.micros },
+      }),
+    fn,
+  );
 
 export function aiConfigured(res: Response) {
   if (isMealAiConfigured()) return true;
@@ -687,10 +699,10 @@ cervelleRouter.post("/learners/:learnerId/revisions", async (req, res) => {
       photoCount: files.length,
     },
   });
-  await recordUsage(familyId, "revision");
+  const usage = await recordUsage(familyId, "revision", learner.id);
   const photoKeys = await storeFiles(`cervelle/${familyId}/${revision.id}`, files);
   if (photoKeys.length) await prisma.revision.update({ where: { id: revision.id }, data: { photoKeys } });
-  void processRevision(revision.id, files, learner, { title, subject });
+  void withUsage(usage.id, () => processRevision(revision.id, files, learner, { title, subject }));
   res.status(202).json({ revision: { id: revision.id, status: revision.status } });
 });
 
@@ -704,9 +716,9 @@ cervelleRouter.post("/learners/:learnerId/revisions/:revisionId/retry", async (r
   const files = await loadStoredFiles(revision.photoKeys);
   if (!files) return res.status(410).json({ error: "Je n'ai plus les photos de ce cours. Ajoute une nouvelle révision avec les photos." });
   if (!(await underDailyLimit(req.cervelle!.familyId, "revision", res))) return;
-  await recordUsage(req.cervelle!.familyId, "revision");
+  const usage = await recordUsage(req.cervelle!.familyId, "revision", learner.id);
   await prisma.revision.update({ where: { id: revision.id }, data: { status: "processing", error: null } });
-  void processRevision(revision.id, files, learner, { title: revision.title, subject: revision.subject });
+  void withUsage(usage.id, () => processRevision(revision.id, files, learner, { title: revision.title, subject: revision.subject }));
   res.status(202).json({ revision: { id: revision.id, status: "processing" } });
 });
 
@@ -881,9 +893,9 @@ cervelleRouter.post("/learners/:learnerId/answers", async (req, res) => {
       correct = false;
       comment = "Ta réponse ne correspond pas à celle attendue.";
       if (isMealAiConfigured() && (await usedToday(familyId, "grading")) < DAILY_LIMITS.grading) {
-        await recordUsage(familyId, "grading");
+        const usage = await recordUsage(familyId, "grading", learner.id);
         try {
-          const verdict = await ai.gradeAnswer({ question: question.prompt, expected: question.answer, acceptable: question.acceptable, answer: text, level: learner.level as Level });
+          const verdict = await withUsage(usage.id, () => ai.gradeAnswer({ question: question.prompt, expected: question.answer, acceptable: question.acceptable, answer: text, level: learner.level as Level }));
           if (verdict) {
             correct = verdict.correct;
             comment = verdict.comment;
@@ -1151,9 +1163,9 @@ cervelleRouter.post("/learners/:learnerId/assistant", async (req, res) => {
   const revision = revisionId ? await prisma.revision.findFirst({ where: { id: revisionId, learnerId: learner.id, status: "ready" } }) : null;
   const familyId = req.cervelle!.familyId;
   if (!(await underDailyLimit(familyId, "assistant", res))) return;
-  await recordUsage(familyId, "assistant");
+  const usage = await recordUsage(familyId, "assistant", learner.id);
   try {
-    const reply = await ai.assistantReply({ level: learner.level as Level, grade: learner.grade, course: revision ? courseText(revision) : null, turns: messages.slice(-12) });
+    const reply = await withUsage(usage.id, () => ai.assistantReply({ level: learner.level as Level, grade: learner.grade, course: revision ? courseText(revision) : null, turns: messages.slice(-12) }));
     res.json({ reply });
   } catch (e) {
     if (e instanceof ai.CervelleAiError) return res.status(502).json({ error: e.message });
@@ -1202,10 +1214,10 @@ cervelleRouter.post("/learners/:learnerId/exam-reviews", async (req, res) => {
   const familyId = req.cervelle!.familyId;
   if (!(await underDailyLimit(familyId, "exam", res))) return;
   const exam = await prisma.examReview.create({ data: { learnerId: learner.id, revisionId } });
-  await recordUsage(familyId, "exam");
+  const usage = await recordUsage(familyId, "exam", learner.id);
   const photoKeys = await storeFiles(`cervelle/${familyId}/interro-${exam.id}`, files);
   if (photoKeys.length) await prisma.examReview.update({ where: { id: exam.id }, data: { photoKeys } });
-  void processExam(exam.id, files, learner, revisionId);
+  void withUsage(usage.id, () => processExam(exam.id, files, learner, revisionId));
   res.status(202).json({ examReview: serializeExam(exam) });
 });
 
@@ -1238,9 +1250,10 @@ cervelleRouter.delete("/learners/:learnerId/exam-reviews/:examId", async (req, r
 });
 
 // Agenda, tâches, habitudes, journal, minuteur, statistiques et amis.
-mountOrganize(cervelleRouter, { loadLearner, parentOnly, serializeLearner, missionState, underDailyLimit, recordUsage, aiConfigured, decodeFiles });
+mountOrganize(cervelleRouter, { loadLearner, parentOnly, serializeLearner, missionState, underDailyLimit, recordUsage, withUsage, aiConfigured, decodeFiles });
 mountBadges(cervelleRouter, { loadLearner });
 mountGoals(cervelleRouter, { loadLearner, parentOnly });
 mountStars(cervelleRouter, { loadLearner });
 mountDuels(cervelleRouter, { loadLearner });
 mountWeekly(cervelleRouter, { loadLearner });
+mountUsage(cervelleRouter, { parentOnly });
