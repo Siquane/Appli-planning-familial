@@ -1,0 +1,8 @@
+-- What each Cervelle AI call really used, to price the app on real numbers.
+ALTER TABLE "AiUsage" ADD COLUMN "learnerId" TEXT;
+ALTER TABLE "AiUsage" ADD COLUMN "model" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "AiUsage" ADD COLUMN "inputTokens" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "AiUsage" ADD COLUMN "outputTokens" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "AiUsage" ADD COLUMN "cacheReadTokens" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "AiUsage" ADD COLUMN "cacheWriteTokens" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "AiUsage" ADD COLUMN "costMicros" INTEGER NOT NULL DEFAULT 0;

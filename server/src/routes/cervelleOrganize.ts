@@ -46,7 +46,8 @@ export interface OrganizeDeps {
   serializeLearner: (l: Learner) => unknown;
   missionState: (l: Learner) => Promise<unknown>;
   underDailyLimit: (familyId: string, kind: Limited, res: Response) => Promise<boolean>;
-  recordUsage: (familyId: string, kind: Limited) => Promise<unknown>;
+  recordUsage: (familyId: string, kind: Limited, learnerId?: string) => Promise<{ id: string }>;
+  withUsage: <T>(usageId: string, fn: () => Promise<T>) => Promise<T>;
   aiConfigured: (res: Response) => boolean;
   decodeFiles: (files: FileInput[]) => ai.CourseFile[] | string;
 }
@@ -412,9 +413,9 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
     const files = d.decodeFiles(parsed.data.files);
     if (typeof files === "string") return res.status(400).json({ error: files });
     if (!(await d.underDailyLimit(learner.userId, "timetable", res))) return;
-    await d.recordUsage(learner.userId, "timetable");
+    const usage = await d.recordUsage(learner.userId, "timetable", learner.id);
     try {
-      res.json({ slots: await ai.readTimetable({ files }) });
+      res.json({ slots: await d.withUsage(usage.id, () => ai.readTimetable({ files })) });
     } catch (e) {
       if (e instanceof ai.CervelleAiError) return res.status(422).json({ error: e.message });
       throw e;
