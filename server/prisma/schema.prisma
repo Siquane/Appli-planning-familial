@@ -623,6 +623,7 @@ model Learner {
   attempts       Attempt[]
   sessions       StudySession[]
   examReviews    ExamReview[]
+  homework       HomeworkHelp[]
   events         StudyEvent[]
   todos          TodoItem[]
   habits         Habit[]
@@ -1133,4 +1134,19 @@ model PocketMoneyCredit {
   createdAt   DateTime @default(now())
 
   @@index([accountId, day])
+}
+
+// « Aide aux devoirs » : a photographed exercise, read by Cervelle into
+// questions. `questions` is [{ prompt, hints[3], solution, hintsShown,
+// attempts, solved, lastMessage }]; the solution never leaves the server.
+model HomeworkHelp {
+  id           String   @id @default(cuid())
+  learnerId    String
+  learner      Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  subject      String   @default("")
+  instructions String   @default("")
+  questions    Json
+  createdAt    DateTime @default(now())
+
+  @@index([learnerId, createdAt])
 }
