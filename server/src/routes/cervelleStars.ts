@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import type { Request, Response, Router } from "express";
 import { prisma } from "../db";
 import { beforeParisDay, addDays, parisDay } from "../lib/cervelle/days";
-import { onSale, SHOP } from "../lib/cervelle/shop";
+import { onSale, SHOP, equip } from "../lib/cervelle/shop";
 import { monthRange, openChest, PATH_END, starsOf, STAR_RULES, STEPS, themeOf, type MonthFacts } from "../lib/cervelle/stars";
 
 // « Chemin d'étoiles »: GET works out the month's stars from what is stored,
@@ -51,10 +51,17 @@ async function payStep(learner: Learner, month: string, at: number, reward: (typ
   try {
     await prisma.$transaction([
       prisma.starEvent.create({ data: { learnerId: learner.id, key, day: parisDay(), coins, item } }),
-      prisma.learner.update({ where: { id: learner.id }, data: { coins: { increment: coins }, ...(item && !learner.owned.includes(item) ? { owned: { push: item } } : {}) } }),
+      // A prize is worn at once (it takes its slot's place): the child sees it on Cervelle right away.
+      prisma.learner.update({
+        where: { id: learner.id },
+        data: { coins: { increment: coins }, ...(item ? { equipped: equip(learner.equipped, item), ...(!learner.owned.includes(item) ? { owned: { push: item } } : {}) } : {}) },
+      }),
       ...(reward.type === "item" ? [prisma.learnerBadge.upsert({ where: { learnerId_key: { learnerId: learner.id, key: `chemin:${month}` } }, create: { learnerId: learner.id, key: `chemin:${month}` }, update: {} })] : []),
     ]);
-    if (item) learner.owned.push(item);
+    if (item) {
+      learner.owned.push(item);
+      learner.equipped = equip(learner.equipped, item);
+    }
     return { coins, item };
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") return null;

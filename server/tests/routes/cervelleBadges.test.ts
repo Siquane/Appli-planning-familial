@@ -78,4 +78,19 @@ describe("Cervelle — badges", () => {
     expect((await request(app).post(`${url}/outfits/2/wear`).set(child)).status).toBe(404);
     expect((await request(app).put(`${url}/outfits/4`).set(child)).status).toBe(404);
   });
+
+  it("puts on at once the item a new badge unlocks, in place of the one in its slot", async () => {
+    const { learnerId, child } = await family();
+    // A 30-day streak: « Régulier » in gold, which unlocks the gold crown (a hat too).
+    await prisma.learner.update({ where: { id: learnerId }, data: { owned: ["couronne"], equipped: ["couronne"], bestStreak: 30 } });
+    const res = await request(app).get("/cervelle/learners/me/badges").set(child);
+    expect(res.status).toBe(200);
+    const learner = await prisma.learner.findUniqueOrThrow({ where: { id: learnerId } });
+    expect(learner.equipped).toContain("couronne_or");
+    expect(learner.equipped).not.toContain("couronne");
+    // Looking again does not put it back on if the child took it off.
+    await prisma.learner.update({ where: { id: learnerId }, data: { equipped: ["couronne"] } });
+    await request(app).get("/cervelle/learners/me/badges").set(child);
+    expect((await prisma.learner.findUniqueOrThrow({ where: { id: learnerId } })).equipped).toEqual(["couronne"]);
+  });
 });
