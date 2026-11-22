@@ -146,7 +146,19 @@ const publicLearner = (l: Learner) => ({ id: l.id, name: l.name, color: l.color,
 
 // ─── Schemas ─────────────────────────────────────────────────────────────
 
-const EVENT_KINDS = ["cours", "interro", "devoir", "revision", "activite"] as const;
+// « activite » is shown as « Loisirs »; maison, sante and travail are Passerelle's other task categories.
+const EVENT_KINDS = ["cours", "interro", "devoir", "revision", "activite", "maison", "sante", "travail"] as const;
+type EventKind = (typeof EVENT_KINDS)[number];
+
+/** Passerelle task category of a Cervelle slot (school work is « École »). */
+export function categoryOfKind(kind: string): string {
+  return { activite: "Loisirs", maison: "Maison", sante: "Santé", travail: "Travail" }[kind] ?? "École";
+}
+
+/** Cervelle kind of a Passerelle task, from its category. */
+export function kindOfCategory(category: string): EventKind {
+  return ({ Loisirs: "activite", Maison: "maison", Santé: "sante", Travail: "travail", École: "cours" } as Record<string, EventKind>)[category] ?? "activite";
+}
 
 const eventBase = z.object({
   title: z.string().trim().min(1, "Donne un nom").max(60),
@@ -352,6 +364,19 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
       prisma.studyEvent.findMany({ where: { learnerId: learner.id }, orderBy: [{ start: "asc" }] }),
       prisma.revision.findMany({ where: { learnerId: learner.id, examDate: { not: null }, status: "ready" }, select: { id: true, title: true, subject: true, examDate: true } }),
     ]);
+    // Slots imported before categories were kept: fill them in from Passerelle now, once.
+    const missing = events.filter((e) => e.source === "passerelle" && !e.passerelleCategory && e.passerelleTaskId);
+    if (missing.length) {
+      const tasks = await prisma.task.findMany({ where: { id: { in: missing.map((e) => e.passerelleTaskId!) } }, select: { id: true, category: true } });
+      const byId = new Map(tasks.map((t) => [t.id, t.category]));
+      for (const e of missing) {
+        const category = byId.get(e.passerelleTaskId!);
+        if (!category) continue;
+        e.passerelleCategory = category;
+        e.kind = kindOfCategory(category);
+        await prisma.studyEvent.update({ where: { id: e.id }, data: { passerelleCategory: category, kind: e.kind } });
+      }
+    }
     res.json({
       events: events.map(serializeEvent),
       exams: exams.map((r) => ({ id: r.id, title: r.title, subject: r.subject, day: parisDay(r.examDate!) })),
@@ -449,7 +474,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
         const weekday = e.weekday ?? weekdayOf(e.day!);
         const data = {
           title: e.title,
-          category: "École",
+          category: categoryOfKind(e.kind),
           weekday,
           date: e.day ? new Date(`${e.day}T12:00:00Z`) : dateForWeekday(weekday as 0),
           time: e.start,
@@ -479,7 +504,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
         live.add(t.id);
         const data = {
           title: t.title.slice(0, 60),
-          kind: "activite",
+          kind: kindOfCategory(t.category),
           passerelleCategory: t.category || null,
           weekday: t.recurring ? t.weekday : null,
           day: t.recurring ? null : parisDay(t.date),
