@@ -196,6 +196,7 @@ const serializeEvent = (e: Prisma.StudyEventGetPayload<object>) => ({
   createdBy: e.createdBy,
   source: e.source,
   synced: !!e.passerelleTaskId,
+  category: e.source === "passerelle" ? (e.passerelleCategory ?? null) : null,
 });
 
 const serializeTodo = (t: Prisma.TodoItemGetPayload<object>) => ({
@@ -479,6 +480,7 @@ export function mountOrganize(router: Router, d: OrganizeDeps) {
         const data = {
           title: t.title.slice(0, 60),
           kind: "activite",
+          passerelleCategory: t.category || null,
           weekday: t.recurring ? t.weekday : null,
           day: t.recurring ? null : parisDay(t.date),
           start: t.time,

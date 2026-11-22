@@ -191,7 +191,7 @@ describe("Cervelle — agenda", () => {
       ["Piscine", "Loisirs", "17:00", 60, true],
     ]);
     const agenda = await request(app).get(`${url}/agenda`).set(auth);
-    expect(agenda.body.events.find((e: { title: string }) => e.title === "Piscine")).toMatchObject({ source: "passerelle", weekday: 2, start: "17:00", end: "18:00" });
+    expect(agenda.body.events.find((e: { title: string }) => e.title === "Piscine")).toMatchObject({ source: "passerelle", category: "Loisirs", weekday: 2, start: "17:00", end: "18:00" });
 
     // Again: nothing duplicated. Then the task goes away in Passerelle.
     expect((await request(app).post(`${url}/agenda/sync`).set(auth)).body).toEqual({ pushed: 1, pulled: 1, removed: 0 });
