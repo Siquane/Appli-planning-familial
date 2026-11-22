@@ -861,6 +861,8 @@ model StudyEvent {
   source           String   @default("cervelle")
   // The Passerelle task this slot is synchronised with, when the parent asked for it.
   passerelleTaskId String?
+  // Category of the Passerelle task (« École », « Maison »…) for slots brought in from it.
+  passerelleCategory String?
   createdAt        DateTime @default(now())
 
   @@index([learnerId])
