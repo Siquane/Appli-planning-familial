@@ -407,4 +407,5 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 ## Filtre du Planning par membre (22/11/2026)
 
 - Sous la barre des jours : puces « Tous » + un prénom par membre (plusieurs au choix). Montre les tâches des membres choisis **et** celles sans « Pour qui » ; tout cocher revient à « Tous ». L'anneau du jour compte les tâches filtrées.
+- 2e rangée : « Toutes » + les 5 catégories (École, Travail, Maison, Santé, Loisirs), combinée avec les prénoms (Jules + École = l'école de Jules). Gardée aussi sur le téléphone.
 - Gardé sur le téléphone (`src/state/planningFilterStore.ts`, AsyncStorage) ; logique dans `src/lib/planningFilter.ts` (membres supprimés ignorés). JS seulement.

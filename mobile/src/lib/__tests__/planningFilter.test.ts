@@ -1,4 +1,4 @@
-import { filterByMembers, toggleMember } from "../planningFilter";
+import { filterByCategories, filterByMembers, toggleMember } from "../planningFilter";
 
 const t = (id: string, memberIds: string[]) => ({ id, memberIds });
 const tasks = [t("jules", ["j"]), t("lea", ["l"]), t("both", ["j", "l"]), t("family", [])];
@@ -20,5 +20,16 @@ describe("toggleMember", () => {
     expect(toggleMember([], "j", ["j", "l", "e"])).toEqual(["j"]);
     expect(toggleMember(["j"], "j", ["j", "l", "e"])).toEqual([]);
     expect(toggleMember(["j", "l"], "e", ["j", "l", "e"])).toEqual([]);
+  });
+});
+
+describe("filterByCategories", () => {
+  const cats = [{ id: "a", category: "École" as const }, { id: "b", category: "Santé" as const }, { id: "c", category: "Maison" as const }];
+  it("keeps everything without a choice or with an unknown one", () => {
+    expect(filterByCategories(cats, []).length).toBe(3);
+    expect(filterByCategories(cats, ["Inconnue"]).length).toBe(3);
+  });
+  it("keeps only the chosen categories", () => {
+    expect(filterByCategories(cats, ["École", "Maison"]).map((x) => x.id)).toEqual(["a", "c"]);
   });
 });

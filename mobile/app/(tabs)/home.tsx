@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { View, RefreshControl, ScrollView } from "react-native";
 import { Chip } from "../../src/components/Chip";
 import { usePlanningFilterStore } from "../../src/state/planningFilterStore";
-import { filterByMembers, toggleMember } from "../../src/lib/planningFilter";
+import { TASK_CATEGORIES, filterByCategories, filterByMembers, toggleMember } from "../../src/lib/planningFilter";
 import { router } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Pressable } from "../../src/components/Touchable";
@@ -42,9 +42,13 @@ export default function HomeScreen() {
   const { data: members = [] } = useMembers();
 
   // Semaine type (chaque semaine) + rendez-vous datés de cette semaine.
-  // Filtre par membre (gardé sur ce téléphone) : ses tâches + celles de toute la famille.
+  // Filtre par membre (gardé sur ce téléphone) : ses tâches + celles de toute la famille,
+  // et par catégorie ; les deux se combinent.
   const filterIds = usePlanningFilterStore((s) => s.memberIds);
   const setFilterIds = usePlanningFilterStore((s) => s.setMemberIds);
+  const filterCategories = usePlanningFilterStore((s) => s.categories);
+  const setFilterCategories = usePlanningFilterStore((s) => s.setCategories);
+  const activeCategories = filterCategories.filter((c) => (TASK_CATEGORIES as string[]).includes(c));
   const hydrateFilter = usePlanningFilterStore((s) => s.hydrate);
   useEffect(() => {
     hydrateFilter();
@@ -52,8 +56,8 @@ export default function HomeScreen() {
   const memberIdsAll = useMemo(() => members.map((m) => m.id), [members]);
   const activeFilter = filterIds.filter((id) => memberIdsAll.includes(id));
   const dayTasks = useMemo(
-    () => filterByMembers(tasksOn(tasks, selected, week), filterIds, memberIdsAll),
-    [tasks, selected, week, filterIds, memberIdsAll]
+    () => filterByCategories(filterByMembers(tasksOn(tasks, selected, week), filterIds, memberIdsAll), filterCategories),
+    [tasks, selected, week, filterIds, memberIdsAll, filterCategories]
   );
 
   function goToWeek(offset: number) {
@@ -123,6 +127,12 @@ export default function HomeScreen() {
             ))}
           </ScrollView>
         )}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.xs }}>
+          <Chip label="Toutes" selected={activeCategories.length === 0} onPress={() => setFilterCategories([])} size="sm" />
+          {TASK_CATEGORIES.map((c) => (
+            <Chip key={c} label={c} selected={activeCategories.includes(c)} onPress={() => setFilterCategories(toggleMember(activeCategories, c, TASK_CATEGORIES))} size="sm" />
+          ))}
+        </ScrollView>
         {!isCurrentWeek && (
           <Pressable onPress={() => goToWeek(0)} accessibilityRole="button" style={{ alignSelf: "center", paddingVertical: space.xs }}>
             <Text size={13} tone="accent">
