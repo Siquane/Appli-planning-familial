@@ -177,6 +177,7 @@ describe("Cervelle — agenda", () => {
     const memberId = member.body.member.id;
     await request(app).patch(`${url}`).set(auth).send({ memberId });
     await request(app).post(`${url}/agenda/events`).set(auth).send({ title: "Français", weekday: 0, start: "08:00", end: "08:55", room: "2-004" });
+    await request(app).post(`${url}/agenda/events`).set(auth).send({ title: "Ranger ma chambre", kind: "maison", weekday: 5, start: "10:00", end: "10:30" });
     const task = await request(app)
       .post("/tasks")
       .set(auth)
@@ -184,20 +185,26 @@ describe("Cervelle — agenda", () => {
     expect(task.status).toBe(201);
 
     const sync = await request(app).post(`${url}/agenda/sync`).set(auth).send({ direction: "both" });
-    expect(sync.body).toEqual({ pushed: 1, pulled: 1, removed: 0 });
+    expect(sync.body).toEqual({ pushed: 2, pulled: 1, removed: 0 });
     const tasks = await prisma.task.findMany({ where: { members: { some: { memberId } } }, orderBy: { title: "asc" } });
     expect(tasks.map((t) => [t.title, t.category, t.time, t.duration, t.recurring])).toEqual([
       ["Français", "École", "08:00", 55, true],
       ["Piscine", "Loisirs", "17:00", 60, true],
+      ["Ranger ma chambre", "Maison", "10:00", 30, true],
     ]);
     const agenda = await request(app).get(`${url}/agenda`).set(auth);
-    expect(agenda.body.events.find((e: { title: string }) => e.title === "Piscine")).toMatchObject({ source: "passerelle", category: "Loisirs", weekday: 2, start: "17:00", end: "18:00" });
+    expect(agenda.body.events.find((e: { title: string }) => e.title === "Piscine")).toMatchObject({ source: "passerelle", kind: "activite", category: "Loisirs", weekday: 2, start: "17:00", end: "18:00" });
+
+    // A slot imported before categories were kept gets its category back when the agenda is read.
+    await prisma.studyEvent.updateMany({ where: { learnerId, title: "Piscine" }, data: { passerelleCategory: null, kind: "cours" } });
+    const again = await request(app).get(`${url}/agenda`).set(auth);
+    expect(again.body.events.find((e: { title: string }) => e.title === "Piscine")).toMatchObject({ kind: "activite", category: "Loisirs" });
 
     // Again: nothing duplicated. Then the task goes away in Passerelle.
-    expect((await request(app).post(`${url}/agenda/sync`).set(auth)).body).toEqual({ pushed: 1, pulled: 1, removed: 0 });
+    expect((await request(app).post(`${url}/agenda/sync`).set(auth)).body).toEqual({ pushed: 2, pulled: 1, removed: 0 });
     await prisma.task.delete({ where: { id: task.body.task.id } });
     expect((await request(app).post(`${url}/agenda/sync`).set(auth).send({ direction: "from_passerelle" })).body).toEqual({ pushed: 0, pulled: 0, removed: 1 });
-    expect(await prisma.task.count({ where: { userId: (await prisma.learner.findUniqueOrThrow({ where: { id: learnerId } })).userId } })).toBe(1);
+    expect(await prisma.task.count({ where: { userId: (await prisma.learner.findUniqueOrThrow({ where: { id: learnerId } })).userId } })).toBe(2);
   });
 });
 
