@@ -20,6 +20,7 @@ import { mountUsage } from "./cervelleUsage";
 import { mountHomework } from "./cervelleHomework";
 import { mountBrevet } from "./cervelleBrevet";
 import * as shop from "../lib/cervelle/shop";
+import { howToGet } from "../lib/cervelle/howToGet";
 import { applyAnswer, combinedMastery, displayedMastery, revisionProgress, type Mastery } from "../lib/cervelle/mastery";
 import { localGrade, normalizeAnswer, sameOrder } from "../lib/cervelle/grading";
 import {
@@ -1129,6 +1130,7 @@ cervelleRouter.get("/learners/:learnerId/shop", async (req, res) => {
       kind: i.kind,
       season: i.season ?? null,
       badge: i.badge?.label ?? null,
+      how: howToGet(i, today),
       onSale: shop.onSale(i, today),
       owned: shop.owns(i, learner.owned, badgeKeys),
       equipped: learner.equipped.includes(i.id) || (shop.FREE.includes(i.id) && !learner.equipped.some((e) => shopItem(e)?.slot === i.slot)),
