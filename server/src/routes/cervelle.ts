@@ -1322,4 +1322,4 @@ mountWeekly(cervelleRouter, { loadLearner });
 mountUsage(cervelleRouter, { parentOnly });
 mountHomework(cervelleRouter, { loadLearner, aiConfigured, decodeFiles, fileSchema, underDailyLimit, recordUsage, withUsage });
 mountBrevet(cervelleRouter, { loadLearner, aiConfigured, underDailyLimit, recordUsage, withUsage, courseText });
-mountWidget(cervelleRouter, { loadLearner, serializeLearner, missionState, revisionCards });
+mountWidget(cervelleRouter, { parentOnly, loadLearner, serializeLearner, missionState, revisionCards });
