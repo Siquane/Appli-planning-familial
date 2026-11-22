@@ -53,6 +53,8 @@ describe("Cervelle — widget", () => {
     await prisma.studySession.create({ data: { learnerId: b.learnerId, mode: "minuteur", correct: 0, total: 0, seconds: 600, day: today } });
     const res = await request(app).get("/cervelle/learners/me/widget").set(a.child);
     expect(res.body.timer).toMatchObject({ weekMinutes: 25 });
+    expect(res.body.week).toHaveLength(7);
+    expect(res.body.week.find((d: { today: boolean }) => d.today)).toEqual({ day: today, done: true, today: true });
     expect(res.body.timer.focus).toBeGreaterThan(0);
     expect(res.body.friends).toMatchObject({ cheers: 1, lastCheer: { fromName: "Léa", emoji: "👏" }, invites: 0, challenge: { otherName: "Léa", myMinutes: 25, theirMinutes: 10 } });
   });

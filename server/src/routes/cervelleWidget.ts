@@ -54,6 +54,9 @@ export function mountWidget(router: Router, d: Deps) {
     const active = challenges.find((c) => c.status === "active");
     const otherId = active ? (active.fromId === learner.id ? active.toId : active.fromId) : null;
     const rows = await prisma.studySession.groupBy({ by: ["learnerId"], where: { learnerId: { in: otherId ? [learner.id, otherId] : [learner.id] }, day: { gte: monday, lt: addDays(monday, 7) } }, _sum: { seconds: true } });
+    // Days of this week (Monday first) with some work: the dots of the streak widget.
+    const worked = new Set((await prisma.studySession.findMany({ where: { learnerId: learner.id, day: { gte: monday, lt: addDays(monday, 7) } }, select: { day: true }, distinct: ["day"] })).map((x) => x.day));
+    const week = Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((day) => ({ day, done: worked.has(day), today: day === today }));
     const minutesOf = (id: string) => Math.floor((rows.find((r) => r.learnerId === id)?._sum.seconds ?? 0) / 60);
 
     const next = revisions
@@ -72,6 +75,7 @@ export function mountWidget(router: Router, d: Deps) {
       name: me.name,
       streak: me.streak,
       studiedToday: learner.lastStudyDay === today,
+      week,
       equipped: me.equipped,
       missions: { done: missions.done, total: missions.total, chestOpened: missions.chestOpened },
       stars: { total: starsOf(facts).total, end: PATH_END },
