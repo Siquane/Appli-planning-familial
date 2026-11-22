@@ -12,6 +12,7 @@ import { monthFacts } from "./cervelleStars";
 // month's stars, and a memory card of the day. Pays nothing (the app does).
 
 interface Deps {
+  parentOnly: (req: Request, res: Response, next: () => void) => unknown;
   loadLearner: (req: Request, res: Response) => Promise<Learner | null>;
   serializeLearner: (l: Learner) => { name: string; streak: number; equipped: string[]; timer: { focus: number } };
   missionState: (l: Learner) => Promise<{ done: number; total: number; chestOpened: boolean }>;
@@ -27,7 +28,28 @@ function hash(s: string): number {
 
 const daysBetween = (from: string, to: string) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 
+/** The next interro of a child, from its revision cards. */
+function nextExam(revisions: Awaited<ReturnType<Deps["revisionCards"]>>, today: string) {
+  const next = revisions.filter((r) => r.status === "ready" && r.examDate && r.examDate >= today).sort((a, b) => a.examDate!.localeCompare(b.examDate!))[0];
+  if (!next) return null;
+  const notions = next.counts.mastered + next.counts.review + next.counts.new;
+  return { revisionId: next.id, title: next.title, subject: next.subject, examDate: next.examDate!, daysLeft: daysBetween(today, next.examDate!), mastered: next.counts.mastered, notions, progress: next.progress };
+}
+
 export function mountWidget(router: Router, d: Deps) {
+  // The parent's widget: for each child, worked today? and the next interro.
+  router.get("/widget/parent", d.parentOnly, async (req, res) => {
+    const today = parisDay();
+    const learners = await prisma.learner.findMany({ where: { userId: req.cervelle!.familyId }, orderBy: { createdAt: "asc" } });
+    const children = await Promise.all(
+      learners.map(async (l) => {
+        const me = d.serializeLearner(l);
+        return { id: l.id, name: me.name, streak: me.streak, studiedToday: l.lastStudyDay === today, equipped: me.equipped, exam: nextExam(await d.revisionCards(l.id), today) };
+      }),
+    );
+    res.json({ day: today, children });
+  });
+
   router.get("/learners/:learnerId/widget", async (req, res) => {
     const learner = await d.loadLearner(req, res);
     if (!learner) return;
@@ -59,10 +81,6 @@ export function mountWidget(router: Router, d: Deps) {
     const week = Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((day) => ({ day, done: worked.has(day), today: day === today }));
     const minutesOf = (id: string) => Math.floor((rows.find((r) => r.learnerId === id)?._sum.seconds ?? 0) / 60);
 
-    const next = revisions
-      .filter((r) => r.status === "ready" && r.examDate && r.examDate >= today)
-      .sort((a, b) => a.examDate!.localeCompare(b.examDate!))[0];
-    const total = next ? next.counts.mastered + next.counts.review + next.counts.new : 0;
 
     // Card of the day: one to review if there is any, else any card.
     const toReview = cards.filter((c) => displayedMastery(c.notion, now) === "review");
@@ -79,9 +97,7 @@ export function mountWidget(router: Router, d: Deps) {
       equipped: me.equipped,
       missions: { done: missions.done, total: missions.total, chestOpened: missions.chestOpened },
       stars: { total: starsOf(facts).total, end: PATH_END },
-      exam: next
-        ? { revisionId: next.id, title: next.title, subject: next.subject, examDate: next.examDate, daysLeft: daysBetween(today, next.examDate!), mastered: next.counts.mastered, notions: total, progress: next.progress }
-        : null,
+      exam: nextExam(revisions, today),
       timer: { focus: me.timer.focus, weekMinutes: minutesOf(learner.id) },
       friends: {
         cheers: cheers.length,

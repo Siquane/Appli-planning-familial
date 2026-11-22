@@ -12,7 +12,7 @@ async function family() {
   const learnerId = created.body.learner.id as string;
   const code = await request(app).post(`/cervelle/learners/${learnerId}/code`).set(auth);
   const login = await request(app).post("/cervelle/child/login").send({ code: code.body.code });
-  return { learnerId, child: { Authorization: `Bearer ${login.body.token}` } };
+  return { auth, learnerId, child: { Authorization: `Bearer ${login.body.token}` } };
 }
 
 describe("Cervelle — widget", () => {
@@ -57,5 +57,16 @@ describe("Cervelle — widget", () => {
     expect(res.body.week.find((d: { today: boolean }) => d.today)).toEqual({ day: today, done: true, today: true });
     expect(res.body.timer.focus).toBeGreaterThan(0);
     expect(res.body.friends).toMatchObject({ cheers: 1, lastCheer: { fromName: "Léa", emoji: "👏" }, invites: 0, challenge: { otherName: "Léa", myMinutes: 25, theirMinutes: 10 } });
+  });
+
+  it("gives the parent each child's day and next interro, and refuses a child", async () => {
+    const { auth, learnerId, child } = await family();
+    const today = parisDay();
+    await prisma.learner.update({ where: { id: learnerId }, data: { lastStudyDay: today, streak: 2 } });
+    await prisma.revision.create({ data: { learnerId, title: "Les volcans", subject: "SVT", status: "ready", examDate: new Date(`${addDays(today, 2)}T00:00:00Z`) } });
+    const res = await request(app).get("/cervelle/widget/parent").set(auth);
+    expect(res.status).toBe(200);
+    expect(res.body.children).toEqual([expect.objectContaining({ id: learnerId, name: "Léa", streak: 2, studiedToday: true, exam: expect.objectContaining({ title: "Les volcans", daysLeft: 2 }) })]);
+    expect((await request(app).get("/cervelle/widget/parent").set(child)).status).toBe(403);
   });
 });
