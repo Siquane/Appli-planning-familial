@@ -582,13 +582,14 @@ export function decodeFiles(files: z.infer<typeof fileSchema>[]): ai.CourseFile[
 
 const EXT: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "application/pdf": "pdf" };
 
-async function storeFiles(prefix: string, files: ai.CourseFile[]): Promise<string[]> {
+async function storeFiles(prefix: string, files: ai.CourseFile[], start = 0): Promise<string[]> {
   const storage = getStorage();
   if (!storage?.putObject) return [];
   const keys: string[] = [];
   try {
     for (const [i, f] of files.entries()) {
-      const key = `${prefix}/${i + 1}.${EXT[f.mimeType]}`;
+      // `start`: pages added later go after the ones already kept.
+      const key = `${prefix}/${start + i + 1}-${Date.now().toString(36)}.${EXT[f.mimeType]}`;
       await storage.putObject(key, f.data, f.mimeType);
       keys.push(key);
     }
@@ -618,25 +619,51 @@ const SCHOOL_LEVELS = new Set(["primaire", "college", "lycee"]);
 /** At most this many sub-notions added « from the programme » per revision: the course stays the base. */
 const MAX_PROGRAMME_ADDITIONS = 2;
 
-export async function processRevision(revisionId: string, files: ai.CourseFile[], learner: Pick<Learner, "level" | "grade">, hint: { title: string; subject: string }) {
+/**
+ * `update`: pages added to a revision that was already ready. On success the
+ * revision keeps every page; on failure it goes back to its previous fiches
+ * (status « ready » with the error to show) and the new pages are dropped.
+ */
+export async function processRevision(
+  revisionId: string,
+  files: ai.CourseFile[],
+  learner: Pick<Learner, "level" | "grade">,
+  hint: { title: string; subject: string },
+  update?: { photoKeys: string[]; newKeys: string[] },
+) {
   try {
     const school = SCHOOL_LEVELS.has(learner.level);
     const programme = school ? programmeForPrompt(learner.grade) : null;
     const out = await ai.generateRevision({ files, level: learner.level as Level, grade: learner.grade, hint, programme });
     await saveGenerated(revisionId, out, hint, { school, grade: learner.grade });
+    if (update) await prisma.revision.update({ where: { id: revisionId }, data: { photoKeys: [...update.photoKeys, ...update.newKeys] } });
     await notifyRevisionReady(revisionId);
   } catch (e) {
     const message = e instanceof ai.CervelleAiError ? e.message : "La préparation a échoué. Réessaie.";
     if (!(e instanceof ai.CervelleAiError)) console.error("Cervelle: revision failed", e);
-    await prisma.revision.update({ where: { id: revisionId }, data: { status: "failed", error: message } }).catch(() => {});
+    if (update) {
+      await removeObjects(update.newKeys).catch(() => {});
+      await prisma.revision.update({ where: { id: revisionId }, data: { status: "ready", error: `Les nouvelles pages n'ont pas pu être ajoutées : ${message}` } }).catch(() => {});
+    } else {
+      await prisma.revision.update({ where: { id: revisionId }, data: { status: "failed", error: message } }).catch(() => {});
+    }
   }
 }
+
+const sameTitle = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
 
 async function saveGenerated(revisionId: string, out: ai.GeneratedRevision, hint: { title: string; subject: string }, ctx: { school: boolean; grade: string }) {
   const chapter = ctx.school && out.chapitre_programme ? findChapter(ctx.grade, out.chapitre_programme) : null;
   let additions = 0;
   await prisma.$transaction(
     async (tx) => {
+      // Prepared again (pages added): what was learned on a notion that keeps its title is kept.
+      const before = new Map(
+        (await tx.notion.findMany({ where: { revisionId, parentId: { not: null } }, select: { title: true, mastery: true, streak: true, nextReviewAt: true, lastAnsweredAt: true } })).map((n) => [
+          sameTitle(n.title),
+          { mastery: n.mastery, streak: n.streak, nextReviewAt: n.nextReviewAt, lastAnsweredAt: n.lastAnsweredAt },
+        ]),
+      );
       await tx.notion.deleteMany({ where: { revisionId } });
       const sheets: Prisma.InputJsonValue[] = [];
       let questionOrder = 0;
@@ -650,7 +677,8 @@ async function saveGenerated(revisionId: string, out: ai.GeneratedRevision, hint
           if (fromProgramme && (!ctx.school || additions >= MAX_PROGRAMME_ADDITIONS)) continue;
           if (fromProgramme) additions++;
           children++;
-          const leaf = await tx.notion.create({ data: { revisionId, parentId: root.id, title: sub.titre.trim().slice(0, 160) || root.title, order: j, fromProgramme } });
+          const title = sub.titre.trim().slice(0, 160) || root.title;
+          const leaf = await tx.notion.create({ data: { revisionId, parentId: root.id, title, order: j, fromProgramme, ...before.get(sameTitle(title)) } });
           sheets.push({ notionId: leaf.id, parentTitle: root.title, title: leaf.title, fromProgramme, ...ai.cleanSheet(sub.fiche) });
           const questions = sub.questions.map(ai.cleanQuestion).filter((q): q is ai.CleanQuestion => q !== null).slice(0, 8);
           if (questions.length) {
@@ -721,6 +749,36 @@ cervelleRouter.post("/learners/:learnerId/revisions/:revisionId/retry", async (r
   const usage = await recordUsage(req.cervelle!.familyId, "revision", learner.id);
   await prisma.revision.update({ where: { id: revision.id }, data: { status: "processing", error: null } });
   void withUsage(usage.id, () => processRevision(revision.id, files, learner, { title: revision.title, subject: revision.subject }));
+  res.status(202).json({ revision: { id: revision.id, status: "processing" } });
+});
+
+const addPagesSchema = z.object({ files: z.array(fileSchema).min(1, "Ajoute au moins une photo").max(MAX_FILES) });
+
+/** Adds pages to a ready revision, then prepares it again with every page. */
+cervelleRouter.post("/learners/:learnerId/revisions/:revisionId/pages", async (req, res) => {
+  const learner = await loadLearner(req, res);
+  if (!learner) return;
+  if (!aiConfigured(res)) return;
+  const revision = await loadRevision(req, res, learner);
+  if (!revision) return;
+  if (revision.status !== "ready") return res.status(409).json({ error: "Attends que la révision soit prête pour ajouter des pages." });
+  const parsed = addPagesSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
+  const added = decodeFiles(parsed.data.files);
+  if (typeof added === "string") return res.status(400).json({ error: added });
+  if (revision.photoKeys.length + added.length > MAX_FILES) return res.status(400).json({ error: `${MAX_FILES} pages au plus par cours : ce cours en a déjà ${revision.photoKeys.length}.` });
+  const kept = await loadStoredFiles(revision.photoKeys);
+  if (!kept) return res.status(410).json({ error: "Je n'ai plus les photos de ce cours. Ajoute une nouvelle révision avec toutes les pages." });
+  const familyId = req.cervelle!.familyId;
+  if (!(await underDailyLimit(familyId, "revision", res))) return;
+  const usage = await recordUsage(familyId, "revision", learner.id);
+  const newKeys = await storeFiles(`cervelle/${familyId}/${revision.id}`, added, revision.photoKeys.length);
+  if (newKeys.length !== added.length) {
+    await removeObjects(newKeys).catch(() => {});
+    return res.status(503).json({ error: "Les nouvelles pages n'ont pas pu être enregistrées. Réessaie dans un instant." });
+  }
+  await prisma.revision.update({ where: { id: revision.id }, data: { status: "processing", error: null } });
+  void withUsage(usage.id, () => processRevision(revision.id, [...kept, ...added], learner, { title: revision.title, subject: revision.subject }, { photoKeys: revision.photoKeys, newKeys }));
   res.status(202).json({ revision: { id: revision.id, status: "processing" } });
 });
 

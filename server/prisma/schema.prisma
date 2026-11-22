@@ -768,8 +768,10 @@ model Attempt {
   id         String   @id @default(cuid())
   learnerId  String
   learner    Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
-  questionId String
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  // Null once the question is gone (a revision prepared again with more
+  // pages): the answer still counts for the child's effort and badges.
+  questionId String?
+  question   Question? @relation(fields: [questionId], references: [id], onDelete: SetNull)
   correct    Boolean
   answer     String   @default("")
   mode       String
