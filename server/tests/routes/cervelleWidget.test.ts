@@ -2,7 +2,7 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { app } from "../../src/index";
 import { prisma } from "../../src/db";
-import { addDays, parisDay } from "../../src/lib/cervelle/days";
+import { addDays, mondayOf, parisDay } from "../../src/lib/cervelle/days";
 import { authHeader, signup } from "../helpers";
 
 async function family() {
@@ -41,5 +41,19 @@ describe("Cervelle — widget", () => {
     expect(res.body.card).toEqual({ front: "La lave ?", back: "Magma sorti", revisionId: soon.id, title: "Les volcans" });
     const again = await request(app).get("/cervelle/learners/me/widget").set(child);
     expect(again.body.card).toEqual(res.body.card);
+  });
+
+  it("shows the week's minutes, unseen cheers and the challenge with a friend", async () => {
+    const a = await family();
+    const b = await family();
+    const today = parisDay();
+    await prisma.cheer.create({ data: { fromId: b.learnerId, toId: a.learnerId, kind: "bravo" } });
+    await prisma.challenge.create({ data: { fromId: b.learnerId, toId: a.learnerId, week: mondayOf(today), status: "active" } });
+    await prisma.studySession.create({ data: { learnerId: a.learnerId, mode: "minuteur", correct: 0, total: 0, seconds: 1500, day: today } });
+    await prisma.studySession.create({ data: { learnerId: b.learnerId, mode: "minuteur", correct: 0, total: 0, seconds: 600, day: today } });
+    const res = await request(app).get("/cervelle/learners/me/widget").set(a.child);
+    expect(res.body.timer).toMatchObject({ weekMinutes: 25 });
+    expect(res.body.timer.focus).toBeGreaterThan(0);
+    expect(res.body.friends).toMatchObject({ cheers: 1, lastCheer: { fromName: "Léa", emoji: "👏" }, invites: 0, challenge: { otherName: "Léa", myMinutes: 25, theirMinutes: 10 } });
   });
 });
