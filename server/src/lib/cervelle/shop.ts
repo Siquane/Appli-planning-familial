@@ -142,6 +142,11 @@ export function owns(item: CatalogItem, owned: string[], badgeKeys: string[]): b
   return owned.includes(item.id) || FREE.includes(item.id) || unlockedBy(item, badgeKeys);
 }
 
+/** Items a set of badges unlocks (badge rewards). */
+export function unlockedItems(badgeKeys: string[]): CatalogItem[] {
+  return SHOP.filter((i) => i.kind === "badge" && unlockedBy(i, badgeKeys));
+}
+
 /** Equipping an item takes its slot's place. Pink is no item: it just clears the colour. */
 export function equip(equipped: string[], id: string): string[] {
   const item = shopItem(id);

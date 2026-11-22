@@ -28,7 +28,11 @@ describe("Cervelle — chemin d'étoiles (route)", () => {
     const after = await prisma.learner.findUniqueOrThrow({ where: { id: learnerId } });
     const chest = r1.body.fresh[1];
     expect(after.coins).toBe(before + 10 + chest.coins);
-    if (chest.item) expect(after.owned).toContain(chest.item);
+    // A prize is worn at once.
+    if (chest.item) {
+      expect(after.owned).toContain(chest.item);
+      expect(after.equipped).toContain(chest.item);
+    }
 
     // Asking again pays nothing more.
     expect((await request(app).get(url).set(auth)).body.fresh).toEqual([]);
@@ -40,6 +44,7 @@ describe("Cervelle — chemin d'étoiles (route)", () => {
     expect(r2.body.steps.at(-1)).toMatchObject({ reached: true, result: { item: themeOf(today.slice(0, 7)).item } });
     const final = await prisma.learner.findUniqueOrThrow({ where: { id: learnerId } });
     expect(final.owned).toContain(themeOf(today.slice(0, 7)).item);
+    expect(final.equipped).toContain(themeOf(today.slice(0, 7)).item);
     const badges = await request(app).get(`/cervelle/learners/${learnerId}/badges`).set(auth);
     expect(badges.body.windows[0]).toMatchObject({ family: "chemin", earned: true });
 

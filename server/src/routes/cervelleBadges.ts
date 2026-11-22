@@ -5,6 +5,7 @@ import { prisma } from "../db";
 import { BADGE_LABELS, coinsFor, computeBadges, type BadgeStats } from "../lib/cervelle/badges";
 import { parisDay } from "../lib/cervelle/days";
 import { FOCUS_MIN_SECONDS } from "../lib/cervelle/game";
+import { equip, unlockedItems } from "../lib/cervelle/shop";
 
 // Cervelle's badges: records, successes with three tiers, seasons and holidays.
 // GET works out what the child has earned from what is already stored
@@ -73,6 +74,15 @@ async function award(learnerId: string, keys: string[]): Promise<{ added: string
     } catch (e) {
       // Another request saved it first: it is paid once, by that one.
       if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e;
+    }
+  }
+  // An item a new badge unlocks is worn at once (it takes its slot's place).
+  if (added.length) {
+    const before = new Set(unlockedItems([...stored]).map((i) => i.id));
+    const won = unlockedItems([...stored, ...added]).filter((i) => !before.has(i.id));
+    if (won.length) {
+      const learner = await prisma.learner.findUniqueOrThrow({ where: { id: learnerId }, select: { equipped: true } });
+      await prisma.learner.update({ where: { id: learnerId }, data: { equipped: won.reduce((eq, i) => equip(eq, i.id), learner.equipped) } });
     }
   }
   return { added, coins };
