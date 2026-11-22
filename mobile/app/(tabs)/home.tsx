@@ -1,5 +1,8 @@
-import { useMemo, useState } from "react";
-import { View, RefreshControl } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { View, RefreshControl, ScrollView } from "react-native";
+import { Chip } from "../../src/components/Chip";
+import { usePlanningFilterStore } from "../../src/state/planningFilterStore";
+import { filterByMembers, toggleMember } from "../../src/lib/planningFilter";
 import { router } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Pressable } from "../../src/components/Touchable";
@@ -39,7 +42,19 @@ export default function HomeScreen() {
   const { data: members = [] } = useMembers();
 
   // Semaine type (chaque semaine) + rendez-vous datés de cette semaine.
-  const dayTasks = useMemo(() => tasksOn(tasks, selected, week), [tasks, selected, week]);
+  // Filtre par membre (gardé sur ce téléphone) : ses tâches + celles de toute la famille.
+  const filterIds = usePlanningFilterStore((s) => s.memberIds);
+  const setFilterIds = usePlanningFilterStore((s) => s.setMemberIds);
+  const hydrateFilter = usePlanningFilterStore((s) => s.hydrate);
+  useEffect(() => {
+    hydrateFilter();
+  }, [hydrateFilter]);
+  const memberIdsAll = useMemo(() => members.map((m) => m.id), [members]);
+  const activeFilter = filterIds.filter((id) => memberIdsAll.includes(id));
+  const dayTasks = useMemo(
+    () => filterByMembers(tasksOn(tasks, selected, week), filterIds, memberIdsAll),
+    [tasks, selected, week, filterIds, memberIdsAll]
+  );
 
   function goToWeek(offset: number) {
     setWeekOffset(offset);
@@ -100,6 +115,14 @@ export default function HomeScreen() {
           </Pressable>
         </View>
         <WeekStrip selected={selected} onSelect={setSelected} today={isCurrentWeek ? today : null} week={week} />
+        {members.length > 1 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.xs }}>
+            <Chip label="Tous" selected={activeFilter.length === 0} onPress={() => setFilterIds([])} size="sm" />
+            {members.map((m) => (
+              <Chip key={m.id} label={m.name} selected={activeFilter.includes(m.id)} onPress={() => setFilterIds(toggleMember(activeFilter, m.id, memberIdsAll))} size="sm" />
+            ))}
+          </ScrollView>
+        )}
         {!isCurrentWeek && (
           <Pressable onPress={() => goToWeek(0)} accessibilityRole="button" style={{ alignSelf: "center", paddingVertical: space.xs }}>
             <Text size={13} tone="accent">

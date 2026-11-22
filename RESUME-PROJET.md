@@ -403,3 +403,8 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 - **Pas de tâche programmée** : les versements dus sont créés à la lecture (`catchUpPocketMoney`, verrou `pg_advisory_xact_lock` contre les doublons, 60 au plus d'un coup). Une nouvelle règle commence le lendemain.
 - Routes `/pocket-money` : `GET` (règle + prochain versement, 50 derniers versements, reçu / dépensé = toutes ses dépenses / reste), `PUT|DELETE /rule`, `POST /credits` (ponctuel), `DELETE /credits/:id`. Compte visé = `req.privateId` (l'enfant lui-même, ou un adulte avec `X-Child-Space`) ; seul un adulte écrit (garde enfant).
 - Appli : carte « Mon argent de poche » / « Argent de poche de Jules » en haut du Budget (`PocketMoneyCard`), écran `app/pocket-money.tsx` (réglage semaine/mois + jour, versement ponctuel, historique, appui long pour retirer côté parent). Téléphone de l'enfant : notification locale à 9 h les 4 prochains jours de versement (`syncPocketMoneyNotifications`).
+
+## Filtre du Planning par membre (22/11/2026)
+
+- Sous la barre des jours : puces « Tous » + un prénom par membre (plusieurs au choix). Montre les tâches des membres choisis **et** celles sans « Pour qui » ; tout cocher revient à « Tous ». L'anneau du jour compte les tâches filtrées.
+- Gardé sur le téléphone (`src/state/planningFilterStore.ts`, AsyncStorage) ; logique dans `src/lib/planningFilter.ts` (membres supprimés ignorés). JS seulement.
