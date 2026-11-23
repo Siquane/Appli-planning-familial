@@ -414,3 +414,9 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 
 - En novembre 2026, les 2 000 minutes gratuites (dépôt privé) ont été épuisées : tous les jobs échouaient sans démarrer (« recent account payments have failed or your spending limit needs to be increased »). Le quota revient le 1er de chaque mois.
 - Allègement : tests seulement sur les PR concernées, plus de passage sur `main`, APK seulement à la main. Replanifier exclut aussi les tâches cochées faites cette semaine (#85).
+
+## École et Travail ne se cochent pas (23/11/2026)
+
+- Sur le Planning, les tâches École et Travail (rendez-vous compris) n'ont plus de rond « fait » : un cartable ou une mallette à la couleur de la catégorie à la place. L'anneau du jour ne compte que les tâches à cocher et n'apparaît pas s'il n'y en a aucune.
+- `isCheckable` dans `mobile/src/lib/planningFilter.ts` ; le serveur refuse `PUT /tasks/:id/done` pour ces catégories (400).
+- Publication des mises à jour sans GitHub Actions : depuis une session Claude, jeton Expo en « Network secret » (api.expo.dev) de l'environnement « Passerelle et Cervelle », puis `eas update --channel preview --environment preview --platform android` (après `eas init --force` + `node scripts/configure-updates.js`, sans committer app.json).

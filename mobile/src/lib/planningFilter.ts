@@ -25,3 +25,7 @@ export function filterByCategories<T extends Pick<Task, "category">>(tasks: T[],
   if (chosen.length === 0) return tasks;
   return tasks.filter((t) => chosen.includes(t.category));
 }
+
+/** École et Travail sont des créneaux, pas des tâches à cocher. */
+export const NOT_CHECKABLE: Category[] = ["École", "Travail"];
+export const isCheckable = (task: Pick<Task, "category">) => !NOT_CHECKABLE.includes(task.category);

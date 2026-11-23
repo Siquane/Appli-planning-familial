@@ -222,6 +222,24 @@ export const BookIcon = makeIcon(
   16,
 );
 
+// Tâche École (pas à cocher) : cartable
+export const SchoolBagIcon = makeIcon(
+  [
+  { kind: "path", d: "M6.5 8.5a3 3 0 0 1 3-3h5a3 3 0 0 1 3 3V19a1.5 1.5 0 0 1-1.5 1.5H8A1.5 1.5 0 0 1 6.5 19z", tint: true },
+  { kind: "path", d: "M9.5 5.5V4.5a2.5 2.5 0 0 1 5 0v1M9 13.5h6v3.5H9z" },
+  ],
+  16,
+);
+
+// Tâche Travail (pas à cocher) : mallette
+export const BriefcaseIcon = makeIcon(
+  [
+  { kind: "path", d: "M5 8h14a1.5 1.5 0 0 1 1.5 1.5v8.5a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18V9.5A1.5 1.5 0 0 1 5 8z", tint: true },
+  { kind: "path", d: "M9 8V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v2M3.5 13h17" },
+  ],
+  16,
+);
+
 // Documents
 export const DocumentIcon = makeIcon(
   [
