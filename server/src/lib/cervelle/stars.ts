@@ -1,29 +1,32 @@
-// « Chemin d'étoiles »: each month a new path. Stars come from revising,
-// the daily missions, regularity, duels and badges; every few stars a
-// reward (coins, a surprise chest), and at the end an exclusive item and
-// the path's badge. Pure: the route gathers the month's facts.
+// « Chemin d'étoiles »: each month a new path of 100 squares, one every 5
+// stars (500 to finish). Stars come from revising, the daily missions,
+// regularity, duels and badges; every 5 squares a reward (coins, a surprise
+// chest), and at the end an exclusive item and the path's badge. Pure: the
+// route gathers the month's facts.
 
 import { addDays, daysBetween } from "./days";
 
-export const PATH_END = 50;
+export const SQUARES = 100;
+export const STARS_PER_SQUARE = 5;
+export const PATH_END = SQUARES * STARS_PER_SQUARE;
+/** A reward every this many squares. */
+const REWARD_EVERY = 5;
 
-export type Reward = { type: "coins"; coins: number } | { type: "chest" } | { type: "item" };
+export type Reward = { type: "coins"; coins: number } | { type: "chest" } | { type: "item" } | { type: "none" };
 
-/** The steps of every month's path. */
-export const STEPS: { at: number; reward: Reward }[] = [
-  { at: 3, reward: { type: "coins", coins: 10 } },
-  { at: 6, reward: { type: "chest" } },
-  { at: 10, reward: { type: "coins", coins: 20 } },
-  { at: 14, reward: { type: "chest" } },
-  { at: 18, reward: { type: "coins", coins: 30 } },
-  { at: 22, reward: { type: "chest" } },
-  { at: 26, reward: { type: "coins", coins: 40 } },
-  { at: 30, reward: { type: "chest" } },
-  { at: 35, reward: { type: "coins", coins: 50 } },
-  { at: 40, reward: { type: "chest" } },
-  { at: 45, reward: { type: "coins", coins: 60 } },
-  { at: PATH_END, reward: { type: "item" } },
-];
+/**
+ * The 100 squares of every month's path. Every 5th square gives something,
+ * coins and surprise chests in turn (coins growing along the path); the last
+ * one, the month's exclusive item.
+ */
+export const STEPS: { at: number; reward: Reward }[] = Array.from({ length: SQUARES }, (_, i) => {
+  const square = i + 1;
+  const at = square * STARS_PER_SQUARE;
+  if (square === SQUARES) return { at, reward: { type: "item" } };
+  if (square % REWARD_EVERY !== 0) return { at, reward: { type: "none" } };
+  const n = square / REWARD_EVERY; // 1 … 19
+  return { at, reward: n % 2 === 1 ? { type: "coins", coins: 10 + 5 * Math.floor(n / 2) * 2 } : { type: "chest" } };
+});
 
 /** Monthly themes, in turn; each has its exclusive item (shop id, kind « chemin »). */
 export const THEMES = [
@@ -61,9 +64,10 @@ export interface MonthFacts {
 }
 
 export const STAR_RULES = {
-  quiz: 1,
+  /** Half a star a quiz (the month's half stars are added up, then rounded down). */
+  quiz: 0.5,
   /** Effort bonus: going over one's mistakes (« à revoir ») or a long session (10 questions or more). */
-  effort: 1,
+  effort: 0.5,
   interro: 2,
   day: 1,
   week: 5,
@@ -86,7 +90,8 @@ function weekBonuses(days: string[]): number {
 
 export function starsOf(f: MonthFacts) {
   // Effort, not marks: the bonus rewards reviewing mistakes or a long session, never a score.
-  const revision = f.quizzes.reduce((n, q) => n + STAR_RULES.quiz + (q.mode === "a_revoir" || q.total >= 10 ? STAR_RULES.effort : 0), 0) + f.interros * STAR_RULES.interro;
+  const quizStars = Math.floor(f.quizzes.reduce((n, q) => n + STAR_RULES.quiz + (q.mode === "a_revoir" || q.total >= 10 ? STAR_RULES.effort : 0), 0));
+  const revision = quizStars + f.interros * STAR_RULES.interro;
   const regularite = new Set(f.studyDays).size * STAR_RULES.day + weekBonuses(f.studyDays) * STAR_RULES.week;
   const missions = f.chests * STAR_RULES.chest;
   const defis = f.wins * STAR_RULES.win + f.badges * STAR_RULES.badge;

@@ -6,7 +6,8 @@ const none = { quizzes: [], interros: 0, studyDays: [], chests: 0, wins: 0, badg
 describe("Cervelle — chemin d'étoiles", () => {
   it("counts stars from revising, regularity, missions, duels and badges", () => {
     const s = starsOf({ ...none, quizzes: [{ mode: "a_revoir", total: 6 }, { mode: "qcm", total: 5 }], interros: 1, studyDays: ["2026-11-02", "2026-11-02", "2026-11-03"], chests: 2, wins: 1, badges: 1 });
-    expect(s).toEqual({ revision: 3 + 2, regularite: 2, missions: 6, defis: 3 + 2, total: 5 + 2 + 6 + 5 });
+    // Quizzes: ½ + ½ (effort: « à revoir ») + ½ = 1,5 → 1 star; the interro: 2.
+    expect(s).toEqual({ revision: 1 + 2, regularite: 2, missions: 6, defis: 3 + 2, total: 3 + 2 + 6 + 5 });
   });
 
   it("gives a bonus for each full week in a row", () => {
@@ -20,7 +21,12 @@ describe("Cervelle — chemin d'étoiles", () => {
     expect(monthRange("2026-02")).toEqual({ from: "2026-02-01", to: "2026-02-28" });
     expect(monthRange("2026-12")).toEqual({ from: "2026-12-01", to: "2026-12-31" });
     expect(themeOf("2026-11").id).not.toBe(themeOf("2026-12").id);
-    expect(STEPS.at(-1)).toEqual({ at: 50, reward: { type: "item" } });
+    expect(STEPS).toHaveLength(100);
+    expect(STEPS.at(-1)).toEqual({ at: 500, reward: { type: "item" } });
+    // A reward every 5 squares (25 stars): coins and chests in turn.
+    expect(STEPS.filter((s) => s.reward.type !== "none").map((s) => s.at).slice(0, 4)).toEqual([25, 50, 75, 100]);
+    expect(STEPS[4].reward).toEqual({ type: "coins", coins: 10 });
+    expect(STEPS[9].reward).toEqual({ type: "chest" });
   });
 
   it("opens chests: coins most of the time, sometimes an item still to win", () => {

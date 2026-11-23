@@ -84,7 +84,7 @@ export function mountStars(router: Router, d: { loadLearner: (req: Request, res:
     const fresh: { at: number; coins: number; item: string | null }[] = [];
     for (const s of STEPS) {
       if (stars.total < s.at) break;
-      if (paidSteps.has(s.at)) continue;
+      if (s.reward.type === "none" || paidSteps.has(s.at)) continue;
       const paid = await payStep(learner, month, s.at, s.reward);
       if (paid) fresh.push({ at: s.at, ...paid });
     }
