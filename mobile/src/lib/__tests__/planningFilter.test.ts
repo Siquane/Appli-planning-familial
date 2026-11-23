@@ -1,4 +1,4 @@
-import { filterByCategories, filterByMembers, toggleMember } from "../planningFilter";
+import { filterByCategories, filterByMembers, isCheckable, toggleMember } from "../planningFilter";
 
 const t = (id: string, memberIds: string[]) => ({ id, memberIds });
 const tasks = [t("jules", ["j"]), t("lea", ["l"]), t("both", ["j", "l"]), t("family", [])];
@@ -31,5 +31,13 @@ describe("filterByCategories", () => {
   });
   it("keeps only the chosen categories", () => {
     expect(filterByCategories(cats, ["École", "Maison"]).map((x) => x.id)).toEqual(["a", "c"]);
+  });
+});
+
+describe("isCheckable", () => {
+  it("leaves School and Work out", () => {
+    expect(isCheckable({ category: "École" })).toBe(false);
+    expect(isCheckable({ category: "Travail" })).toBe(false);
+    expect(isCheckable({ category: "Maison" })).toBe(true);
   });
 });

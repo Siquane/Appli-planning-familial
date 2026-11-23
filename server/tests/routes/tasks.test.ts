@@ -157,7 +157,7 @@ describe("GET /tasks/replan/proposals", () => {
   it("leaves out a flexible task already ticked done this week", async () => {
     const { accessToken } = await signup(app);
     const auth = authHeader(accessToken);
-    const done = (await request(app).post("/tasks").set(auth).send({ ...baseTask, title: "Faite", flexible: true })).body.task;
+    const done = (await request(app).post("/tasks").set(auth).send({ ...baseTask, category: "Maison", title: "Faite", flexible: true })).body.task;
     await request(app).post("/tasks").set(auth).send({ ...baseTask, title: "À faire", flexible: true });
     const { mondayOf, parisDay } = await import("../../src/lib/cervelle/days");
     await request(app).put(`/tasks/${done.id}/done`).set(auth).send({ day: mondayOf(parisDay()) });
@@ -183,6 +183,15 @@ describe("GET /tasks/replan/proposals", () => {
 
 describe("tasks done", () => {
   const WEEK = "2026-11-16"; // un lundi
+
+  it("refuses to tick a School or Work task", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    for (const category of ["École", "Travail"]) {
+      const task = (await request(app).post("/tasks").set(auth).send({ title: "Créneau", category, weekday: 1, time: "08:30" })).body.task;
+      expect((await request(app).put(`/tasks/${task.id}/done`).set(auth).send({ day: "2026-11-17" })).status).toBe(400);
+    }
+  });
 
   it("ticks a task for one day, lists the week, and unticks it", async () => {
     const { accessToken } = await signup(app);

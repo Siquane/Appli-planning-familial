@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { View, RefreshControl, ScrollView } from "react-native";
 import { Chip } from "../../src/components/Chip";
 import { usePlanningFilterStore } from "../../src/state/planningFilterStore";
-import { TASK_CATEGORIES, filterByCategories, filterByMembers, toggleMember } from "../../src/lib/planningFilter";
+import { TASK_CATEGORIES, filterByCategories, filterByMembers, isCheckable, toggleMember } from "../../src/lib/planningFilter";
 import { router } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Pressable } from "../../src/components/Touchable";
@@ -70,13 +70,15 @@ export default function HomeScreen() {
   const { data: doneMarks = [] } = useTaskDone(week);
   const toggleDone = useToggleTaskDone(week);
   const doneIds = useMemo(() => new Set(doneMarks.filter((m) => m.day === day).map((m) => m.taskId)), [doneMarks, day]);
-  const doneCount = dayTasks.filter((t) => doneIds.has(t.id)).length;
-  const progress = progressLine(doneCount, dayTasks.length);
+  // École et Travail ne se cochent pas : l'anneau ne compte que le reste.
+  const checkable = useMemo(() => dayTasks.filter(isCheckable), [dayTasks]);
+  const doneCount = checkable.filter((t) => doneIds.has(t.id)).length;
+  const progress = progressLine(doneCount, checkable.length);
 
   function onToggle(taskId: string) {
     const done = !doneIds.has(taskId);
     // Dernière tâche du jour cochée : petite célébration.
-    if (done && doneCount + 1 === dayTasks.length) useToastStore.getState().show(selected === today && isCurrentWeek ? "Tout est fait pour aujourd'hui, bravo la famille !" : "Tout est fait pour ce jour-là, bravo !", "party");
+    if (done && doneCount + 1 === checkable.length) useToastStore.getState().show(selected === today && isCurrentWeek ? "Tout est fait pour aujourd'hui, bravo la famille !" : "Tout est fait pour ce jour-là, bravo !", "party");
     toggleDone.mutate({ taskId, day, done }, { onError: (e) => useToastStore.getState().show(errorText(e, "enregistrer la tâche")) });
   }
 
@@ -163,9 +165,9 @@ export default function HomeScreen() {
             <EmptyState title="Journée libre" detail="Rien de prévu ce jour-là. Profites-en, ou ajoute une tâche avec le « + »." />
           </Card>
         )}
-        {dayTasks.length > 0 && (
+        {checkable.length > 0 && (
           <Card>
-            <DayRing done={doneCount} total={dayTasks.length} title={progress.title} detail={progress.detail} />
+            <DayRing done={doneCount} total={checkable.length} title={progress.title} detail={progress.detail} />
           </Card>
         )}
         {dayTasks.map((task) => (

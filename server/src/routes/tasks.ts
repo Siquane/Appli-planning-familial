@@ -205,6 +205,8 @@ tasksRouter.put("/:id/done", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: "Jour invalide" });
   const task = await loadOwnedTask(req.userId!, req.params.id);
   if (!task) return res.status(404).json({ error: "Not found" });
+  // École et Travail sont des créneaux, pas des tâches à cocher.
+  if (task.category === "École" || task.category === "Travail") return res.status(400).json({ error: "Les tâches École et Travail ne se cochent pas." });
   await prisma.taskDone.upsert({
     where: { taskId_day: { taskId: task.id, day: parsed.data.day } },
     create: { taskId: task.id, day: parsed.data.day },

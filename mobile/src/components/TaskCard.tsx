@@ -5,14 +5,16 @@ import { Text } from "./Text";
 import { Card } from "./Card";
 import { Tag } from "./Tag";
 import { AvatarStack } from "./Avatar";
-import { ClockIcon, PinIcon, RecurringIcon } from "./icons";
+import { BriefcaseIcon, ClockIcon, PinIcon, RecurringIcon, SchoolBagIcon } from "./icons";
 import { DoneCheck } from "./Playful";
 import { color, space } from "../theme/tokens";
 import { categoryColor, formatDuration } from "../lib/weekdays";
+import { isCheckable } from "../lib/planningFilter";
 import type { Member, Task } from "../api/types";
 
 // `done` / `onToggleDone` : la case ronde « fait » (Planning). Sans eux,
-// la carte reste une simple ligne cliquable (recherche, réglages…).
+// la carte reste une simple ligne cliquable (recherche, réglages…). École et
+// Travail ne se cochent pas : une petite icône prend la place de la case.
 export function TaskCard({ task, members, done, onToggleDone }: { task: Task; members: Member[]; done?: boolean; onToggleDone?: () => void }) {
   const assigned = task.memberIds
     .map((id) => members.find((m) => m.id === id))
@@ -33,7 +35,14 @@ export function TaskCard({ task, members, done, onToggleDone }: { task: Task; me
           ...(task.recurring ? { borderWidth: 1, borderColor: color.accent800 } : null),
         }}
       >
-        {onToggleDone && <DoneCheck done={!!done} tint={categoryColor(task.category)} label={task.title} onToggle={onToggleDone} />}
+        {onToggleDone &&
+          (isCheckable(task) ? (
+            <DoneCheck done={!!done} tint={categoryColor(task.category)} label={task.title} onToggle={onToggleDone} />
+          ) : (
+            <View style={{ width: 24, height: 24, alignItems: "center", justifyContent: "center" }} accessibilityLabel={task.category}>
+              {task.category === "École" ? <SchoolBagIcon size={20} color={categoryColor(task.category)} /> : <BriefcaseIcon size={20} color={categoryColor(task.category)} />}
+            </View>
+          ))}
 
         <View style={{ width: 52, gap: 3 }}>
           <Text mono size={13} weight="medium">
