@@ -24,7 +24,8 @@ describe("Cervelle — objectifs du parent", () => {
 
     const monday = mondayOf(parisDay());
     const days = [monday, addDays(monday, 1)].filter((d) => d <= parisDay());
-    await prisma.studySession.createMany({ data: [...days, parisDay()].map((day) => ({ learnerId, mode: "qcm", correct: 9, total: 10, seconds: 60, day })) });
+    // Long quizzes give a star each (½ + ½ effort); two more today make at least 5 stars on any weekday.
+    await prisma.studySession.createMany({ data: [...days, parisDay(), parisDay(), parisDay()].map((day) => ({ learnerId, mode: "qcm", correct: 9, total: 10, seconds: 60, day })) });
     g = (await request(app).get(url).set(auth)).body.goals;
     expect(g[1]).toMatchObject({ kind: "etoiles", reached: true, current: 5, wins: 1 });
     if (new Set([...days, parisDay()]).size >= 2) expect(g[0]).toMatchObject({ reached: true, current: 2, wins: 1 });

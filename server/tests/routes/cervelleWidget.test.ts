@@ -20,7 +20,7 @@ describe("Cervelle — widget", () => {
     const { child } = await family();
     const res = await request(app).get("/cervelle/learners/me/widget").set(child);
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ name: "Léa", streak: 0, studiedToday: false, exam: null, card: null, stars: { total: 0, end: 50 } });
+    expect(res.body).toMatchObject({ name: "Léa", streak: 0, studiedToday: false, exam: null, card: null, stars: { total: 0, end: 500 } });
     expect(res.body.missions.total).toBeGreaterThan(0);
   });
 

@@ -19,7 +19,7 @@ const goalSchema = z.object({
   reward: z.string().trim().min(1).max(80),
 });
 
-const LIMITS = { jours: [1, 7], etoiles: [5, 50] } as const;
+const LIMITS = { jours: [1, 7], etoiles: [5, 500] } as const;
 
 async function progress(learner: Learner, goal: LearnerGoal, today: string) {
   if (goal.kind === "jours") {
