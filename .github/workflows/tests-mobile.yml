@@ -1,0 +1,31 @@
+name: Tests appli
+
+# Vérifie l'appli sur chaque pull request qui y touche (pas de nouveau passage
+# après la fusion : le code fusionné est celui déjà vérifié). Économise le quota
+# gratuit de GitHub (2 000 minutes par mois pour un dépôt privé).
+on:
+  pull_request:
+    paths: ["mobile/**", ".github/workflows/tests-mobile.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: tests-mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx jest --ci

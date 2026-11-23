@@ -1,15 +1,15 @@
-name: Tests
+name: Tests serveur
 
-# Runs the server and mobile checks on every pull request (and on main after
-# a merge). Free for this private repo within GitHub's 2 000 minutes/month;
-# a run takes about 3–4 minutes.
+# Vérifie le serveur sur chaque pull request qui y touche (pas de nouveau passage
+# après la fusion : le code fusionné est celui déjà vérifié). Économise le quota
+# gratuit de GitHub (2 000 minutes par mois pour un dépôt privé).
 on:
   pull_request:
-  push:
-    branches: [main]
+    paths: ["server/**", ".github/workflows/tests-server.yml"]
+  workflow_dispatch:
 
 concurrency:
-  group: tests-${{ github.ref }}
+  group: tests-server-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -50,19 +50,3 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
-  mobile:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: mobile
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: mobile/package-lock.json
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npx jest --ci
