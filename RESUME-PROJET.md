@@ -70,7 +70,7 @@ Dernière mise à jour : 19 novembre 2026 (documentation, dépendances, nettoyag
 
 - **Cache sur le téléphone** : les données (sauf documents) sont gardées 7 jours dans AsyncStorage et s'affichent tout de suite au lancement ; effacées à la déconnexion (`mobile/src/lib/queryClient.ts`).
 - **Serveur éveillé** : pas via GitHub Actions (dépôt privé = 2 000 min/mois, un ping toutes les 10 min en consommerait plus de 4 000). À faire avec un service externe gratuit (cron-job.org) qui appelle `/health` toutes les 10 minutes.
-- **Tests automatiques** : workflow `.github/workflows/tests.yml` sur chaque pull request et sur `main` (serveur avec Postgres, vérification des migrations, mobile).
+- **Tests automatiques** : `.github/workflows/tests-server.yml` (Postgres, vérification des migrations) et `tests-mobile.yml`, seulement sur les pull requests qui touchent `server/` ou `mobile/` (plus sur `main` après fusion) pour tenir dans les 2 000 minutes gratuites par mois. EAS Update ne part pas pour un changement de tests seuls.
 - **Limites de tentatives** : connexion et code de réinitialisation 10 / 15 min par e-mail et IP ; inscription et demande de code 10 / heure par IP (`server/src/middleware/rateLimits.ts`). Les tests les désactivent via `DISABLE_RATE_LIMIT=1`.
 - **Bouton « + »** : menu d'ajout rapide (tâche, dépense, document, recette, repas).
 - **Notifications** : récap du soir à 20 h (tâches du lendemain, interrupteur dans l'onglet Notifications) ; message quand une dépense fait dépasser un plafond ; la synchro des rappels de tâches n'annule plus les rappels d'anniversaire.
@@ -409,3 +409,8 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 - Sous la barre des jours : puces « Tous » + un prénom par membre (plusieurs au choix). Montre les tâches des membres choisis **et** celles sans « Pour qui » ; tout cocher revient à « Tous ». L'anneau du jour compte les tâches filtrées.
 - 2e rangée : « Toutes » + les 5 catégories (École, Travail, Maison, Santé, Loisirs), combinée avec les prénoms (Jules + École = l'école de Jules). Gardée aussi sur le téléphone.
 - Gardé sur le téléphone (`src/state/planningFilterStore.ts`, AsyncStorage) ; logique dans `src/lib/planningFilter.ts` (membres supprimés ignorés). JS seulement.
+
+## Quota GitHub Actions (23/11/2026)
+
+- En novembre 2026, les 2 000 minutes gratuites (dépôt privé) ont été épuisées : tous les jobs échouaient sans démarrer (« recent account payments have failed or your spending limit needs to be increased »). Le quota revient le 1er de chaque mois.
+- Allègement : tests seulement sur les PR concernées, plus de passage sur `main`, APK seulement à la main. Replanifier exclut aussi les tâches cochées faites cette semaine (#85).
