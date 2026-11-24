@@ -6,10 +6,23 @@ function required(name: string, fallback?: string): string {
   return v;
 }
 
+// En production (Render pose RENDER=true), pas de secret de secours : ces
+// valeurs sont lisibles dans le code, donc n'importe qui pourrait signer des
+// jetons. Le serveur refuse de démarrer plutôt que de les utiliser.
+const isProduction = process.env.NODE_ENV === "production" || !!process.env.RENDER;
+
+function secret(name: string, devFallback: string): string {
+  const v = process.env[name];
+  if (isProduction && (!v || v === devFallback || v.length < 32)) {
+    throw new Error(`${name} doit être défini en production (au moins 32 caractères, par exemple \`openssl rand -hex 32\`).`);
+  }
+  return v || devFallback;
+}
+
 export const env = {
   port: Number(process.env.PORT ?? 4000),
-  jwtAccessSecret: required("JWT_ACCESS_SECRET", "dev-access-secret-change-me"),
-  jwtRefreshSecret: required("JWT_REFRESH_SECRET", "dev-refresh-secret-change-me"),
+  jwtAccessSecret: secret("JWT_ACCESS_SECRET", "dev-access-secret-change-me"),
+  jwtRefreshSecret: secret("JWT_REFRESH_SECRET", "dev-refresh-secret-change-me"),
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID ?? "",
     clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",

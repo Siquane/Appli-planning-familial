@@ -82,7 +82,7 @@ Toute la mise en place (Play Console, RevenueCat, clés, test) est décrite dans
 | `REVENUECAT_SECRET_KEY` | clé secrète RevenueCat (`sk_…`) |
 | `REVENUECAT_WEBHOOK_AUTH` | la valeur exacte mise en « Authorization header » du webhook RevenueCat (ex. `Bearer 3f9…`) |
 
-Ne pas laisser `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` vides : `src/env.ts` retombe sinon sur des valeurs de dev codées en dur.
+`JWT_ACCESS_SECRET` et `JWT_REFRESH_SECRET` sont obligatoires en production (au moins 32 caractères) : sans elles, le serveur refuse de démarrer (`src/env.ts`).
 
 **Stockage des documents — [Cloudflare R2](https://dash.cloudflare.com) (optionnel)**
 
