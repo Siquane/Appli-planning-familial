@@ -17,7 +17,7 @@ import { useIsChildAccount } from "../state/authStore";
 const TABS: Record<string, { label: string; tint: string; Icon: (props: { size: number; color: string }) => React.JSX.Element }> = {
   home: { label: "Planning", get tint() { return color.pillar1; }, Icon: CalendarIcon },
   repas: { label: "Repas", get tint() { return color.pillar2; }, Icon: MealIcon },
-  budget: { label: "Budget", get tint() { return color.pillar3; }, Icon: WalletIcon },
+  budget: { label: "Comptes", get tint() { return color.pillar3; }, Icon: WalletIcon },
   famille: { label: "Famille", get tint() { return color.pillar4; }, Icon: ProfileIcon },
 };
 

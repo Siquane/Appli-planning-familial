@@ -1,5 +1,7 @@
 import { api } from "./client";
 import type {
+  SplitExpenseInput,
+  SplitGroup,
   Note,
   NoteInput,
   TaskDoneMark,
@@ -248,4 +250,23 @@ export const calendarApi = {
   status: () => api.get<CalendarStatus>("/calendar/status"),
   disconnect: (provider: string) => api.delete<void>(`/calendar/${provider}`),
   connectApple: () => api.post<{ connection: { provider: string } }>("/calendar/apple/connect"),
+};
+
+type SplitResult = { group: SplitGroup };
+type SplitExpenseResult = SplitResult & { expenseId: string; upload: { url: string; method: string; headers: Record<string, string> } | null };
+
+export const splitsApi = {
+  list: () => api.get<{ groups: SplitGroup[] }>("/splits"),
+  get: (id: string) => api.get<SplitResult>(`/splits/${id}`),
+  create: (data: { name: string; emoji?: string; participants: { name: string; memberId?: string | null }[] }) => api.post<SplitResult>("/splits", data),
+  update: (id: string, data: { name?: string; emoji?: string; archived?: boolean }) => api.patch<SplitResult>(`/splits/${id}`, data),
+  remove: (id: string) => api.delete<void>(`/splits/${id}`),
+  addParticipant: (id: string, data: { name: string; memberId?: string | null }) => api.post<SplitResult>(`/splits/${id}/participants`, data),
+  renameParticipant: (id: string, pid: string, name: string) => api.patch<SplitResult>(`/splits/${id}/participants/${pid}`, { name }),
+  removeParticipant: (id: string, pid: string) => api.delete<SplitResult>(`/splits/${id}/participants/${pid}`),
+  addExpense: (id: string, data: SplitExpenseInput) => api.post<SplitExpenseResult>(`/splits/${id}/expenses`, data),
+  updateExpense: (id: string, eid: string, data: SplitExpenseInput) => api.put<SplitExpenseResult>(`/splits/${id}/expenses/${eid}`, data),
+  removeExpense: (id: string, eid: string) => api.delete<SplitResult>(`/splits/${id}/expenses/${eid}`),
+  removePhoto: (id: string, eid: string) => api.delete<SplitResult>(`/splits/${id}/expenses/${eid}/photo`),
+  settle: (id: string, data: { fromId: string; toId: string; amountCents: number }) => api.post<SplitResult>(`/splits/${id}/settle`, data),
 };

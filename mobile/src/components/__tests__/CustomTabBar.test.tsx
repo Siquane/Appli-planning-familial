@@ -29,8 +29,8 @@ const tab = (tree: renderer.ReactTestRenderer, label: string) =>
 describe("CustomTabBar", () => {
   it("shows the 4 pillars around the + and navigates to them", () => {
     const { tree, navigateToTab } = render(0);
-    for (const label of ["Planning", "Repas", "Budget", "Famille"]) expect(tab(tree, label)).toBeTruthy();
-    act(() => tab(tree, "Budget").props.onPress());
+    for (const label of ["Planning", "Repas", "Comptes", "Famille"]) expect(tab(tree, label)).toBeTruthy();
+    act(() => tab(tree, "Comptes").props.onPress());
     expect(navigateToTab).toHaveBeenCalledWith("budget");
   });
 

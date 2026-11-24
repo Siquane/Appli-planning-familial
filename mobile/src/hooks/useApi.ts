@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi, notesApi, pocketMoneyApi } from "../api/resources";
+import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi, notesApi, pocketMoneyApi, splitsApi } from "../api/resources";
 import type { NoteInput, MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskDoneMark, TaskInput, Tint, Weekday } from "../api/types";
 import { useChildSpaceStore } from "../state/childSpaceStore";
 import { useAuthStore, useIsChildAccount } from "../state/authStore";
@@ -654,3 +654,27 @@ export const useSetPocketMoneyRule = () => usePocketMoneyMutation((d: { amountCe
 export const useRemovePocketMoneyRule = () => usePocketMoneyMutation(() => pocketMoneyApi.removeRule());
 export const useAddPocketMoneyCredit = () => usePocketMoneyMutation((d: { amountCents: number; label: string }) => pocketMoneyApi.addCredit(d));
 export const useRemovePocketMoneyCredit = () => usePocketMoneyMutation((id: string) => pocketMoneyApi.removeCredit(id));
+
+// ── Comptes partagés ──
+
+export function useSplitGroups() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["splits"], queryFn: () => splitsApi.list().then((r) => r.groups), enabled, refetchInterval: SHARED_REFRESH_MS });
+}
+
+export function useSplitGroup(id: string | undefined) {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["splits", id], queryFn: () => splitsApi.get(id!).then((r) => r.group), enabled: enabled && !!id, refetchInterval: SHARED_REFRESH_MS });
+}
+
+/** Une action sur un groupe : met à jour son détail tout de suite et rafraîchit la liste. */
+export function useSplitMutation<T, R extends { group?: import("../api/types").SplitGroup }>(fn: (input: T) => Promise<R>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: (r) => {
+      if (r?.group) qc.setQueryData(["splits", r.group.id], r.group);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["splits"] }),
+  });
+}
