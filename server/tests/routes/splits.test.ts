@@ -121,3 +121,57 @@ describe("Comptes partagés", () => {
     expect((await request(app).post("/splits").set(auth).send({ name: "Seul", participants: [{ name: "Moi" }] })).status).toBe(400);
   });
 });
+
+describe("Comptes partagés — lien d'une personne", () => {
+  it("lets Marc see the group with his link, add his own expense, and edit only his own", async () => {
+    const { auth, id, ids } = await newGroup(["Anaïs", "Marc"]);
+    const { prisma } = await import("../../src/db");
+    const { setPushSender } = await import("../../src/lib/familyAlerts");
+    const sent: { body: string; data?: unknown }[] = [];
+    setPushSender(async (m) => {
+      sent.push(...m);
+    });
+    try {
+      const owner = (await request(app).get("/splits").set(auth)).body.groups[0];
+      const familyId = (await prisma.splitGroup.findUniqueOrThrow({ where: { id: owner.id } })).userId;
+      await prisma.pushToken.create({ data: { userId: familyId, token: "ExponentPushToken[anais]" } });
+
+      // The family makes Marc's link: only the family sees the secret.
+      const made = await request(app).post(`/splits/${id}/participants/${ids.Marc}/link`).set(auth);
+      const token = made.body.group.participants.find((p: { id: string }) => p.id === ids.Marc).linkToken as string;
+      expect(token).toMatch(/^[\w-]{24}$/);
+
+      const page = await request(app).get(`/s/${token}`);
+      expect(page.status).toBe(200);
+      expect(page.text).toContain("Comptes partagés");
+      expect(page.headers["x-robots-tag"]).toContain("noindex");
+
+      const data = await request(app).get(`/s/${token}/data`);
+      expect(data.body.me).toBe(ids.Marc);
+      expect(data.body.group.participants.every((p: { linkToken?: string }) => p.linkToken === undefined)).toBe(true);
+
+      // An expense of the family, and one Marc adds through his link.
+      const fam = await request(app).post(`/splits/${id}/expenses`).set(auth).send({ title: "Cantine", amountCents: 8000, paidById: ids["Anaïs"], date: "2026-11-20", shares: [{ participantId: ids["Anaïs"], value: 1 }, { participantId: ids.Marc, value: 1 }] });
+      const added = await request(app).post(`/s/${token}/expenses`).send({ title: "Foot", amountCents: 12000, paidById: ids.Marc, date: "2026-11-21", shares: [{ participantId: ids["Anaïs"], value: 1 }, { participantId: ids.Marc, value: 1 }] });
+      expect(added.status).toBe(201);
+      const foot = added.body.group.expenses.find((e: { title: string }) => e.title === "Foot");
+      expect(foot.addedById).toBe(ids.Marc);
+      await new Promise((r) => setTimeout(r, 50));
+      expect(sent.map((m) => m.body)).toEqual([expect.stringContaining("Marc a ajouté « Foot »")]);
+      expect(sent[0].data).toEqual({ url: `/comptes/${id}` });
+
+      // Marc can change his own expense, not the family's.
+      const body = { title: "Foot (licence)", amountCents: 12000, paidById: ids.Marc, date: "2026-11-21", shares: [{ participantId: ids["Anaïs"], value: 1 }, { participantId: ids.Marc, value: 1 }] };
+      expect((await request(app).put(`/s/${token}/expenses/${foot.id}`).send(body)).status).toBe(200);
+      expect((await request(app).put(`/s/${token}/expenses/${fam.body.expenseId}`).send(body)).status).toBe(403);
+      expect((await request(app).delete(`/s/${token}/expenses/${fam.body.expenseId}`)).status).toBe(403);
+
+      // Cutting the link stops it at once.
+      await request(app).delete(`/splits/${id}/participants/${ids.Marc}/link`).set(auth);
+      expect((await request(app).get(`/s/${token}/data`)).status).toBe(404);
+      expect((await request(app).get(`/s/${token}`)).text).toContain("n'est plus valable");
+    } finally {
+      setPushSender(null);
+    }
+  });
+});

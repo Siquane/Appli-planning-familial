@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, View } from "react-native";
+import { Alert, Share, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { KeyboardScrollView } from "../../src/components/KeyboardScrollView";
 import { Screen } from "../../src/components/Screen";
@@ -12,7 +12,10 @@ import { TopBar } from "../../src/components/TopBar";
 import { CloseIcon } from "../../src/components/icons";
 import { splitsApi } from "../../src/api/resources";
 import { useSplitGroup, useSplitMutation } from "../../src/hooks/useApi";
-import { GROUP_EMOJIS } from "../../src/lib/splits";
+import { findMe, GROUP_EMOJIS, splitLinkUrl } from "../../src/lib/splits";
+import { API_URL } from "../../src/api/client";
+import { useAuthStore } from "../../src/state/authStore";
+import type { SplitParticipant } from "../../src/api/types";
 import { useToastStore } from "../../src/state/toastStore";
 import { errorText } from "../../src/lib/errors";
 import { color, gutter, radius, space } from "../../src/theme/tokens";
@@ -39,6 +42,9 @@ export default function GroupSettingsScreen() {
   const update = useSplitMutation((data: { name?: string; emoji?: string; archived?: boolean }) => splitsApi.update(id!, data));
   const addPerson = useSplitMutation((n: string) => splitsApi.addParticipant(id!, { name: n }));
   const removePerson = useSplitMutation((pid: string) => splitsApi.removeParticipant(id!, pid));
+  const makeLink = useSplitMutation((pid: string) => splitsApi.makeLink(id!, pid));
+  const cutLink = useSplitMutation((pid: string) => splitsApi.cutLink(id!, pid));
+  const user = useAuthStore((s) => s.user);
 
   if (!g) {
     return (
@@ -49,6 +55,29 @@ export default function GroupSettingsScreen() {
   }
 
   const changed = name.trim() !== g.name || emoji !== g.emoji;
+  const me = findMe(g.participants, user ? { name: user.name, memberId: user.childMemberId } : null);
+
+  /** Envoie son lien à une personne (le crée d'abord s'il n'existe pas). */
+  const shareLink = async (p: SplitParticipant) => {
+    try {
+      let token = p.linkToken;
+      if (!token) {
+        const r = await makeLink.mutateAsync(p.id);
+        token = r.group.participants.find((x) => x.id === p.id)?.linkToken ?? null;
+      }
+      if (!token) return;
+      await Share.share({
+        message: `${p.name}, voici ton lien pour nos comptes partagés « ${g.name} » : tu y vois qui doit quoi et tu peux ajouter tes dépenses, sans rien installer.\n${splitLinkUrl(API_URL, token)}`,
+      });
+    } catch (e) {
+      toast(e, "partager le lien");
+    }
+  };
+  const confirmCut = (p: SplitParticipant) =>
+    Alert.alert(`Couper le lien de ${p.name} ?`, "Son lien cessera de fonctionner. Tu pourras lui en envoyer un nouveau.", [
+      { text: "Annuler", style: "cancel" },
+      { text: "Couper", style: "destructive", onPress: () => cutLink.mutate(p.id, { onError: (e) => toast(e, "couper le lien") }) },
+    ]);
   const saveName = () => update.mutate({ name: name.trim(), emoji }, { onSuccess: () => router.back(), onError: (e) => toast(e, "enregistrer le groupe") });
 
   const confirmDelete = () =>
@@ -93,11 +122,22 @@ export default function GroupSettingsScreen() {
             Qui partage ? ({g.participants.length})
           </Text>
           {g.participants.map((p) => (
-            <Card key={p.id} row style={{ alignItems: "center" }}>
+            <Card key={p.id} row style={{ alignItems: "center", gap: space.sm }}>
               <Text size={15} style={{ flex: 1 }}>
                 {p.name}
-                {p.memberId ? "  · famille" : ""}
+                {p.id === me?.id ? "  (toi)" : p.memberId ? "  · famille" : ""}
+                {p.linkToken ? "  🔗" : ""}
               </Text>
+              {p.id !== me?.id ? (
+                <Button label={p.linkToken ? "Renvoyer le lien" : "Envoyer un lien"} variant="ghost" onPress={() => void shareLink(p)} accessibilityLabel={`Envoyer son lien à ${p.name}`} />
+              ) : null}
+              {p.linkToken ? (
+                <Pressable onPress={() => confirmCut(p)} accessibilityLabel={`Couper le lien de ${p.name}`} hitSlop={10}>
+                  <Text size={12} style={{ color: color.danger }}>
+                    Couper
+                  </Text>
+                </Pressable>
+              ) : null}
               {!p.used && g.participants.length > 2 ? (
                 <Pressable onPress={() => removePerson.mutate(p.id, { onError: (e) => toast(e, "retirer cette personne") })} accessibilityLabel={`Retirer ${p.name}`} hitSlop={10}>
                   <CloseIcon size={16} color={color.neutral400} />
@@ -117,7 +157,7 @@ export default function GroupSettingsScreen() {
             />
           </View>
           <Text size={12} tone="faint">
-            On ne peut retirer que quelqu'un qui n'apparaît dans aucune dépense.
+            Avec son lien, une personne voit le groupe et ce qu'elle doit, et ajoute ses dépenses depuis son navigateur, sans compte. Elle ne peut modifier que celles qu'elle a ajoutées. On ne peut retirer que quelqu'un qui n'apparaît dans aucune dépense.
           </Text>
         </View>
 

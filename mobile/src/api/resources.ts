@@ -269,4 +269,6 @@ export const splitsApi = {
   removeExpense: (id: string, eid: string) => api.delete<SplitResult>(`/splits/${id}/expenses/${eid}`),
   removePhoto: (id: string, eid: string) => api.delete<SplitResult>(`/splits/${id}/expenses/${eid}/photo`),
   settle: (id: string, data: { fromId: string; toId: string; amountCents: number }) => api.post<SplitResult>(`/splits/${id}/settle`, data),
+  makeLink: (id: string, pid: string) => api.post<SplitResult>(`/splits/${id}/participants/${pid}/link`),
+  cutLink: (id: string, pid: string) => api.delete<SplitResult>(`/splits/${id}/participants/${pid}/link`),
 };
