@@ -10,6 +10,7 @@ import { TextField } from "../src/components/TextField";
 import { Button } from "../src/components/Button";
 import { TopBar } from "../src/components/TopBar";
 import { ChildSpaceBanner } from "../src/components/ChildSpaceBanner";
+import { AdvancesSection } from "../src/components/AdvancesSection";
 import { useAddPocketMoneyCredit, usePocketMoney, useRemovePocketMoneyCredit, useRemovePocketMoneyRule, useSetPocketMoneyRule } from "../src/hooks/useApi";
 import { useIsChildAccount } from "../src/state/authStore";
 import { useChildSpaceStore } from "../src/state/childSpaceStore";
@@ -161,9 +162,11 @@ export default function PocketMoneyScreen() {
           </View>
         )}
 
+        {data ? <AdvancesSection advances={data.advances ?? []} owedCents={data.owedCents ?? 0} balanceCents={data.balanceCents} canEdit={canEdit} childName={childName ?? null} /> : null}
+
         <View style={{ gap: space.sm }}>
           <Text weight="medium" size={15}>
-            Versements reçus
+            Historique
           </Text>
           {!isLoading && (data?.credits.length ?? 0) === 0 && (
             <Text size={13} tone="muted">
@@ -175,7 +178,7 @@ export default function PocketMoneyScreen() {
               {data!.credits.map((c, i) => (
                 <Pressable
                   key={c.id}
-                  onLongPress={canEdit ? () => onRemoveCredit(c.id, c.label) : undefined}
+                  onLongPress={canEdit && c.source !== "repay" ? () => onRemoveCredit(c.id, c.label) : undefined}
                   style={{ flexDirection: "row", alignItems: "center", gap: space.sm, paddingVertical: space.sm, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: color.divider }}
                 >
                   <Text size={13} tone="faint" style={{ width: 56 }}>
@@ -185,7 +188,7 @@ export default function PocketMoneyScreen() {
                     {c.label}
                   </Text>
                   <Text size={13} mono weight="medium">
-                    +{formatEuros(c.amountCents)}
+                    {c.amountCents < 0 ? "" : "+"}{formatEuros(c.amountCents)}
                   </Text>
                 </Pressable>
               ))}

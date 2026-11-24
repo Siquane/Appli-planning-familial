@@ -647,8 +647,26 @@ export function usePocketMoney() {
 
 function usePocketMoneyMutation<V>(fn: (v: V) => Promise<unknown>) {
   const qc = useQueryClient();
-  return useMutation({ mutationFn: fn, onSuccess: () => qc.invalidateQueries({ queryKey: ["pocket-money"] }) });
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["pocket-money"] });
+      void qc.invalidateQueries({ queryKey: ["advances"] });
+    },
+  });
 }
+
+/** Onglet Comptes : les avances de chaque enfant (adultes seulement). */
+export function useFamilyAdvances() {
+  const enabled = useEnabled();
+  const isChild = useIsChildAccount();
+  return useQuery({ queryKey: ["advances"], queryFn: () => pocketMoneyApi.familyAdvances().then((r) => r.children), enabled: enabled && !isChild });
+}
+
+export const useAddAdvance = () => usePocketMoneyMutation((d: { amountCents: number; label: string }) => pocketMoneyApi.addAdvance(d));
+export const useRemoveAdvance = () => usePocketMoneyMutation((id: string) => pocketMoneyApi.removeAdvance(id));
+export const useRepayAdvance = () => usePocketMoneyMutation((d: { id: string; amountCents?: number }) => pocketMoneyApi.repay(d.id, d.amountCents));
+export const useAddFamilyAdvance = () => usePocketMoneyMutation((d: { memberId: string; amountCents: number; label: string }) => pocketMoneyApi.addFamilyAdvance(d));
 
 export const useSetPocketMoneyRule = () => usePocketMoneyMutation((d: { amountCents: number; frequency: "weekly" | "monthly"; day: number }) => pocketMoneyApi.setRule(d));
 export const useRemovePocketMoneyRule = () => usePocketMoneyMutation(() => pocketMoneyApi.removeRule());
@@ -659,7 +677,9 @@ export const useRemovePocketMoneyCredit = () => usePocketMoneyMutation((id: stri
 
 export function useSplitGroups() {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["splits"], queryFn: () => splitsApi.list().then((r) => r.groups), enabled, refetchInterval: SHARED_REFRESH_MS });
+  // Les comptes partagés sont ceux des adultes (un compte enfant n'y a pas accès).
+  const isChild = useIsChildAccount();
+  return useQuery({ queryKey: ["splits"], queryFn: () => splitsApi.list().then((r) => r.groups), enabled: enabled && !isChild, refetchInterval: SHARED_REFRESH_MS });
 }
 
 export function useSplitGroup(id: string | undefined) {

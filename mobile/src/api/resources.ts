@@ -1,5 +1,7 @@
 import { api } from "./client";
 import type {
+  FamilyAdvances,
+  PocketMoneyAdvance,
   SplitExpenseInput,
   SplitGroup,
   Note,
@@ -222,6 +224,11 @@ export const pocketMoneyApi = {
   removeRule: () => api.delete<void>("/pocket-money/rule"),
   addCredit: (data: { amountCents: number; label: string }) => api.post<{ credit: PocketMoneyCredit }>("/pocket-money/credits", data),
   removeCredit: (id: string) => api.delete<void>(`/pocket-money/credits/${id}`),
+  addAdvance: (data: { amountCents: number; label: string }) => api.post<{ advance: PocketMoneyAdvance }>("/pocket-money/advances", data),
+  removeAdvance: (id: string) => api.delete<void>(`/pocket-money/advances/${id}`),
+  repay: (id: string, amountCents?: number) => api.post<{ advance: PocketMoneyAdvance }>(`/pocket-money/advances/${id}/repay`, amountCents ? { amountCents } : {}),
+  familyAdvances: () => api.get<FamilyAdvances>("/pocket-money/advances/family"),
+  addFamilyAdvance: (data: { memberId: string; amountCents: number; label: string }) => api.post<{ advance: PocketMoneyAdvance }>("/pocket-money/advances/family", data),
 };
 
 export const notesApi = {
