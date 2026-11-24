@@ -99,7 +99,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="home" options={{ title: "Planning" }} />
       {/* Un compte enfant n'a pas l'onglet Repas. */}
       <Tabs.Screen name="repas" options={{ title: "Repas", href: isChild ? null : undefined }} />
-      <Tabs.Screen name="budget" options={{ title: "Budget" }} />
+      <Tabs.Screen name="budget" options={{ title: "Comptes" }} />
       <Tabs.Screen name="famille" options={{ title: "Famille" }} />
     </Tabs>
     <FamilyNoticeModal />

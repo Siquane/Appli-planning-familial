@@ -21,7 +21,7 @@ describe("QuickAddSheet", () => {
     });
     act(() => byLabel(tree, "Ajouter : Dépense").props.onPress());
     expect(onClose).toHaveBeenCalled();
-    expect(router.push).toHaveBeenCalledWith("/expense/new");
+    expect(router.push).toHaveBeenCalledWith("/comptes/expense");
 
     act(() => byLabel(tree, "Ajouter : Tâche").props.onPress());
     expect(router.push).toHaveBeenLastCalledWith("/task/new");

@@ -9,12 +9,12 @@ datasource db {
 }
 
 model User {
-  id                   String        @id @default(cuid())
-  email                String        @unique
+  id                   String              @id @default(cuid())
+  email                String              @unique
   passwordHash         String
   name                 String
   initials             String
-  createdAt            DateTime      @default(now())
+  createdAt            DateTime            @default(now())
   // Each pack is active while its date is in the future ("Les 2" sets both).
   // Set by hand for now (npm run premium), later by the store purchase.
   budgetUntil          DateTime?
@@ -22,22 +22,22 @@ model User {
   budgetTrialStartedAt DateTime?
   // Horaires de travail de CE compte (0 = lundi … 6 = dimanche ; vide = aucun) :
   // « Replanifier » ne propose rien pendant ces heures.
-  workDays             Int[]         @default([])
-  workStart            String        @default("09:00")
-  workEnd              String        @default("17:30")
+  workDays             Int[]               @default([])
+  workStart            String              @default("09:00")
+  workEnd              String              @default("17:30")
   // Family sharing. A family is the data of its creator (the « owner »); other
   // accounts join it with a code (see lib/family.ts). null = this account is
   // its own family's owner. Roles of a joiner: "full" shares everything,
   // including budget and documents; "planning" shares the planning only and
   // keeps its own budget and documents. Packs and trial always belong to the owner.
   familyOwnerId        String?
-  familyOwner          User?         @relation("FamilyAccounts", fields: [familyOwnerId], references: [id], onDelete: SetNull)
-  familyAccounts       User[]        @relation("FamilyAccounts")
-  familyRole           String        @default("owner")
+  familyOwner          User?               @relation("FamilyAccounts", fields: [familyOwnerId], references: [id], onDelete: SetNull)
+  familyAccounts       User[]              @relation("FamilyAccounts")
+  familyRole           String              @default("owner")
   // Compte « enfant » (moins de 15 ans) créé par un parent pour ce membre de la
   // famille : connexion par code, pas d'e-mail ni de mot de passe utilisables.
-  childMemberId        String?       @unique
-  childMember          FamilyMember? @relation("ChildAccount", fields: [childMemberId], references: [id], onDelete: Cascade)
+  childMemberId        String?             @unique
+  childMember          FamilyMember?       @relation("ChildAccount", fields: [childMemberId], references: [id], onDelete: Cascade)
   childLoginCodes      ChildLoginCode[]
   pocketMoneyRule      PocketMoneyRule?    @relation("PocketMoneyRule")
   pocketMoneyCredits   PocketMoneyCredit[] @relation("PocketMoneyCredits")
@@ -46,7 +46,7 @@ model User {
   familyNotice         String?
   // Notification sur le téléphone quand un autre compte de la famille modifie
   // le planning, les repas, les courses ou les recettes (lib/familyAlerts.ts).
-  familyAlerts         Boolean       @default(true)
+  familyAlerts         Boolean             @default(true)
   pushTokens           PushToken[]
   mealsUntil           DateTime?
   // Explicit consent to store members' diets, allergies and foods to limit
@@ -83,6 +83,7 @@ model User {
   rewardRequests      RewardRequest[]
   learners            Learner[]
   aiUsages            AiUsage[]
+  splitGroups         SplitGroup[]
 }
 
 // Code à 6 chiffres envoyé par e-mail pour se connecter sans mot de passe (appli
@@ -122,18 +123,18 @@ model RefreshToken {
 
 // tint: 'accent' | 'neutral' | 'accent2' — matches the Nocturne avatar tint roles
 model FamilyMember {
-  id       String    @id @default(cuid())
-  userId   String
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name     String
-  initials String
-  tint     String    @default("neutral")
-  age      Int?
-  birthday DateTime?
-  order    Int       @default(0)
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  initials     String
+  tint         String    @default("neutral")
+  age          Int?
+  birthday     DateTime?
+  order        Int       @default(0)
   // Lien public de son planning (« /share/m/<jeton> »), créé à la demande.
-  shareToken String?  @unique
-  childAccount User?   @relation("ChildAccount")
+  shareToken   String?   @unique
+  childAccount User?     @relation("ChildAccount")
 
   // Food preferences, used to tailor generated menus. Sent to Claude
   // without the member's name (see services/mealPlanner.ts).
@@ -157,6 +158,7 @@ model FamilyMember {
   rewardRedemptions RewardRedemption[]
   rewardRequests    RewardRequest[]
   learners          Learner[]
+  splitParticipants SplitParticipant[]
 }
 
 // priority: 'high' | 'medium' | 'low'
@@ -665,6 +667,7 @@ model LearnerCode {
   codeHash  String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+
   @@index([learnerId])
 }
 
@@ -680,6 +683,7 @@ model LearnerDevice {
   pushToken  String?  @unique
   // The child can turn the « fiches prêtes » notification off on this phone.
   readyAlert Boolean  @default(true)
+
   @@index([learnerId])
 }
 
@@ -765,17 +769,17 @@ model Question {
 }
 
 model Attempt {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   learnerId  String
-  learner    Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  learner    Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
   // Null once the question is gone (a revision prepared again with more
   // pages): the answer still counts for the child's effort and badges.
   questionId String?
   question   Question? @relation(fields: [questionId], references: [id], onDelete: SetNull)
   correct    Boolean
-  answer     String   @default("")
+  answer     String    @default("")
   mode       String
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
 
   @@index([learnerId, createdAt])
 }
@@ -819,11 +823,11 @@ model ExamReview {
 
 // Every Claude call made for Cervelle, to cap daily use per family.
 model AiUsage {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   // "revision" | "exam" | "assistant" | "grading" | "timetable"
-  kind      String
+  kind             String
   // Cervelle: the child it was for, and what the call really used (filled
   // once the call ends; 0 for older rows and for other features).
   learnerId        String?
@@ -834,7 +838,7 @@ model AiUsage {
   cacheWriteTokens Int      @default(0)
   // Millionths of a dollar.
   costMicros       Int      @default(0)
-  createdAt DateTime @default(now())
+  createdAt        DateTime @default(now())
 
   @@index([userId, kind, createdAt])
 }
@@ -843,27 +847,27 @@ model AiUsage {
 
 // A slot of the child's agenda: every week on `weekday` (timetable), or once on `day`.
 model StudyEvent {
-  id               String   @id @default(cuid())
-  learnerId        String
-  learner          Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
-  title            String
+  id                 String   @id @default(cuid())
+  learnerId          String
+  learner            Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  title              String
   // "cours" | "interro" | "devoir" | "revision" | "activite"
-  kind             String   @default("cours")
+  kind               String   @default("cours")
   // 0 = lundi … 6 = dimanche (same as Passerelle's tasks).
-  weekday          Int?
-  day              String?
-  start            String
-  end              String
-  room             String   @default("")
+  weekday            Int?
+  day                String?
+  start              String
+  end                String
+  room               String   @default("")
   // "parent" | "enfant"
-  createdBy        String   @default("enfant")
+  createdBy          String   @default("enfant")
   // "cervelle", or "passerelle" when it was brought in from the family planning.
-  source           String   @default("cervelle")
+  source             String   @default("cervelle")
   // The Passerelle task this slot is synchronised with, when the parent asked for it.
-  passerelleTaskId String?
+  passerelleTaskId   String?
   // Category of the Passerelle task (« École », « Maison »…) for slots brought in from it.
   passerelleCategory String?
-  createdAt        DateTime @default(now())
+  createdAt          DateTime @default(now())
 
   @@index([learnerId])
 }
@@ -1173,4 +1177,75 @@ model BrevetSubject {
   createdAt DateTime @default(now())
 
   @@index([learnerId, createdAt])
+}
+
+// ─── Comptes partagés (« Comptes ») ──────────────────────────────────────
+// A group of people who share expenses (« Enfants avec Marc », « Vacances »).
+// Owned by the family; its participants are family members or outsiders known
+// by their name only. Amounts in cents. See lib/splits.ts.
+model SplitGroup {
+  id           String             @id @default(cuid())
+  userId       String
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  emoji        String             @default("💸")
+  // Split remembered for new expenses: { mode, values: { participantId: value } }.
+  defaultSplit Json?
+  archivedAt   DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  participants SplitParticipant[]
+  expenses     SplitExpense[]
+
+  @@index([userId])
+}
+
+model SplitParticipant {
+  id        String         @id @default(cuid())
+  groupId   String
+  group     SplitGroup     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name      String
+  // Set when the participant is a member of the family.
+  memberId  String?
+  member    FamilyMember?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  order     Int            @default(0)
+  createdAt DateTime       @default(now())
+  paid      SplitExpense[] @relation("SplitPaidBy")
+  shares    SplitShare[]
+
+  @@index([groupId])
+}
+
+model SplitExpense {
+  id          String           @id @default(cuid())
+  groupId     String
+  group       SplitGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  title       String
+  amountCents Int
+  paidById    String
+  paidBy      SplitParticipant @relation("SplitPaidBy", fields: [paidById], references: [id], onDelete: Cascade)
+  date        DateTime         @db.Date
+  // "equal" | "percent" | "amount" | "shares"
+  mode        String           @default("equal")
+  // "expense", or "transfer" when someone pays someone back.
+  kind        String           @default("expense")
+  photoKey    String?
+  photoMime   String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  shares      SplitShare[]
+
+  @@index([groupId, date])
+}
+
+model SplitShare {
+  expenseId     String
+  expense       SplitExpense     @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  participantId String
+  participant   SplitParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  // What was entered (percent ×100, cents, number of shares, or 1).
+  value         Int
+  amountCents   Int
+
+  @@id([expenseId, participantId])
 }

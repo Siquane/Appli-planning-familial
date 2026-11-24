@@ -584,3 +584,70 @@ export interface PocketMoney {
   spentCents: number;
   balanceCents: number;
 }
+
+// ── Comptes partagés (onglet « Comptes ») ──
+
+export type SplitMode = "equal" | "percent" | "amount" | "shares";
+
+export interface SplitParticipant {
+  id: string;
+  name: string;
+  memberId: string | null;
+  /** Apparaît dans au moins une dépense (ne peut pas être retiré). */
+  used: boolean;
+}
+
+export interface SplitShare {
+  participantId: string;
+  /** Saisie : pourcentage ×100, centimes, nombre de parts, ou 1 (à parts égales). */
+  value: number;
+  amountCents: number;
+}
+
+export interface SplitExpense {
+  id: string;
+  title: string;
+  amountCents: number;
+  paidById: string;
+  date: string;
+  mode: SplitMode;
+  /** « transfer » : un remboursement. */
+  kind: "expense" | "transfer";
+  shares: SplitShare[];
+  photoUrl: string | null;
+  createdAt: string;
+}
+
+export interface SplitTransfer {
+  fromId: string;
+  toId: string;
+  amountCents: number;
+}
+
+export interface SplitGroup {
+  id: string;
+  name: string;
+  emoji: string;
+  defaultSplit: { mode: SplitMode; values: Record<string, number> } | null;
+  archived: boolean;
+  spentCents: number;
+  expenseCount: number;
+  lastActivity: string;
+  participants: SplitParticipant[];
+  /** Positif : on lui doit ; négatif : il doit. */
+  balances: { participantId: string; cents: number }[];
+  transfers: SplitTransfer[];
+  /** Seulement dans le détail d'un groupe. */
+  expenses?: SplitExpense[];
+}
+
+export interface SplitExpenseInput {
+  title: string;
+  amountCents: number;
+  paidById: string;
+  date: string;
+  mode: SplitMode;
+  shares: { participantId: string; value: number }[];
+  remember?: boolean;
+  photo?: { mimeType: string; size: number } | null;
+}
