@@ -10,7 +10,7 @@ import { Button } from "../src/components/Button";
 import { TextField } from "../src/components/TextField";
 import { updateName } from "../src/lib/account";
 import { Avatar } from "../src/components/Avatar";
-import { CalendarIcon, ChevronRightIcon, ClockIcon, RecurringIcon, SparkleIcon } from "../src/components/icons";
+import { CalendarIcon, ChevronRightIcon, ClockIcon, SparkleIcon } from "../src/components/icons";
 import { workSummary } from "../src/lib/workHours";
 import { useCalendarStatus, useConstraints, useDisconnectCalendar, usePlan } from "../src/hooks/useApi";
 import { useAuthStore, useIsChildAccount } from "../src/state/authStore";
@@ -232,16 +232,6 @@ export default function ProfileScreen() {
 
         </>
       )}
-
-      <Pressable onPress={() => router.push("/recurring-tasks")}>
-        <Card row style={{ alignItems: "center" }}>
-          <RecurringIcon size={16} color={color.neutral400} />
-          <Text size={15} style={{ flex: 1, marginLeft: space.sm }}>
-            Tâches récurrentes
-          </Text>
-          <ChevronRightIcon size={14} color={color.neutral500} />
-        </Card>
-      </Pressable>
 
       <Pressable onPress={() => router.push("/privacy")}>
         <Card row style={{ alignItems: "center" }}>

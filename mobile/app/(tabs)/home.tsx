@@ -13,7 +13,7 @@ import { WeekStrip } from "../../src/components/WeekStrip";
 import { TaskCard } from "../../src/components/TaskCard";
 import { TabHeader } from "../../src/components/PageHeader";
 import { TodayCard } from "../../src/components/TodayCard";
-import { ChevronLeftIcon, ChevronRightIcon, ReshuffleIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
+import { ChevronLeftIcon, ChevronRightIcon, RecurringIcon, ReshuffleIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
 import { shiftWeek, shortDate, tasksOn, weekRange, weekTitle } from "../../src/lib/appointments";
 import { useMembers, useTaskDone, useTasks, useToggleTaskDone } from "../../src/hooks/useApi";
 import { DayRing, EmptyState } from "../../src/components/Playful";
@@ -143,6 +143,19 @@ export default function HomeScreen() {
           </Pressable>
         )}
       </View>
+
+      <Pressable onPress={() => router.push("/tasks")} accessibilityRole="button">
+        <Card row style={{ alignItems: "center" }}>
+          <RecurringIcon size={16} color={color.accent400} />
+          <Text size={15} weight="medium" style={{ flex: 1, marginLeft: space.sm }}>
+            Toutes les tâches
+          </Text>
+          <Text size={11} tone="faint" style={{ marginRight: space.sm }}>
+            {tasks.length}
+          </Text>
+          <ChevronRightIcon size={14} color={color.neutral500} />
+        </Card>
+      </Pressable>
 
       {upcomingBirthday && (
         <Card row style={{ alignItems: "center", backgroundColor: color.accent900 }}>
