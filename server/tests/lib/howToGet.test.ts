@@ -18,7 +18,7 @@ describe("Comment l'avoir ?", () => {
   it("tells which month's star path gives the prize", () => {
     const now = themeOf("2026-11");
     expect(howToGet(item(now.item), "2026-11-22")).toContain("cadeau du chemin d'étoiles de ce mois-ci");
-    expect(howToGet(item(now.item), "2026-11-22")).toContain("50 étoiles");
+    expect(howToGet(item(now.item), "2026-11-22")).toContain("500 étoiles");
     const other = SHOP.find((i) => i.kind === "chemin" && i.id !== now.item)!;
     expect(howToGet(other, "2026-11-22")).toMatch(/chemin d'étoiles de (décembre|janvier|février)/);
   });
