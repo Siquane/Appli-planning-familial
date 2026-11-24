@@ -10,7 +10,8 @@ import { ChildSpaceBanner } from "../../src/components/ChildSpaceBanner";
 import { PocketMoneyCard } from "../../src/components/PocketMoneyCard";
 import { EmptyState } from "../../src/components/Playful";
 import { ChevronRightIcon, PlusIcon } from "../../src/components/icons";
-import { useSplitGroups } from "../../src/hooks/useApi";
+import { useFamilyAdvances, useSplitGroups } from "../../src/hooks/useApi";
+import { useIsChildAccount } from "../../src/state/authStore";
 import { formatEuros } from "../../src/lib/money";
 import { mySide } from "../../src/lib/splits";
 import { useAuthStore } from "../../src/state/authStore";
@@ -20,7 +21,9 @@ import type { SplitGroup } from "../../src/api/types";
 // Onglet « Comptes » : les dépenses partagées avec d'autres (l'autre parent,
 // des amis…), groupe par groupe, et qui doit combien à qui.
 export default function ComptesScreen() {
+  const isChild = useIsChildAccount();
   const { data: groups = [], isLoading, refetch, isRefetching } = useSplitGroups();
+  const { data: kids = [] } = useFamilyAdvances();
   const active = groups.filter((g) => !g.archived);
   const archived = groups.filter((g) => g.archived);
 
@@ -30,7 +33,11 @@ export default function ComptesScreen() {
       <ChildSpaceBanner />
       <PocketMoneyCard />
 
+      {isChild ? null : (
+        <>
       <Button label="Nouveau groupe" variant="primary" block icon={<PlusIcon size={16} color={color.bg} />} onPress={() => router.push("/comptes/new")} />
+
+      {kids.length > 0 && <AdvancesCard kids={kids} />}
 
       {!isLoading && groups.length === 0 ? (
         <EmptyState title="Partage tes dépenses" detail="Crée un groupe (les enfants avec l'autre parent, des vacances entre amis…), note qui a payé quoi : Passerelle calcule qui doit combien à qui." />
@@ -52,7 +59,40 @@ export default function ComptesScreen() {
           ))}
         </View>
       )}
+        </>
+      )}
     </Screen>
+  );
+}
+
+/** Ce que chaque enfant doit encore (argent avancé), et un bouton pour avancer. */
+function AdvancesCard({ kids }: { kids: { memberId: string | null; name: string; owedCents: number }[] }) {
+  const total = kids.reduce((n, k) => n + k.owedCents, 0);
+  return (
+    <Card style={{ gap: space.sm }}>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <Text size={16} weight="semibold" style={{ flex: 1 }}>
+          🐷 Avances aux enfants
+        </Text>
+        <Button label="Avancer" variant="ghost" onPress={() => router.push("/comptes/advance")} />
+      </View>
+      {total === 0 ? (
+        <Text size={13} tone="muted">
+          Rien à rembourser. Quand tu paies quelque chose pour un enfant (un jeu, une sortie…), note-le ici : il le rembourse quand il veut avec son argent de poche.
+        </Text>
+      ) : (
+        kids
+          .filter((k) => k.owedCents > 0)
+          .map((k) => (
+            <View key={k.memberId ?? k.name} style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text size={14}>{k.name}</Text>
+              <Text size={14} weight="medium" style={{ color: color.danger }}>
+                doit {formatEuros(k.owedCents)}
+              </Text>
+            </View>
+          ))
+      )}
+    </Card>
   );
 }
 

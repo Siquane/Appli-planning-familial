@@ -87,11 +87,13 @@ export async function deleteChildAccountsOf(familyId: string): Promise<void> {
 // Ce qu'un compte enfant ne peut pas faire. Lecture : tout sauf ces chemins.
 // Écriture : rien sur ces chemins (gestion de la famille, repas, étoiles,
 // achats, agendas externes, Cervelle). Les tâches sont vérifiées dans leur route.
-const READ_BLOCKED = ["/share", "/calendar", "/billing", "/cervelle", "/family/children"];
-const WRITE_BLOCKED = ["/members", "/family", "/share", "/constraints", "/calendar", "/recipes", "/meals", "/shopping", "/stars", "/billing", "/plan", "/cervelle", "/pocket-money"];
+const READ_BLOCKED = ["/share", "/calendar", "/billing", "/cervelle", "/family/children", "/splits"];
+const WRITE_BLOCKED = ["/members", "/family", "/share", "/constraints", "/calendar", "/recipes", "/meals", "/shopping", "/stars", "/billing", "/plan", "/cervelle", "/pocket-money", "/splits"];
 const WRITE_ALLOWED = ["/family/notice"];
-// Demander une récompense (le reste des étoiles reste aux adultes).
-const WRITE_ALLOWED_PATTERNS = [/^\/stars\/rewards\/[^/]+\/request$/];
+// Demander une récompense (le reste des étoiles reste aux adultes) ; rembourser
+// une avance avec sa cagnotte (le reste de l'argent de poche reste aux adultes).
+// Les comptes partagés (/splits) sont ceux des adultes.
+const WRITE_ALLOWED_PATTERNS = [/^\/stars\/rewards\/[^/]+\/request$/, /^\/pocket-money\/advances\/[^/]+\/repay$/];
 
 const under = (path: string, prefix: string) => path === prefix || path.startsWith(`${prefix}/`);
 

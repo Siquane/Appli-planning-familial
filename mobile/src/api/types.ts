@@ -574,7 +574,18 @@ export interface PocketMoneyCredit {
   amountCents: number;
   label: string;
   day: string;
-  source: "auto" | "manual";
+  /** « repay » : remboursement d'une avance (montant négatif). */
+  source: "auto" | "manual" | "repay";
+}
+
+/** Argent avancé à l'enfant, qu'il rembourse quand il veut avec sa cagnotte. */
+export interface PocketMoneyAdvance {
+  id: string;
+  amountCents: number;
+  label: string;
+  day: string;
+  repaidCents: number;
+  leftCents: number;
 }
 
 export interface PocketMoney {
@@ -583,6 +594,13 @@ export interface PocketMoney {
   receivedCents: number;
   spentCents: number;
   balanceCents: number;
+  advances?: PocketMoneyAdvance[];
+  /** Ce que l'enfant doit encore (avances non remboursées). */
+  owedCents?: number;
+}
+
+export interface FamilyAdvances {
+  children: { memberId: string | null; name: string; owedCents: number; advances: PocketMoneyAdvance[] }[];
 }
 
 // ── Comptes partagés (onglet « Comptes ») ──

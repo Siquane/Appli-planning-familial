@@ -9,12 +9,12 @@ datasource db {
 }
 
 model User {
-  id                   String              @id @default(cuid())
-  email                String              @unique
+  id                   String               @id @default(cuid())
+  email                String               @unique
   passwordHash         String
   name                 String
   initials             String
-  createdAt            DateTime            @default(now())
+  createdAt            DateTime             @default(now())
   // Each pack is active while its date is in the future ("Les 2" sets both).
   // Set by hand for now (npm run premium), later by the store purchase.
   budgetUntil          DateTime?
@@ -22,31 +22,32 @@ model User {
   budgetTrialStartedAt DateTime?
   // Horaires de travail de CE compte (0 = lundi … 6 = dimanche ; vide = aucun) :
   // « Replanifier » ne propose rien pendant ces heures.
-  workDays             Int[]               @default([])
-  workStart            String              @default("09:00")
-  workEnd              String              @default("17:30")
+  workDays             Int[]                @default([])
+  workStart            String               @default("09:00")
+  workEnd              String               @default("17:30")
   // Family sharing. A family is the data of its creator (the « owner »); other
   // accounts join it with a code (see lib/family.ts). null = this account is
   // its own family's owner. Roles of a joiner: "full" shares everything,
   // including budget and documents; "planning" shares the planning only and
   // keeps its own budget and documents. Packs and trial always belong to the owner.
   familyOwnerId        String?
-  familyOwner          User?               @relation("FamilyAccounts", fields: [familyOwnerId], references: [id], onDelete: SetNull)
-  familyAccounts       User[]              @relation("FamilyAccounts")
-  familyRole           String              @default("owner")
+  familyOwner          User?                @relation("FamilyAccounts", fields: [familyOwnerId], references: [id], onDelete: SetNull)
+  familyAccounts       User[]               @relation("FamilyAccounts")
+  familyRole           String               @default("owner")
   // Compte « enfant » (moins de 15 ans) créé par un parent pour ce membre de la
   // famille : connexion par code, pas d'e-mail ni de mot de passe utilisables.
-  childMemberId        String?             @unique
-  childMember          FamilyMember?       @relation("ChildAccount", fields: [childMemberId], references: [id], onDelete: Cascade)
+  childMemberId        String?              @unique
+  childMember          FamilyMember?        @relation("ChildAccount", fields: [childMemberId], references: [id], onDelete: Cascade)
   childLoginCodes      ChildLoginCode[]
-  pocketMoneyRule      PocketMoneyRule?    @relation("PocketMoneyRule")
-  pocketMoneyCredits   PocketMoneyCredit[] @relation("PocketMoneyCredits")
+  pocketMoneyRule      PocketMoneyRule?     @relation("PocketMoneyRule")
+  pocketMoneyCredits   PocketMoneyCredit[]  @relation("PocketMoneyCredits")
+  pocketMoneyAdvances  PocketMoneyAdvance[] @relation("PocketMoneyAdvances")
   familyInvite         FamilyInvite?
   // One-time message (JSON) shown at the next opening after the family changed hands; see lib/familyHandover.ts.
   familyNotice         String?
   // Notification sur le téléphone quand un autre compte de la famille modifie
   // le planning, les repas, les courses ou les recettes (lib/familyAlerts.ts).
-  familyAlerts         Boolean             @default(true)
+  familyAlerts         Boolean              @default(true)
   pushTokens           PushToken[]
   mealsUntil           DateTime?
   // Explicit consent to store members' diets, allergies and foods to limit
@@ -1138,11 +1139,28 @@ model PocketMoneyCredit {
   label       String
   // « AAAA-MM-JJ » (heure de Paris)
   day         String
-  // "auto" (règle) | "manual" (ajouté par un parent)
+  // "auto" (règle) | "manual" (ajouté par un parent) | "repay" (négatif : remboursement d'une avance)
   source      String
   createdAt   DateTime @default(now())
 
   @@index([accountId, day])
+}
+
+// Argent avancé à un enfant (un jeu, une sortie…) : il le rembourse quand il
+// veut depuis sa cagnotte ; chaque remboursement est un versement négatif
+// (source « repay ») et fait monter repaidCents.
+model PocketMoneyAdvance {
+  id          String   @id @default(cuid())
+  accountId   String
+  account     User     @relation("PocketMoneyAdvances", fields: [accountId], references: [id], onDelete: Cascade)
+  amountCents Int
+  label       String
+  // « AAAA-MM-JJ » (heure de Paris)
+  day         String
+  repaidCents Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([accountId])
 }
 
 // « Aide aux devoirs » : a photographed exercise, read by Cervelle into
