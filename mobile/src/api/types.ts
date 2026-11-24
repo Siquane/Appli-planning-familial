@@ -595,6 +595,8 @@ export interface SplitParticipant {
   memberId: string | null;
   /** Apparaît dans au moins une dépense (ne peut pas être retiré). */
   used: boolean;
+  /** Secret de son lien web (« Partager le lien ») ; null = pas de lien. */
+  linkToken?: string | null;
 }
 
 export interface SplitShare {
@@ -614,6 +616,8 @@ export interface SplitExpense {
   /** « transfer » : un remboursement. */
   kind: "expense" | "transfer";
   shares: SplitShare[];
+  /** Ajoutée par cette personne avec son lien web (null : ajoutée dans l'appli). */
+  addedById: string | null;
   photoUrl: string | null;
   createdAt: string;
 }

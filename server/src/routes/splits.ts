@@ -17,13 +17,13 @@ const MAX_GROUPS = 100;
 const MAX_PARTICIPANTS = 30;
 const PHOTO_TYPES = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/heic": ".heic" } as const;
 
-const groupInclude = {
+export const groupInclude = {
   participants: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] },
   expenses: { include: { shares: true }, orderBy: [{ date: "desc" }, { createdAt: "desc" }] },
 } satisfies Prisma.SplitGroupInclude;
-type FullGroup = Prisma.SplitGroupGetPayload<{ include: typeof groupInclude }>;
+export type FullGroup = Prisma.SplitGroupGetPayload<{ include: typeof groupInclude }>;
 
-async function loadGroup(familyId: string, id: string): Promise<FullGroup | null> {
+export async function loadGroup(familyId: string, id: string): Promise<FullGroup | null> {
   return prisma.splitGroup.findFirst({ where: { id, userId: familyId }, include: groupInclude });
 }
 
@@ -36,11 +36,12 @@ function summary(g: FullGroup) {
   return { bal, spent, transfers: settleUp(bal) };
 }
 
-function serializeParticipant(p: FullGroup["participants"][number], used: Set<string>) {
-  return { id: p.id, name: p.name, memberId: p.memberId, used: used.has(p.id) };
+function serializeParticipant(p: FullGroup["participants"][number], used: Set<string>, withLinks: boolean) {
+  return { id: p.id, name: p.name, memberId: p.memberId, used: used.has(p.id), ...(withLinks ? { linkToken: p.linkToken } : {}) };
 }
 
-async function serializeGroup(g: FullGroup, withExpenses: boolean) {
+/** `withLinks`: the family sees each person's link secret; the web page never does. */
+export async function serializeGroup(g: FullGroup, withExpenses: boolean, withLinks = true) {
   const { bal, spent, transfers } = summary(g);
   const used = new Set(g.expenses.flatMap((e) => [e.paidById, ...e.shares.map((s) => s.participantId)]));
   const storage = withExpenses ? getStorage() : null;
@@ -53,7 +54,7 @@ async function serializeGroup(g: FullGroup, withExpenses: boolean) {
     spentCents: spent,
     expenseCount: g.expenses.filter((e) => e.kind === "expense").length,
     lastActivity: (g.expenses[0]?.createdAt ?? g.createdAt).toISOString(),
-    participants: g.participants.map((p) => serializeParticipant(p, used)),
+    participants: g.participants.map((p) => serializeParticipant(p, used, withLinks)),
     balances: g.participants.map((p) => ({ participantId: p.id, cents: bal.get(p.id) ?? 0 })),
     transfers,
     ...(withExpenses
@@ -68,6 +69,7 @@ async function serializeGroup(g: FullGroup, withExpenses: boolean) {
               mode: e.mode,
               kind: e.kind,
               shares: e.shares.map((s) => ({ participantId: s.participantId, value: s.value, amountCents: s.amountCents })),
+              addedById: e.addedById,
               photoUrl: storage && e.photoKey ? await storage.downloadUrl(e.photoKey, `ticket${PHOTO_TYPES[e.photoMime as keyof typeof PHOTO_TYPES] ?? ".jpg"}`).catch(() => null) : null,
               createdAt: e.createdAt.toISOString(),
             })),
@@ -197,9 +199,28 @@ splitsRouter.delete("/:id/participants/:pid", async (req, res) => {
   res.json({ group: await serializeGroup((await loadGroup(req.familyId!, g.id))!, true) });
 });
 
+// ── Lien de chaque personne (page web sans compte, routes/splitsPublic.ts) ──
+
+/** Crée le lien d'une personne, ou en donne un nouveau : l'ancien cesse de fonctionner. */
+splitsRouter.post("/:id/participants/:pid/link", async (req, res) => {
+  const g = await loadGroup(req.familyId!, req.params.id);
+  const p = g?.participants.find((x) => x.id === req.params.pid);
+  if (!g || !p) return res.status(404).json({ error: "Introuvable" });
+  await prisma.splitParticipant.update({ where: { id: p.id }, data: { linkToken: nanoid(24) } });
+  res.json({ group: await serializeGroup((await loadGroup(req.familyId!, g.id))!, true) });
+});
+
+splitsRouter.delete("/:id/participants/:pid/link", async (req, res) => {
+  const g = await loadGroup(req.familyId!, req.params.id);
+  const p = g?.participants.find((x) => x.id === req.params.pid);
+  if (!g || !p) return res.status(404).json({ error: "Introuvable" });
+  await prisma.splitParticipant.update({ where: { id: p.id }, data: { linkToken: null } });
+  res.json({ group: await serializeGroup((await loadGroup(req.familyId!, g.id))!, true) });
+});
+
 // ── Dépenses ──
 
-const expenseSchema = z.object({
+export const expenseSchema = z.object({
   title: z.string().trim().min(1, "Indique ce qui a été payé").max(80),
   amountCents: z.number().int().min(1, "Indique un montant").max(100_000_000),
   paidById: z.string(),
@@ -212,7 +233,7 @@ const expenseSchema = z.object({
 });
 
 /** Checks the people and computes the shares, or answers 400. */
-function prepare(res: Response, g: FullGroup, d: z.infer<typeof expenseSchema>) {
+export function prepare(res: Response, g: FullGroup, d: z.infer<typeof expenseSchema>) {
   const ids = new Set(g.participants.map((p) => p.id));
   if (!ids.has(d.paidById) || d.shares.some((s) => !ids.has(s.participantId))) {
     res.status(400).json({ error: "Personne inconnue dans ce groupe" });
@@ -226,7 +247,7 @@ function prepare(res: Response, g: FullGroup, d: z.infer<typeof expenseSchema>) 
   }
 }
 
-async function photoUpload(res: Response, familyId: string, photo: z.infer<typeof expenseSchema>["photo"]) {
+export async function photoUpload(res: Response, familyId: string, photo: z.infer<typeof expenseSchema>["photo"]) {
   if (!photo) return { key: null, mime: null, upload: null };
   const storage = getStorage();
   if (!storage) {

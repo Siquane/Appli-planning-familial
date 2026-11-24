@@ -75,3 +75,8 @@ export function previewShares(amountCents: number, mode: SplitMode, values: numb
       return { amounts: prorata(amountCents, values), problem: sum > 0 ? null : "Donne au moins une part." };
   }
 }
+
+/** Adresse de la page web d'une personne (servie par l'API). */
+export function splitLinkUrl(apiUrl: string, token: string): string {
+  return `${apiUrl.replace(/\/$/, "")}/s/${token}`;
+}

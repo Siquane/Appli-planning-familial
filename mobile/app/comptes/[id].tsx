@@ -158,6 +158,7 @@ export default function GroupScreen() {
                     <Text size={12} tone="faint" numberOfLines={1}>
                       {shortDay(e.date)} · {transfer ? "remboursement" : `payé par ${name(e.paidById)}`}
                       {!transfer && myShare !== undefined ? ` · ta part ${formatEuros(myShare)}` : ""}
+                      {e.addedById ? ` · ajoutée par ${name(e.addedById)}` : ""}
                     </Text>
                   </View>
                   <Text size={15} weight="semibold">

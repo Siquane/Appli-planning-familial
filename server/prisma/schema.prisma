@@ -1209,6 +1209,8 @@ model SplitParticipant {
   memberId  String?
   member    FamilyMember?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
   order     Int            @default(0)
+  // Secret of this person\'s web link (« Partager le lien ») ; null = no link.
+  linkToken String?        @unique
   createdAt DateTime       @default(now())
   paid      SplitExpense[] @relation("SplitPaidBy")
   shares    SplitShare[]
@@ -1231,6 +1233,8 @@ model SplitExpense {
   kind        String           @default("expense")
   photoKey    String?
   photoMime   String?
+  // Participant who added it through their web link (null: added in the app).
+  addedById   String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   shares      SplitShare[]
