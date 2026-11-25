@@ -1,3 +1,4 @@
+import { weekKey } from "../lib/stars";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi, notesApi, pocketMoneyApi, splitsApi } from "../api/resources";
 import type { NoteInput, MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskDoneMark, TaskInput, Tint, Weekday } from "../api/types";
@@ -96,9 +97,10 @@ export function useDeleteRecipe() {
   });
 }
 
-export function useMeals() {
+/** Le menu d'une semaine (son lundi) ; par défaut la semaine en cours. */
+export function useMeals(week: string = weekKey()) {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["meals"], queryFn: () => mealsApi.list().then((r) => r.meals), enabled, refetchInterval: SHARED_REFRESH_MS });
+  return useQuery({ queryKey: ["meals", week], queryFn: () => mealsApi.list(week).then((r) => r.meals), enabled, refetchInterval: SHARED_REFRESH_MS });
 }
 
 export function useSetMeal() {
@@ -183,7 +185,7 @@ export function useBudgetReport(months = 6, enabled = true) {
 export function useSaveMeals() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (meals: MealInput[]) => mealsApi.saveMany(meals),
+    mutationFn: ({ week, meals }: { week: string; meals: MealInput[] }) => mealsApi.saveMany(week, meals),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["meals"] }),
   });
 }
@@ -369,7 +371,7 @@ export function useDeleteShoppingItem() {
 
 export function useShoppingFromMenu() {
   const qc = useQueryClient();
-  return useMutation({ mutationFn: () => shoppingApi.fromMenu(), onSuccess: (r) => qc.setQueryData(["shopping"], r.items) });
+  return useMutation({ mutationFn: (week: string) => shoppingApi.fromMenu(week), onSuccess: (r) => qc.setQueryData(["shopping"], r.items) });
 }
 
 export function useClearCheckedShopping() {

@@ -72,4 +72,17 @@ describe("meals", () => {
     const listAsB = await request(app).get("/meals").set(authHeader(userB.accessToken));
     expect(listAsB.body.meals).toHaveLength(0);
   });
+
+  it("keeps a separate menu for each week", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    await request(app).post("/meals").set(auth).send({ week: "2026-11-23", weekday: 0, type: "dîner", title: "Gratin" });
+    await request(app).post("/meals").set(auth).send({ week: "2026-11-30", weekday: 0, type: "dîner", title: "Curry" });
+    const a = await request(app).get("/meals?week=2026-11-23").set(auth);
+    const b = await request(app).get("/meals?week=2026-11-30").set(auth);
+    expect(a.body.meals.map((m: { title: string }) => m.title)).toEqual(["Gratin"]);
+    expect(b.body.meals.map((m: { title: string }) => m.title)).toEqual(["Curry"]);
+    expect(b.body.meals[0].week).toBe("2026-11-30");
+    expect((await request(app).post("/meals").set(auth).send({ week: "2026-11-25", weekday: 0, type: "dîner", title: "X" })).status).toBe(400);
+  });
 });

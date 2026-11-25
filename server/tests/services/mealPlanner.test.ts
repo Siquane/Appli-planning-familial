@@ -30,6 +30,13 @@ describe("sanitizeProposal", () => {
 });
 
 describe("buildUserPrompt", () => {
+  it("lists the neighbouring weeks' dishes to avoid", () => {
+    const p = buildUserPrompt({ ...base, recent: ["Raclette", "Raclette", " "] });
+    expect(p).toContain("<menus_des_semaines_voisines>");
+    expect(p.match(/- Raclette/g)).toHaveLength(1);
+    expect(buildUserPrompt(base)).not.toContain("menus_des_semaines_voisines");
+  });
+
   const base: PlannerContext = {
     slots: [{ weekday: 6, type: "dîner" }],
     preferences: {

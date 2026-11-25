@@ -60,6 +60,7 @@ export function setMealIn(meals: Meal[], id: string, data: MealInput): Meal[] {
     ingredients: [],
     ...(previous ?? {}),
     ...data,
+    week: data.week ?? previous?.week ?? "",
     id: previous?.id ?? id,
   } as Meal;
   return previous ? meals.map((m) => (m === previous ? meal : m)) : [...meals, meal];

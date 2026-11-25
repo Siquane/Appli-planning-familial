@@ -8,11 +8,16 @@ import { CheckIcon, CloseIcon } from "../components/icons";
 import { useAddShoppingItem, useClearCheckedShopping, useDeleteShoppingItem, useShoppingFromMenu, useShoppingList, useToggleShoppingItem } from "../hooks/useApi";
 import { useToastStore } from "../state/toastStore";
 import { fromMenuMessage } from "../lib/shopping";
+import { weekTitle } from "../lib/appointments";
+import { useMenuWeek } from "../state/menuWeekStore";
 import { color, font, radius, space } from "../theme/tokens";
 import { errorText } from "../lib/errors";
 import { EmptyState } from "../components/Playful";
 
 const toast = (m: string) => useToastStore.getState().show(m);
+
+/** « de cette semaine », « de la semaine prochaine », « de la semaine du 30 nov. »… */
+const menuOfWeek = (title: string) => (title === "Cette semaine" ? "de cette semaine" : `de la ${title.charAt(0).toLowerCase()}${title.slice(1)}`);
 
 /** Shopping list, shown in the « Repas » tab. */
 export function ShoppingBody() {
@@ -21,6 +26,8 @@ export function ShoppingBody() {
   const toggle = useToggleShoppingItem();
   const remove = useDeleteShoppingItem();
   const fromMenu = useShoppingFromMenu();
+  // Les ingrédients du menu de la semaine affichée dans Repas.
+  const week = useMenuWeek();
   const clearChecked = useClearCheckedShopping();
   const [label, setLabel] = useState("");
 
@@ -34,7 +41,7 @@ export function ShoppingBody() {
   }
 
   function onFromMenu() {
-    fromMenu.mutate(undefined, {
+    fromMenu.mutate(week, {
       onSuccess: (r) => toast(fromMenuMessage(r.added, r.withoutIngredients)),
       onError: (e) => toast(errorText(e, "mettre à jour la liste")),
     });
@@ -66,7 +73,7 @@ export function ShoppingBody() {
         <Button label="Ajouter" variant="secondary" onPress={onAdd} disabled={!label.trim()} loading={add.isPending} />
       </View>
 
-      <Button label="Générer depuis le menu de la semaine" variant="ghost" block onPress={onFromMenu} loading={fromMenu.isPending} />
+      <Button label={`Ajouter le menu ${menuOfWeek(weekTitle(week))}`} variant="ghost" block onPress={onFromMenu} loading={fromMenu.isPending} />
 
       {!isLoading && items.length === 0 && (
         <Card>

@@ -1,3 +1,5 @@
+import { mondayOf, parisDay } from "../lib/cervelle/days";
+import { isMondayKey } from "../lib/stars";
 import { Router } from "express";
 import { z } from "zod";
 import type { ShoppingItem } from "@prisma/client";
@@ -48,8 +50,10 @@ shoppingRouter.post("/", async (req, res) => {
 // hand, or generated before dishes came with their ingredients).
 shoppingRouter.post("/from-menu", async (req, res) => {
   const userId = req.userId!;
+  // Le menu de la semaine affichée dans l'appli (sinon la semaine en cours).
+  const week = typeof req.body?.week === "string" && isMondayKey(req.body.week) ? req.body.week : mondayOf(parisDay());
   const meals = await prisma.meal.findMany({
-    where: { userId },
+    where: { userId, week },
     include: { recipe: { select: { ingredients: true } } },
   });
   const existing = await prisma.shoppingItem.findMany({ where: { userId }, select: { label: true } });
