@@ -10,7 +10,8 @@ import { TextField } from "../src/components/TextField";
 import { TopBar } from "../src/components/TopBar";
 import { Accordion } from "../src/components/Accordion";
 import { useFoodConsent, useSetFoodConsent } from "../src/hooks/useApi";
-import { deleteAccount } from "../src/lib/account";
+import { useAuthStore } from "../src/state/authStore";
+import { deleteAccount, sendDeleteCode, type DeleteProof } from "../src/lib/account";
 import { useIsChildAccount } from "../src/state/authStore";
 import { ApiError } from "../src/api/client";
 import { useToastStore } from "../src/state/toastStore";
@@ -42,6 +43,27 @@ export default function PrivacyScreen() {
   const { data: consentedAt } = useFoodConsent();
   const setConsent = useSetFoodConsent();
   const [password, setPassword] = useState("");
+  // Compte sans mot de passe (créé par code e-mail) : confirmation par un code reçu.
+  const [byCode, setByCode] = useState(false);
+  const [code, setCode] = useState("");
+  const [sendingCode, setSendingCode] = useState(false);
+  const email = useAuthStore((s) => s.user?.email);
+  const proof: DeleteProof = byCode ? { emailCode: code.trim() } : { password };
+  const canConfirm = byCode ? /^\d{6}$/.test(code.trim()) : !!password;
+
+  async function onSendCode() {
+    if (!email) return;
+    setSendingCode(true);
+    try {
+      await sendDeleteCode(email);
+      setByCode(true);
+      useToastStore.getState().show(`Code envoyé à ${email}.`);
+    } catch (e) {
+      useToastStore.getState().show(errorText(e, "envoyer le code"));
+    } finally {
+      setSendingCode(false);
+    }
+  }
   // Several adults could take the family over: the owner chooses (see HeirPickerModal).
   const [heirChoices, setHeirChoices] = useState<HeirChoice[] | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -68,7 +90,7 @@ export default function PrivacyScreen() {
   async function deleteForGood(heirId?: string) {
     setDeleting(true);
     try {
-      await deleteAccount(password, true, heirId);
+      await deleteAccount(proof, true, heirId);
       router.replace("/");
     } catch (err) {
       useToastStore.getState().show(errorText(err, "supprimer le compte"));
@@ -89,7 +111,7 @@ export default function PrivacyScreen() {
           onPress: async () => {
             setDeleting(true);
             try {
-              await deleteAccount(password);
+              await deleteAccount(proof);
               router.replace("/");
             } catch (e) {
               if (e instanceof ApiError && e.code === "family_has_members") {
@@ -109,7 +131,7 @@ export default function PrivacyScreen() {
                     onPress: async () => {
                       setDeleting(true);
                       try {
-                        await deleteAccount(password, true);
+                        await deleteAccount(proof, true);
                         router.replace("/");
                       } catch (err) {
                         useToastStore.getState().show(errorText(err, "supprimer le compte"));
@@ -212,10 +234,19 @@ export default function PrivacyScreen() {
         ) : (
         <Accordion title="Supprimer mon compte">
           <Text size={13} tone="muted">
-            Efface définitivement tes données. Si d'autres comptes partagent ta famille, un adulte peut la reprendre avant ton départ. Saisis ton mot de passe pour confirmer.
+            Efface définitivement tes données. Si d'autres comptes partagent ta famille, un adulte peut la reprendre avant ton départ. {byCode ? "Saisis le code reçu par e-mail pour confirmer." : "Saisis ton mot de passe pour confirmer."}
           </Text>
-          <TextField label="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
-          <Button label="Supprimer mon compte" variant="secondary" block loading={deleting} disabled={!password} onPress={onDelete} />
+          {byCode ? (
+            <TextField label="Code reçu par e-mail" value={code} onChangeText={setCode} keyboardType="number-pad" maxLength={6} placeholder="123456" />
+          ) : (
+            <TextField label="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
+          )}
+          <Button label="Supprimer mon compte" variant="secondary" block loading={deleting} disabled={!canConfirm} onPress={onDelete} />
+          {byCode ? (
+            <Button label="Utiliser mon mot de passe" variant="ghost" block onPress={() => setByCode(false)} />
+          ) : (
+            <Button label="Pas de mot de passe ? Recevoir un code par e-mail" variant="ghost" block loading={sendingCode} onPress={onSendCode} />
+          )}
         </Accordion>
         )}
       </KeyboardScrollView>

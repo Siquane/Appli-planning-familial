@@ -4,8 +4,30 @@ import { app } from "../../src/index";
 import { prisma } from "../../src/db";
 import { authHeader, signup } from "../helpers";
 import * as storage from "../../src/lib/storage";
+import { setMailTransport, type Mail } from "../../src/services/mailer";
 
 describe("DELETE /auth/me", () => {
+  it("accepts a code received by e-mail instead of the password", async () => {
+    const sent: Mail[] = [];
+    setMailTransport(async (mail) => {
+      sent.push(mail);
+    });
+    try {
+      const email = `sans-mdp${Date.now()}@passerelle.test`;
+      const { accessToken, user } = await signup(app, { email });
+      const auth = authHeader(accessToken);
+      expect((await request(app).delete("/auth/me").set(auth).send({ emailCode: "000000" })).status).toBe(401);
+      await prisma.emailLoginCode.deleteMany({ where: { email } });
+      await request(app).post("/auth/email-code").send({ email, app: "passerelle" });
+      const code = sent.at(-1)!.text.match(/\b(\d{6})\b/)![1];
+      expect((await request(app).delete("/auth/me").set(auth).send({ emailCode: code })).status).toBe(204);
+      expect(await prisma.user.findUnique({ where: { id: user.id } })).toBeNull();
+    } finally {
+      setMailTransport(null);
+    }
+  });
+
+
   it("refuses a wrong password and keeps the account", async () => {
     const { accessToken, user } = await signup(app);
     const res = await request(app).delete("/auth/me").set(authHeader(accessToken)).send({ password: "mauvais" });

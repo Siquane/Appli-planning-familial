@@ -250,6 +250,17 @@ authRouter.post("/email-code/verify", loginLimiter, async (req, res) => {
   res.status(created ? 201 : 200).json({ user: publicUser(user), created, ...tokens });
 });
 
+/** Vérifie un code reçu par e-mail (essai compté d'abord) ; le consomme s'il est bon. */
+async function checkEmailCode(email: string, code: string): Promise<boolean> {
+  const stored = await prisma.emailLoginCode.findFirst({ where: { email }, orderBy: { createdAt: "desc" } });
+  if (!stored || stored.expiresAt < new Date()) return false;
+  const counted = await prisma.emailLoginCode.updateMany({ where: { id: stored.id, attempts: { lt: LOGIN_MAX_ATTEMPTS } }, data: { attempts: { increment: 1 } } });
+  if (counted.count === 0) return false;
+  if (!crypto.timingSafeEqual(Buffer.from(hashResetCode(code)), Buffer.from(stored.codeHash))) return false;
+  await prisma.emailLoginCode.deleteMany({ where: { email } });
+  return true;
+}
+
 authRouter.post("/refresh", async (req, res) => {
   const refreshToken = req.body?.refreshToken as string | undefined;
   if (!refreshToken) return res.status(400).json({ error: "Missing refreshToken" });
@@ -300,11 +311,25 @@ authRouter.patch("/me", requireAuth, async (req, res) => {
 // required by the Play Store). The password confirms it's really the owner.
 // Every table cascades from User; stored files (R2) are removed first.
 authRouter.delete("/me", requireAuth, loginLimiter, async (req, res) => {
-  const parsed = z.object({ password: z.string().min(1, "Mot de passe requis"), confirmFamily: z.boolean().optional(), heirId: z.string().optional() }).safeParse(req.body);
+  // Confirmation : le mot de passe, ou un code reçu par e-mail (POST /auth/email-code)
+  // pour un compte créé sans mot de passe.
+  const parsed = z
+    .object({
+      password: z.string().min(1).optional(),
+      emailCode: z.string().trim().regex(/^\d{6}$/, "Le code contient 6 chiffres").optional(),
+      confirmFamily: z.boolean().optional(),
+      heirId: z.string().optional(),
+    })
+    .refine((b) => !!b.password || !!b.emailCode, { message: "Mot de passe requis" })
+    .safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const user = await prisma.user.findUnique({ where: { id: req.accountId } });
   if (!user) return res.status(404).json({ error: "Not found" });
-  if (!(await bcrypt.compare(parsed.data.password, user.passwordHash))) return res.status(401).json({ error: "Mot de passe incorrect" });
+  if (parsed.data.emailCode) {
+    if (!(await checkEmailCode(user.email.toLowerCase(), parsed.data.emailCode))) return res.status(401).json({ error: "Ce code ne marche pas ou a expiré. Demande un nouveau code." });
+  } else if (!(await bcrypt.compare(parsed.data.password!, user.passwordHash))) {
+    return res.status(401).json({ error: "Mot de passe incorrect" });
+  }
   // The owner's account IS the family's data: it moves to another adult of the
   // family when there is one, so the others keep their planning.
   const parsedBody = parsed.data;
