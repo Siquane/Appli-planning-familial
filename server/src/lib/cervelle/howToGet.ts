@@ -1,4 +1,5 @@
 import { fetesOf, SUCCESSES } from "./badges";
+import { ADVENT_ITEMS } from "./advent";
 import type { CatalogItem } from "./shop";
 import { PATH_END, THEMES, themeOf } from "./stars";
 
@@ -41,6 +42,10 @@ export function howToGet(item: CatalogItem, today: string): string | null {
         : `C'est le cadeau du chemin d'étoiles de ${MONTHS[Number(m.slice(5, 7)) - 1]} (« ${theme.label} ») : ce mois-là, gagne ${PATH_END} étoiles.`;
     }
     return `C'est un cadeau du chemin d'étoiles : gagne ${PATH_END} étoiles dans le mois.`;
+  }
+  if (item.kind === "avent") {
+    const box = ADVENT_ITEMS.find((a) => a.item === item.id);
+    return `Il se cache derrière ${box ? `la case ${box.day}` : "une case"} du calendrier de l'Avent (en décembre). Révise pour ouvrir les cases : touche 🎄 sur l'accueil.`;
   }
   return null;
 }

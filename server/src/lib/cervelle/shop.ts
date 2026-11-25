@@ -10,12 +10,13 @@
 //   saison      on sale only between two dates each year, kept forever once bought;
 //   legendaire  very expensive, a long-term goal;
 //   badge       not for sale: unlocked by earning a badge (src/lib/cervelle/badges.ts);
-//   chemin      not for sale: the prize at the end of a month's « chemin d'étoiles » (stars.ts).
+//   chemin      not for sale: the prize at the end of a month's « chemin d'étoiles » (stars.ts);
+//   avent       not for sale: behind a box of the advent calendar (advent.ts).
 
 export type Slot = "tete" | "visage" | "cou" | "tenue" | "main" | "couleur" | "decor";
 export const SLOTS: Slot[] = ["tete", "visage", "cou", "tenue", "main", "couleur", "decor"];
 
-export type Kind = "normal" | "saison" | "legendaire" | "badge" | "chemin";
+export type Kind = "normal" | "saison" | "legendaire" | "badge" | "chemin" | "avent";
 
 export interface CatalogItem {
   id: string;
@@ -34,6 +35,7 @@ const s = (id: string, name: string, slot: Slot, price: number, from: string, to
 const l = (id: string, name: string, slot: Slot, price: number): CatalogItem => ({ id, name, slot, price, kind: "legendaire" });
 const b = (id: string, name: string, slot: Slot, key: string, label: string): CatalogItem => ({ id, name, slot, price: 0, kind: "badge", badge: { key, label } });
 const c = (id: string, name: string, slot: Slot): CatalogItem => ({ id, name, slot, price: 0, kind: "chemin" });
+const a = (id: string, name: string, slot: Slot): CatalogItem => ({ id, name, slot, price: 0, kind: "avent" });
 
 export const SHOP: CatalogItem[] = [
   // Tête
@@ -105,6 +107,14 @@ export const SHOP: CatalogItem[] = [
   c("couronne_feuilles", "Couronne de feuilles", "tete"),
   c("cape_etoiles", "Cape étoilée", "tenue"),
 
+  // Calendrier de l'Avent : derrière les cases 4, 8, 12, 16, 20 et 24
+  a("nez_renne", "Nez de renne", "visage"),
+  a("sucre_orge", "Sucre d'orge", "main"),
+  a("bois_renne", "Bois de renne", "tete"),
+  a("echarpe_noel", "Écharpe de Noël", "cou"),
+  a("bonnet_lutin", "Bonnet de lutin", "tete"),
+  a("cape_noel", "Cape du Père Noël", "tenue"),
+
   // Décor
   n("classe", "Salle de classe", "decor", 120),
   n("bibliotheque", "Bibliothèque", "decor", 150),
@@ -124,7 +134,7 @@ export const FREE = SHOP.filter((i) => i.kind === "normal" && i.price === 0).map
 
 /** On sale on `day` (« YYYY-MM-DD »)? Badge items never are. */
 export function onSale(item: CatalogItem, day: string): boolean {
-  if (item.kind === "badge" || item.kind === "chemin") return false;
+  if (item.kind === "badge" || item.kind === "chemin" || item.kind === "avent") return false;
   if (item.kind !== "saison" || !item.season) return true;
   const md = day.slice(5);
   const [from, to] = item.season;

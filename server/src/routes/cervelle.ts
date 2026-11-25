@@ -14,6 +14,7 @@ import { mountOrganize } from "./cervelleOrganize";
 import { mountBadges } from "./cervelleBadges";
 import { mountGoals } from "./cervelleGoals";
 import { mountStars } from "./cervelleStars";
+import { mountAdvent } from "./cervelleAdvent";
 import { mountDuels } from "./cervelleDuels";
 import { mountWeekly } from "./cervelleWeekly";
 import { mountUsage } from "./cervelleUsage";
@@ -1317,6 +1318,7 @@ mountOrganize(cervelleRouter, { loadLearner, parentOnly, serializeLearner, missi
 mountBadges(cervelleRouter, { loadLearner });
 mountGoals(cervelleRouter, { loadLearner, parentOnly });
 mountStars(cervelleRouter, { loadLearner });
+mountAdvent(cervelleRouter, { loadLearner, serializeLearner });
 mountDuels(cervelleRouter, { loadLearner });
 mountWeekly(cervelleRouter, { loadLearner });
 mountUsage(cervelleRouter, { parentOnly });

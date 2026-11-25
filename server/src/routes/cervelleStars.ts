@@ -17,12 +17,13 @@ export async function monthFacts(learner: Learner, month: string): Promise<Month
   const { from, to } = monthRange(month);
   const since = beforeParisDay(from);
   const until = beforeParisDay(addDays(to, 2));
-  const [sessions, chests, duels, challenges, badges] = await Promise.all([
+  const [sessions, chests, duels, challenges, badges, bonus] = await Promise.all([
     prisma.studySession.findMany({ where: { learnerId: id, day: { gte: from, lte: to } }, select: { day: true, mode: true, correct: true, total: true } }),
     prisma.starEvent.count({ where: { learnerId: id, key: { startsWith: "chest:" }, day: { gte: from, lte: to } } }),
     prisma.quizDuel.findMany({ where: { progressIds: { has: id }, endedAt: { gte: since, lt: until } }, select: { endedAt: true } }),
     prisma.challenge.findMany({ where: { winnerId: id, week: { gte: addDays(from, -6), lte: to } }, select: { week: true } }),
     prisma.learnerBadge.findMany({ where: { learnerId: id, earnedAt: { gte: since, lt: until }, NOT: { key: { startsWith: "chemin:" } } }, select: { earnedAt: true } }),
+    prisma.starEvent.aggregate({ where: { learnerId: id, stars: { gt: 0 }, day: { gte: from, lte: to } }, _sum: { stars: true } }),
   ]);
   const inMonth = (d: Date | null) => !!d && parisDay(d) >= from && parisDay(d) <= to;
   return {
@@ -33,6 +34,7 @@ export async function monthFacts(learner: Learner, month: string): Promise<Month
     // A weekly challenge counts in the month its week ends.
     wins: duels.filter((d) => inMonth(d.endedAt)).length + challenges.filter((c) => addDays(c.week, 6) >= from && addDays(c.week, 6) <= to).length,
     badges: badges.filter((b) => inMonth(b.earnedAt)).length,
+    bonus: bonus._sum.stars ?? 0,
   };
 }
 

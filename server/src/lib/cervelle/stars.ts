@@ -61,6 +61,8 @@ export interface MonthFacts {
   wins: number;
   /** Badges earned this month. */
   badges: number;
+  /** Bonus stars given this month (advent calendar boxes). */
+  bonus?: number;
 }
 
 export const STAR_RULES = {
@@ -93,7 +95,7 @@ export function starsOf(f: MonthFacts) {
   const quizStars = Math.floor(f.quizzes.reduce((n, q) => n + STAR_RULES.quiz + (q.mode === "a_revoir" || q.total >= 10 ? STAR_RULES.effort : 0), 0));
   const revision = quizStars + f.interros * STAR_RULES.interro;
   const regularite = new Set(f.studyDays).size * STAR_RULES.day + weekBonuses(f.studyDays) * STAR_RULES.week;
-  const missions = f.chests * STAR_RULES.chest;
+  const missions = f.chests * STAR_RULES.chest + (f.bonus ?? 0);
   const defis = f.wins * STAR_RULES.win + f.badges * STAR_RULES.badge;
   return { total: revision + regularite + missions + defis, revision, regularite, missions, defis };
 }
