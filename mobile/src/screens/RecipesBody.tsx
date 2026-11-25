@@ -31,7 +31,7 @@ export function RecipesBody() {
                 <Text size={15} weight="medium">
                   {recipe.title}
                 </Text>
-                <Text size={11} tone="faint">
+                <Text size={12} tone="faint">
                   {recipe.ingredients.length} ingrédient{recipe.ingredients.length !== 1 ? "s" : ""} · {recipe.steps.length} étape{recipe.steps.length !== 1 ? "s" : ""}
                 </Text>
               </View>

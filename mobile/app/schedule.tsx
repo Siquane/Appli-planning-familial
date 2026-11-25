@@ -72,7 +72,7 @@ export default function ScheduleScreen() {
           <Text weight="medium" size={15}>
             Mon travail
           </Text>
-          <Text size={11} tone="faint">
+          <Text size={12} tone="faint">
             Propre à ton compte : les autres membres de la famille ont leurs propres horaires.
           </Text>
           <View style={{ flexDirection: "row", gap: space.xs }}>
@@ -94,7 +94,7 @@ export default function ScheduleScreen() {
             <Text weight="medium" size={15}>
               Plages de la famille
             </Text>
-            <Text size={11} tone="faint">
+            <Text size={12} tone="faint">
               Communes à toute la famille.
             </Text>
           </View>

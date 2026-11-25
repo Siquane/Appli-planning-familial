@@ -72,7 +72,7 @@ export default function ReplanScreen() {
                     <Text weight="medium" size={13} mono>
                       {WEEKDAYS_FULL[c.weekday]} · {c.time}
                     </Text>
-                    <Text size={11} tone="muted">
+                    <Text size={12} tone="muted">
                       {c.reason}
                     </Text>
                   </View>

@@ -136,7 +136,7 @@ export default function HomeScreen() {
           <Text size={15} weight="medium" style={{ flex: 1, marginLeft: space.sm }}>
             Toutes les tâches
           </Text>
-          <Text size={11} tone="faint" style={{ marginRight: space.sm }}>
+          <Text size={12} tone="faint" style={{ marginRight: space.sm }}>
             {tasks.length}
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />

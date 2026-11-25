@@ -9,6 +9,10 @@ import { OFFLINE_MESSAGE, statusMessage } from "../lib/errors";
 // 10.0.2.2 alias instead.
 const DEFAULT_URL = Platform.OS === "android" ? "http://10.0.2.2:4000" : "http://localhost:4000";
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_URL;
+// Lecture : 1 minute. Écriture : 3 minutes, car certaines font travailler l'IA
+// (menus, relevé bancaire) et peuvent prendre plus d'une minute.
+const READ_TIMEOUT_MS = 60_000;
+const WRITE_TIMEOUT_MS = 3 * 60_000;
 
 export class ApiError extends Error {
   status: number;
@@ -41,13 +45,20 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
   if (childSpace) headers["X-Child-Space"] = childSpace;
 
   let res: Response;
+  // Passé le délai (réseau coupé en route), on abandonne : l'écran affiche
+  // « hors connexion » au lieu de charger sans fin. Le délai laisse au serveur
+  // gratuit le temps de se réveiller.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), !options.method || options.method === "GET" ? READ_TIMEOUT_MS : WRITE_TIMEOUT_MS);
   try {
-    res = await fetch(`${API_URL}${path}`, { ...options, headers });
+    res = await fetch(`${API_URL}${path}`, { ...options, headers, signal: options.signal ?? controller.signal });
   } catch {
+    clearTimeout(timer);
     // No answer at all (offline, server asleep): say so instead of « Network request failed ».
     useNetworkStore.getState().setOnline(false);
     throw new ApiError(0, OFFLINE_MESSAGE);
   }
+  clearTimeout(timer);
   useNetworkStore.getState().setOnline(true);
 
   if (res.status === 401 && !accessToken && !useAuthStore.getState().refreshToken) {

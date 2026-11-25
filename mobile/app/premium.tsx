@@ -223,7 +223,7 @@ export default function PremiumScreen() {
             {hasPaidPack(plan) && (
               <Button label="Gérer ou résilier mon abonnement" variant="ghost" block onPress={() => Linking.openURL(MANAGE_SUBSCRIPTIONS_URL)} />
             )}
-            <Text size={11} tone="faint" center>
+            <Text size={12} tone="faint" center>
               Abonnement renouvelé automatiquement, résiliable à tout moment depuis le Play Store.
             </Text>
           </View>

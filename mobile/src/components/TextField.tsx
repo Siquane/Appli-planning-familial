@@ -53,7 +53,7 @@ export function TextField({ label, style, multiline, error, onFocus, onBlur, ...
         {...rest}
       />
       {error ? (
-        <Text size={11} tone="danger" accessibilityLiveRegion="polite">
+        <Text size={12} tone="danger" accessibilityLiveRegion="polite">
           {error}
         </Text>
       ) : null}

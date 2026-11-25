@@ -436,3 +436,10 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 - `Meal.week` (lundi « AAAA-MM-JJ ») : chaque semaine a son propre menu (unique `userId, week, weekday, type`). Migration `20261125170000_weekly_meals` : les menus existants deviennent ceux de la semaine en cours. Sans `week`, les routes prennent la semaine en cours (anciennes versions de l'appli).
 - `POST /meals/generate` (avec `week`) envoie à Claude les plats des 2 semaines d'avant et d'après (`recent`, bloc `<menus_des_semaines_voisines>`) pour ne pas les reproposer ; seule exception, une recette de la famille si « utiliser mes recettes » = souvent.
 - Appli : flèches ‹ › dans Repas → Menu (`src/state/menuWeekStore.ts`, composant `WeekNav` partagé avec le Planning). Semaine vide : bouton « Proposer les menus de la semaine ». La proposition, l'enregistrement et « Ajouter le menu … » aux courses suivent la semaine affichée.
+
+## Audit — lot 2 (confort de l'appli, 25/11/2026)
+
+- Textes d'aide passés de 11 à 12 dans les écrans (les composants compacts — carte de tâche, barre des jours, étiquettes, onglets — gardent 11).
+- Lecteurs d'écran : champs date/heure nommés (« Date : 25 nov. »), fonds de fenêtres = « Fermer », contenus de fenêtres non annoncés comme bouton. Le `Pressable` de `Touchable.tsx` annonce déjà « bouton » par défaut.
+- `src/api/client.ts` : délai max 1 min en lecture, 3 min en écriture (IA), puis message « hors connexion ».
+- Rafraîchissement auto : planning, coches et courses chaque minute ; membres, menus, notes et comptes partagés toutes les 5 minutes.

@@ -226,7 +226,7 @@ export default function FamilyAccessScreen() {
                 La famille est complète ({family?.maxAccounts} comptes au plus).
               </Text>
             )}
-            <Text size={11} tone="faint" center>
+            <Text size={12} tone="faint" center>
               Un code est valable 7 jours. L'abonnement Budget+ ou Repas+ est celui de la famille : personne ne paie deux fois.
             </Text>
           </View>

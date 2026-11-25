@@ -81,7 +81,7 @@ export default function ShareScreen() {
             <Text size={15} weight="medium">
               Planning de {l.name}
             </Text>
-            <Text size={11} tone="faint" mono numberOfLines={1}>
+            <Text size={12} tone="faint" mono numberOfLines={1}>
               {MEMBER_PAGE_URL}/{l.token}
             </Text>
             <View style={{ flexDirection: "row", gap: space.sm }}>
@@ -108,7 +108,7 @@ export default function ShareScreen() {
             <Card key={p.id} row style={{ alignItems: "center" }}>
               <View style={{ flex: 1 }}>
                 <Text size={15}>{p.name}</Text>
-                <Text size={11} tone="faint">
+                <Text size={12} tone="faint">
                   {p.role}
                 </Text>
               </View>

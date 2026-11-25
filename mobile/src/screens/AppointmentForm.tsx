@@ -187,7 +187,7 @@ export function AppointmentForm({ existing, source, prefillTitle, prefillMember,
               />
             ))}
           </View>
-          <Text size={11} tone="faint">
+          <Text size={12} tone="faint">
             {remind === "eve" ? "Une notification la veille à 20 h." : remind === "hour" ? "Une notification une heure avant." : "Il apparaît aussi dans le récap du matin du jour J, s'il est activé."}
           </Text>
         </View>

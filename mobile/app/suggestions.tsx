@@ -130,7 +130,7 @@ export default function SuggestionsScreen() {
                 <Card key={s.title} row style={{ alignItems: "center" }}>
                   <View style={{ flex: 1 }}>
                     <Text size={15}>{s.title}</Text>
-                    <Text size={11} tone="faint">
+                    <Text size={12} tone="faint">
                       {s.category} · {s.duration} min
                     </Text>
                   </View>
@@ -141,7 +141,7 @@ export default function SuggestionsScreen() {
           );
         })}
 
-        <Text tone="faint" size={11} style={{ marginTop: space.sm }}>
+        <Text tone="faint" size={12} style={{ marginTop: space.sm }}>
           Repères tirés de guides parentaux courants (Naître et grandir, GoHenry…) — à ajuster selon ta famille. Tranches disponibles :{" "}
           {AGE_BRACKETS.map((b) => b.label).join(", ")}.
         </Text>

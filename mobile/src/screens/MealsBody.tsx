@@ -60,7 +60,7 @@ export function MealsBody() {
               >
                 <Card row style={{ alignItems: "center" }}>
                   <View style={{ flex: 1 }}>
-                    <Text size={11} tone="faint" style={{ textTransform: "capitalize" }}>
+                    <Text size={12} tone="faint" style={{ textTransform: "capitalize" }}>
                       {type}
                     </Text>
                     <Text size={15} weight="medium" tone={label ? "text" : "muted"}>

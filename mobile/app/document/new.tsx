@@ -79,7 +79,7 @@ export default function DocumentFormScreen() {
                   {file.name}
                 </Text>
                 {file.size ? (
-                  <Text size={11} tone="faint">
+                  <Text size={12} tone="faint">
                     {formatSize(file.size)}
                   </Text>
                 ) : null}

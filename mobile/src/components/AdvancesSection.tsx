@@ -128,7 +128,7 @@ export function AdvancesSection({ advances, owedCents, balanceCents, canEdit, ch
               )
             }
           />
-          <Text size={11} tone="faint">
+          <Text size={12} tone="faint">
             {you} la rembourse quand il veut avec sa cagnotte, en une ou plusieurs fois.
           </Text>
         </Card>

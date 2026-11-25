@@ -127,7 +127,7 @@ export default function RecurringTasksOnboardingScreen() {
                   <Text size={15} weight="medium">
                     {d.title}
                   </Text>
-                  <Text size={11} tone="faint">
+                  <Text size={12} tone="faint">
                     {describeSchedule(d.times)} · {d.category}
                     {d.reminder ? " · Rappel" : ""}
                   </Text>
