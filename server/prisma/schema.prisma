@@ -642,6 +642,7 @@ model Learner {
   devices        LearnerDevice[]
   revisions      Revision[]
   cardDraws      CardDraw[]
+  teachQuizzes   TeachQuiz[]
   attempts       Attempt[]
   sessions       StudySession[]
   examReviews    ExamReview[]
@@ -738,6 +739,7 @@ model Revision {
   updatedAt          DateTime  @updatedAt
 
   notions     Notion[]
+  teachQuizzes TeachQuiz[]
   questions   Question[]
   sessions    StudySession[]
   examReviews ExamReview[]
@@ -1040,6 +1042,28 @@ model CardDraw {
   createdAt DateTime @default(now())
 
   @@unique([learnerId, n])
+}
+
+/// « Apprends-le à papa/maman » : a child sends 5 questions of a revision to the
+/// family; a parent answers them in Passerelle, the child sees the answers and
+/// gets stars for having taught.
+model TeachQuiz {
+  id              String    @id @default(cuid())
+  learnerId       String
+  learner         Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  revisionId      String
+  revision        Revision  @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  questionIds     String[]
+  /// [{ questionId, answer, correct }] once answered.
+  answers         Json?
+  answeredById    String?
+  answeredByName  String?
+  answeredAt      DateTime?
+  /// The child saw the parent's answers.
+  seenAt          DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([learnerId, createdAt])
 }
 
 /// A quiz duel between two friends: the same 10 questions (QCM, vrai/faux)

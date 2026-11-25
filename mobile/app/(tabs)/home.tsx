@@ -14,6 +14,7 @@ import { WeekNav } from "../../src/components/WeekNav";
 import { TaskCard } from "../../src/components/TaskCard";
 import { TabHeader } from "../../src/components/PageHeader";
 import { TodayCard } from "../../src/components/TodayCard";
+import { CervelleQuizCard } from "../../src/components/CervelleQuizCard";
 import { ChevronRightIcon, RecurringIcon, ReshuffleIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
 import { shiftWeek, shortDate, tasksOn } from "../../src/lib/appointments";
 import { useMembers, useTaskDone, useTasks, useToggleTaskDone } from "../../src/hooks/useApi";
@@ -103,6 +104,8 @@ export default function HomeScreen() {
       />
 
       <TodayCard />
+
+      <CervelleQuizCard />
 
       <View style={{ gap: space.sm }}>
         <WeekNav week={week} current={currentWeek} onPrev={() => goToWeek(weekOffset - 1)} onNext={() => goToWeek(weekOffset + 1)} />
