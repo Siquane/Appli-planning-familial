@@ -88,6 +88,16 @@ afterEach(() => {
   env.anthropicApiKey = "";
 });
 
+describe("Cervelle — request size", () => {
+  it("reads large bodies only from an identified caller", async () => {
+    const big = { data: "x".repeat(300_000) };
+    expect((await request(app).post("/cervelle/learners").send(big)).status).toBe(413);
+    const { accessToken } = await signup(app);
+    const res = await request(app).post("/cervelle/learners").set(authHeader(accessToken)).send(big);
+    expect(res.status).not.toBe(413);
+  });
+});
+
 describe("Cervelle — profiles and child sign-in", () => {
   it("lets a parent create a child, and the child sign in with a one-time code", async () => {
     const { auth, learnerId } = await parentWithChild();

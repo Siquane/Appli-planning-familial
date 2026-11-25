@@ -30,7 +30,7 @@ function TaskRow({ task, members, showDate }: { task: Task; members: Member[]; s
           <Text size={15} weight="medium" numberOfLines={1}>
             {task.title}
           </Text>
-          <Text size={11} tone="faint" numberOfLines={1}>
+          <Text size={12} tone="faint" numberOfLines={1}>
             {when} · {task.category}
             {names.length ? ` · ${names.join(", ")}` : ""}
           </Text>

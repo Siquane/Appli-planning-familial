@@ -1,3 +1,4 @@
+import { weekKey } from "../lib/stars";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi, notesApi, pocketMoneyApi, splitsApi } from "../api/resources";
 import type { NoteInput, MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskDoneMark, TaskInput, Tint, Weekday } from "../api/types";
@@ -9,6 +10,9 @@ import { offlineExpenses, offlineMeals, offlineShopping, offlineTasks } from "..
 
 // Planning data is shared with the other accounts of the family: look for their changes every minute while the app is open.
 const SHARED_REFRESH_MS = 60_000;
+// Ce qui change moins souvent pendant qu'on regarde : toutes les 5 minutes
+// (moins de batterie, de données mobiles et de quota gratuit pour la base).
+const SLOW_REFRESH_MS = 5 * 60_000;
 // Les recettes changent rarement et la liste peut être longue : moins souvent.
 const RECIPES_REFRESH_MS = 5 * 60_000;
 
@@ -18,7 +22,7 @@ function useEnabled() {
 
 export function useMembers() {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["members"], queryFn: () => membersApi.list().then((r) => r.members), enabled, refetchInterval: SHARED_REFRESH_MS });
+  return useQuery({ queryKey: ["members"], queryFn: () => membersApi.list().then((r) => r.members), enabled, refetchInterval: SLOW_REFRESH_MS });
 }
 
 export function useCreateMember() {
@@ -96,9 +100,10 @@ export function useDeleteRecipe() {
   });
 }
 
-export function useMeals() {
+/** Le menu d'une semaine (son lundi) ; par défaut la semaine en cours. */
+export function useMeals(week: string = weekKey()) {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["meals"], queryFn: () => mealsApi.list().then((r) => r.meals), enabled, refetchInterval: SHARED_REFRESH_MS });
+  return useQuery({ queryKey: ["meals", week], queryFn: () => mealsApi.list(week).then((r) => r.meals), enabled, refetchInterval: SLOW_REFRESH_MS });
 }
 
 export function useSetMeal() {
@@ -183,7 +188,7 @@ export function useBudgetReport(months = 6, enabled = true) {
 export function useSaveMeals() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (meals: MealInput[]) => mealsApi.saveMany(meals),
+    mutationFn: ({ week, meals }: { week: string; meals: MealInput[] }) => mealsApi.saveMany(week, meals),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["meals"] }),
   });
 }
@@ -369,7 +374,7 @@ export function useDeleteShoppingItem() {
 
 export function useShoppingFromMenu() {
   const qc = useQueryClient();
-  return useMutation({ mutationFn: () => shoppingApi.fromMenu(), onSuccess: (r) => qc.setQueryData(["shopping"], r.items) });
+  return useMutation({ mutationFn: (week: string) => shoppingApi.fromMenu(week), onSuccess: (r) => qc.setQueryData(["shopping"], r.items) });
 }
 
 export function useClearCheckedShopping() {
@@ -625,7 +630,7 @@ export const useDeclineRewardRequest = () => useStarsMutation((d: { id: string; 
 // Notes (Famille + Perso), partagées entre les comptes : rafraîchies comme les autres listes partagées.
 export function useNotes() {
   const enabled = useEnabled();
-  return useQuery({ queryKey: ["notes"], queryFn: () => notesApi.list().then((r) => r.notes), enabled, refetchInterval: SHARED_REFRESH_MS });
+  return useQuery({ queryKey: ["notes"], queryFn: () => notesApi.list().then((r) => r.notes), enabled, refetchInterval: SLOW_REFRESH_MS });
 }
 
 function useNotesMutation<T, R>(fn: (input: T) => Promise<R>) {
@@ -679,7 +684,7 @@ export function useSplitGroups() {
   const enabled = useEnabled();
   // Les comptes partagés sont ceux des adultes (un compte enfant n'y a pas accès).
   const isChild = useIsChildAccount();
-  return useQuery({ queryKey: ["splits"], queryFn: () => splitsApi.list().then((r) => r.groups), enabled: enabled && !isChild, refetchInterval: SHARED_REFRESH_MS });
+  return useQuery({ queryKey: ["splits"], queryFn: () => splitsApi.list().then((r) => r.groups), enabled: enabled && !isChild, refetchInterval: SLOW_REFRESH_MS });
 }
 
 export function useSplitGroup(id: string | undefined) {

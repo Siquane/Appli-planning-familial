@@ -4,17 +4,11 @@ import { app } from "../../src/index";
 import { authHeader, signup } from "../helpers";
 
 describe("share", () => {
-  it("creates a share link idempotently and lists shared people", async () => {
+  it("lists shared people, without the old family-wide link", async () => {
     const { accessToken } = await signup(app);
-    const auth = authHeader(accessToken);
-
-    const first = await request(app).get("/share").set(auth);
-    expect(first.status).toBe(200);
-    expect(typeof first.body.shareToken).toBe("string");
-    expect(first.body.sharedWith).toEqual([]);
-
-    const second = await request(app).get("/share").set(auth);
-    expect(second.body.shareToken).toBe(first.body.shareToken);
+    const res = await request(app).get("/share").set(authHeader(accessToken));
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ sharedWith: [] });
   });
 
   it("invites and removes a shared person", async () => {
@@ -35,24 +29,8 @@ describe("share", () => {
     expect(listAfter.body.sharedWith).toHaveLength(0);
   });
 
-  it("exposes only synced tasks on the public token endpoint", async () => {
-    const { accessToken } = await signup(app);
-    const auth = authHeader(accessToken);
-    const shareRes = await request(app).get("/share").set(auth);
-    const token = shareRes.body.shareToken;
-
-    await request(app).post("/tasks").set(auth).send({ title: "Privée", category: "Maison", weekday: 0, time: "08:00", synced: false });
-    await request(app).post("/tasks").set(auth).send({ title: "Synchronisée", category: "Maison", weekday: 0, time: "09:00", synced: true });
-
-    const publicView = await request(app).get(`/share/public/${token}`);
-    expect(publicView.status).toBe(200);
-    expect(publicView.body.tasks).toHaveLength(1);
-    expect(publicView.body.tasks[0].title).toBe("Synchronisée");
-  });
-
-  it("404s on an invalid share token", async () => {
-    const res = await request(app).get("/share/public/not-a-real-token");
-    expect(res.status).toBe(404);
+  it("no longer serves the old family-wide public page", async () => {
+    expect((await request(app).get("/share/public/anything")).status).toBe(404);
   });
 });
 

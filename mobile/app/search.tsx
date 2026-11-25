@@ -121,7 +121,7 @@ function Row({ icon, title, subtitle, onPress }: { icon: React.ReactNode; title:
             {title}
           </Text>
           {subtitle ? (
-            <Text size={11} tone="faint">
+            <Text size={12} tone="faint">
               {subtitle}
             </Text>
           ) : null}

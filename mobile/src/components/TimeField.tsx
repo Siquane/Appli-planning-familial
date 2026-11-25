@@ -83,8 +83,9 @@ export function TimeField({ label, value, onChange }: Props) {
 
       {Platform.OS === "ios" && (
         <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
-          <Pressable style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }} onPress={() => setOpen(false)}>
+          <Pressable style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }} onPress={() => setOpen(false)} accessibilityLabel="Fermer">
             <Pressable
+              accessible={false}
               style={{ backgroundColor: color.surface, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, padding: space.md }}
               onPress={(e) => e.stopPropagation()}
             >

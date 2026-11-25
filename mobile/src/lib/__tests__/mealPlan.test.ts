@@ -1,7 +1,7 @@
 import type { Meal } from "../../api/types";
 import { buildSlots, countFilled } from "../mealPlan";
 
-const meal = (weekday: Meal["weekday"], type: Meal["type"], title = "Plat"): Meal => ({ id: `${weekday}${type}`, weekday, type, title, recipeId: null, notes: "", ingredients: [] });
+const meal = (weekday: Meal["weekday"], type: Meal["type"], title = "Plat"): Meal => ({ id: `${weekday}${type}`, week: "2026-11-23", weekday, type, title, recipeId: null, notes: "", ingredients: [] });
 
 describe("buildSlots", () => {
   const meals = [meal(0, "dîner"), meal(1, "déjeuner", "")];

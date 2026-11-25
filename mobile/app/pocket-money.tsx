@@ -113,7 +113,7 @@ export default function PocketMoneyScreen() {
               Reçu {formatEuros(data.receivedCents)} · Dépensé {formatEuros(data.spentCents)}
             </Text>
             {data.rule && (
-              <Text size={11} tone="faint" center>
+              <Text size={12} tone="faint" center>
                 {ruleLabel(data.rule)} · {nextLabel(data.rule)}
               </Text>
             )}
@@ -145,7 +145,7 @@ export default function PocketMoneyScreen() {
             )}
             <Button label={data?.rule ? "Enregistrer" : "Mettre en place"} variant="primary" block disabled={!amountCents} loading={setRule.isPending} needsNetwork onPress={onSaveRule} />
             {data?.rule && <Button label="Arrêter l'argent de poche" variant="ghost" block onPress={onStop} needsNetwork />}
-            <Text size={11} tone="faint">
+            <Text size={12} tone="faint">
               {childName ?? "L'enfant"} reçoit une notification sur son téléphone le jour du versement. Pense à lui donner l'argent en vrai !
             </Text>
           </View>
@@ -195,7 +195,7 @@ export default function PocketMoneyScreen() {
             </Card>
           )}
           {canEdit && (data?.credits.length ?? 0) > 0 && (
-            <Text size={11} tone="faint">
+            <Text size={12} tone="faint">
               Appui long sur un versement pour le retirer.
             </Text>
           )}

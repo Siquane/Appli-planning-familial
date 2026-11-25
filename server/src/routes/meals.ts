@@ -6,15 +6,26 @@ import type { Meal } from "@prisma/client";
 import { isMealAiConfigured } from "../env";
 import { COOK_TIMES, DIETS, MealPlannerError, RECIPE_USAGE, anonymizeMembers, proposeMeals } from "../services/mealPlanner";
 import { getMealQuota, quotaProblem } from "../lib/plan";
+import { addDays, mondayOf, parisDay } from "../lib/cervelle/days";
+import { isMondayKey } from "../lib/stars";
 
 export const mealsRouter = Router();
 mealsRouter.use(requireAuth);
 
 const MEAL_TYPES = ["petit-déjeuner", "déjeuner", "goûter", "dîner"] as const;
 
+// Chaque semaine a son propre menu, rangé sous son lundi (« AAAA-MM-JJ »).
+// Sans semaine précisée (anciennes versions de l'appli) : la semaine en cours.
+const weekKey = z.string().refine(isMondayKey, "Semaine invalide");
+const currentWeek = () => mondayOf(parisDay());
+const weekFrom = (value: unknown) => (typeof value === "string" && isMondayKey(value) ? value : currentWeek());
+/** Semaines voisines dont on évite de répéter les plats : deux avant, deux après. */
+const NEIGHBOUR_WEEKS = 2;
+
 function serializeMeal(meal: Meal) {
   return {
     id: meal.id,
+    week: meal.week,
     weekday: meal.weekday,
     type: meal.type,
     title: meal.title,
@@ -25,11 +36,12 @@ function serializeMeal(meal: Meal) {
 }
 
 mealsRouter.get("/", async (req, res) => {
-  const meals = await prisma.meal.findMany({ where: { userId: req.userId }, orderBy: [{ weekday: "asc" }] });
+  const meals = await prisma.meal.findMany({ where: { userId: req.userId, week: weekFrom(req.query.week) }, orderBy: [{ weekday: "asc" }] });
   res.json({ meals: meals.map(serializeMeal) });
 });
 
 const mealSchema = z.object({
+  week: weekKey.optional(),
   weekday: z.number().int().min(0).max(6),
   type: z.enum(MEAL_TYPES),
   title: z.string().default(""),
@@ -52,14 +64,15 @@ mealsRouter.post("/", async (req, res) => {
 
   // Without a new list, ingredients follow the dish: kept while its title is
   // unchanged (only the notes were edited), dropped when it becomes another dish.
-  const slot = { userId_weekday_type: { userId: req.userId!, weekday: d.weekday, type: d.type } };
+  const week = d.week ?? currentWeek();
+  const slot = { userId_week_weekday_type: { userId: req.userId!, week, weekday: d.weekday, type: d.type } };
   const current = d.ingredients ? null : await prisma.meal.findUnique({ where: slot, select: { title: true, ingredients: true } });
   const ingredients = d.ingredients ?? (current && current.title === d.title ? current.ingredients : []);
 
   const meal = await prisma.meal.upsert({
     where: slot,
     update: { title: d.title, recipeId: d.recipeId ?? null, notes: d.notes, ingredients },
-    create: { userId: req.userId!, weekday: d.weekday, type: d.type, title: d.title, recipeId: d.recipeId ?? null, notes: d.notes, ingredients },
+    create: { userId: req.userId!, week, weekday: d.weekday, type: d.type, title: d.title, recipeId: d.recipeId ?? null, notes: d.notes, ingredients },
   });
   res.status(201).json({ meal: serializeMeal(meal) });
 });
@@ -74,6 +87,7 @@ mealsRouter.delete("/:id", async (req, res) => {
 const slotSchema = z.object({ weekday: z.number().int().min(0).max(6), type: z.enum(MEAL_TYPES) });
 
 const generateSchema = z.object({
+  week: weekKey.optional(),
   slots: z.array(slotSchema).min(1, "Choisis au moins un repas à remplir").max(28),
   preferences: z.object({
     diets: z.array(z.enum(DIETS)).default([]),
@@ -104,6 +118,7 @@ mealsRouter.post("/generate", async (req, res) => {
   const parsed = generateSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const { slots, preferences, exclude, kind } = parsed.data;
+  const week = parsed.data.week ?? currentWeek();
   if (kind === "reroll" && slots.length !== 1) return res.status(400).json({ error: "« Autre idée » porte sur un seul repas" });
 
   const quota = await getMealQuota(req.userId!);
@@ -119,17 +134,25 @@ mealsRouter.post("/generate", async (req, res) => {
       orderBy: { order: "asc" },
     }),
     prisma.user.findUnique({ where: { id: req.userId }, select: { foodHealthConsentAt: true } }),
-    prisma.meal.findMany({ where: { userId: req.userId }, include: { recipe: { select: { title: true } } } }),
+    prisma.meal.findMany({
+      where: { userId: req.userId, week: { gte: addDays(week, -7 * NEIGHBOUR_WEEKS), lte: addDays(week, 7 * NEIGHBOUR_WEEKS) } },
+      include: { recipe: { select: { title: true } } },
+    }),
   ]);
   const requested = new Set(slots.map((s) => `${s.weekday}|${s.type}`));
   const keptMeals = meals
-    .filter((m) => !requested.has(`${m.weekday}|${m.type}`))
+    .filter((m) => m.week === week && !requested.has(`${m.weekday}|${m.type}`))
     .map((m) => ({ weekday: m.weekday, type: m.type, title: m.recipe?.title ?? m.title }))
     .filter((m) => m.title);
 
   try {
     const members = anonymizeMembers(storedMembers, !!user?.foodHealthConsentAt);
-    const proposal = await proposeMeals({ slots, preferences, recipes, members, keptMeals, exclude });
+    // Pas les mêmes plats d'une semaine à l'autre : ceux des semaines voisines sont à éviter.
+    const recent = meals
+      .filter((m) => m.week !== week)
+      .map((m) => m.recipe?.title ?? m.title)
+      .filter((t) => t.trim());
+    const proposal = await proposeMeals({ slots, preferences, recipes, members, keptMeals, exclude, recent });
     // Only successful generations count against the quota.
     await prisma.mealGeneration.create({ data: { userId: req.userId!, kind } });
     res.json({ meals: proposal, quota: await getMealQuota(req.userId!) });
@@ -139,13 +162,13 @@ mealsRouter.post("/generate", async (req, res) => {
   }
 });
 
-const bulkSchema = z.object({ meals: z.array(mealSchema).min(1).max(28) });
+const bulkSchema = z.object({ week: weekKey.optional(), meals: z.array(mealSchema).min(1).max(28) });
 
 // Saves an accepted proposal in one go (same upsert-per-slot rule as POST /).
 mealsRouter.post("/bulk", async (req, res) => {
   const parsed = bulkSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
-  const items = parsed.data.meals;
+  const items = parsed.data.meals.map((m) => ({ ...m, week: m.week ?? parsed.data.week ?? currentWeek() }));
 
   const recipeIds = [...new Set(items.map((m) => m.recipeId).filter((id): id is string => !!id))];
   if (recipeIds.length) {
@@ -156,9 +179,9 @@ mealsRouter.post("/bulk", async (req, res) => {
   const saved = await prisma.$transaction(
     items.map((d) =>
       prisma.meal.upsert({
-        where: { userId_weekday_type: { userId: req.userId!, weekday: d.weekday, type: d.type } },
+        where: { userId_week_weekday_type: { userId: req.userId!, week: d.week, weekday: d.weekday, type: d.type } },
         update: { title: d.title, recipeId: d.recipeId ?? null, notes: d.notes, ingredients: d.ingredients ?? [] },
-        create: { userId: req.userId!, weekday: d.weekday, type: d.type, title: d.title, recipeId: d.recipeId ?? null, notes: d.notes, ingredients: d.ingredients ?? [] },
+        create: { userId: req.userId!, week: d.week, weekday: d.weekday, type: d.type, title: d.title, recipeId: d.recipeId ?? null, notes: d.notes, ingredients: d.ingredients ?? [] },
       }),
     ),
   );

@@ -93,18 +93,18 @@ export const shoppingApi = {
   add: (label: string) => api.post<{ item: ShoppingItem }>("/shopping", { label }),
   update: (id: string, data: Partial<Pick<ShoppingItem, "label" | "checked">>) => api.patch<{ item: ShoppingItem }>(`/shopping/${id}`, data),
   remove: (id: string) => api.delete<void>(`/shopping/${id}`),
-  fromMenu: () => api.post<{ added: number; withoutIngredients: number; items: ShoppingItem[] }>("/shopping/from-menu"),
+  fromMenu: (week: string) => api.post<{ added: number; withoutIngredients: number; items: ShoppingItem[] }>("/shopping/from-menu", { week }),
   clearChecked: () => api.delete<{ removed: number; items: ShoppingItem[] }>("/shopping/checked"),
 };
 
 export const mealsApi = {
-  list: () => api.get<{ meals: Meal[] }>("/meals"),
+  list: (week: string) => api.get<{ meals: Meal[] }>(`/meals?week=${week}`),
   set: (data: MealInput) => api.post<{ meal: Meal }>("/meals", data),
   remove: (id: string) => api.delete<void>(`/meals/${id}`),
   /** Asks the server (Claude) for suggestions — nothing is saved. */
-  generate: (data: { slots: MealSlot[]; preferences: MealPlanPreferences; exclude?: string[]; kind: "week" | "reroll" }) =>
+  generate: (data: { week: string; slots: MealSlot[]; preferences: MealPlanPreferences; exclude?: string[]; kind: "week" | "reroll" }) =>
     api.post<{ meals: ProposedMeal[]; quota: MealQuota }>("/meals/generate", data),
-  saveMany: (meals: MealInput[]) => api.post<{ meals: Meal[] }>("/meals/bulk", { meals }),
+  saveMany: (week: string, meals: MealInput[]) => api.post<{ meals: Meal[] }>("/meals/bulk", { week, meals }),
 };
 
 export const familyApi = {
@@ -239,7 +239,7 @@ export const notesApi = {
 };
 
 export const shareApi = {
-  get: () => api.get<{ shareToken: string; sharedWith: SharedPerson[] }>("/share"),
+  get: () => api.get<{ sharedWith: SharedPerson[] }>("/share"),
   invite: (data: { name: string; role?: string }) => api.post<{ person: SharedPerson }>("/share/people", data),
   remove: (id: string) => api.delete<void>(`/share/people/${id}`),
   /** Un lien par membre : la page web de sa semaine. */

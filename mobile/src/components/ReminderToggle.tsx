@@ -33,7 +33,7 @@ export function ReminderToggle({ value, onChange }: Props) {
           <Text size={15} weight="medium">
             Rappel
           </Text>
-          <Text size={11} tone={value ? "accent" : "faint"}>
+          <Text size={12} tone={value ? "accent" : "faint"}>
             {value ? "Activé : une notification avant la tâche" : "Recevoir une notification avant la tâche"}
           </Text>
         </View>

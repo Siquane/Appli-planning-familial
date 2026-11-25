@@ -120,6 +120,8 @@ model RefreshToken {
   tokenHash String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // tint: 'accent' | 'neutral' | 'accent2' — matches the Nocturne avatar tint roles
@@ -160,6 +162,8 @@ model FamilyMember {
   rewardRequests    RewardRequest[]
   learners          Learner[]
   splitParticipants SplitParticipant[]
+
+  @@index([userId])
 }
 
 // priority: 'high' | 'medium' | 'low'
@@ -229,6 +233,8 @@ model Recipe {
   members   RecipeMember[]
   meals     Meal[]
   documents Document[]
+
+  @@index([userId])
 }
 
 model RecipeMember {
@@ -247,6 +253,8 @@ model Meal {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Lundi de la semaine du repas, « AAAA-MM-JJ » : chaque semaine a son menu.
+  week        String
   weekday     Int
   type        String
   title       String   @default("")
@@ -259,7 +267,7 @@ model Meal {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@unique([userId, weekday, type])
+  @@unique([userId, week, weekday, type])
 }
 
 // A file kept in object storage (Cloudflare R2 or S3 — see lib/storage.ts).
@@ -324,6 +332,8 @@ model ExpenseCategory {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // The code an owner gives to someone joining the family. One live code per
@@ -385,6 +395,8 @@ model RecurringExpense {
 
   expenses Expense[]
   runs     RecurringRun[]
+
+  @@index([userId])
 }
 
 // Marks a month as already generated for a RecurringExpense, so deleting that
@@ -431,6 +443,8 @@ model Notification {
   title     String
   unread    Boolean  @default(true)
   createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model ShareLink {
@@ -446,6 +460,8 @@ model SharedPerson {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   name   String
   role   String @default("Invité")
+
+  @@index([userId])
 }
 
 // provider: 'google' | 'outlook' | 'apple'
@@ -491,6 +507,8 @@ model SavingsGoal {
   updatedAt   DateTime  @updatedAt
 
   expenses Expense[]
+
+  @@index([userId])
 }
 
 // Premium: a cap alert already raised, so each level (80 / 100 %) fires once

@@ -71,7 +71,7 @@ export default function DebitsScreen() {
         {data && (
           <View style={{ flexDirection: "row", gap: space.sm }}>
             <Card style={{ flex: 1, gap: space.xs }}>
-              <Text size={11} tone="faint">
+              <Text size={12} tone="faint">
                 Déjà passé
               </Text>
               <Text size={17} weight="semibold" mono>
@@ -79,7 +79,7 @@ export default function DebitsScreen() {
               </Text>
             </Card>
             <Card style={{ flex: 1, gap: space.xs, borderWidth: 1, borderColor: color.pillar3 }}>
-              <Text size={11} tone="faint">
+              <Text size={12} tone="faint">
                 À venir
               </Text>
               <Text size={17} weight="semibold" mono>
@@ -112,7 +112,7 @@ export default function DebitsScreen() {
                     <Text size={15} numberOfLines={1}>
                       {d.label}
                     </Text>
-                    <Text size={11} tone="faint">
+                    <Text size={12} tone="faint">
                       {categoryLabel(options, d.category)}
                       {d.passed ? " · passé" : ""}
                     </Text>

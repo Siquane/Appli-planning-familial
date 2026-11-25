@@ -63,6 +63,15 @@ describe("POST /auth/refresh", () => {
     expect(second.status).toBe(200);
   });
 
+  it("answers 401, not 500, to the loser of two simultaneous refreshes", async () => {
+    const { refreshToken } = await signup(app);
+    const [a, b] = await Promise.all([
+      request(app).post("/auth/refresh").send({ refreshToken }),
+      request(app).post("/auth/refresh").send({ refreshToken }),
+    ]);
+    expect([a.status, b.status].sort()).toEqual([200, 401]);
+  });
+
   it("rejects a bogus refresh token", async () => {
     const res = await request(app).post("/auth/refresh").send({ refreshToken: "not-a-real-token" });
     expect(res.status).toBe(401);

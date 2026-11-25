@@ -120,7 +120,7 @@ export default function TaskDetailScreen() {
               {assigned.map((m) => (
                 <View key={m.id} style={{ alignItems: "center", gap: space.xs }}>
                   <Avatar initials={m.initials} bg={m.tint === "neutral" ? color.neutral700 : color.accent800} fg={m.tint === "neutral" ? color.neutral100 : color.accent100} size={32} />
-                  <Text size={11} tone="muted">
+                  <Text size={12} tone="muted">
                     {m.name}
                   </Text>
                 </View>

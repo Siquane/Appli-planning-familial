@@ -185,12 +185,12 @@ export default function ProfileScreen() {
                 <View style={{ flex: 1 }}>
                   <Text size={13}>{p.label}</Text>
                   {connection?.email && (
-                    <Text size={11} tone="faint">
+                    <Text size={12} tone="faint">
                       {connection.email}
                     </Text>
                   )}
                   {unavailable && (
-                    <Text size={11} tone="faint">
+                    <Text size={12} tone="faint">
                       Bientôt disponible
                     </Text>
                   )}
@@ -223,7 +223,7 @@ export default function ProfileScreen() {
           <Text size={15} style={{ flex: 1, marginLeft: space.sm }}>
             Mes horaires
           </Text>
-          <Text size={11} tone="faint" style={{ marginRight: space.sm }}>
+          <Text size={12} tone="faint" style={{ marginRight: space.sm }}>
             {workSummary(constraints?.work) ?? "Travail, sommeil, déjeuner"}
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />

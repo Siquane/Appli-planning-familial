@@ -70,7 +70,7 @@ function NoteCard({ note }: { note: Note }) {
             {note.pinned ? "📌 " : ""}
             {noteHeading(note)}
           </Text>
-          <Text size={11} tone="faint">
+          <Text size={12} tone="faint">
             {who}
           </Text>
         </View>

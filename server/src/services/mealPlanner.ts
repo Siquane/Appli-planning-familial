@@ -49,6 +49,8 @@ export interface PlannerContext {
   keptMeals: { weekday: number; type: string; title: string }[];
   /** Dishes the user just rejected or already sees elsewhere in the proposal. */
   exclude: string[];
+  /** Dishes of the weeks around this one (two before, two after): not again so soon. */
+  recent?: string[];
 }
 
 /** A family member as Claude sees it: a label instead of the name. */
@@ -170,6 +172,17 @@ function describePreferences(p: PlannerPreferences): string {
   return lines.join("\n");
 }
 
+/** Plats des semaines voisines : à ne pas reproposer (sauf recettes de la famille demandées « souvent »). */
+function recentBlock(ctx: PlannerContext): string {
+  const recent = [...new Set((ctx.recent ?? []).map((t) => t.trim()).filter(Boolean))].slice(0, 80);
+  if (recent.length === 0) return "";
+  const rule =
+    ctx.preferences.useMyRecipes === "souvent"
+      ? "Ne repropose pas ces plats, sauf une recette de la famille si elle colle vraiment (au plus une fois)."
+      : "Ne repropose pas ces plats : la famille vient de les manger ou les a déjà prévus.";
+  return `\n<menus_des_semaines_voisines>\n${rule}\n${recent.map((t) => `- ${t}`).join("\n")}\n</menus_des_semaines_voisines>\n`;
+}
+
 export function buildUserPrompt(ctx: PlannerContext): string {
   const family = ctx.members.length ? `\n${ctx.members.map(describeMember).join("\n")}\n` : "non renseignée";
   const recipes =
@@ -194,7 +207,7 @@ ${recipes}
 <deja_prevus>
 ${kept}
 </deja_prevus>
-${ctx.exclude.length ? `\n<a_exclure>\n${ctx.exclude.map((t) => `- ${t}`).join("\n")}\n</a_exclure>\n` : ""}
+${ctx.exclude.length ? `\n<a_exclure>\n${ctx.exclude.map((t) => `- ${t}`).join("\n")}\n</a_exclure>\n` : ""}${recentBlock(ctx)}
 Propose un plat pour chacun de ces créneaux :
 ${slots}`;
 }

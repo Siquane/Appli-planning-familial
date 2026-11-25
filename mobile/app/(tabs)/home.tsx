@@ -10,12 +10,13 @@ import { Text } from "../../src/components/Text";
 import { Card } from "../../src/components/Card";
 import { Button } from "../../src/components/Button";
 import { WeekStrip } from "../../src/components/WeekStrip";
+import { WeekNav } from "../../src/components/WeekNav";
 import { TaskCard } from "../../src/components/TaskCard";
 import { TabHeader } from "../../src/components/PageHeader";
 import { TodayCard } from "../../src/components/TodayCard";
 import { CervelleQuizCard } from "../../src/components/CervelleQuizCard";
-import { ChevronLeftIcon, ChevronRightIcon, RecurringIcon, ReshuffleIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
-import { shiftWeek, shortDate, tasksOn, weekRange, weekTitle } from "../../src/lib/appointments";
+import { ChevronRightIcon, RecurringIcon, ReshuffleIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
+import { shiftWeek, shortDate, tasksOn } from "../../src/lib/appointments";
 import { useMembers, useTaskDone, useTasks, useToggleTaskDone } from "../../src/hooks/useApi";
 import { DayRing, EmptyState } from "../../src/components/Playful";
 import { useToastStore } from "../../src/state/toastStore";
@@ -107,22 +108,7 @@ export default function HomeScreen() {
       <CervelleQuizCard />
 
       <View style={{ gap: space.sm }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
-          <Pressable onPress={() => goToWeek(weekOffset - 1)} accessibilityRole="button" accessibilityLabel="Semaine précédente" hitSlop={10} style={{ padding: space.xs }}>
-            <ChevronLeftIcon size={18} color={color.neutral400} />
-          </Pressable>
-          <View style={{ flex: 1, alignItems: "center" }}>
-            <Text weight="medium" size={15}>
-              {weekTitle(week, currentWeek)}
-            </Text>
-            <Text size={11} tone="faint">
-              {weekRange(week)}
-            </Text>
-          </View>
-          <Pressable onPress={() => goToWeek(weekOffset + 1)} accessibilityRole="button" accessibilityLabel="Semaine suivante" hitSlop={10} style={{ padding: space.xs }}>
-            <ChevronRightIcon size={18} color={color.neutral400} />
-          </Pressable>
-        </View>
+        <WeekNav week={week} current={currentWeek} onPrev={() => goToWeek(weekOffset - 1)} onNext={() => goToWeek(weekOffset + 1)} />
         <WeekStrip selected={selected} onSelect={setSelected} today={isCurrentWeek ? today : null} week={week} />
         {members.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.xs }}>
@@ -153,7 +139,7 @@ export default function HomeScreen() {
           <Text size={15} weight="medium" style={{ flex: 1, marginLeft: space.sm }}>
             Toutes les tâches
           </Text>
-          <Text size={11} tone="faint" style={{ marginRight: space.sm }}>
+          <Text size={12} tone="faint" style={{ marginRight: space.sm }}>
             {tasks.length}
           </Text>
           <ChevronRightIcon size={14} color={color.neutral500} />

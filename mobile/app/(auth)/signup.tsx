@@ -104,7 +104,7 @@ export default function SignupScreen() {
                 J'ai un code famille
               </Text>
             </Pressable>
-            <Text tone="faint" size={11}>
+            <Text tone="faint" size={12}>
               Sans code, tu crées ta propre famille.
             </Text>
           </View>

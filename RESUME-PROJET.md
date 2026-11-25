@@ -420,3 +420,26 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 - Sur le Planning, les tâches École et Travail (rendez-vous compris) n'ont plus de rond « fait » : un cartable ou une mallette à la couleur de la catégorie à la place. L'anneau du jour ne compte que les tâches à cocher et n'apparaît pas s'il n'y en a aucune.
 - `isCheckable` dans `mobile/src/lib/planningFilter.ts` ; le serveur refuse `PUT /tasks/:id/done` pour ces catégories (400).
 - Publication des mises à jour sans GitHub Actions : depuis une session Claude, jeton Expo en « Network secret » (api.expo.dev) de l'environnement « Passerelle et Cervelle », puis `eas update --channel preview --environment preview --platform android` (après `eas init --force` + `node scripts/configure-updates.js`, sans committer app.json).
+
+## Audit du 25/11/2026 — lot 1 (sécurité serveur)
+
+- Rapport : https://claude.ai/artifact/4wumq59boxiCt4mnuVrXRV
+- L'« Espace de l'enfant » (en-tête `X-Child-Space`) est réservé aux comptes propriétaire et accès complet ; un accès « planning » reçoit 403 `child_space_forbidden`.
+- `compression` 1.8.2 (faille de fuite mémoire corrigée).
+- `/cervelle` : le corps de 40 Mo n'est lu que pour un appelant identifié (`middleware/cervelleBody.ts`), sinon 100 ko. Les erreurs de lecture du corps répondent 413/400 au lieu de 500.
+- Ancien lien de partage « toute la famille » (`/share/public/:token`) supprimé ; `GET /share` ne renvoie plus que `sharedWith`. Restent les liens par membre (révocables).
+- `/auth/refresh` : deux renouvellements simultanés → 200 et 401 (plus de 500). Codes à 6 chiffres : l'essai est compté avant la vérification.
+- Migration `20261125090000_user_indexes` : index `userId` sur 8 tables.
+
+## Un menu par semaine (25/11/2026)
+
+- `Meal.week` (lundi « AAAA-MM-JJ ») : chaque semaine a son propre menu (unique `userId, week, weekday, type`). Migration `20261125170000_weekly_meals` : les menus existants deviennent ceux de la semaine en cours. Sans `week`, les routes prennent la semaine en cours (anciennes versions de l'appli).
+- `POST /meals/generate` (avec `week`) envoie à Claude les plats des 2 semaines d'avant et d'après (`recent`, bloc `<menus_des_semaines_voisines>`) pour ne pas les reproposer ; seule exception, une recette de la famille si « utiliser mes recettes » = souvent.
+- Appli : flèches ‹ › dans Repas → Menu (`src/state/menuWeekStore.ts`, composant `WeekNav` partagé avec le Planning). Semaine vide : bouton « Proposer les menus de la semaine ». La proposition, l'enregistrement et « Ajouter le menu … » aux courses suivent la semaine affichée.
+
+## Audit — lot 2 (confort de l'appli, 25/11/2026)
+
+- Textes d'aide passés de 11 à 12 dans les écrans (les composants compacts — carte de tâche, barre des jours, étiquettes, onglets — gardent 11).
+- Lecteurs d'écran : champs date/heure nommés (« Date : 25 nov. »), fonds de fenêtres = « Fermer », contenus de fenêtres non annoncés comme bouton. Le `Pressable` de `Touchable.tsx` annonce déjà « bouton » par défaut.
+- `src/api/client.ts` : délai max 1 min en lecture, 3 min en écriture (IA), puis message « hors connexion ».
+- Rafraîchissement auto : planning, coches et courses chaque minute ; membres, menus, notes et comptes partagés toutes les 5 minutes.

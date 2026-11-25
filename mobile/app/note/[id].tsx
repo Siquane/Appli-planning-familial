@@ -111,7 +111,7 @@ export default function NoteScreen() {
             <Chip label="Famille" selected={shared} onPress={() => setShared(true)} size="sm" fill />
             <Chip label="Perso" selected={!shared} onPress={() => canMakePersonal && setShared(false)} size="sm" fill />
           </View>
-          <Text size={11} tone="faint">
+          <Text size={12} tone="faint">
             {shared
               ? "Tous les comptes de la famille la voient et peuvent la modifier."
               : "Toi seul la vois."}
@@ -156,7 +156,7 @@ export default function NoteScreen() {
         >
           <View style={{ flex: 1 }}>
             <Text size={15}>Épingler en haut</Text>
-            <Text size={11} tone="faint">
+            <Text size={12} tone="faint">
               Les notes épinglées passent en premier, aussi sur le widget.
             </Text>
           </View>

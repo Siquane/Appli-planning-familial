@@ -159,13 +159,14 @@ authRouter.post("/reset-password", loginLimiter, async (req, res) => {
   if (!user) return invalid();
 
   const stored = await prisma.passwordResetCode.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" } });
-  if (!stored || stored.expiresAt < new Date() || stored.attempts >= RESET_MAX_ATTEMPTS) return invalid();
+  if (!stored || stored.expiresAt < new Date()) return invalid();
+  // L'essai est compté avant la vérification : des essais envoyés en même temps
+  // ne passent pas au-delà de la limite.
+  const counted = await prisma.passwordResetCode.updateMany({ where: { id: stored.id, attempts: { lt: RESET_MAX_ATTEMPTS } }, data: { attempts: { increment: 1 } } });
+  if (counted.count === 0) return invalid();
 
   const matches = crypto.timingSafeEqual(Buffer.from(hashResetCode(code)), Buffer.from(stored.codeHash));
-  if (!matches) {
-    await prisma.passwordResetCode.update({ where: { id: stored.id }, data: { attempts: { increment: 1 } } });
-    return invalid();
-  }
+  if (!matches) return invalid();
 
   const passwordHash = await bcrypt.hash(password, 12);
   await prisma.$transaction([
@@ -226,12 +227,12 @@ authRouter.post("/email-code/verify", loginLimiter, async (req, res) => {
   const invalid = () => res.status(400).json({ error: "Ce code ne marche pas ou a expiré. Demande un nouveau code." });
 
   const stored = await prisma.emailLoginCode.findFirst({ where: { email }, orderBy: { createdAt: "desc" } });
-  if (!stored || stored.expiresAt < new Date() || stored.attempts >= LOGIN_MAX_ATTEMPTS) return invalid();
+  if (!stored || stored.expiresAt < new Date()) return invalid();
+  // Essai compté avant la vérification (voir reset-password).
+  const counted = await prisma.emailLoginCode.updateMany({ where: { id: stored.id, attempts: { lt: LOGIN_MAX_ATTEMPTS } }, data: { attempts: { increment: 1 } } });
+  if (counted.count === 0) return invalid();
   const matches = crypto.timingSafeEqual(Buffer.from(hashResetCode(parsed.data.code)), Buffer.from(stored.codeHash));
-  if (!matches) {
-    await prisma.emailLoginCode.update({ where: { id: stored.id }, data: { attempts: { increment: 1 } } });
-    return invalid();
-  }
+  if (!matches) return invalid();
 
   let user = await findUserByEmail(email);
   let created = false;
@@ -260,7 +261,10 @@ authRouter.post("/refresh", async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: stored.userId } });
   if (!user) return res.status(401).json({ error: "Invalid refresh token" });
 
-  await prisma.refreshToken.delete({ where: { id: stored.id } });
+  // Deux renouvellements simultanés (appli + widget) : un seul gagne, l'autre
+  // reçoit un refus normal plutôt qu'une erreur serveur.
+  const { count } = await prisma.refreshToken.deleteMany({ where: { id: stored.id } });
+  if (count === 0) return res.status(401).json({ error: "Invalid refresh token" });
   const tokens = await issueTokens(user.id, user.email);
   res.json({ user: publicUser(user), ...tokens });
 });

@@ -29,6 +29,7 @@ import { savingsGoalsRouter } from "./routes/savingsGoals";
 import { planRouter } from "./routes/plan";
 import { billingRouter } from "./routes/billing";
 import { cervelleRouter } from "./routes/cervelle";
+import { cervelleBody } from "./middleware/cervelleBody";
 import { grantLifetimePremium } from "./lib/lifetimePremium";
 
 export const app = express();
@@ -39,8 +40,9 @@ app.use(cors());
 // Gzip JSON answers: revisions, quizzes and plans are text that shrinks well on mobile data.
 app.use(compression());
 // Cervelle receives course photos in the request body (base64): its own,
-// larger limit, mounted before the global 100 kB JSON parser.
-app.use("/cervelle", express.json({ limit: "40mb" }), cervelleRouter);
+// larger limit for identified callers only, mounted before the global 100 kB
+// JSON parser.
+app.use("/cervelle", cervelleBody, cervelleRouter);
 app.use(express.json());
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
@@ -74,6 +76,10 @@ app.use("/billing", billingRouter);
 app.use((req, res) => res.status(404).json({ error: `No route for ${req.method} ${req.path}` }));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  // Erreurs de lecture du corps (trop gros, JSON illisible) : la faute de la demande, pas du serveur.
+  const status = typeof (err as { status?: unknown })?.status === "number" ? (err as { status: number }).status : 500;
+  if (status === 413) return res.status(413).json({ error: "Envoi trop volumineux." });
+  if (status >= 400 && status < 500) return res.status(status).json({ error: "Requête invalide" });
   console.error(err);
   res.status(500).json({ error: "Erreur serveur" });
 });
