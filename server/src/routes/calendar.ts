@@ -4,28 +4,54 @@ import { prisma } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { verifyAccessToken } from "../lib/jwt";
 import { familyIdOf } from "../lib/family";
+import { seal } from "../lib/secretBox";
 import { env, isGoogleConfigured, isMicrosoftConfigured } from "../env";
 import { exchangeGoogleCode, getGoogleAuthUrl } from "../services/googleCalendar";
 import { exchangeMicrosoftCode, getMicrosoftAuthUrl } from "../services/outlookCalendar";
 
 export const calendarRouter = Router();
 
-// In-memory CSRF-state -> userId map for the OAuth redirect round-trip
-// (short-lived; a browser redirect can't carry an Authorization header, so
-// the flow starts with the access token as a query param instead).
-const pendingStates = new Map<string, { userId: string; expiresAt: number }>();
-function issueState(userId: string): string {
-  const state = crypto.randomBytes(16).toString("hex");
-  pendingStates.set(state, { userId, expiresAt: Date.now() + 10 * 60_000 });
-  return state;
+// Connexion d'un agenda : le navigateur ne peut pas porter d'en-tête
+// Authorization. L'appli demande donc un ticket (POST /:provider/ticket, 2 min,
+// usage unique), l'ouvre dans le navigateur, puis le serveur garde un « état »
+// OAuth de 10 min en base jusqu'au retour de Google ou Microsoft.
+// (?token= reste accepté pour les versions de l'appli qui n'ont pas le ticket.)
+const TICKET_TTL_MS = 2 * 60_000;
+const STATE_TTL_MS = 10 * 60_000;
+const hash = (v: string) => crypto.createHash("sha256").update(v).digest("hex");
+
+async function issue(kind: "ticket" | "state", userId: string, ttlMs: number): Promise<string> {
+  await prisma.oAuthTicket.deleteMany({ where: { expiresAt: { lt: new Date() } } });
+  const value = crypto.randomBytes(24).toString("hex");
+  await prisma.oAuthTicket.create({ data: { kind, tokenHash: hash(value), userId, expiresAt: new Date(Date.now() + ttlMs) } });
+  return value;
 }
-function consumeState(state: string | undefined): string | null {
-  if (!state) return null;
-  const entry = pendingStates.get(state);
-  pendingStates.delete(state);
-  if (!entry || entry.expiresAt < Date.now()) return null;
-  return entry.userId;
+
+/** La famille liée à ce ticket ou état (consommé), ou null. */
+async function consume(kind: "ticket" | "state", value: string | undefined): Promise<string | null> {
+  if (!value) return null;
+  const row = await prisma.oAuthTicket.findUnique({ where: { tokenHash: hash(value) } });
+  if (!row) return null;
+  const { count } = await prisma.oAuthTicket.deleteMany({ where: { id: row.id } });
+  if (count === 0 || row.kind !== kind || row.expiresAt < new Date()) return null;
+  return row.userId;
 }
+
+/** La famille qui ouvre la connexion : par ticket, ou par l'ancien ?token=. */
+async function starter(query: Record<string, unknown>): Promise<string | null> {
+  if (typeof query.ticket === "string") return consume("ticket", query.ticket);
+  try {
+    return await familyIdOf(verifyAccessToken(String(query.token ?? "")).sub);
+  } catch {
+    return null;
+  }
+}
+
+calendarRouter.post("/:provider/ticket", requireAuth, async (req, res) => {
+  if (req.params.provider !== "google" && req.params.provider !== "microsoft") return res.status(404).json({ error: "Agenda inconnu" });
+  // The agenda connection belongs to the family, not to the one account that started it.
+  res.json({ ticket: await issue("ticket", req.userId!, TICKET_TTL_MS) });
+});
 
 calendarRouter.get("/status", requireAuth, async (req, res) => {
   const connections = await prisma.calendarConnection.findMany({ where: { userId: req.userId } });
@@ -62,25 +88,20 @@ function requireProviderConfigured(configured: boolean, name: string) {
 }
 
 calendarRouter.get("/google/start", requireProviderConfigured(isGoogleConfigured(), "Google Calendar"), async (req, res) => {
-  try {
-    // The agenda connection belongs to the family, not to the one account that started it.
-    const userId = await familyIdOf(verifyAccessToken(String(req.query.token ?? "")).sub);
-    const state = issueState(userId);
-    res.redirect(getGoogleAuthUrl(state));
-  } catch {
-    res.status(401).send("Jeton invalide ou expiré");
-  }
+  const userId = await starter(req.query);
+  if (!userId) return res.status(401).send("Lien expiré. Recommence depuis l'appli.");
+  res.redirect(getGoogleAuthUrl(await issue("state", userId, STATE_TTL_MS)));
 });
 
 calendarRouter.get("/google/callback", async (req, res) => {
-  const userId = consumeState(req.query.state as string | undefined);
+  const userId = await consume("state", typeof req.query.state === "string" ? req.query.state : undefined);
   if (!userId) return res.status(400).send("État invalide ou expiré");
   try {
     const { accessToken, refreshToken, expiresAt, email } = await exchangeGoogleCode(String(req.query.code));
     await prisma.calendarConnection.upsert({
       where: { userId_provider: { userId, provider: "google" } },
-      update: { accessToken, refreshToken, expiresAt, email },
-      create: { userId, provider: "google", accessToken, refreshToken, expiresAt, email },
+      update: { accessToken: seal(accessToken), refreshToken: seal(refreshToken), expiresAt, email },
+      create: { userId, provider: "google", accessToken: seal(accessToken), refreshToken: seal(refreshToken), expiresAt, email },
     });
     res.redirect(`${env.appDeepLink}?provider=google&status=connected`);
   } catch (e) {
@@ -90,25 +111,20 @@ calendarRouter.get("/google/callback", async (req, res) => {
 });
 
 calendarRouter.get("/microsoft/start", requireProviderConfigured(isMicrosoftConfigured(), "Outlook"), async (req, res) => {
-  try {
-    // The agenda connection belongs to the family, not to the one account that started it.
-    const userId = await familyIdOf(verifyAccessToken(String(req.query.token ?? "")).sub);
-    const state = issueState(userId);
-    res.redirect(await getMicrosoftAuthUrl(state));
-  } catch {
-    res.status(401).send("Jeton invalide ou expiré");
-  }
+  const userId = await starter(req.query);
+  if (!userId) return res.status(401).send("Lien expiré. Recommence depuis l'appli.");
+  res.redirect(await getMicrosoftAuthUrl(await issue("state", userId, STATE_TTL_MS)));
 });
 
 calendarRouter.get("/microsoft/callback", async (req, res) => {
-  const userId = consumeState(req.query.state as string | undefined);
+  const userId = await consume("state", typeof req.query.state === "string" ? req.query.state : undefined);
   if (!userId) return res.status(400).send("État invalide ou expiré");
   try {
     const { accessToken, refreshToken, expiresAt, email } = await exchangeMicrosoftCode(String(req.query.code));
     await prisma.calendarConnection.upsert({
       where: { userId_provider: { userId, provider: "outlook" } },
-      update: { accessToken, refreshToken, expiresAt, email },
-      create: { userId, provider: "outlook", accessToken, refreshToken, expiresAt, email },
+      update: { accessToken: seal(accessToken), refreshToken: seal(refreshToken), expiresAt, email },
+      create: { userId, provider: "outlook", accessToken: seal(accessToken), refreshToken: seal(refreshToken), expiresAt, email },
     });
     res.redirect(`${env.appDeepLink}?provider=outlook&status=connected`);
   } catch (e) {

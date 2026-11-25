@@ -36,6 +36,8 @@ model User {
   familyRole           String               @default("owner")
   // Compte « enfant » (moins de 15 ans) créé par un parent pour ce membre de la
   // famille : connexion par code, pas d'e-mail ni de mot de passe utilisables.
+  /// « Sorties & idées » : la ville pour la météo (compte de la famille).
+  outingCity           String?
   childMemberId        String?              @unique
   childMember          FamilyMember?        @relation("ChildAccount", fields: [childMemberId], references: [id], onDelete: Cascade)
   childLoginCodes      ChildLoginCode[]
@@ -1034,14 +1036,14 @@ model StarEvent {
 /// One card drawn for the album (src/lib/cervelle/cards.ts): the n-th card
 /// earned, which card it was, and the coins when it was already in the album.
 model CardDraw {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   learnerId String
-  learner   Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  learner   Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
   n         Int
   cardId    String
-  duplicate Boolean   @default(false)
-  coins     Int       @default(0)
-  createdAt DateTime  @default(now())
+  duplicate Boolean  @default(false)
+  coins     Int      @default(0)
+  createdAt DateTime @default(now())
 
   @@unique([learnerId, n])
 }
@@ -1362,4 +1364,20 @@ model SplitShare {
   amountCents   Int
 
   @@id([expenseId, participantId])
+}
+
+/// Connexion d'un agenda Google/Outlook : un ticket d'ouverture (2 min, usage
+/// unique, demandé par l'appli connectée) puis l'« état » OAuth (10 min) gardé
+/// en base, pour survivre à un redémarrage du serveur pendant l'autorisation.
+model OAuthTicket {
+  id        String   @id @default(cuid())
+  /// "ticket" ou "state".
+  kind      String
+  /// Empreinte SHA-256 de la valeur.
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
 }

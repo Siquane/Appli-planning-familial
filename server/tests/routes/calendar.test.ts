@@ -57,4 +57,13 @@ describe("calendar", () => {
     const microsoftStart = await request(app).get("/calendar/microsoft/start").query({ token: accessToken });
     expect(microsoftStart.status).toBe(503);
   });
+
+  it("hands out a one-time ticket to open the agenda connection, and refuses an unknown state", async () => {
+    const { accessToken } = await signup(app);
+    const res = await request(app).post("/calendar/google/ticket").set(authHeader(accessToken));
+    expect(res.status).toBe(200);
+    expect(res.body.ticket).toMatch(/^[0-9a-f]{48}$/);
+    expect((await request(app).post("/calendar/apple/ticket").set(authHeader(accessToken))).status).toBe(404);
+    expect((await request(app).get("/calendar/google/callback").query({ state: "inconnu", code: "x" })).status).toBe(400);
+  });
 });

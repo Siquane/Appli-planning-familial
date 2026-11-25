@@ -20,13 +20,21 @@ export async function syncUser(): Promise<void> {
   }
 }
 
+/** Ce qui confirme la suppression : le mot de passe, ou un code reçu par e-mail. */
+export type DeleteProof = { password: string } | { emailCode: string };
+
 /**
- * Delete the account and all its data (password confirms it). Signs out on
- * success so the app returns to the login screen with nothing cached.
+ * Delete the account and all its data (password or e-mail code confirms it).
+ * Signs out on success so the app returns to the login screen with nothing cached.
  */
-export async function deleteAccount(password: string, confirmFamily = false, heirId?: string): Promise<void> {
-  await api.delete<void>("/auth/me", { password, ...(confirmFamily ? { confirmFamily: true } : {}), ...(heirId ? { heirId } : {}) });
+export async function deleteAccount(proof: DeleteProof, confirmFamily = false, heirId?: string): Promise<void> {
+  await api.delete<void>("/auth/me", { ...proof, ...(confirmFamily ? { confirmFamily: true } : {}), ...(heirId ? { heirId } : {}) });
   await useAuthStore.getState().signOut();
+}
+
+/** Envoie un code à 6 chiffres à l'adresse du compte (pour un compte sans mot de passe). */
+export async function sendDeleteCode(email: string): Promise<void> {
+  await api.post<{ ok: boolean }>("/auth/email-code", { email, app: "passerelle" });
 }
 
 /**
