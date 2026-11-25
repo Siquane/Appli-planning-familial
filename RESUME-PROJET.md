@@ -433,6 +433,6 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 
 ## Un menu par semaine (25/11/2026)
 
-- `Meal.week` (lundi « AAAA-MM-JJ ») : chaque semaine a son propre menu (unique `userId, week, weekday, type`). Migration `20261125100000_weekly_meals` : les menus existants deviennent ceux de la semaine en cours. Sans `week`, les routes prennent la semaine en cours (anciennes versions de l'appli).
+- `Meal.week` (lundi « AAAA-MM-JJ ») : chaque semaine a son propre menu (unique `userId, week, weekday, type`). Migration `20261125170000_weekly_meals` : les menus existants deviennent ceux de la semaine en cours. Sans `week`, les routes prennent la semaine en cours (anciennes versions de l'appli).
 - `POST /meals/generate` (avec `week`) envoie à Claude les plats des 2 semaines d'avant et d'après (`recent`, bloc `<menus_des_semaines_voisines>`) pour ne pas les reproposer ; seule exception, une recette de la famille si « utiliser mes recettes » = souvent.
 - Appli : flèches ‹ › dans Repas → Menu (`src/state/menuWeekStore.ts`, composant `WeekNav` partagé avec le Planning). Semaine vide : bouton « Proposer les menus de la semaine ». La proposition, l'enregistrement et « Ajouter le menu … » aux courses suivent la semaine affichée.
