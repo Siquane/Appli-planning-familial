@@ -200,3 +200,16 @@ export function challengeWinner(fromId: string, fromMinutes: number, toId: strin
   if (fromMinutes === toMinutes) return "tie";
   return fromMinutes > toMinutes ? fromId : toId;
 }
+
+// Boss de fin de chapitre : il arrive quand chaque notion d'une révision a été
+// travaillée au moins une fois. 10 questions mélangées, chaque bonne réponse
+// lui enlève un cœur ; une erreur ne fait pas perdre (la question revient). La
+// première victoire sur une révision rapporte ceci.
+export const BOSS_HEARTS = 10;
+export const BOSS_COINS = 30;
+export const BOSS_STARS = 5;
+
+/** Le boss est là : la révision a des notions et chacune a déjà eu au moins une réponse. */
+export function bossReady(leaves: { lastAnsweredAt: Date | null }[]): boolean {
+  return leaves.length > 0 && leaves.every((n) => n.lastAnsweredAt !== null);
+}
