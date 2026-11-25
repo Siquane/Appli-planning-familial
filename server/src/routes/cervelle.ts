@@ -17,6 +17,7 @@ import { mountStars } from "./cervelleStars";
 import { mountAdvent } from "./cervelleAdvent";
 import { mountIslands } from "./cervelleIslands";
 import { mountAlbum } from "./cervelleAlbum";
+import { mountTeach } from "./cervelleTeach";
 import { mountDuels } from "./cervelleDuels";
 import { mountWeekly } from "./cervelleWeekly";
 import { mountUsage } from "./cervelleUsage";
@@ -77,7 +78,7 @@ const MAX_PDF_BYTES = 15 * 1024 * 1024;
 /** Claude calls per family and per day. */
 export const DAILY_LIMITS = { revision: 15, exam: 10, assistant: 120, grading: 400, timetable: 10, homework: 40, brevet: 5 } as const;
 
-type Caller = { kind: "parent"; familyId: string } | { kind: "child"; familyId: string; learnerId: string; deviceId: string };
+type Caller = { kind: "parent"; familyId: string; accountId?: string } | { kind: "child"; familyId: string; learnerId: string; deviceId: string };
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -115,7 +116,7 @@ async function cervelleAuth(req: Request, res: Response, next: NextFunction) {
   }
   const space = await resolveSpace(accountId);
   if (!space) return res.status(401).json({ error: "Tu as été déconnecté. Reconnecte-toi pour continuer." });
-  req.cervelle = { kind: "parent", familyId: space.familyId };
+  req.cervelle = { kind: "parent", familyId: space.familyId, accountId };
   next();
 }
 
@@ -1344,6 +1345,7 @@ mountStars(cervelleRouter, { loadLearner });
 mountAdvent(cervelleRouter, { loadLearner, serializeLearner });
 mountIslands(cervelleRouter, { loadLearner });
 mountAlbum(cervelleRouter, { loadLearner });
+mountTeach(cervelleRouter, { loadLearner, parentOnly });
 mountDuels(cervelleRouter, { loadLearner });
 mountWeekly(cervelleRouter, { loadLearner });
 mountUsage(cervelleRouter, { parentOnly });
