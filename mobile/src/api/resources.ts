@@ -257,6 +257,7 @@ export const calendarApi = {
   status: () => api.get<CalendarStatus>("/calendar/status"),
   disconnect: (provider: string) => api.delete<void>(`/calendar/${provider}`),
   connectApple: () => api.post<{ connection: { provider: string } }>("/calendar/apple/connect"),
+  ticket: (provider: "google" | "microsoft") => api.post<{ ticket: string }>(`/calendar/${provider}/ticket`),
 };
 
 type SplitResult = { group: SplitGroup };

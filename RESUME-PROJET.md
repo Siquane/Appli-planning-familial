@@ -443,3 +443,9 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 - Lecteurs d'écran : champs date/heure nommés (« Date : 25 nov. »), fonds de fenêtres = « Fermer », contenus de fenêtres non annoncés comme bouton. Le `Pressable` de `Touchable.tsx` annonce déjà « bouton » par défaut.
 - `src/api/client.ts` : délai max 1 min en lecture, 3 min en écriture (IA), puis message « hors connexion ».
 - Rafraîchissement auto : planning, coches et courses chaque minute ; membres, menus, notes et comptes partagés toutes les 5 minutes.
+
+## Audit — lot 3 (finitions, 25/11/2026)
+
+- Accès aux agendas Google/Outlook chiffrés en base (`server/src/lib/secretBox.ts`, AES-256-GCM, clé dérivée de `JWT_ACCESS_SECRET` : changer ce secret oblige à reconnecter les agendas). Les anciennes clés en clair sont chiffrées à leur première utilisation.
+- Connexion d'un agenda : l'appli demande un ticket à usage unique (`POST /calendar/:provider/ticket`, 2 min), plus de session dans l'adresse ; l'« état » OAuth est gardé en base 10 min (table `OAuthTicket`, migration `20261125180000_oauth_tickets`) et survit à un redémarrage. `?token=` reste accepté pour les anciennes versions.
+- Suppression du compte : mot de passe **ou** code reçu par e-mail (`DELETE /auth/me` avec `emailCode`, code demandé par `POST /auth/email-code`) ; bouton « Pas de mot de passe ? Recevoir un code par e-mail » dans Confidentialité.
