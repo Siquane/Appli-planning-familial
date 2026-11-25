@@ -7,6 +7,7 @@
 // « fete:noel:2026 ».
 
 import { addDays, daysBetween } from "./days";
+import { islandName } from "./islands";
 
 export interface BadgeStats {
   /** Ready revisions (courses photographed and turned into sheets). */
@@ -307,6 +308,7 @@ export function BADGE_LABELS(key: string): string {
     const months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
     return `Chemin d'étoiles de ${months[m - 1]} ${y}`;
   }
+  if (a === "ile") return `Explorateur : ${islandName(b)}`;
   if (a === "saison") return `${SEASON_NAMES[b] ?? b} ${c}`;
   if (a === "fete") return fetesOf(Number(c)).find((f) => f.id === b)?.label ?? key;
   const s = SUCCESSES.find((x) => x.id === a);

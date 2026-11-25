@@ -1,5 +1,6 @@
 import { fetesOf, SUCCESSES } from "./badges";
 import { ADVENT_ITEMS } from "./advent";
+import { DECOR_AFTER, SPOTS } from "./islands";
 import type { CatalogItem } from "./shop";
 import { PATH_END, THEMES, themeOf } from "./stars";
 
@@ -42,6 +43,11 @@ export function howToGet(item: CatalogItem, today: string): string | null {
         : `C'est le cadeau du chemin d'étoiles de ${MONTHS[Number(m.slice(5, 7)) - 1]} (« ${theme.label} ») : ce mois-là, gagne ${PATH_END} étoiles.`;
     }
     return `C'est un cadeau du chemin d'étoiles : gagne ${PATH_END} étoiles dans le mois.`;
+  }
+  if (item.kind === "tresor") {
+    return item.slot === "decor"
+      ? `Explore entièrement ${DECOR_AFTER} îles de la carte au trésor : sur chaque île, ${SPOTS} notions « Maîtrisé ». Touche 🗺️ sur l'accueil.`
+      : `Explore entièrement une île de la carte au trésor : ${SPOTS} notions « Maîtrisé » dans une même matière. Touche 🗺️ sur l'accueil.`;
   }
   if (item.kind === "avent") {
     const box = ADVENT_ITEMS.find((a) => a.item === item.id);
