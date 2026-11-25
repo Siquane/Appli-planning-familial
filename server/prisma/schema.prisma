@@ -997,6 +997,8 @@ model StarEvent {
   day       String
   coins     Int      @default(0)
   item      String?
+  /// Bonus stars for that month's path (advent calendar), counted on `day`.
+  stars     Int      @default(0)
   createdAt DateTime @default(now())
 
   @@unique([learnerId, key])
