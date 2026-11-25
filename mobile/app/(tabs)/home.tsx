@@ -13,6 +13,7 @@ import { WeekStrip } from "../../src/components/WeekStrip";
 import { TaskCard } from "../../src/components/TaskCard";
 import { TabHeader } from "../../src/components/PageHeader";
 import { TodayCard } from "../../src/components/TodayCard";
+import { CervelleQuizCard } from "../../src/components/CervelleQuizCard";
 import { ChevronLeftIcon, ChevronRightIcon, RecurringIcon, ReshuffleIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
 import { shiftWeek, shortDate, tasksOn, weekRange, weekTitle } from "../../src/lib/appointments";
 import { useMembers, useTaskDone, useTasks, useToggleTaskDone } from "../../src/hooks/useApi";
@@ -102,6 +103,8 @@ export default function HomeScreen() {
       />
 
       <TodayCard />
+
+      <CervelleQuizCard />
 
       <View style={{ gap: space.sm }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
