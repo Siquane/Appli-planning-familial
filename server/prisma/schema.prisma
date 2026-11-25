@@ -718,6 +718,8 @@ model Revision {
   examDate           DateTime?
   // "processing" | "ready" | "failed"
   status             String    @default("processing")
+  /// First time the « boss de fin de chapitre » was beaten on this revision.
+  bossBeatenAt       DateTime?
   error              String?
   // "parent" | "enfant"
   createdBy          String    @default("parent")

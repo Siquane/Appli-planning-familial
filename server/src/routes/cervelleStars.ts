@@ -27,7 +27,7 @@ export async function monthFacts(learner: Learner, month: string): Promise<Month
   ]);
   const inMonth = (d: Date | null) => !!d && parisDay(d) >= from && parisDay(d) <= to;
   return {
-    quizzes: sessions.filter((s) => ["qcm", "cartes", "a_revoir", "express"].includes(s.mode) && s.total > 0).map((s) => ({ mode: s.mode, total: s.total })),
+    quizzes: sessions.filter((s) => ["qcm", "cartes", "a_revoir", "express", "boss"].includes(s.mode) && s.total > 0).map((s) => ({ mode: s.mode, total: s.total })),
     interros: sessions.filter((s) => s.mode === "interro" && s.total > 0).length,
     studyDays: sessions.map((s) => s.day),
     chests,
