@@ -24,12 +24,13 @@ const LINKS: { label: string; href: Href; Icon: (p: { size: number; color: strin
   { label: "Étoiles et récompenses", href: "/stars", Icon: StarIcon },
   { label: "Documents", href: "/documents", Icon: DocumentIcon },
   { label: "Anniversaires", href: "/birthdays", Icon: GiftIcon },
+  { label: "Routines du matin et du soir", href: "/routines", Icon: StarIcon },
   { label: "Comptes de la famille", href: "/family-access", Icon: ProfileIcon },
   { label: "Partager le planning", href: "/share", Icon: ProfileIcon },
 ];
 
 // Ce qu'un compte enfant ne gère pas.
-const ADULT_ONLY = ["Comptes de la famille", "Partager le planning"];
+const ADULT_ONLY = ["Comptes de la famille", "Partager le planning", "Routines du matin et du soir"];
 
 // « Famille » tab: who's in the family, and what belongs to everyone.
 export default function FamilleTab() {

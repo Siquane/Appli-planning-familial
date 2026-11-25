@@ -645,6 +645,8 @@ model Learner {
   revisions      Revision[]
   cardDraws      CardDraw[]
   teachQuizzes   TeachQuiz[]
+  routines       Routine[]
+  routineChecks  RoutineCheck[]
   attempts       Attempt[]
   sessions       StudySession[]
   examReviews    ExamReview[]
@@ -1066,6 +1068,32 @@ model TeachQuiz {
   createdAt       DateTime  @default(now())
 
   @@index([learnerId, createdAt])
+}
+
+/// Routine du matin ou du soir d'un enfant (réglée par un parent dans
+/// Passerelle, cochée dans Cervelle). steps: [{ id, emoji, label }].
+model Routine {
+  id        String   @id @default(cuid())
+  learnerId String
+  learner   Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  /// "matin" | "soir"
+  kind      String
+  steps     Json     @default("[]")
+  updatedAt DateTime @updatedAt
+
+  @@unique([learnerId, kind])
+}
+
+/// Les étapes cochées un jour donné (« AAAA-MM-JJ », Paris).
+model RoutineCheck {
+  id        String   @id @default(cuid())
+  learnerId String
+  learner   Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  kind      String
+  day       String
+  stepIds   String[]
+
+  @@unique([learnerId, kind, day])
 }
 
 /// A quiz duel between two friends: the same 10 questions (QCM, vrai/faux)
