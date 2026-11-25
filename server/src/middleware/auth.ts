@@ -50,10 +50,14 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   if (space.role === "child" && !childAllowed(req.method, `${req.baseUrl}${req.path}`)) {
     return res.status(403).json({ error: "Demande à un parent de le faire.", code: "child_forbidden" });
   }
-  // « Espace de Jules » : un adulte de la famille consulte et gère le budget et
-  // les documents d'un enfant (en-tête X-Child-Space = id du membre).
+  // « Espace de Jules » : un parent (propriétaire ou accès complet) consulte et
+  // gère le budget et les documents d'un enfant (en-tête X-Child-Space = id du
+  // membre). Un accès « planning » garde ses propres données et ne l'ouvre pas.
   const childSpace = req.header("x-child-space");
-  if (childSpace && space.role !== "child") {
+  if (childSpace && space.role === "planning") {
+    return res.status(403).json({ error: "Seul un parent avec l'accès complet peut ouvrir l'espace d'un enfant.", code: "child_space_forbidden" });
+  }
+  if (childSpace && (space.role === "owner" || space.role === "full")) {
     const child = await prisma.user.findFirst({ where: { childMemberId: childSpace, familyOwnerId: space.familyId, familyRole: "child" }, select: { id: true } });
     if (!child) return res.status(404).json({ error: "Cet enfant n'a pas d'accès à Passerelle.", code: "child_space_not_found" });
     req.privateId = child.id;
