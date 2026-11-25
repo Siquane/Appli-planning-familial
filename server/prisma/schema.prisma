@@ -36,6 +36,8 @@ model User {
   familyRole           String               @default("owner")
   // Compte « enfant » (moins de 15 ans) créé par un parent pour ce membre de la
   // famille : connexion par code, pas d'e-mail ni de mot de passe utilisables.
+  /// « Sorties & idées » : la ville pour la météo (compte de la famille).
+  outingCity           String?
   childMemberId        String?              @unique
   childMember          FamilyMember?        @relation("ChildAccount", fields: [childMemberId], references: [id], onDelete: Cascade)
   childLoginCodes      ChildLoginCode[]
