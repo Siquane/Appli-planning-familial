@@ -123,6 +123,16 @@ describe("parents see the child's space", () => {
     expect(JSON.stringify((await request(app).get("/expenses?month=2026-11").set(childAuth)).body)).toContain("Argent de poche");
   });
 
+  it("refuses the child's space to a « planning » account of the same family", async () => {
+    const { auth, member } = await familyWithChild();
+    const code = (await request(app).post("/family/invite").set(auth).send({ role: "planning" })).body.invite.code as string;
+    const email = `planning${Date.now()}${Math.floor(Math.random() * 1e6)}@passerelle.test`;
+    const joined = await request(app).post("/auth/signup").send({ email, password: "password123", name: "Léa", familyCode: code, age15: true });
+    const res = await request(app).get("/expenses?month=2026-11").set({ ...authHeader(joined.body.accessToken), "X-Child-Space": member.id });
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe("child_space_forbidden");
+  });
+
   it("refuses another family's child and a child using the header", async () => {
     const { auth, member } = await familyWithChild();
     const { childAuth } = await childLogin(auth, member.id);

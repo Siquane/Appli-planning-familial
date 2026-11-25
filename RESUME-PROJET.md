@@ -420,3 +420,13 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 - Sur le Planning, les tâches École et Travail (rendez-vous compris) n'ont plus de rond « fait » : un cartable ou une mallette à la couleur de la catégorie à la place. L'anneau du jour ne compte que les tâches à cocher et n'apparaît pas s'il n'y en a aucune.
 - `isCheckable` dans `mobile/src/lib/planningFilter.ts` ; le serveur refuse `PUT /tasks/:id/done` pour ces catégories (400).
 - Publication des mises à jour sans GitHub Actions : depuis une session Claude, jeton Expo en « Network secret » (api.expo.dev) de l'environnement « Passerelle et Cervelle », puis `eas update --channel preview --environment preview --platform android` (après `eas init --force` + `node scripts/configure-updates.js`, sans committer app.json).
+
+## Audit du 25/11/2026 — lot 1 (sécurité serveur)
+
+- Rapport : https://claude.ai/artifact/4wumq59boxiCt4mnuVrXRV
+- L'« Espace de l'enfant » (en-tête `X-Child-Space`) est réservé aux comptes propriétaire et accès complet ; un accès « planning » reçoit 403 `child_space_forbidden`.
+- `compression` 1.8.2 (faille de fuite mémoire corrigée).
+- `/cervelle` : le corps de 40 Mo n'est lu que pour un appelant identifié (`middleware/cervelleBody.ts`), sinon 100 ko. Les erreurs de lecture du corps répondent 413/400 au lieu de 500.
+- Ancien lien de partage « toute la famille » (`/share/public/:token`) supprimé ; `GET /share` ne renvoie plus que `sharedWith`. Restent les liens par membre (révocables).
+- `/auth/refresh` : deux renouvellements simultanés → 200 et 401 (plus de 500). Codes à 6 chiffres : l'essai est compté avant la vérification.
+- Migration `20261125090000_user_indexes` : index `userId` sur 8 tables.

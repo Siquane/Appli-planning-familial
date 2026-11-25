@@ -239,7 +239,7 @@ export const notesApi = {
 };
 
 export const shareApi = {
-  get: () => api.get<{ shareToken: string; sharedWith: SharedPerson[] }>("/share"),
+  get: () => api.get<{ sharedWith: SharedPerson[] }>("/share"),
   invite: (data: { name: string; role?: string }) => api.post<{ person: SharedPerson }>("/share/people", data),
   remove: (id: string) => api.delete<void>(`/share/people/${id}`),
   /** Un lien par membre : la page web de sa semaine. */
