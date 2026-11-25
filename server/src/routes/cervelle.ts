@@ -15,6 +15,7 @@ import { mountBadges } from "./cervelleBadges";
 import { mountGoals } from "./cervelleGoals";
 import { mountStars } from "./cervelleStars";
 import { mountAdvent } from "./cervelleAdvent";
+import { mountIslands } from "./cervelleIslands";
 import { mountDuels } from "./cervelleDuels";
 import { mountWeekly } from "./cervelleWeekly";
 import { mountUsage } from "./cervelleUsage";
@@ -983,7 +984,7 @@ cervelleRouter.post("/learners/:learnerId/answers", async (req, res) => {
 
   const [, notion, updatedLearner] = await prisma.$transaction([
     prisma.attempt.create({ data: { learnerId: learner.id, questionId, correct, answer: text.slice(0, 1000), mode } }),
-    prisma.notion.update({ where: { id: question.notionId }, data: next }),
+    prisma.notion.update({ where: { id: question.notionId }, data: { ...next, ...(next.mastery === "mastered" && !question.notion.masteredAt ? { masteredAt: now } : {}) } }),
     prisma.learner.update({ where: { id: learner.id }, data: { coins: { increment: coins }, xp: { increment: xp } } }),
   ]);
   const before = levelOf(learner.xp).level;
@@ -1319,6 +1320,7 @@ mountBadges(cervelleRouter, { loadLearner });
 mountGoals(cervelleRouter, { loadLearner, parentOnly });
 mountStars(cervelleRouter, { loadLearner });
 mountAdvent(cervelleRouter, { loadLearner, serializeLearner });
+mountIslands(cervelleRouter, { loadLearner });
 mountDuels(cervelleRouter, { loadLearner });
 mountWeekly(cervelleRouter, { loadLearner });
 mountUsage(cervelleRouter, { parentOnly });

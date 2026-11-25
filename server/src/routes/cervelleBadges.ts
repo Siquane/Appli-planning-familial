@@ -113,11 +113,28 @@ export function mountBadges(router: Router, d: { loadLearner: (req: Request, res
       coins: 0,
       isNew: !b.seenAt,
     }));
+    // Badges de la carte au trésor, un par île explorée.
+    const islands = (await prisma.learnerBadge.findMany({ where: { learnerId: learner.id, key: { startsWith: "ile:" } }, orderBy: { earnedAt: "desc" } })).map((b) => ({
+      key: b.key,
+      family: "ile" as const,
+      label: BADGE_LABELS(b.key),
+      icon: "map",
+      shape: "round" as const,
+      earned: true,
+      when: "past" as const,
+      days: 1,
+      needs: 1,
+      from: parisDay(b.earnedAt),
+      to: parisDay(b.earnedAt),
+      hint: "Explorer toute une île de la carte au trésor.",
+      coins: 0,
+      isNew: !b.seenAt,
+    }));
     const isNew = (prefix: string) => [...unseen].some((k) => k === prefix || k.startsWith(`${prefix}:`));
     res.json({
       records: view.records,
       successes: view.successes.map((s) => ({ ...s, isNew: s.tier > 0 && isNew(s.id) })),
-      windows: [...paths, ...view.windows.map((w) => ({ ...w, isNew: w.earned && unseen.has(w.key) }))],
+      windows: [...islands, ...paths, ...view.windows.map((w) => ({ ...w, isNew: w.earned && unseen.has(w.key) }))],
       newCount: unseen.size,
       earnedCount: view.earnedKeys.length,
       coinsEarned: coins,

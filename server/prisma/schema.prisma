@@ -741,6 +741,8 @@ model Notion {
   streak         Int       @default(0)
   nextReviewAt   DateTime?
   lastAnsweredAt DateTime?
+  /// First time it was « Maîtrisé » (never cleared): reveals a spot on the treasure map.
+  masteredAt     DateTime?
 
   questions Question[]
 
