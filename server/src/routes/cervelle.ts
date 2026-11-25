@@ -43,6 +43,10 @@ import {
   missions,
   nextStreak,
   shopItem,
+  BOSS_COINS,
+  BOSS_HEARTS,
+  BOSS_STARS,
+  bossReady,
 } from "../lib/cervelle/game";
 import { LEVELS, REVISION_ICONS, type Level } from "../lib/cervelle/icons";
 import { SCHOOL_YEAR, chapterById, findChapter, programmeFor, programmeForPrompt } from "../lib/cervelle/programme";
@@ -526,6 +530,7 @@ function serializeRevisionDetail(r: Revision, notions: NotionWithChildren[], que
     photoCount: r.photoCount,
     questionCount,
     steps: { sheets: !!r.sheetsReadAt, quizBest: r.quizBest, examBest: r.examBest },
+    boss: { ready: bossReady(leafs), beaten: !!r.bossBeatenAt, hearts: BOSS_HEARTS },
     programme: programmeInfo(r.programmeChapterId),
     progress: revisionProgress({ sheetsRead: !!r.sheetsReadAt, quizBest: r.quizBest, examBest: r.examBest, mastered, notions: leafs.length }),
     notions: roots.map((root) => {
@@ -832,7 +837,7 @@ cervelleRouter.get("/learners/:learnerId/revisions/:revisionId/photos", async (r
 // ─── Quiz ────────────────────────────────────────────────────────────────
 
 // « express » : 6 questions d'une révision, les notions À revoir d'abord (veille d'interro).
-export const QUIZ_MODES = ["qcm", "cartes", "interro", "a_revoir", "express"] as const;
+export const QUIZ_MODES = ["qcm", "cartes", "interro", "a_revoir", "express", "boss"] as const;
 type QuizMode = (typeof QUIZ_MODES)[number];
 
 function shuffle<T>(list: T[]): T[] {
@@ -888,7 +893,12 @@ cervelleRouter.get("/learners/:learnerId/quiz", async (req, res) => {
   }
   const now = new Date();
   const scope: Prisma.QuestionWhereInput = revisionId ? { revisionId } : { revision: { learnerId: learner.id, status: "ready" } };
-  const types: Record<QuizMode, string[] | null> = { qcm: ["qcm", "vrai_faux"], cartes: ["carte", "courte", "trous"], interro: null, a_revoir: null, express: null };
+  // Boss: every type the app can check by itself (no flash card graded by the child).
+  const types: Record<QuizMode, string[] | null> = { qcm: ["qcm", "vrai_faux"], cartes: ["carte", "courte", "trous"], interro: null, a_revoir: null, express: null, boss: ["qcm", "vrai_faux", "courte", "trous", "ordre"] };
+  if (mode === "boss") {
+    const leafs = leaves(await prisma.notion.findMany({ where: { revisionId: revisionId! } }));
+    if (!bossReady(leafs)) return res.status(400).json({ error: "Le boss n'est pas encore là : travaille d'abord chaque notion de la leçon." });
+  }
   const all = await prisma.question.findMany({ where: { ...scope, ...(types[mode] ? { type: { in: types[mode]! } } : {}) }, include: { notion: true } });
 
   let picked: (Question & { notion: Notion })[];
@@ -898,6 +908,8 @@ cervelleRouter.get("/learners/:learnerId/quiz", async (req, res) => {
     picked = pickSpread(all, 20, now);
   } else if (mode === "express") {
     picked = pickSpread(all, 6, now);
+  } else if (mode === "boss") {
+    picked = pickSpread(all, BOSS_HEARTS, now);
   } else {
     picked = pickSpread(all, mode === "interro" ? 15 : 10, now);
   }
@@ -1038,6 +1050,13 @@ cervelleRouter.post("/learners/:learnerId/sessions", async (req, res) => {
     if (percent !== null && d.mode === "interro" && (revision?.examBest ?? -1) < percent) revisionData.examBest = percent;
   }
   const streak = nextStreak(learner.lastStudyDay, learner.streak, today);
+  // Boss: beaten when every heart is gone. The first victory on a revision pays once.
+  const bossWon = d.mode === "boss" && !!revision && d.total >= 5 && d.correct >= d.total;
+  const bossFirst = bossWon && !revision!.bossBeatenAt;
+  if (bossFirst) {
+    revisionData.bossBeatenAt = new Date();
+    coins += BOSS_COINS;
+  }
 
   const [session, updated] = await prisma.$transaction([
     prisma.studySession.create({ data: { learnerId: learner.id, revisionId: revision?.id ?? null, mode: d.mode, seconds: d.seconds, correct: d.correct, total: d.total, coins, day: today } }),
@@ -1046,11 +1065,13 @@ cervelleRouter.post("/learners/:learnerId/sessions", async (req, res) => {
       data: { coins: { increment: coins }, streak, bestStreak: Math.max(learner.bestStreak, streak), lastStudyDay: today },
     }),
     ...(revision && Object.keys(revisionData).length ? [prisma.revision.update({ where: { id: revision.id }, data: revisionData })] : []),
+    ...(bossFirst ? [prisma.starEvent.create({ data: { learnerId: learner.id, key: `boss:${revision!.id}`, day: today, coins: BOSS_COINS, stars: BOSS_STARS } })] : []),
   ]);
   res.status(201).json({
     session: { id: session.id, coins, percent, score20: d.mode === "interro" && percent !== null ? Math.round(percent / 5) : null },
     learner: serializeLearner(updated),
     streakIncreased: streak > currentStreak(learner.lastStudyDay, learner.streak, today),
+    boss: d.mode === "boss" ? { won: bossWon, first: bossFirst, coins: bossFirst ? BOSS_COINS : 0, stars: bossFirst ? BOSS_STARS : 0 } : null,
     missions: await missionState(updated),
   });
 });
