@@ -59,7 +59,7 @@ export default function NotificationsScreen() {
             <Text size={15} weight="medium">
               Récap du matin
             </Text>
-            <Text size={11} tone="faint">
+            <Text size={12} tone="faint">
               Chaque matin, toutes les tâches du jour, avec qui les fait.
             </Text>
           </View>
@@ -86,7 +86,7 @@ export default function NotificationsScreen() {
             <Text size={15} weight="medium">
               Récap du soir
             </Text>
-            <Text size={11} tone="faint">
+            <Text size={12} tone="faint">
               Chaque soir à {DIGEST_HOUR} h, les tâches du lendemain.
             </Text>
           </View>
@@ -106,7 +106,7 @@ export default function NotificationsScreen() {
               <Text size={15} weight="medium">
                 Modifications de la famille
               </Text>
-              <Text size={11} tone="faint">
+              <Text size={12} tone="faint">
                 Quand quelqu'un d'autre change le planning, les repas, les courses ou les recettes.
               </Text>
             </View>

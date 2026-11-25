@@ -85,7 +85,7 @@ export default function BudgetReportScreen() {
                     style={{ flex: 1, alignItems: "center", justifyContent: "flex-end", height: "100%" }}
                   >
                     {isSel && (
-                      <Text size={11} weight="medium" numberOfLines={1}>
+                      <Text size={12} weight="medium" numberOfLines={1}>
                         {formatEuros(m.totalCents).replace(/,\d\d /, " ")}
                       </Text>
                     )}
@@ -100,7 +100,7 @@ export default function BudgetReportScreen() {
                       }}
                     />
                     <View style={{ height: 1, alignSelf: "stretch", backgroundColor: color.divider }} />
-                    <Text size={11} tone={isSel ? "text" : "faint"} style={{ marginTop: space.xs }}>
+                    <Text size={12} tone={isSel ? "text" : "faint"} style={{ marginTop: space.xs }}>
                       {shortMonthLabel(m.month)}
                     </Text>
                   </Pressable>
@@ -216,7 +216,7 @@ function ExportSection() {
           <Button label="CSV (tableur)" variant="secondary" style={{ flex: 1 }} onPress={() => onExport("csv")} loading={busy === "csv"} disabled={!!busy} />
           <Button label="PDF" variant="secondary" style={{ flex: 1 }} onPress={() => onExport("pdf")} loading={busy === "pdf"} disabled={!!busy} />
         </View>
-        <Text size={11} tone="faint">
+        <Text size={12} tone="faint">
           Pour les impôts, la CAF ou un dossier de prêt : le fichier s'ouvre dans le menu de partage du téléphone.
         </Text>
       </Card>

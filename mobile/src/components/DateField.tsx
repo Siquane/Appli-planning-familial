@@ -54,6 +54,7 @@ export function DateField({ label, value, onChange, placeholder = "Choisir une d
       </Text>
       <Pressable
         onPress={openPicker}
+        accessibilityLabel={`${label} : ${value ? formatDate(value) : "à choisir"}`}
         style={{
           paddingVertical: space.md,
           paddingHorizontal: space.lg,
@@ -76,8 +77,9 @@ export function DateField({ label, value, onChange, placeholder = "Choisir une d
 
       {Platform.OS === "ios" && (
         <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
-          <Pressable style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }} onPress={() => setOpen(false)}>
+          <Pressable style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" }} onPress={() => setOpen(false)} accessibilityLabel="Fermer">
             <Pressable
+              accessible={false}
               style={{ backgroundColor: color.surface, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, padding: space.md }}
               onPress={(e) => e.stopPropagation()}
             >

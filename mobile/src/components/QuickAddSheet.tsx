@@ -35,6 +35,7 @@ export function QuickAddSheet({ visible, onClose }: { visible: boolean; onClose:
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" }} onPress={onClose} accessibilityLabel="Fermer">
         <Pressable
+          accessible={false}
           onPress={(e) => e.stopPropagation()}
           style={{
             backgroundColor: color.surface,
@@ -71,7 +72,7 @@ export function QuickAddSheet({ visible, onClose }: { visible: boolean; onClose:
                 <Text size={15} weight="medium">
                   {label}
                 </Text>
-                <Text size={11} tone="faint">
+                <Text size={12} tone="faint">
                   {hint}
                 </Text>
               </View>

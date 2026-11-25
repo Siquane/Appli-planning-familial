@@ -41,7 +41,7 @@ export function PocketMoneyCard() {
             {isChild ? "Tu dois" : "Doit encore"} {formatEuros(data.owedCents!)} (avances) · touche pour rembourser
           </Text>
         ) : null}
-        <Text size={11} tone="faint">
+        <Text size={12} tone="faint">
           {data.rule ? `${ruleLabel(data.rule)} · ${nextLabel(data.rule)}` : isChild ? "Pas encore d'argent de poche automatique." : "Touche pour régler un argent de poche automatique."}
         </Text>
       </Card>
@@ -52,7 +52,7 @@ export function PocketMoneyCard() {
 function Figure({ label, cents, strong }: { label: string; cents: number; strong?: boolean }) {
   return (
     <View style={{ flex: 1, gap: 2 }}>
-      <Text size={11} tone="faint">
+      <Text size={12} tone="faint">
         {label}
       </Text>
       <Text size={strong ? 17 : 15} weight={strong ? "semibold" : "medium"} mono tone={strong && cents < 0 ? "danger" : "text"}>

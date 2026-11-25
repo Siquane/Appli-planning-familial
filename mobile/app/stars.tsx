@@ -166,7 +166,7 @@ export default function StarsScreen() {
                     {r.cost} ★
                   </Text>
                 </View>
-                <Text size={11} tone="faint">
+                <Text size={12} tone="faint">
                   {nameOf(r.memberId)} a {starsLabel(balanceOf(r.memberId))}.
                 </Text>
                 {decliningId === r.id ? (
@@ -209,7 +209,7 @@ export default function StarsScreen() {
                       <Text size={15} weight="medium">
                         {m.name}
                       </Text>
-                      <Text size={11} tone="faint">
+                      <Text size={12} tone="faint">
                         +{info?.weekStars ?? 0} ★ cette semaine
                       </Text>
                     </View>
@@ -247,14 +247,14 @@ export default function StarsScreen() {
                 <GiftIcon size={18} color={color.pillar4} />
                 <View style={{ flex: 1 }}>
                   <Text size={15}>{r.title}</Text>
-                  <Text size={11} tone="faint">
+                  <Text size={12} tone="faint">
                     {starsLabel(r.cost)}
                     {chosen && missing > 0 ? ` · encore ${missing} pour ${chosen.name}` : ""}
                   </Text>
                 </View>
                 {viewerIsChild && chosen && chosen.id === viewerMemberId && (
                   requests.some((q) => q.status === "pending" && q.rewardId === r.id && q.memberId === viewerMemberId) ? (
-                    <Text size={11} tone="accent">
+                    <Text size={12} tone="accent">
                       Demandée
                     </Text>
                   ) : missing <= 0 ? (
@@ -294,12 +294,12 @@ export default function StarsScreen() {
                     <Text size={13} style={{ flex: 1 }} numberOfLines={1}>
                       {r.title} · {r.cost} ★
                     </Text>
-                    <Text size={11} tone={r.status === "declined" ? "muted" : "accent"}>
+                    <Text size={12} tone={r.status === "declined" ? "muted" : "accent"}>
                       {r.status === "pending" ? "En attente" : r.status === "accepted" ? "Acceptée 🎉" : "Pas cette fois"}
                     </Text>
                   </View>
                   {r.status === "declined" && r.note ? (
-                    <Text size={11} tone="faint">
+                    <Text size={12} tone="faint">
                       « {r.note} »
                     </Text>
                   ) : null}
@@ -331,7 +331,7 @@ export default function StarsScreen() {
                     <Text size={13} style={{ flex: 1 }} numberOfLines={1}>
                       {nameOf(h.memberId)} · {h.title}
                     </Text>
-                    <Text size={11} tone="faint">
+                    <Text size={12} tone="faint">
                       {new Date(h.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
                     </Text>
                   </Pressable>
@@ -339,7 +339,7 @@ export default function StarsScreen() {
               })}
             </Card>
             {!viewerIsChild && (
-              <Text size={11} tone="faint">
+              <Text size={12} tone="faint">
                 Appui long sur une ligne pour l'effacer (erreur de coche ou d'échange).
               </Text>
             )}

@@ -309,7 +309,7 @@ export default function TaskFormScreen() {
             </View>
           )}
           {customDuration && parseDuration(customFields.hours, customFields.minutes) === null && (
-            <Text size={11} tone="danger" accessibilityLiveRegion="polite">
+            <Text size={12} tone="danger" accessibilityLiveRegion="polite">
               Entre 5 min et 8 h, minutes de 0 à 59.
             </Text>
           )}
@@ -392,7 +392,7 @@ export default function TaskFormScreen() {
         >
           <View style={{ flex: 1 }}>
             <Text size={15}>Dans les récaps</Text>
-            <Text size={11} tone="faint">
+            <Text size={12} tone="faint">
               Récap du soir (tâches du lendemain) et du matin (tâches du jour). Décoche pour une tâche évidente, comme le coucher.
             </Text>
           </View>

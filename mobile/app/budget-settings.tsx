@@ -55,7 +55,7 @@ export default function BudgetSettingsScreen() {
                   <Text size={15} weight="medium" numberOfLines={1}>
                     {r.label}
                   </Text>
-                  <Text size={11} tone="faint">
+                  <Text size={12} tone="faint">
                     Le {r.dayOfMonth} du mois · {categoryLabel(options, r.category)}
                   </Text>
                 </View>
@@ -100,7 +100,7 @@ function Section({ title, hint, children }: { title: string; hint: string; child
       <Text weight="medium" size={13} tone="muted">
         {title}
       </Text>
-      <Text size={11} tone="faint">
+      <Text size={12} tone="faint">
         {hint}
       </Text>
       {children}
