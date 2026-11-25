@@ -13,6 +13,24 @@ afterEach(() => {
 });
 
 describe("POST /meals/generate", () => {
+  it("asks to avoid the dishes of the neighbouring weeks, not of far-away ones", async () => {
+    env.anthropicApiKey = "test-key";
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    await request(app).post("/meals").set(auth).send({ week: "2026-11-23", weekday: 2, type: "dîner", title: "Hachis parmentier" });
+    await request(app).post("/meals").set(auth).send({ week: "2026-12-14", weekday: 2, type: "dîner", title: "Raclette" });
+    await request(app).post("/meals").set(auth).send({ week: "2026-10-05", weekday: 2, type: "dîner", title: "Vieux plat" });
+    await request(app).post("/meals").set(auth).send({ week: "2026-11-30", weekday: 1, type: "dîner", title: "Soupe" });
+    const spy = vi.spyOn(planner, "proposeMeals").mockResolvedValue([{ weekday: 0, type: "dîner", title: "Tajine", recipeId: null, notes: "", ingredients: [] }]);
+
+    const res = await request(app).post("/meals/generate").set(auth).send({ week: "2026-11-30", slots: [{ weekday: 0, type: "dîner" }], preferences: prefs });
+    expect(res.status).toBe(200);
+    const ctx = spy.mock.calls[0][0];
+    expect(ctx.recent).toEqual(expect.arrayContaining(["Hachis parmentier", "Raclette"]));
+    expect(ctx.recent).not.toContain("Vieux plat");
+    expect(ctx.keptMeals.map((m) => m.title)).toEqual(["Soupe"]);
+  });
+
   it("answers 503 when no Claude API key is configured", async () => {
     const { accessToken } = await signup(app);
     const res = await request(app).post("/meals/generate").set(authHeader(accessToken)).send({ slots: [{ weekday: 0, type: "dîner" }], preferences: prefs });

@@ -14,7 +14,7 @@ describe("what the screen shows for changes made offline", () => {
   });
 
   it("replaces the meal of a slot instead of doubling it", () => {
-    const lunch: Meal = { id: "m1", weekday: 1, type: "déjeuner", title: "Pâtes", recipeId: null, notes: "", ingredients: [] };
+    const lunch: Meal = { id: "m1", week: "2026-11-23", weekday: 1, type: "déjeuner", title: "Pâtes", recipeId: null, notes: "", ingredients: [] };
     const next = setMealIn([lunch], "tmp_2", { weekday: 1, type: "déjeuner", title: "Riz" });
     expect(next).toHaveLength(1);
     expect(next[0]).toMatchObject({ id: "m1", title: "Riz" });

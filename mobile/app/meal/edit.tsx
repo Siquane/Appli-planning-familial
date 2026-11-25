@@ -13,13 +13,15 @@ import { useDeleteMeal, useMeals, useRecipes, useSetMeal } from "../../src/hooks
 import { useToastStore } from "../../src/state/toastStore";
 import { space, gutter } from "../../src/theme/tokens";
 import { WEEKDAYS_FULL } from "../../src/lib/weekdays";
+import { weekKey } from "../../src/lib/stars";
 import type { MealType, Weekday } from "../../src/api/types";
 
 export default function MealEditScreen() {
-  const { weekday: weekdayParam, type } = useLocalSearchParams<{ weekday: string; type: MealType }>();
+  const { week: weekParam, weekday: weekdayParam, type } = useLocalSearchParams<{ week?: string; weekday: string; type: MealType }>();
   const weekday = Number(weekdayParam) as Weekday;
+  const week = typeof weekParam === "string" && /^\d{4}-\d{2}-\d{2}$/.test(weekParam) ? weekParam : weekKey();
 
-  const { data: meals = [] } = useMeals();
+  const { data: meals = [] } = useMeals(week);
   const { data: recipes = [] } = useRecipes();
   const setMeal = useSetMeal();
   const deleteMeal = useDeleteMeal();
@@ -41,7 +43,7 @@ export default function MealEditScreen() {
 
   async function onSave() {
     try {
-      await setMeal.mutateAsync({ weekday, type, title: title.trim(), recipeId, notes });
+      await setMeal.mutateAsync({ week, weekday, type, title: title.trim(), recipeId, notes });
       useToastStore.getState().show("Repas enregistré.");
       router.back();
     } catch (e) {

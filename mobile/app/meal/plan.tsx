@@ -19,6 +19,8 @@ import { mealQuotaLabel, showApiError } from "../../src/lib/premium";
 import { useSlowHint } from "../../src/hooks/useSlowHint";
 import { useToastStore } from "../../src/state/toastStore";
 import { WEEKDAYS_FULL, WEEKDAYS_SHORT } from "../../src/lib/weekdays";
+import { weekTitle } from "../../src/lib/appointments";
+import { useMenuWeek } from "../../src/state/menuWeekStore";
 import {
   COOK_TIME_OPTIONS,
   DEFAULT_PREFERENCES,
@@ -47,7 +49,9 @@ const perWeekFromValue = (v: string | null) => (v === null || v === "any" ? null
 // "Générer mes menus": a short questionnaire, then Claude's proposal that the
 // user can tweak slot by slot before saving it into the week.
 export default function MealPlanScreen() {
-  const { data: meals = [] } = useMeals();
+  // La semaine affichée dans Repas : la proposition est faite pour elle.
+  const week = useMenuWeek();
+  const { data: meals = [] } = useMeals(week);
   const generate = useGenerateMeals();
   const save = useSaveMeals();
   const { data: plan } = usePlan();
@@ -79,7 +83,7 @@ export default function MealPlanScreen() {
     }
     savePreferences(prefs);
     try {
-      const res = await generate.mutateAsync({ slots, preferences: prefs, kind: "week" });
+      const res = await generate.mutateAsync({ week, slots, preferences: prefs, kind: "week" });
       if (res.meals.length === 0) {
         useToastStore.getState().show("Claude n'a rien proposé cette fois. Réessaie dans un instant.");
         return;
@@ -96,6 +100,7 @@ export default function MealPlanScreen() {
     setRerolling(key);
     try {
       const res = await generate.mutateAsync({
+        week,
         slots: [{ weekday: meal.weekday, type: meal.type }],
         preferences: prefs,
         exclude: proposal.map((m) => m.title),
@@ -117,7 +122,7 @@ export default function MealPlanScreen() {
   async function onSave() {
     if (!proposal?.length) return;
     try {
-      await save.mutateAsync(proposal.map(({ weekday, type, title, recipeId, notes, ingredients }) => ({ weekday, type, title, recipeId, notes, ingredients })));
+      await save.mutateAsync({ week, meals: proposal.map(({ weekday, type, title, recipeId, notes, ingredients }) => ({ week, weekday, type, title, recipeId, notes, ingredients })) });
       useToastStore.getState().show(`${proposal.length} repas ajoutés au menu.`);
       router.back();
     } catch (e) {
@@ -221,7 +226,7 @@ export default function MealPlanScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title="Générer mes menus" onBack={() => router.back()} />
+      <TopBar title={`Menus · ${weekTitle(week).toLowerCase()}`} onBack={() => router.back()} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <Pressable onPress={() => router.push("/famille")}>
           <Text size={13} tone="faint">

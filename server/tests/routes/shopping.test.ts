@@ -92,4 +92,13 @@ describe("shopping list", () => {
     expect((await request(app).patch(`/shopping/${item.body.item.id}`).set(authHeader(b.accessToken)).send({ checked: true })).status).toBe(404);
     expect((await request(app).delete(`/shopping/${item.body.item.id}`).set(authHeader(b.accessToken))).status).toBe(404);
   });
+
+  it("adds the ingredients of the week asked for", async () => {
+    const { accessToken } = await signup(app);
+    const auth = authHeader(accessToken);
+    await request(app).post("/meals").set(auth).send({ week: "2026-11-30", weekday: 0, type: "dîner", title: "Curry", ingredients: ["2 oignons"] });
+    await request(app).post("/meals").set(auth).send({ week: "2026-12-07", weekday: 0, type: "dîner", title: "Gratin", ingredients: ["4 courgettes"] });
+    const res = await request(app).post("/shopping/from-menu").set(auth).send({ week: "2026-12-07" });
+    expect(res.body.items.map((i: { label: string }) => i.label)).toEqual(["4 courgettes"]);
+  });
 });

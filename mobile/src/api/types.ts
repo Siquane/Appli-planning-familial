@@ -214,6 +214,8 @@ export type MealType = "petit-déjeuner" | "déjeuner" | "goûter" | "dîner";
 
 export interface Meal {
   id: string;
+  /** Lundi de la semaine du repas (« AAAA-MM-JJ »). */
+  week: string;
   weekday: Weekday;
   type: MealType;
   title: string;
@@ -224,6 +226,8 @@ export interface Meal {
 }
 
 export type MealInput = {
+  /** Lundi de la semaine ; la semaine en cours si absent. */
+  week?: string;
   weekday: Weekday;
   type: MealType;
   title?: string;

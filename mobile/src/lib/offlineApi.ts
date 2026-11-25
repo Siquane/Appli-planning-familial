@@ -1,3 +1,4 @@
+import { weekKey } from "./stars";
 import { expensesApi, mealsApi, shoppingApi, tasksApi } from "../api/resources";
 import type { CapAlert, DriftAlert, Expense, ExpenseInput, Meal, MealInput, MonthlyBudget, ShoppingItem, Task, TaskInput } from "../api/types";
 import { queryClient } from "./queryClient";
@@ -94,7 +95,7 @@ export const offlineMeals = {
       tempId,
       send: () => mealsApi.set(data),
       queuedResult: () => ({ meal: setMealIn([], tempId, data)[0] }),
-      applyToCache: () => qc.setQueryData<Meal[]>(["meals"], (list) => setMealIn(list ?? [], tempId, data)),
+      applyToCache: () => qc.setQueryData<Meal[]>(["meals", data.week ?? weekKey()], (list) => setMealIn(list ?? [], tempId, data)),
     });
   },
   remove: (id: string) =>
@@ -104,7 +105,7 @@ export const offlineMeals = {
       path: `/meals/${id}`,
       send: () => mealsApi.remove(id),
       queuedResult: () => undefined,
-      applyToCache: () => qc.setQueryData<Meal[]>(["meals"], (list) => list?.filter((m) => m.id !== id)),
+      applyToCache: () => qc.setQueriesData<Meal[]>({ queryKey: ["meals"] }, (list) => list?.filter((m) => m.id !== id)),
     }),
 };
 
