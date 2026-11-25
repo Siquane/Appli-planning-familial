@@ -641,6 +641,7 @@ model Learner {
   codes          LearnerCode[]
   devices        LearnerDevice[]
   revisions      Revision[]
+  cardDraws      CardDraw[]
   attempts       Attempt[]
   sessions       StudySession[]
   examReviews    ExamReview[]
@@ -1022,6 +1023,21 @@ model StarEvent {
   createdAt DateTime @default(now())
 
   @@unique([learnerId, key])
+}
+
+/// One card drawn for the album (src/lib/cervelle/cards.ts): the n-th card
+/// earned, which card it was, and the coins when it was already in the album.
+model CardDraw {
+  id        String    @id @default(cuid())
+  learnerId String
+  learner   Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  n         Int
+  cardId    String
+  duplicate Boolean   @default(false)
+  coins     Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  @@unique([learnerId, n])
 }
 
 /// A quiz duel between two friends: the same 10 questions (QCM, vrai/faux)
