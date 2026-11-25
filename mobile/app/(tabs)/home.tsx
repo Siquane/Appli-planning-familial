@@ -21,7 +21,7 @@ import { DayRing, EmptyState } from "../../src/components/Playful";
 import { useToastStore } from "../../src/state/toastStore";
 import { errorText } from "../../src/lib/errors";
 import { weekKey } from "../../src/lib/stars";
-import { useAuthStore } from "../../src/state/authStore";
+import { useAuthStore, useIsChildAccount } from "../../src/state/authStore";
 import { color, space } from "../../src/theme/tokens";
 import { dayOfWeek, progressLine, todayWeekday, WEEKDAYS_FULL } from "../../src/lib/weekdays";
 import { daysUntilBirthday } from "../../src/lib/notifications";
@@ -32,6 +32,7 @@ const BIRTHDAY_LOOKAHEAD_DAYS = 7;
 
 export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
+  const isChild = useIsChildAccount();
   const today = todayWeekday();
   const [selected, setSelected] = useState<Weekday>(today);
   // 0 = cette semaine, 1 = la suivante, -1 = la précédente…
@@ -142,6 +143,21 @@ export default function HomeScreen() {
           <ChevronRightIcon size={14} color={color.neutral500} />
         </Card>
       </Pressable>
+
+      {!isChild ? (
+        <Pressable onPress={() => router.push("/sorties")} accessibilityRole="button">
+          <Card row style={{ alignItems: "center" }}>
+            <Text size={16}>🌤️</Text>
+            <Text size={15} weight="medium" style={{ flex: 1, marginLeft: space.sm }}>
+              Sorties & idées
+            </Text>
+            <Text size={12} tone="faint" style={{ marginRight: space.sm }}>
+              Que faire ce week-end ?
+            </Text>
+            <ChevronRightIcon size={14} color={color.neutral500} />
+          </Card>
+        </Pressable>
+      ) : null}
 
       {upcomingBirthday && (
         <Card row style={{ alignItems: "center", backgroundColor: color.accent900 }}>
