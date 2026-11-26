@@ -107,7 +107,7 @@ export default function FamilyAccessScreen() {
 
   return (
     <Screen scroll={false} padded={false}>
-      <TopBar title="Comptes de la famille" onBack={() => router.back()} />
+      <TopBar title="Accès à l'appli" onBack={() => router.back()} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         {isLoading && <Text tone="muted" size={13}>Chargement…</Text>}
 

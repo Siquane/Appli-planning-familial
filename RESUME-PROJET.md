@@ -449,3 +449,11 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 - Accès aux agendas Google/Outlook chiffrés en base (`server/src/lib/secretBox.ts`, AES-256-GCM, clé dérivée de `JWT_ACCESS_SECRET` : changer ce secret oblige à reconnecter les agendas). Les anciennes clés en clair sont chiffrées à leur première utilisation.
 - Connexion d'un agenda : l'appli demande un ticket à usage unique (`POST /calendar/:provider/ticket`, 2 min), plus de session dans l'adresse ; l'« état » OAuth est gardé en base 10 min (table `OAuthTicket`, migration `20261125180000_oauth_tickets`) et survit à un redémarrage. `?token=` reste accepté pour les anciennes versions.
 - Suppression du compte : mot de passe **ou** code reçu par e-mail (`DELETE /auth/me` avec `emailCode`, code demandé par `POST /auth/email-code`) ; bouton « Pas de mot de passe ? Recevoir un code par e-mail » dans Confidentialité.
+
+## Revue design et code (26/11/2026)
+
+- Rapport : https://claude.ai/artifact/5RS6CDb1Ddtyen2Vt4XfXn · visuels Play Store (8 captures 1080×1920 + bannière 1024×500) dans `docs/play-store/`.
+- Onglet **Budget** (plus « Comptes ») : sous-onglets « Mon budget » (`src/screens/MonthlyBudgetBody.tsx`, l'ancien écran du budget du mois avec Bilan, Épargne, Prélèvements, Import de relevé) et « Partagés » (groupes). `/budget?tab=partages` ouvre les groupes. « Comptes de la famille » devient « Accès à l'appli ».
+- Accueil (`src/lib/today.ts`) : les plafonds ne comparent que les catégories plafonnées (« N plafond(s) dépassé(s) » / « Reste … ») ; le soir, « Plus rien de prévu · N à cocher » tant que tout n'est pas coché.
+- Serveur : avances d'argent de poche réservées au propriétaire / accès complet ; lien public d'un groupe archivé en lecture seule ; remboursement d'avance sous verrou (cagnotte jamais négative) ; photo de ticket `photoPending` (montrée une fois arrivée dans le stockage, oubliée après 1 h, migration `20261126090000_split_photo_pending`) ; agenda illisible (secret changé) → connexion retirée.
+- Appli : carte de tâche avec action TalkBack « Marquer comme faite », durée sur une ligne, avatars moins serrés, jours annoncés comme onglets, « Petit-déjeuner », « Ajouter les ingrédients du menu … ». Version web : widgets et notification d'ouverture seulement sur Android (sert aux captures).

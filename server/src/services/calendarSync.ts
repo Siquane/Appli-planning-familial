@@ -19,6 +19,7 @@ export async function syncTaskToCalendar(task: Task): Promise<{ externalEventId:
   });
   if (!connection || !connection.refreshToken) return { externalEventId: null, externalProvider: null };
   const refreshToken = await readRefreshToken(connection);
+  if (!refreshToken) return { externalEventId: null, externalProvider: null };
 
   const start = combineDateAndTime(task.date, task.time);
   const end = new Date(start.getTime() + task.duration * 60_000);
@@ -44,17 +45,29 @@ export async function unsyncTaskFromCalendar(task: Task): Promise<void> {
   const connection = await prisma.calendarConnection.findFirst({ where: { userId: task.userId, provider: task.externalProvider } });
   if (!connection?.refreshToken) return;
   const refreshToken = await readRefreshToken(connection);
+  if (!refreshToken) return;
   if (task.externalProvider === "google") await deleteGoogleEvent(refreshToken, task.externalEventId);
   else if (task.externalProvider === "outlook") await deleteOutlookEvent(refreshToken, task.externalEventId);
 }
 
-/** La clé d'accès en clair ; une ancienne clé gardée en clair est chiffrée au passage. */
-async function readRefreshToken(connection: { id: string; refreshToken: string | null; accessToken: string | null }): Promise<string> {
+/**
+ * La clé d'accès en clair ; une ancienne clé gardée en clair est chiffrée au
+ * passage. Illisible (le secret du serveur a changé) : la connexion est retirée,
+ * l'agenda apparaît alors « à connecter » dans l'appli, et null est rendu.
+ */
+async function readRefreshToken(connection: { id: string; refreshToken: string | null; accessToken: string | null }): Promise<string | null> {
   const stored = connection.refreshToken!;
   if (!isSealed(stored)) {
     await prisma.calendarConnection.update({ where: { id: connection.id }, data: { refreshToken: seal(stored), accessToken: seal(connection.accessToken) } });
+    return stored;
   }
-  return open(stored);
+  try {
+    return open(stored);
+  } catch {
+    console.error("Calendar token unreadable (server secret changed?): connection removed", connection.id);
+    await prisma.calendarConnection.deleteMany({ where: { id: connection.id } });
+    return null;
+  }
 }
 
 function combineDateAndTime(date: Date, time: string): Date {

@@ -56,6 +56,7 @@ export function ShoppingBody() {
           onSubmitEditing={onAdd}
           returnKeyType="done"
           placeholder="Ajouter un article…"
+          accessibilityLabel="Article à ajouter à la liste"
           placeholderTextColor={color.neutral600}
           style={{
             flex: 1,
@@ -73,7 +74,7 @@ export function ShoppingBody() {
         <Button label="Ajouter" variant="secondary" onPress={onAdd} disabled={!label.trim()} loading={add.isPending} />
       </View>
 
-      <Button label={`Ajouter le menu ${menuOfWeek(weekTitle(week))}`} variant="ghost" block onPress={onFromMenu} loading={fromMenu.isPending} />
+      <Button label={`Ajouter les ingrédients du menu ${menuOfWeek(weekTitle(week))}`} variant="ghost" block onPress={onFromMenu} loading={fromMenu.isPending} />
 
       {!isLoading && items.length === 0 && (
         <Card>

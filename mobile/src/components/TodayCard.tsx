@@ -4,7 +4,9 @@ import { router } from "expo-router";
 import { Card } from "./Card";
 import { Text } from "./Text";
 import { CalendarIcon, MealIcon, WalletIcon } from "./icons";
-import { useMeals, useMonthlyBudget, useRecipes, useTasks } from "../hooks/useApi";
+import { useMeals, useMonthlyBudget, useRecipes, useTaskDone, useTasks } from "../hooks/useApi";
+import { weekKey } from "../lib/stars";
+import { dayKey } from "../lib/appointments";
 import { todayWeekday } from "../lib/weekdays";
 import { currentMonth } from "../lib/money";
 import { nowTime, todayLines, todaySummary } from "../lib/today";
@@ -17,7 +19,10 @@ export function TodayCard() {
   const { data: meals = [] } = useMeals();
   const { data: recipes = [] } = useRecipes();
   const { data: budget } = useMonthlyBudget(currentMonth());
-  const s = todaySummary(todayWeekday(), nowTime(), tasks, meals, recipes, budget);
+  const { data: doneMarks } = useTaskDone(weekKey());
+  const today = dayKey(new Date());
+  const doneIds = doneMarks ? new Set(doneMarks.filter((m) => m.day === today).map((m) => m.taskId)) : undefined;
+  const s = todaySummary(todayWeekday(), nowTime(), tasks, meals, recipes, budget, today, doneIds);
 
   const lines = todayLines(s);
 
@@ -28,7 +33,7 @@ export function TodayCard() {
       </Text>
       <Line icon={<CalendarIcon size={15} color={color.pillar1} />} text={lines.tasks} />
       <Line icon={<MealIcon size={15} color={color.pillar2} />} text={lines.dinner} onPress={() => router.push("/repas")} />
-      <Line icon={<WalletIcon size={15} color={color.pillar3} />} text={lines.budget} danger={lines.overBudget} onPress={() => router.push("/budget")} />
+      <Line icon={<WalletIcon size={15} color={color.pillar3} />} text={lines.budget} danger={lines.overBudget} onPress={() => router.push("/budget?tab=budget")} />
     </Card>
   );
 }

@@ -1,6 +1,7 @@
 import type { Meal, MonthlyBudget, Recipe, Task, Weekday } from "../api/types";
 import { formatEuros } from "./money";
 import { dayKey } from "./appointments";
+import { isCheckable } from "./planningFilter";
 
 export interface TodaySummary {
   taskCount: number;
@@ -8,8 +9,14 @@ export interface TodaySummary {
   next: Task | null;
   /** Tonight's dinner: recipe title or free text, or null if not planned. */
   dinner: string | null;
-  /** Budget line: what's left under the caps, or what was spent if no cap. */
-  budget: { spentCents: number; capCents: number | null };
+  /** Tâches du jour à cocher (hors École et Travail) pas encore faites ; null si on ne sait pas. */
+  toTick: number | null;
+  /**
+   * Budget line. `spentCents`: the whole month. `cappedSpentCents` / `capCents`:
+   * only the categories that have a cap (null when none has). `overCount`:
+   * how many capped categories are over.
+   */
+  budget: { spentCents: number; cappedSpentCents: number; capCents: number | null; overCount: number };
 }
 
 /** "HH:MM" of now, for comparing with task times. */
@@ -25,20 +32,27 @@ export function todaySummary(
   recipes: Recipe[],
   budget: MonthlyBudget | undefined,
   todayDate: string = dayKey(new Date()),
+  /** Ids des tâches cochées aujourd'hui, si on les connaît. */
+  doneIds?: Set<string>,
 ): TodaySummary {
   // Un rendez-vous ne compte que le jour de sa date.
   const todays = tasks.filter((t) => (t.appointmentDate ? t.appointmentDate === todayDate : t.weekday === today)).sort((a, b) => a.time.localeCompare(b.time));
   const next = todays.find((t) => t.time >= time) ?? null;
   const meal = meals.find((m) => m.weekday === today && m.type === "dîner");
   const dinner = meal ? (meal.recipeId ? recipes.find((r) => r.id === meal.recipeId)?.title ?? meal.title : meal.title) || null : null;
+  // Les plafonds ne comparent que les dépenses des catégories plafonnées
+  // (le loyer sans plafond ne « dépasse » rien).
   const caps = budget?.byCategory.filter((c) => c.limitCents !== null) ?? [];
   return {
     taskCount: todays.length,
     next,
     dinner,
+    toTick: doneIds ? todays.filter((t) => isCheckable(t) && !doneIds.has(t.id)).length : null,
     budget: {
       spentCents: budget?.totalCents ?? 0,
+      cappedSpentCents: caps.reduce((sum, c) => sum + c.totalCents, 0),
       capCents: caps.length > 0 ? caps.reduce((sum, c) => sum + (c.limitCents ?? 0), 0) : null,
+      overCount: caps.filter((c) => c.totalCents > (c.limitCents ?? 0)).length,
     },
   };
 }
@@ -53,10 +67,18 @@ export interface TodayLines {
 /** The three sentences shown by the « Aujourd'hui » card and the widget. */
 export function todayLines(s: TodaySummary): TodayLines {
   const n = `${s.taskCount} tâche${s.taskCount > 1 ? "s" : ""}`;
-  const tasks = s.taskCount === 0 ? "Rien de prévu aujourd'hui" : s.next ? `${n} · prochaine : ${s.next.time} ${s.next.title}` : `${n} · journée terminée`;
+  // Le soir : « journée terminée » seulement si tout ce qui se coche est coché.
+  const evening = s.toTick ? `Plus rien de prévu · ${s.toTick} à cocher` : `${n} · journée terminée`;
+  const tasks = s.taskCount === 0 ? "Rien de prévu aujourd'hui" : s.next ? `${n} · prochaine : ${s.next.time} ${s.next.title}` : evening;
   const dinner = s.dinner ? `Ce soir : ${s.dinner}` : "Dîner pas encore prévu";
-  const left = s.budget.capCents !== null ? s.budget.capCents - s.budget.spentCents : null;
+  const { capCents, cappedSpentCents, overCount, spentCents } = s.budget;
   const budget =
-    left === null ? `${formatEuros(s.budget.spentCents)} dépensés ce mois-ci` : left >= 0 ? `Reste ${formatEuros(left)} sur les plafonds du mois` : `Plafonds dépassés de ${formatEuros(-left)}`;
-  return { tasks, dinner, budget, overBudget: left !== null && left < 0 };
+    capCents === null
+      ? `${formatEuros(spentCents)} dépensés ce mois-ci`
+      : overCount > 0
+        ? overCount === 1
+          ? "1 plafond dépassé ce mois-ci"
+          : `${overCount} plafonds dépassés ce mois-ci`
+        : `Reste ${formatEuros(capCents - cappedSpentCents)} sur les plafonds du mois`;
+  return { tasks, dinner, budget, overBudget: overCount > 0 };
 }

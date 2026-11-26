@@ -25,8 +25,21 @@ export function TaskCard({ task, members, done, onToggleDone }: { task: Task; me
       fg: m.tint === "neutral" ? color.neutral100 : color.accent100,
     }));
 
+  // Lecteur d'écran : la carte est lue d'un bloc ; la case « fait » y est
+  // proposée comme action (« Marquer comme faite ») plutôt que cachée dedans.
+  const checkable = !!onToggleDone && isCheckable(task);
+  const toggleLabel = done ? "Décocher" : "Marquer comme faite";
   return (
-    <Pressable onPress={() => router.push(`/task/${task.id}`)}>
+    <Pressable
+      onPress={() => router.push(`/task/${task.id}`)}
+      accessibilityLabel={`${task.title}, ${task.time}, ${task.category}${done ? ", faite" : ""}`}
+      accessibilityHint="Ouvre la tâche"
+      accessibilityActions={checkable ? [{ name: "activate" }, { name: "toggleDone", label: toggleLabel }] : undefined}
+      onAccessibilityAction={(e) => {
+        if (e.nativeEvent.actionName === "toggleDone") onToggleDone?.();
+        else if (e.nativeEvent.actionName === "activate") router.push(`/task/${task.id}`);
+      }}
+    >
       <Card
         row
         style={{
@@ -44,13 +57,13 @@ export function TaskCard({ task, members, done, onToggleDone }: { task: Task; me
             </View>
           ))}
 
-        <View style={{ width: 52, gap: 3 }}>
+        <View style={{ width: 60, gap: 3 }}>
           <Text mono size={13} weight="medium">
             {task.time}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
             <ClockIcon size={9} color={color.neutral500} />
-            <Text size={11} tone="faint" mono>
+            <Text size={11} tone="faint" mono numberOfLines={1} style={{ flexShrink: 1 }}>
               {formatDuration(task.duration)}
             </Text>
           </View>

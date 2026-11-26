@@ -40,6 +40,22 @@ function serializeParticipant(p: FullGroup["participants"][number], used: Set<st
   return { id: p.id, name: p.name, memberId: p.memberId, used: used.has(p.id), ...(withLinks ? { linkToken: p.linkToken } : {}) };
 }
 
+/** Une photo annoncée n'est montrée qu'une fois arrivée dans le stockage ; ratée depuis une heure, elle est oubliée. */
+const PHOTO_GIVE_UP_MS = 60 * 60_000;
+async function photoReady(e: FullGroup["expenses"][number], storage: ReturnType<typeof getStorage>): Promise<boolean> {
+  if (!e.photoKey || !storage) return false;
+  if (!e.photoPending) return true;
+  const size = await storage.size(e.photoKey).catch(() => null);
+  if (size !== null) {
+    await prisma.splitExpense.update({ where: { id: e.id }, data: { photoPending: false } });
+    return true;
+  }
+  if (Date.now() - e.updatedAt.getTime() > PHOTO_GIVE_UP_MS) {
+    await prisma.splitExpense.update({ where: { id: e.id }, data: { photoKey: null, photoMime: null, photoPending: false } });
+  }
+  return false;
+}
+
 /** `withLinks`: the family sees each person's link secret; the web page never does. */
 export async function serializeGroup(g: FullGroup, withExpenses: boolean, withLinks = true) {
   const { bal, spent, transfers } = summary(g);
@@ -70,7 +86,7 @@ export async function serializeGroup(g: FullGroup, withExpenses: boolean, withLi
               kind: e.kind,
               shares: e.shares.map((s) => ({ participantId: s.participantId, value: s.value, amountCents: s.amountCents })),
               addedById: e.addedById,
-              photoUrl: storage && e.photoKey ? await storage.downloadUrl(e.photoKey, `ticket${PHOTO_TYPES[e.photoMime as keyof typeof PHOTO_TYPES] ?? ".jpg"}`).catch(() => null) : null,
+              photoUrl: storage && (await photoReady(e, storage)) ? await storage.downloadUrl(e.photoKey!, `ticket${PHOTO_TYPES[e.photoMime as keyof typeof PHOTO_TYPES] ?? ".jpg"}`).catch(() => null) : null,
               createdAt: e.createdAt.toISOString(),
             })),
           ),
@@ -282,6 +298,7 @@ splitsRouter.post("/:id/expenses", async (req, res) => {
       mode: d.mode,
       photoKey: photo.key,
       photoMime: photo.mime,
+      photoPending: !!photo.upload,
       shares: { create: shares },
     },
   });
@@ -308,7 +325,7 @@ splitsRouter.put("/:id/expenses/:eid", async (req, res) => {
     prisma.splitShare.deleteMany({ where: { expenseId: existing.id } }),
     prisma.splitExpense.update({
       where: { id: existing.id },
-      data: { title: d.title, amountCents: d.amountCents, paidById: d.paidById, date: new Date(`${d.date}T00:00:00Z`), mode: d.mode, photoKey: photo.key, photoMime: photo.mime, shares: { create: shares } },
+      data: { title: d.title, amountCents: d.amountCents, paidById: d.paidById, date: new Date(`${d.date}T00:00:00Z`), mode: d.mode, photoKey: photo.key, photoMime: photo.mime, ...(photo.upload ? { photoPending: true } : {}), shares: { create: shares } },
     }),
   ]);
   if (d.photo && existing.photoKey) await removeObjects([existing.photoKey]).catch(() => undefined);
@@ -320,7 +337,7 @@ splitsRouter.delete("/:id/expenses/:eid/photo", async (req, res) => {
   const existing = g?.expenses.find((x) => x.id === req.params.eid);
   if (!g || !existing) return res.status(404).json({ error: "Dépense introuvable" });
   if (existing.photoKey) {
-    await prisma.splitExpense.update({ where: { id: existing.id }, data: { photoKey: null, photoMime: null } });
+    await prisma.splitExpense.update({ where: { id: existing.id }, data: { photoKey: null, photoMime: null, photoPending: false } });
     await removeObjects([existing.photoKey]).catch(() => undefined);
   }
   res.json({ group: await serializeGroup((await loadGroup(req.familyId!, g.id))!, true) });

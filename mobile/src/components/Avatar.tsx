@@ -45,7 +45,7 @@ export function AvatarStack({ avatars, size = 24, bgBehind = themeColor.bg }: { 
   return (
     <View style={{ flexDirection: "row", paddingLeft: space.sm }}>
       {avatars.map((a, i) => (
-        <Avatar key={i} initials={a.initials} bg={a.bg} fg={a.fg} size={size} borderColor={bgBehind} style={{ marginLeft: -space.sm }} />
+        <Avatar key={i} initials={a.initials} bg={a.bg} fg={a.fg} size={size} borderColor={bgBehind} style={{ marginLeft: i === 0 ? -space.sm : -Math.round(size * 0.22) }} />
       ))}
     </View>
   );

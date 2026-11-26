@@ -174,4 +174,14 @@ describe("Comptes partagés — lien d'une personne", () => {
       setPushSender(null);
     }
   });
+
+  it("keeps an archived group read-only through a person's link", async () => {
+    const { auth, id, ids } = await newGroup(["Anaïs", "Marc"]);
+    const made = await request(app).post(`/splits/${id}/participants/${ids.Marc}/link`).set(auth);
+    const token = made.body.group.participants.find((p: { id: string }) => p.id === ids.Marc).linkToken as string;
+    await request(app).patch(`/splits/${id}`).set(auth).send({ archived: true });
+    expect((await request(app).get(`/s/${token}/data`)).status).toBe(200);
+    const body = { title: "Après coup", amountCents: 1000, paidById: ids.Marc, date: "2026-11-25", shares: [{ participantId: ids.Marc, value: 1 }] };
+    expect((await request(app).post(`/s/${token}/expenses`).send(body)).status).toBe(403);
+  });
 });

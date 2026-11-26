@@ -102,4 +102,28 @@ describe("pocket money", () => {
     expect((await request(app).delete(`/pocket-money/advances/${big.id}`).set(childAuth)).status).toBe(403);
     expect((await request(app).get("/splits").set(childAuth)).status).toBe(403);
   });
+
+  it("keeps the children's advances away from a « planning » account", async () => {
+    const { auth, memberId } = await familyWithChildAccount();
+    const code = (await request(app).post("/family/invite").set(auth).send({ role: "planning" })).body.invite.code as string;
+    const email = `planning${Date.now()}${Math.floor(Math.random() * 1e6)}@passerelle.test`;
+    const joined = await request(app).post("/auth/signup").send({ email, password: "password123", name: "Mamie", familyCode: code, age15: true });
+    const planning = authHeader(joined.body.accessToken);
+    expect((await request(app).get("/pocket-money/advances/family").set(planning)).status).toBe(403);
+    expect((await request(app).post("/pocket-money/advances/family").set(planning).send({ memberId, amountCents: 100, label: "x" })).status).toBe(403);
+  });
+
+  it("two repayments at once can't empty the piggy bank below zero", async () => {
+    const { auth, memberId, space, childAuth } = await familyWithChildAccount();
+    await request(app).post("/pocket-money/credits").set(space).send({ amountCents: 1000, label: "Anniversaire" });
+    const a1 = (await request(app).post("/pocket-money/advances/family").set(auth).send({ memberId, amountCents: 800, label: "Jeu" })).body.advance;
+    const a2 = (await request(app).post("/pocket-money/advances/family").set(auth).send({ memberId, amountCents: 800, label: "Livre" })).body.advance;
+    const [r1, r2] = await Promise.all([
+      request(app).post(`/pocket-money/advances/${a1.id}/repay`).set(childAuth).send({}),
+      request(app).post(`/pocket-money/advances/${a2.id}/repay`).set(childAuth).send({}),
+    ]);
+    expect([r1.status, r2.status].sort()).toEqual([200, 400]);
+    const mine = await request(app).get("/pocket-money").set(childAuth);
+    expect(mine.body.balanceCents).toBeGreaterThanOrEqual(0);
+  });
 });

@@ -44,6 +44,13 @@ async function resolve(req: Request, res: Response): Promise<{ me: FullGroup["pa
   return { me, g };
 }
 
+/** Un groupe archivé (soldé) se consulte encore par le lien, mais ne change plus. */
+function refuseIfArchived(r: { g: FullGroup }, res: Response): boolean {
+  if (!r.g.archivedAt) return false;
+  res.status(403).json({ error: "Ce groupe est archivé : il ne peut plus être modifié." });
+  return true;
+}
+
 async function reload(id: string) {
   return (await prisma.splitGroup.findUnique({ where: { id }, include: groupInclude }))!;
 }
@@ -77,6 +84,7 @@ splitsPublicRouter.get("/:token/data", async (req, res) => {
 splitsPublicRouter.post("/:token/expenses", async (req, res) => {
   const r = await resolve(req, res);
   if (!r) return;
+  if (refuseIfArchived(r, res)) return;
   const parsed = expenseSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const d = parsed.data;
@@ -94,6 +102,7 @@ splitsPublicRouter.post("/:token/expenses", async (req, res) => {
       mode: d.mode,
       photoKey: photo.key,
       photoMime: photo.mime,
+      photoPending: !!photo.upload,
       addedById: r.me.id,
       shares: { create: shares },
     },
@@ -111,6 +120,7 @@ function ownExpense(r: { me: { id: string }; g: FullGroup }, eid: string) {
 splitsPublicRouter.put("/:token/expenses/:eid", async (req, res) => {
   const r = await resolve(req, res);
   if (!r) return;
+  if (refuseIfArchived(r, res)) return;
   const existing = ownExpense(r, String(req.params.eid));
   if (!existing) return res.status(403).json({ error: "Tu ne peux modifier que les dépenses que tu as ajoutées." });
   const parsed = expenseSchema.safeParse(req.body);
@@ -124,7 +134,7 @@ splitsPublicRouter.put("/:token/expenses/:eid", async (req, res) => {
     prisma.splitShare.deleteMany({ where: { expenseId: existing.id } }),
     prisma.splitExpense.update({
       where: { id: existing.id },
-      data: { title: d.title, amountCents: d.amountCents, paidById: d.paidById, date: new Date(`${d.date}T00:00:00Z`), mode: d.mode, photoKey: photo.key, photoMime: photo.mime, shares: { create: shares } },
+      data: { title: d.title, amountCents: d.amountCents, paidById: d.paidById, date: new Date(`${d.date}T00:00:00Z`), mode: d.mode, photoKey: photo.key, photoMime: photo.mime, ...(photo.upload ? { photoPending: true } : {}), shares: { create: shares } },
     }),
   ]);
   if (d.photo && existing.photoKey) await removeObjects([existing.photoKey]).catch(() => undefined);
@@ -134,6 +144,7 @@ splitsPublicRouter.put("/:token/expenses/:eid", async (req, res) => {
 splitsPublicRouter.delete("/:token/expenses/:eid", async (req, res) => {
   const r = await resolve(req, res);
   if (!r) return;
+  if (refuseIfArchived(r, res)) return;
   const existing = ownExpense(r, String(req.params.eid));
   if (!existing) return res.status(403).json({ error: "Tu ne peux supprimer que les dépenses que tu as ajoutées." });
   await prisma.splitExpense.delete({ where: { id: existing.id } });

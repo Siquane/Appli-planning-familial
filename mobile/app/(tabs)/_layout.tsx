@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { useEffect } from "react";
 import { AppState } from "react-native";
 import { router, Tabs } from "expo-router";
@@ -47,7 +48,8 @@ export default function TabsLayout() {
       handledAlert = id;
       router.navigate(route as never);
     };
-    open(Notifications.getLastNotificationResponse());
+    // Pas de notification « d'ouverture » sur le web (version d'essai).
+    if (Platform.OS !== "web") open(Notifications.getLastNotificationResponse());
     const tap = Notifications.addNotificationResponseReceivedListener(open);
     // Alerte reçue appli ouverte : les données ont changé, on les recharge.
     const received = Notifications.addNotificationReceivedListener((n) => {
@@ -99,7 +101,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="home" options={{ title: "Planning" }} />
       {/* Un compte enfant n'a pas l'onglet Repas. */}
       <Tabs.Screen name="repas" options={{ title: "Repas", href: isChild ? null : undefined }} />
-      <Tabs.Screen name="budget" options={{ title: "Comptes" }} />
+      <Tabs.Screen name="budget" options={{ title: "Budget" }} />
       <Tabs.Screen name="famille" options={{ title: "Famille" }} />
     </Tabs>
     <FamilyNoticeModal />

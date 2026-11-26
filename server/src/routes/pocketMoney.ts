@@ -22,6 +22,13 @@ async function childAccount(req: Request, res: Response): Promise<string | null>
   return account.id;
 }
 
+/** Les avances des enfants : réservées aux parents (propriétaire ou accès complet), comme leur espace. */
+function parentOnly(req: Request, res: Response): boolean {
+  if (req.familyRole === "owner" || req.familyRole === "full") return true;
+  res.status(403).json({ error: "Seul un parent avec l'accès complet peut voir les avances des enfants.", code: "child_space_forbidden" });
+  return false;
+}
+
 function adultOnly(req: Request, res: Response): boolean {
   if (req.familyRole !== "child") return true;
   res.status(403).json({ error: "Demande à un parent de le faire.", code: "child_forbidden" });
@@ -143,21 +150,25 @@ pocketMoneyRouter.post("/advances/:id/repay", async (req, res) => {
   const left = a.amountCents - a.repaidCents;
   if (left <= 0) return res.status(409).json({ error: "C'est déjà remboursé." });
   const amount = Math.min(left, parsed.data.amountCents ?? left);
-  const [credits, spent] = await Promise.all([
-    prisma.pocketMoneyCredit.aggregate({ where: { accountId }, _sum: { amountCents: true } }),
-    prisma.expense.aggregate({ where: { userId: accountId }, _sum: { amountCents: true } }),
-  ]);
-  const balance = (credits._sum.amountCents ?? 0) - (spent._sum.amountCents ?? 0);
-  if (balance < amount) {
-    return res.status(400).json({ error: balance > 0 ? `Il n'y a que ${(balance / 100).toFixed(2).replace(".", ",")} € dans la cagnotte : rembourse une partie.` : "La cagnotte est vide pour l'instant.", code: "not_enough" });
-  }
-  // Conditional update: two taps at once can't repay twice.
+  // Solde vérifié et remboursement écrit d'un seul tenant, sous un verrou par
+  // compte : deux remboursements en même temps ne vident pas la cagnotte.
   const done = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`pocket:${accountId}`}))`;
+    const [credits, spent] = await Promise.all([
+      tx.pocketMoneyCredit.aggregate({ where: { accountId }, _sum: { amountCents: true } }),
+      tx.expense.aggregate({ where: { userId: accountId }, _sum: { amountCents: true } }),
+    ]);
+    const balance = (credits._sum.amountCents ?? 0) - (spent._sum.amountCents ?? 0);
+    if (balance < amount) return { short: balance };
     const upd = await tx.pocketMoneyAdvance.updateMany({ where: { id: a.id, repaidCents: a.repaidCents }, data: { repaidCents: { increment: amount } } });
     if (upd.count === 0) return false;
     await tx.pocketMoneyCredit.create({ data: { accountId, amountCents: -amount, label: `Remboursé : ${a.label}`, day: parisDay(), source: "repay" } });
     return true;
   });
+  if (typeof done === "object") {
+    const balance = done.short;
+    return res.status(400).json({ error: balance > 0 ? `Il n'y a que ${(balance / 100).toFixed(2).replace(".", ",")} € dans la cagnotte : rembourse une partie.` : "La cagnotte est vide pour l'instant.", code: "not_enough" });
+  }
   if (!done) return res.status(409).json({ error: "Réessaie dans un instant." });
   const updated = await prisma.pocketMoneyAdvance.findUniqueOrThrow({ where: { id: a.id } });
   res.json({ advance: serializeAdvance(updated) });
@@ -165,7 +176,7 @@ pocketMoneyRouter.post("/advances/:id/repay", async (req, res) => {
 
 /** Onglet Comptes : les avances de tous les enfants de la famille. */
 pocketMoneyRouter.get("/advances/family", async (req, res) => {
-  if (!adultOnly(req, res)) return;
+  if (!parentOnly(req, res)) return;
   const children = await prisma.user.findMany({ where: { familyOwnerId: req.familyId!, familyRole: "child" }, select: { id: true, name: true, childMemberId: true }, orderBy: { createdAt: "asc" } });
   const advances = await prisma.pocketMoneyAdvance.findMany({ where: { accountId: { in: children.map((c) => c.id) } }, orderBy: { createdAt: "desc" } });
   res.json({
@@ -177,7 +188,7 @@ pocketMoneyRouter.get("/advances/family", async (req, res) => {
 });
 
 pocketMoneyRouter.post("/advances/family", async (req, res) => {
-  if (!adultOnly(req, res)) return;
+  if (!parentOnly(req, res)) return;
   const parsed = advanceSchema.extend({ memberId: z.string() }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const child = await childOfMember(req.familyId!, parsed.data.memberId);
