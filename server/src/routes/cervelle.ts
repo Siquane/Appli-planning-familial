@@ -394,7 +394,7 @@ cervelleRouter.get("/learners/:learnerId/overview", parentOnly, async (req, res)
     prisma.studySession.aggregate({ where: { learnerId: learner.id, createdAt: { gte: new Date(now - 30 * DAY) } }, _sum: { seconds: true }, _count: true }),
     prisma.studySession.aggregate({ where: { learnerId: learner.id, createdAt: { gte: new Date(now - 60 * DAY), lt: new Date(now - 30 * DAY) } }, _sum: { seconds: true } }),
     prisma.studySession.findFirst({ where: { learnerId: learner.id }, orderBy: { createdAt: "desc" } }),
-    prisma.studySession.findMany({ where: { learnerId: learner.id }, orderBy: { createdAt: "desc" }, take: 8, include: { revision: { select: { title: true } } } }),
+    prisma.studySession.findMany({ where: { learnerId: learner.id }, orderBy: { createdAt: "desc" }, take: 30, include: { revision: { select: { title: true } } } }),
   ]);
   const cur = last30._sum.seconds ?? 0;
   const prev = prev30._sum.seconds ?? 0;
