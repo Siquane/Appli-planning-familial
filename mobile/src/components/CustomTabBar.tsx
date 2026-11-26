@@ -1,4 +1,5 @@
 import { OfflineBanner } from "./OfflineBanner";
+import { Pop } from "./motion";
 import { useState } from "react";
 import { Pressable } from "./Touchable";
 import { View } from "react-native";
@@ -55,7 +56,9 @@ export function CustomTabBar({ state, navigateToTab }: BottomTabBarProps) {
             filter: isFocused ? [{ dropShadow: { offsetX: 0, offsetY: 0, standardDeviation: 5, color: `${pillar}aa` } }] : undefined,
           }}
         >
-          <Icon size={28} color={tint} />
+          <Pop k={isFocused ? "on" : "off"} scale={isFocused ? 1.2 : 1}>
+            <Icon size={28} color={tint} />
+          </Pop>
         </View>
         <Text size={11} maxFontSizeMultiplier={1.2} numberOfLines={1} style={{ color: tint }}>
           {label}
