@@ -21,7 +21,7 @@ export function WeekStrip({ selected, onSelect, today, week }: { selected: Weekd
   const GAP = space.sm;
   const itemW = width ? (width - GAP * 6) / 7 : 0;
   return (
-    <View style={{ flexDirection: "row", gap: space.sm }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+    <View style={{ flexDirection: "row", gap: space.sm }} accessibilityRole="tablist" onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
       {itemW > 0 ? (
         <Animated.View
           pointerEvents="none"

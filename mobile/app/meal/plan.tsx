@@ -165,8 +165,8 @@ export default function MealPlanScreen() {
                 return (
                   <Card key={key} row style={{ alignItems: "center", opacity: busy ? 0.5 : 1 }}>
                     <View style={{ flex: 1, gap: 2 }}>
-                      <Text size={12} tone="faint" style={{ textTransform: "capitalize" }}>
-                        {m.type}
+                      <Text size={12} tone="faint">
+                        {m.type.charAt(0).toUpperCase() + m.type.slice(1)}
                         {m.recipeId ? " · ma recette" : ""}
                       </Text>
                       <Text size={15} weight="medium">

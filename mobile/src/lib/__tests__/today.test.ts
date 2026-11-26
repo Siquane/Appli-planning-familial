@@ -1,4 +1,4 @@
-import { nowTime, todaySummary } from "../today";
+import { nowTime, todayLines, todaySummary } from "../today";
 
 const tasks = [
   { id: "a", title: "École", weekday: 2, time: "08:20" },
@@ -14,13 +14,35 @@ describe("todaySummary", () => {
     expect(s.taskCount).toBe(2);
     expect(s.next?.title).toBe("Piano");
     expect(s.dinner).toBe("Gratin");
-    expect(s.budget).toEqual({ spentCents: 0, capCents: null });
+    expect(s.budget).toEqual({ spentCents: 0, cappedSpentCents: 0, capCents: null, overCount: 0 });
   });
 
   it("has no next task late in the evening, and no dinner when none is planned", () => {
     const s = todaySummary(3, "23:00", tasks, meals, recipes, undefined);
     expect(s.next).toBeNull();
     expect(s.dinner).toBeNull();
+  });
+
+  it("compares only the capped categories with their caps", () => {
+    const budget = {
+      month: "2026-11",
+      totalCents: 133000,
+      expenses: [],
+      byCategory: [
+        { category: "courses", totalCents: 38000, limitCents: 60000 },
+        { category: "logement", totalCents: 95000, limitCents: null },
+      ],
+    } as never;
+    const s = todaySummary(2, "08:00", tasks, meals, recipes, budget);
+    expect(todayLines(s).budget.replace(/\s/g, " ")).toBe("Reste 220,00 € sur les plafonds du mois");
+    expect(todayLines(s).overBudget).toBe(false);
+  });
+
+  it("says the day is over only when everything to tick is ticked", () => {
+    const evening = todaySummary(2, "23:00", tasks, meals, recipes, undefined, undefined, new Set(["a"]));
+    expect(todayLines(evening).tasks).toBe("Plus rien de prévu · 1 à cocher");
+    const done = todaySummary(2, "23:00", tasks, meals, recipes, undefined, undefined, new Set(["a", "b"]));
+    expect(todayLines(done).tasks).toBe("2 tâches · journée terminée");
   });
 
   it("adds up the caps of the month when there are some", () => {
@@ -34,7 +56,9 @@ describe("todaySummary", () => {
         { category: "autre", totalCents: 0, limitCents: null },
       ],
     } as never;
-    expect(todaySummary(2, "08:00", tasks, meals, recipes, budget).budget).toEqual({ spentCents: 70000, capCents: 70000 });
+    const s = todaySummary(2, "08:00", tasks, meals, recipes, budget);
+    expect(s.budget).toEqual({ spentCents: 70000, cappedSpentCents: 70000, capCents: 70000, overCount: 1 });
+    expect(todayLines(s).budget).toBe("1 plafond dépassé ce mois-ci");
   });
 
   it("formats the current time as HH:MM", () => {

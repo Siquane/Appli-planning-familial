@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
 import { RefreshControl, View } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { Chip } from "../../src/components/Chip";
+import { MonthlyBudgetBody } from "../../src/screens/MonthlyBudgetBody";
 import { Screen } from "../../src/components/Screen";
 import { Pressable } from "../../src/components/Touchable";
 import { Text } from "../../src/components/Text";
@@ -18,10 +21,19 @@ import { useAuthStore } from "../../src/state/authStore";
 import { color, space } from "../../src/theme/tokens";
 import type { SplitGroup } from "../../src/api/types";
 
-// Onglet « Comptes » : les dépenses partagées avec d'autres (l'autre parent,
-// des amis…), groupe par groupe, et qui doit combien à qui.
-export default function ComptesScreen() {
+type Part = "budget" | "partages";
+
+// Onglet « Budget » : « Mon budget » (dépenses du mois, plafonds, outils
+// Budget+) et « Partagés » (dépenses partagées avec d'autres : l'autre parent,
+// des amis…, groupe par groupe, et qui doit combien à qui).
+export default function BudgetScreen() {
   const isChild = useIsChildAccount();
+  // /budget?tab=partages ouvre directement les dépenses partagées (notifications des groupes).
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
+  const [part, setPart] = useState<Part>(tab === "partages" ? "partages" : "budget");
+  useEffect(() => {
+    if (tab === "partages" || tab === "budget") setPart(tab);
+  }, [tab]);
   const { data: groups = [], isLoading, refetch, isRefetching } = useSplitGroups();
   const { data: kids = [] } = useFamilyAdvances();
   const active = groups.filter((g) => !g.archived);
@@ -29,11 +41,20 @@ export default function ComptesScreen() {
 
   return (
     <Screen techGrid edges={["top"]} style={{ gap: space.lg }} refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={color.accent} />}>
-      <TabHeader title="Comptes" />
+      <TabHeader title="Budget" />
       <ChildSpaceBanner />
       <PocketMoneyCard />
 
-      {isChild ? null : (
+      {!isChild && (
+        <View style={{ flexDirection: "row", gap: space.xs }}>
+          <Chip label="Mon budget" selected={part === "budget"} onPress={() => setPart("budget")} fill />
+          <Chip label="Partagés" selected={part === "partages"} onPress={() => setPart("partages")} fill />
+        </View>
+      )}
+
+      {isChild || part === "budget" ? (
+        <MonthlyBudgetBody />
+      ) : (
         <>
       <Button label="Nouveau groupe" variant="primary" block icon={<PlusIcon size={16} color={color.bg} />} onPress={() => router.push("/comptes/new")} />
 

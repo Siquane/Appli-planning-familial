@@ -91,7 +91,7 @@ export default function GroupSettingsScreen() {
             .remove(g.id)
             .then(() => {
               void qc.invalidateQueries({ queryKey: ["splits"] });
-              router.dismissTo("/(tabs)/budget");
+              router.dismissTo("/(tabs)/budget?tab=partages");
             })
             .catch((e) => toast(e, "supprimer le groupe")),
       },

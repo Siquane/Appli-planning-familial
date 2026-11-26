@@ -742,11 +742,11 @@ model Revision {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  notions     Notion[]
+  notions      Notion[]
   teachQuizzes TeachQuiz[]
-  questions   Question[]
-  sessions    StudySession[]
-  examReviews ExamReview[]
+  questions    Question[]
+  sessions     StudySession[]
+  examReviews  ExamReview[]
 
   @@index([learnerId, createdAt])
 }
@@ -1052,20 +1052,20 @@ model CardDraw {
 /// family; a parent answers them in Passerelle, the child sees the answers and
 /// gets stars for having taught.
 model TeachQuiz {
-  id              String    @id @default(cuid())
-  learnerId       String
-  learner         Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
-  revisionId      String
-  revision        Revision  @relation(fields: [revisionId], references: [id], onDelete: Cascade)
-  questionIds     String[]
+  id             String    @id @default(cuid())
+  learnerId      String
+  learner        Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  revisionId     String
+  revision       Revision  @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  questionIds    String[]
   /// [{ questionId, answer, correct }] once answered.
-  answers         Json?
-  answeredById    String?
-  answeredByName  String?
-  answeredAt      DateTime?
+  answers        Json?
+  answeredById   String?
+  answeredByName String?
+  answeredAt     DateTime?
   /// The child saw the parent's answers.
-  seenAt          DateTime?
-  createdAt       DateTime  @default(now())
+  seenAt         DateTime?
+  createdAt      DateTime  @default(now())
 
   @@index([learnerId, createdAt])
 }
@@ -1331,25 +1331,27 @@ model SplitParticipant {
 }
 
 model SplitExpense {
-  id          String           @id @default(cuid())
-  groupId     String
-  group       SplitGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  title       String
-  amountCents Int
-  paidById    String
-  paidBy      SplitParticipant @relation("SplitPaidBy", fields: [paidById], references: [id], onDelete: Cascade)
-  date        DateTime         @db.Date
+  id           String           @id @default(cuid())
+  groupId      String
+  group        SplitGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  title        String
+  amountCents  Int
+  paidById     String
+  paidBy       SplitParticipant @relation("SplitPaidBy", fields: [paidById], references: [id], onDelete: Cascade)
+  date         DateTime         @db.Date
   // "equal" | "percent" | "amount" | "shares"
-  mode        String           @default("equal")
+  mode         String           @default("equal")
   // "expense", or "transfer" when someone pays someone back.
-  kind        String           @default("expense")
-  photoKey    String?
-  photoMime   String?
+  kind         String           @default("expense")
+  photoKey     String?
+  photoMime    String?
+  /// Photo annoncée mais pas encore vue dans le stockage (envoi en cours ou raté).
+  photoPending Boolean          @default(false)
   // Participant who added it through their web link (null: added in the app).
-  addedById   String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  shares      SplitShare[]
+  addedById    String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  shares       SplitShare[]
 
   @@index([groupId, date])
 }
