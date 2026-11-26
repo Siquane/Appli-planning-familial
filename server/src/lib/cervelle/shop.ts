@@ -122,12 +122,12 @@ export const SHOP: CatalogItem[] = [
   t("ile_tresor", "Île au trésor", "decor"),
 
   // Décor
-  n("classe", "Salle de classe", "decor", 120),
-  n("bibliotheque", "Bibliothèque", "decor", 150),
-  n("plage", "Plage", "decor", 150),
-  n("foret", "Forêt", "decor", 150),
-  n("espace", "Espace", "decor", 200),
-  s("neige", "Paysage de neige", "decor", 120, "12-01", "02-28"),
+  n("classe", "Salle de classe", "decor", 300),
+  n("bibliotheque", "Bibliothèque", "decor", 300),
+  n("plage", "Plage", "decor", 300),
+  n("foret", "Forêt", "decor", 300),
+  n("espace", "Espace", "decor", 500),
+  s("neige", "Paysage de neige", "decor", 300, "12-01", "02-28"),
   l("aurore", "Aurore boréale", "decor", 1000),
   n("fond_marin", "Fond marin", "decor", 200),
   n("montagne", "Montagne", "decor", 150),
