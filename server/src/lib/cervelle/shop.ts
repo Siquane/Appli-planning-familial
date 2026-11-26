@@ -129,6 +129,10 @@ export const SHOP: CatalogItem[] = [
   n("espace", "Espace", "decor", 200),
   s("neige", "Paysage de neige", "decor", 120, "12-01", "02-28"),
   l("aurore", "Aurore boréale", "decor", 1000),
+  n("fond_marin", "Fond marin", "decor", 200),
+  n("montagne", "Montagne", "decor", 150),
+  n("jungle", "Jungle des dinosaures", "decor", 200),
+  n("chateau", "Château", "decor", 150),
 ];
 
 export function shopItem(id: string): CatalogItem | null {
