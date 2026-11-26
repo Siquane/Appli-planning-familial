@@ -1,7 +1,42 @@
 # Résumé de projet — Appli planning familial (Passerelle)
 
 À lire en premier dans une nouvelle session. Ce fichier remplace l'historique des conversations précédentes.
-Dernière mise à jour : 19 novembre 2026 (documentation, dépendances, nettoyage).
+Dernière mise à jour : 26 novembre 2026.
+
+## État au 26/11/2026 — à lire d'abord (complète la section suivante)
+
+- **Dépôt public** depuis le 24/11 (GitHub Actions gratuit, les mises à jour EAS
+  partent à chaque fusion). Avant de le rendre public : historique vérifié, aucun
+  secret ; seule la clé Firebase client de `google-services.json` (publique par nature).
+- **Secrets JWT** : en production (`RENDER` ou `NODE_ENV=production`), le serveur
+  refuse de démarrer sans `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` (32 caractères
+  et plus) — `server/src/env.ts`.
+- **Fusion** : l'utilisatrice a dit « fusionne tout sans me demander » : fusionner dès
+  que les vérifications sont vertes (serveur avant l'appli Cervelle). Toujours poser
+  des questions à choix cliquables avant une nouveauté. L'API GitHub renvoie parfois
+  500/502 sur la fusion : réessayer avec `commit_title` explicite, puis vérifier `main`.
+- **Livré du 24 au 26/11** :
+  - Comptes partagés (« Comptes », ex-Budget, façon Tricount) : groupes, 4 modes de
+    partage, virements minimaux, lien web par personne (`/s/<jeton>`), avances aux
+    enfants remboursées avec leur cagnotte.
+  - Tâches dans le Planning (« Toutes les tâches »), bouton du bas au-dessus du clavier.
+  - **Sorties & idées** (Planning) : météo Open-Meteo + 5 idées de Claude
+    (`routes/outings.ts`, `services/outings.ts`, `User.outingCity`), « Ajouter au
+    planning » crée un rendez-vous Loisirs. 15 demandes/famille/24 h.
+  - **Routines du matin et du soir** (Famille > Routines) : le parent règle les
+    étapes, l'enfant coche dans Cervelle (`routes/cervelleRoutines.ts`).
+  - **Quiz « Apprends-le à papa/maman »** : carte sur le Planning et écran
+    `/cervelle-quiz/<id>` (`routes/cervelleTeach.ts`, `TeachQuiz`).
+  - Transitions (`mobile/src/components/motion.tsx`) : pastille du jour qui glisse,
+    journée qui glisse, tâches en cascade, onglet qui saute.
+  - Côté Cervelle (serveur ici) : calendrier de l'Avent, carte au trésor, album de
+    cartes, boss de fin de chapitre, décors à 300/500 pièces, 30 dernières séances.
+    Détail dans `RESUME-PROJET.md` du dépôt `Siquane/Cervelle`.
+- **Tests serveur en local** : `service postgresql start`, puis vitest avec
+  `DATABASE_URL=postgresql://passerelle:passerelle@localhost:5432/passerelle_test`
+  (`npx prisma migrate deploy` avant). Migrations : générer avec
+  `prisma migrate diff`, ne garder que les lignes de sa propre modification.
+
 
 ## État actuel (19/11/2026) — à lire d'abord
 
