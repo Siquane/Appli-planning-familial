@@ -15,6 +15,7 @@ import { TaskCard } from "../../src/components/TaskCard";
 import { TabHeader } from "../../src/components/PageHeader";
 import { TodayCard } from "../../src/components/TodayCard";
 import { CervelleQuizCard } from "../../src/components/CervelleQuizCard";
+import { Cascade, SlideIn, useDirection } from "../../src/components/motion";
 import { ChevronRightIcon, RecurringIcon, ReshuffleIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
 import { shiftWeek, shortDate, tasksOn } from "../../src/lib/appointments";
 import { useMembers, useTaskDone, useTasks, useToggleTaskDone } from "../../src/hooks/useApi";
@@ -36,6 +37,8 @@ export default function HomeScreen() {
   const isChild = useIsChildAccount();
   const today = todayWeekday();
   const [selected, setSelected] = useState<Weekday>(today);
+  // Le contenu du jour glisse du côté du jour choisi.
+  const dayDir = useDirection(selected);
   // 0 = cette semaine, 1 = la suivante, -1 = la précédente…
   const [weekOffset, setWeekOffset] = useState(0);
   const currentWeek = weekKey();
@@ -174,7 +177,7 @@ export default function HomeScreen() {
         </Card>
       )}
 
-      <View style={{ gap: space.sm }}>
+      <SlideIn k={`${week}-${selected}`} direction={dayDir} style={{ gap: space.sm }}>
         <Text weight="medium" size={15} tone="muted">
           {WEEKDAYS_FULL[selected]} {shortDate(day)}
         </Text>
@@ -188,10 +191,12 @@ export default function HomeScreen() {
             <DayRing done={doneCount} total={checkable.length} title={progress.title} detail={progress.detail} />
           </Card>
         )}
-        {dayTasks.map((task) => (
-          <TaskCard key={task.id} task={task} members={members} done={doneIds.has(task.id)} onToggleDone={() => onToggle(task.id)} />
+        {dayTasks.map((task, i) => (
+          <Cascade key={task.id} index={i}>
+            <TaskCard task={task} members={members} done={doneIds.has(task.id)} onToggleDone={() => onToggle(task.id)} />
+          </Cascade>
         ))}
-      </View>
+      </SlideIn>
 
       {/* Discret, sous la liste : un simple lien vers « Replanifier ». */}
       {flexibleCount > 0 && user?.familyRole !== "child" && (
