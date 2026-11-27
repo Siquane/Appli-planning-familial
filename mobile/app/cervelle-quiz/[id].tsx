@@ -59,7 +59,7 @@ export default function CervelleQuizScreen() {
         <TopBar title="Quiz Cervelle" onBack={() => router.back()} />
         {error ? (
           <View style={{ padding: gutter }}>
-            <Text tone="muted">Ce quiz n'existe plus.</Text>
+            <Text tone="muted">Ce quiz n'existe plus. Il a peut-être été supprimé.</Text>
           </View>
         ) : null}
       </Screen>

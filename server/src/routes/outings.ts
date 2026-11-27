@@ -36,7 +36,7 @@ outingsRouter.post("/ideas", async (req, res) => {
   const { day, moment, exclude } = parsed.data;
   const today = parisDay();
   if (day < today || day > addDays(today, 14)) return res.status(400).json({ error: "Choisis un jour dans les deux prochaines semaines." });
-  if (!isMealAiConfigured()) return res.status(503).json({ error: "Les idées ne sont pas disponibles sur ce serveur." });
+  if (!isMealAiConfigured()) return res.status(503).json({ error: "Les idées ne sont pas disponibles pour le moment. Réessaie plus tard." });
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
   if ((await prisma.aiUsage.count({ where: { userId: req.userId!, kind: "sorties", createdAt: { gte: since } } })) >= OUTINGS_DAILY_LIMIT) {
     return res.status(429).json({ error: "Assez d'idées pour aujourd'hui ! Reviens demain." });
