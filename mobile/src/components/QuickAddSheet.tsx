@@ -11,7 +11,8 @@ type Item = { label: string; hint: string; href: Href; Icon: (p: { size: number;
 export const QUICK_ADD_ITEMS: Item[] = [
   { label: "Tâche", hint: "Planning de la famille", href: "/task/new", Icon: CalendarIcon },
   { label: "Rendez-vous", hint: "À une date précise", href: "/task/new?kind=appointment", Icon: ClockIcon },
-  { label: "Dépense", hint: "À partager (comptes)", href: "/comptes/expense", Icon: WalletIcon },
+  { label: "Dépense du mois", hint: "Mon budget", href: "/expense/new", Icon: WalletIcon },
+  { label: "Dépense partagée", hint: "Avec l'autre parent, des amis…", href: "/comptes/expense", Icon: WalletIcon },
   { label: "Document", hint: "Ordonnance, assurance…", href: "/document/new", Icon: DocumentIcon },
   { label: "Recette", hint: "Livre de recettes", href: "/recipe/new", Icon: BookIcon },
   { label: "Repas", hint: "Menu de la semaine", href: "/repas", Icon: MealIcon },

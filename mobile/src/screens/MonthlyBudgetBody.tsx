@@ -238,7 +238,7 @@ export function MonthlyBudgetBody() {
 
         {!isLoading && expenses.length === 0 && (
           <Card>
-            <EmptyState title="Porte-monnaie au repos 💤" detail="Aucune dépense ce mois-ci. Ajoute la première avec le « + », ou importe un relevé." />
+            <EmptyState title="Porte-monnaie au repos 💤" detail="Aucune dépense ce mois-ci. Ajoute la première avec « Ajouter une dépense », ou importe un relevé." />
           </Card>
         )}
 

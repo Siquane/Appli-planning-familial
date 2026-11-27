@@ -110,7 +110,7 @@ familyRouter.post("/join", loginLimiter, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" });
   const accountId = req.accountId!;
   const user = await prisma.user.findUnique({ where: { id: accountId } });
-  if (!user) return res.status(404).json({ error: "Not found" });
+  if (!user) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   if (user.familyOwnerId) return res.status(400).json({ error: "Tu fais déjà partie d'une famille. Quitte-la d'abord pour en rejoindre une autre.", code: "already_in_family" });
   const others = await prisma.user.count({ where: { familyOwnerId: accountId } });
   if (others > 0) {

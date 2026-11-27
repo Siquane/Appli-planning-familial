@@ -78,7 +78,7 @@ export function ShoppingBody() {
 
       {!isLoading && items.length === 0 && (
         <Card>
-          <EmptyState title="Panier vide 🧺" detail="Ajoute des articles, ou génère la liste depuis le menu de la semaine." />
+          <EmptyState title="Panier vide 🧺" detail="Ajoute des articles, ou les ingrédients du menu de la semaine en un geste." />
         </Card>
       )}
 

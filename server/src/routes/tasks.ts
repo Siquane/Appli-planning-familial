@@ -152,7 +152,7 @@ tasksRouter.patch("/:id", async (req, res) => {
   const parsed = patchSchema(taskSchema).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await loadOwnedTask(req.userId!, req.params.id);
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   if (childCannotEdit(req, existing)) return res.status(403).json(CHILD_EDIT_ERROR);
   const d = parsed.data;
 
@@ -192,7 +192,7 @@ function addDays(day: string, n: number): string {
 
 tasksRouter.get("/done", async (req, res) => {
   const week = typeof req.query.week === "string" ? req.query.week : "";
-  if (!isMondayKey(week)) return res.status(400).json({ error: "Semaine invalide" });
+  if (!isMondayKey(week)) return res.status(400).json({ error: "Cette semaine n'est pas valable." });
   const rows = await prisma.taskDone.findMany({
     where: { task: { userId: req.userId! }, day: { gte: week, lte: addDays(week, 6) } },
     select: { taskId: true, day: true },
@@ -202,9 +202,9 @@ tasksRouter.get("/done", async (req, res) => {
 
 tasksRouter.put("/:id/done", async (req, res) => {
   const parsed = z.object({ day: dayKey }).safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Jour invalide" });
+  if (!parsed.success) return res.status(400).json({ error: "Ce jour n'est pas valable. Choisis-en un autre." });
   const task = await loadOwnedTask(req.userId!, req.params.id);
-  if (!task) return res.status(404).json({ error: "Not found" });
+  if (!task) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   // École et Travail sont des créneaux, pas des tâches à cocher.
   if (task.category === "École" || task.category === "Travail") return res.status(400).json({ error: "Les tâches École et Travail ne se cochent pas." });
   await prisma.taskDone.upsert({
@@ -217,16 +217,16 @@ tasksRouter.put("/:id/done", async (req, res) => {
 
 tasksRouter.delete("/:id/done", async (req, res) => {
   const parsed = dayKey.safeParse(req.query.day);
-  if (!parsed.success) return res.status(400).json({ error: "Jour invalide" });
+  if (!parsed.success) return res.status(400).json({ error: "Ce jour n'est pas valable. Choisis-en un autre." });
   const task = await loadOwnedTask(req.userId!, req.params.id);
-  if (!task) return res.status(404).json({ error: "Not found" });
+  if (!task) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   await prisma.taskDone.deleteMany({ where: { taskId: task.id, day: parsed.data } });
   res.status(204).end();
 });
 
 tasksRouter.delete("/:id", async (req, res) => {
   const existing = await loadOwnedTask(req.userId!, req.params.id);
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   if (childCannotEdit(req, existing)) return res.status(403).json(CHILD_EDIT_ERROR);
   try {
     await unsyncTaskFromCalendar(existing);
@@ -272,7 +272,7 @@ tasksRouter.post("/auto-slot", async (req, res) => {
     prisma.task.findMany({ where: { userId: req.userId, ...notOtherWeeks() }, include }),
     schedulingConstraints(req.userId!, req.accountId ?? req.userId!),
   ]);
-  if (!constraints) return res.status(400).json({ error: "Constraints not set up" });
+  if (!constraints) return res.status(400).json({ error: "Tes horaires ne sont pas encore réglés : ouvre Profil → Mes horaires." });
 
   const schedulable: SchedulableTask[] = tasks.map((t) => ({
     id: t.id,
@@ -305,7 +305,7 @@ tasksRouter.get("/replan/proposals", async (req, res) => {
     prisma.task.findMany({ where: { userId: req.userId, ...notOtherWeeks() }, include }),
     schedulingConstraints(req.userId!, req.accountId ?? req.userId!),
   ]);
-  if (!constraints) return res.status(400).json({ error: "Constraints not set up" });
+  if (!constraints) return res.status(400).json({ error: "Tes horaires ne sont pas encore réglés : ouvre Profil → Mes horaires." });
 
   const schedulable: SchedulableTask[] = tasks.map((t) => ({
     id: t.id,

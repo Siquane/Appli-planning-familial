@@ -58,7 +58,7 @@ notesRouter.post("/", async (req, res) => {
   const parsed = noteSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const count = await prisma.note.count({ where: visible(req.familyId!, req.accountId!) });
-  if (count >= MAX_NOTES) return res.status(400).json({ error: `${MAX_NOTES} notes au plus` });
+  if (count >= MAX_NOTES) return res.status(400).json({ error: `${MAX_NOTES} notes au plus. Supprimes-en une d'abord.` });
   const d = parsed.data;
   const note = await prisma.note.create({
     data: { ...d, userId: d.shared ? req.familyId! : req.accountId!, authorId: req.accountId! },
@@ -85,7 +85,7 @@ notesRouter.patch("/:id", async (req, res) => {
   const parsed = patch.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await loadVisible(req.params.id, req.familyId!, req.accountId!);
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   const d = parsed.data;
   // Une note de la famille ne devient perso que pour celui qui l'a écrite.
   if (d.shared === false && existing.shared && existing.authorId !== req.accountId) {
@@ -93,7 +93,7 @@ notesRouter.patch("/:id", async (req, res) => {
   }
   const title = d.title ?? existing.title;
   const body = d.body ?? existing.body;
-  if (!title && !body.trim()) return res.status(400).json({ error: "La note est vide" });
+  if (!title && !body.trim()) return res.status(400).json({ error: "Écris quelque chose dans la note." });
   const shared = d.shared ?? existing.shared;
   const note = await prisma.note.update({
     where: { id: existing.id },
@@ -105,7 +105,7 @@ notesRouter.patch("/:id", async (req, res) => {
 
 notesRouter.delete("/:id", async (req, res) => {
   const existing = await loadVisible(req.params.id, req.familyId!, req.accountId!);
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   await prisma.note.delete({ where: { id: existing.id } });
   res.status(204).end();
 });

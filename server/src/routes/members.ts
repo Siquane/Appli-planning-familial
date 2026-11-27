@@ -104,14 +104,14 @@ membersRouter.patch("/:id", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   if (writesSensitive(parsed.data) && !(await hasFoodConsent(req.userId!))) return res.status(403).json({ error: CONSENT_REQUIRED });
   const existing = await prisma.familyMember.findFirst({ where: { id: req.params.id, userId: req.userId } });
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   const member = await prisma.familyMember.update({ where: { id: existing.id }, data: parsed.data });
   res.json({ member });
 });
 
 membersRouter.delete("/:id", async (req, res) => {
   const existing = await prisma.familyMember.findFirst({ where: { id: req.params.id, userId: req.userId } });
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   // Son accès enfant (et ses documents) part avec lui.
   const child = await prisma.user.findUnique({ where: { childMemberId: existing.id }, select: { id: true } });
   if (child) await deleteChildAccount(child.id);

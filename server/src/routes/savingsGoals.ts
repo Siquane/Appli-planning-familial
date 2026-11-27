@@ -62,7 +62,7 @@ savingsGoalsRouter.patch("/:id", async (req, res) => {
   const parsed = patchSchema(goalSchema).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await prisma.savingsGoal.findFirst({ where: { id: req.params.id, userId } });
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   const { deadline, ...rest } = parsed.data;
   const goal = await prisma.savingsGoal.update({
     where: { id: existing.id },
@@ -74,7 +74,7 @@ savingsGoalsRouter.patch("/:id", async (req, res) => {
 // Deleting a goal keeps its payments as plain 'épargne' expenses (goalId set to null).
 savingsGoalsRouter.delete("/:id", async (req, res) => {
   const existing = await prisma.savingsGoal.findFirst({ where: { id: req.params.id, userId: req.userId } });
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   await prisma.savingsGoal.delete({ where: { id: existing.id } });
   res.status(204).end();
 });
@@ -86,7 +86,7 @@ savingsGoalsRouter.post("/:id/payments", async (req, res) => {
   const parsed = z.object({ amountCents, date: dayString.optional() }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const goal = await prisma.savingsGoal.findFirst({ where: { id: req.params.id, userId } });
-  if (!goal) return res.status(404).json({ error: "Not found" });
+  if (!goal) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   const date = parsed.data.date ?? new Date().toISOString().slice(0, 10);
   await prisma.expense.create({
     data: {

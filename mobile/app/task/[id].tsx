@@ -176,7 +176,7 @@ export default function TaskDetailScreen() {
 
         {task.synced && (
           <Text size={13} tone="faint">
-            Synchronisée avec {task.externalProvider === "outlook" ? "Outlook" : task.externalProvider === "apple" ? "Apple Calendar" : "Google Calendar"}
+            Synchronisée avec {task.externalProvider === "outlook" ? "Outlook" : task.externalProvider === "apple" ? "le calendrier du téléphone" : "Google Agenda"}
           </Text>
         )}
       </View>

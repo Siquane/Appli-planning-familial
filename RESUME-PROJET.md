@@ -499,3 +499,10 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 - Politique de confidentialité : « Sorties & idées » (Claude, Open-Meteo) et section « Supprimer mon compte » (`#suppression`, lien web exigé par Google) ; republiée.
 - Compte de démo pour les testeurs de Google créé sur le serveur de production : testeur.google@passerelle-demo.fr (mot de passe transmis à l'utilisatrice, pas dans le dépôt).
 - L'environnement Claude « Passerelle et Cervelle » autorise appli-planning-familial-0lyd.onrender.com (Node : `NODE_USE_ENV_PROXY=1`).
+
+## Textes et paramètres (27/11/2026)
+
+- Relecture des textes : https://claude.ai/artifact/Am2TrHeE6aKX8pkU96S35M (tout appliqué). Plus aucun message en anglais : serveur traduit (« Not found » → « Introuvable… », jetons, achats…), zod en français (`z.config(z.locales.fr())` dans `server/src/index.ts`), et filet côté appli `isTechnical()` (`mobile/src/lib/errors.ts`) qui remplace tout message technique par le message habituel. Exception gardée : « Vous avez déjà un défi cette semaine. » (Cervelle, s'adresse aux deux amis).
+- Premiers pas : accroche « Toute la famille organisée au même endroit », champ « Prénom », aide « Moins de 15 ans ? », « Me connecter » (code enfant), « Activer les notifications » / « Plus tard ». Le « + » propose « Dépense du mois » et « Dépense partagée ». « Google Agenda », « Calendrier du téléphone » sur Android.
+- `mobile/app.json` : autorisations en tutoiement, micro bloqué (`microphonePermission: false`, `blockedPermissions` RECORD_AUDIO), **runtimeVersion 9** → nouvel APK nécessaire (les APK en runtime 8 ne reçoivent plus les mises à jour).
+- CLAUDE.md complété (onglets, serveur, publication Expo depuis une session, Play Store, règles de textes) ; environnement Claude « Passerelle et Cervelle » : description à jour, script d'installation existant vérifié.

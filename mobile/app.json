@@ -22,7 +22,10 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "app.passerelle.mobile",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -33,7 +36,7 @@
       [
         "expo-calendar",
         {
-          "calendarPermission": "Passerelle a besoin d'accéder à votre calendrier pour synchroniser vos tâches.",
+          "calendarPermission": "Passerelle a besoin de ton calendrier pour y ajouter les tâches de la famille.",
           "writeOnlyAccess": false
         }
       ],
@@ -50,8 +53,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Passerelle a besoin d'accéder à vos photos pour joindre une image à une recette ou à un document.",
-          "cameraPermission": "Passerelle a besoin de l'appareil photo pour photographier une recette ou un document."
+          "photosPermission": "Passerelle a besoin de tes photos pour joindre une image à une recette, un document ou une dépense.",
+          "cameraPermission": "Passerelle a besoin de l'appareil photo pour photographier une recette, un document ou un ticket.",
+          "microphonePermission": false
         }
       ],
       [
@@ -137,7 +141,7 @@
     "experiments": {
       "typedRoutes": true
     },
-    "runtimeVersion": "8",
+    "runtimeVersion": "9",
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0

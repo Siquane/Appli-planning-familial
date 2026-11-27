@@ -12,8 +12,8 @@ import { color, space } from "../../src/theme/tokens";
 export default function NotificationsOnboardingScreen() {
   const complete = useOnboardingStore((s) => s.complete);
 
-  async function finish() {
-    await requestNotificationPermission();
+  async function finish(ask: boolean) {
+    if (ask) await requestNotificationPermission();
     await complete();
     router.replace({ pathname: "/suggestions", params: { onboarding: "1" } });
   }
@@ -34,7 +34,8 @@ export default function NotificationsOnboardingScreen() {
       </View>
       <View style={{ gap: space.md, alignItems: "center", width: "100%" }}>
         <StepDots step={4} total={5} />
-        <Button label="Terminer" variant="primary" block onPress={finish} />
+        <Button label="Activer les notifications" variant="primary" block onPress={() => finish(true)} />
+        <Button label="Plus tard" variant="ghost" block onPress={() => finish(false)} />
       </View>
     </Screen>
   );

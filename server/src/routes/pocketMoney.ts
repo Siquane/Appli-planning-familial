@@ -131,7 +131,7 @@ pocketMoneyRouter.delete("/advances/:id", async (req, res) => {
   const accountId = await childAccount(req, res);
   if (!accountId) return;
   const { count } = await prisma.pocketMoneyAdvance.deleteMany({ where: { id: String(req.params.id), accountId } });
-  if (count === 0) return res.status(404).json({ error: "Not found" });
+  if (count === 0) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   res.status(204).end();
 });
 
@@ -146,7 +146,7 @@ pocketMoneyRouter.post("/advances/:id/repay", async (req, res) => {
   if (!accountId) return;
   await catchUpPocketMoney(accountId);
   const a = await prisma.pocketMoneyAdvance.findFirst({ where: { id: String(req.params.id), accountId } });
-  if (!a) return res.status(404).json({ error: "Not found" });
+  if (!a) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   const left = a.amountCents - a.repaidCents;
   if (left <= 0) return res.status(409).json({ error: "C'est déjà remboursé." });
   const amount = Math.min(left, parsed.data.amountCents ?? left);
@@ -219,6 +219,6 @@ pocketMoneyRouter.delete("/credits/:id", async (req, res) => {
   if (!accountId) return;
   // Un remboursement d'avance ne se supprime pas ici (il fausserait l'avance).
   const { count } = await prisma.pocketMoneyCredit.deleteMany({ where: { id: String(req.params.id), accountId, NOT: { source: "repay" } } });
-  if (count === 0) return res.status(404).json({ error: "Not found" });
+  if (count === 0) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   res.status(204).end();
 });

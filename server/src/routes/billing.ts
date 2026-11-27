@@ -33,9 +33,9 @@ function sameSecret(a: string, b: string) {
 // refund, transfer…) triggers a fresh read of the customer's entitlements.
 billingRouter.post("/revenuecat", async (req, res) => {
   if (!env.revenuecat.webhookAuth || !sameSecret(req.headers.authorization ?? "", env.revenuecat.webhookAuth)) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Connecte-toi pour continuer." });
   }
-  if (!isBillingConfigured()) return res.status(503).json({ error: "Billing not configured" });
+  if (!isBillingConfigured()) return res.status(503).json({ error: "Les achats ne sont pas disponibles pour le moment. Réessaie plus tard." });
 
   const event = (req.body?.event ?? {}) as { app_user_id?: string; transferred_from?: string[]; transferred_to?: string[] };
   const ids = [event.app_user_id, ...(event.transferred_from ?? []), ...(event.transferred_to ?? [])].filter((id): id is string => !!id);
