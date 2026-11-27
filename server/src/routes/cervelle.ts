@@ -25,6 +25,7 @@ import { mountUsage } from "./cervelleUsage";
 import { mountHomework } from "./cervelleHomework";
 import { mountBrevet } from "./cervelleBrevet";
 import { mountWidget } from "./cervelleWidget";
+import { mountLearn } from "./cervelleLearn";
 import * as shop from "../lib/cervelle/shop";
 import { howToGet } from "../lib/cervelle/howToGet";
 import { applyAnswer, combinedMastery, displayedMastery, revisionProgress, type Mastery } from "../lib/cervelle/mastery";
@@ -77,7 +78,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_PDF_BYTES = 15 * 1024 * 1024;
 
 /** Claude calls per family and per day. */
-export const DAILY_LIMITS = { revision: 15, exam: 10, assistant: 120, grading: 400, timetable: 10, homework: 40, brevet: 5 } as const;
+export const DAILY_LIMITS = { revision: 15, exam: 10, assistant: 120, grading: 400, timetable: 10, homework: 40, brevet: 5, dictation: 20, mindmap: 20 } as const;
 
 type Caller = { kind: "parent"; familyId: string; accountId?: string } | { kind: "child"; familyId: string; learnerId: string; deviceId: string };
 
@@ -894,7 +895,9 @@ cervelleRouter.get("/learners/:learnerId/quiz", async (req, res) => {
     return res.status(404).json({ error: "Cette révision n'existe plus. Elle a peut-être été supprimée." });
   }
   const now = new Date();
-  const scope: Prisma.QuestionWhereInput = revisionId ? { revisionId } : { revision: { learnerId: learner.id, status: "ready" } };
+  // Une branche de carte mentale : seulement les questions de ces notions (3 questions).
+  const notionIds = typeof req.query.notionIds === "string" && revisionId && mode === "qcm" ? req.query.notionIds.split(",").filter(Boolean).slice(0, 20) : [];
+  const scope: Prisma.QuestionWhereInput = revisionId ? { revisionId, ...(notionIds.length ? { notionId: { in: notionIds } } : {}) } : { revision: { learnerId: learner.id, status: "ready" } };
   // Boss: every type the app can check by itself (no flash card graded by the child).
   const types: Record<QuizMode, string[] | null> = { qcm: ["qcm", "vrai_faux"], cartes: ["carte", "courte", "trous"], interro: null, a_revoir: null, express: null, boss: ["qcm", "vrai_faux", "courte", "trous", "ordre"] };
   if (mode === "boss") {
@@ -913,7 +916,7 @@ cervelleRouter.get("/learners/:learnerId/quiz", async (req, res) => {
   } else if (mode === "boss") {
     picked = pickSpread(all, BOSS_HEARTS, now);
   } else {
-    picked = pickSpread(all, mode === "interro" ? 15 : 10, now);
+    picked = pickSpread(all, notionIds.length ? 3 : mode === "interro" ? 15 : 10, now);
   }
   res.json({ mode, revisionId, questions: picked.map((q) => playable(q, mode)) });
 });
@@ -1354,3 +1357,4 @@ mountUsage(cervelleRouter, { parentOnly });
 mountHomework(cervelleRouter, { loadLearner, aiConfigured, decodeFiles, fileSchema, underDailyLimit, recordUsage, withUsage });
 mountBrevet(cervelleRouter, { loadLearner, aiConfigured, underDailyLimit, recordUsage, withUsage, courseText });
 mountWidget(cervelleRouter, { parentOnly, loadLearner, serializeLearner, missionState, revisionCards });
+mountLearn(cervelleRouter, { loadLearner, parentOnly, aiConfigured, decodeFiles, fileSchema, underDailyLimit, recordUsage, withUsage });
