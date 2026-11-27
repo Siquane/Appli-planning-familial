@@ -17,6 +17,11 @@
 //
 // Pour ajouter une classe : une entrée dans PROGRAMMES, avec des `id` stables
 // (ils sont enregistrés sur les révisions).
+//
+// Années scolaires : PROGRAMMES est l'année 2026-2027. Les années suivantes
+// (PROGRAMMES_BY_YEAR) reprennent l'année d'avant et ne remplacent que les
+// matières dont le programme change (CHANGES_2027). L'année bascule le
+// 1er août (schoolYearOn) : avant, Cervelle garde les programmes en vigueur.
 
 export interface Chapter {
   id: string;
@@ -34,6 +39,7 @@ export interface SubjectProgramme {
   chapters: Chapter[];
 }
 
+/** Première année scolaire couverte (celle de PROGRAMMES). */
 export const SCHOOL_YEAR = "2026-2027";
 
 // SVT et physique-chimie (BO n° 31 du 30 juillet 2020) : thèmes communs aux trois
@@ -612,6 +618,46 @@ export const PROGRAMMES: Record<string, SubjectProgramme[]> = {
   ],
 };
 
+// ---------------------------------------------------------------------------
+// 2027-2028 : nouveaux programmes au CM2 et en 6e (article 3 de chaque arrêté) :
+//   - sciences et technologie, BO n° 24 du 11 juin 2026 (CM2 et 6e) ;
+//   - EPS et histoire-géographie, BO n° 22 du 28 mai 2026 (CM2 et 6e) ;
+//   - langues vivantes de l'école élémentaire, BO n° 12 du 19 mars 2026 (CM2).
+// Chaque entrée remplace la matière du même nom (ou s'ajoute) pour la classe.
+// Ids nouveaux, préfixés « 27- » : les révisions déjà rangées gardent les leurs.
+export const CHANGES_2027: Record<string, SubjectProgramme[]> = {};
+
+/** Une année = l'année d'avant, avec les matières remplacées ou ajoutées. */
+function nextYear(base: Record<string, SubjectProgramme[]>, changes: Record<string, SubjectProgramme[]>): Record<string, SubjectProgramme[]> {
+  const out: Record<string, SubjectProgramme[]> = {};
+  for (const [grade, subjects] of Object.entries(base)) {
+    const replaced = changes[grade] ?? [];
+    const kept = subjects.map((s) => replaced.find((r) => r.subject === s.subject) ?? s);
+    out[grade] = [...kept, ...replaced.filter((r) => !subjects.some((s) => s.subject === r.subject))];
+  }
+  return out;
+}
+
+export const PROGRAMMES_BY_YEAR: Record<string, Record<string, SubjectProgramme[]>> = {
+  "2026-2027": PROGRAMMES,
+  "2027-2028": nextYear(PROGRAMMES, CHANGES_2027),
+};
+
+const YEARS = Object.keys(PROGRAMMES_BY_YEAR).sort();
+
+/** L'année scolaire à une date (bascule le 1er août), bornée aux années connues. */
+export function schoolYearOn(date: Date = new Date()): string {
+  const start = date.getUTCMonth() >= 7 ? date.getUTCFullYear() : date.getUTCFullYear() - 1;
+  const year = `${start}-${start + 1}`;
+  if (year < YEARS[0]) return YEARS[0];
+  if (year > YEARS[YEARS.length - 1]) return YEARS[YEARS.length - 1];
+  return year;
+}
+
+function programmesOn(date: Date): Record<string, SubjectProgramme[]> {
+  return PROGRAMMES_BY_YEAR[schoolYearOn(date)];
+}
+
 const WORDS: Record<string, string> = { sixieme: "6e", cinquieme: "5e", quatrieme: "4e", troisieme: "3e" };
 
 /** « CM2 », « 5ème », « 6e », « sixième », « 3eme »… → la clé de PROGRAMMES, ou null. */
@@ -628,13 +674,14 @@ export function programmeKey(grade: string): string | null {
   return m ? `${m[1]}e` : null;
 }
 
-export function programmeFor(grade: string): SubjectProgramme[] | null {
+/** Le programme de la classe pour l'année scolaire en cours à cette date. */
+export function programmeFor(grade: string, date: Date = new Date()): SubjectProgramme[] | null {
   const key = programmeKey(grade);
-  return key ? PROGRAMMES[key] : null;
+  return key ? (programmesOn(date)[key] ?? null) : null;
 }
 
-export function findChapter(grade: string, chapterId: string): { subject: SubjectProgramme; chapter: Chapter } | null {
-  for (const subject of programmeFor(grade) ?? []) {
+export function findChapter(grade: string, chapterId: string, date: Date = new Date()): { subject: SubjectProgramme; chapter: Chapter } | null {
+  for (const subject of programmeFor(grade, date) ?? []) {
     const chapter = subject.chapters.find((c) => c.id === chapterId);
     if (chapter) return { subject, chapter };
   }
@@ -642,20 +689,22 @@ export function findChapter(grade: string, chapterId: string): { subject: Subjec
 }
 
 /** The chapter list as Claude sees it in the prompt. */
-export function programmeForPrompt(grade: string): string | null {
-  const subjects = programmeFor(grade);
+export function programmeForPrompt(grade: string, date: Date = new Date()): string | null {
+  const subjects = programmeFor(grade, date);
   if (!subjects) return null;
   return subjects
     .map((s) => `## ${s.subject}\n${s.chapters.map((c) => `- [${c.id}] ${c.title} : ${c.notions.join(" ; ")}`).join("\n")}`)
     .join("\n\n");
 }
 
-/** Chapter ids are unique across classes. */
+/** Chapter ids are unique across classes, and kept across years: a revision filed under an older programme still finds its chapter. */
 export function chapterById(chapterId: string): { grade: string; subject: SubjectProgramme; chapter: Chapter } | null {
-  for (const [grade, subjects] of Object.entries(PROGRAMMES)) {
-    for (const subject of subjects) {
-      const chapter = subject.chapters.find((c) => c.id === chapterId);
-      if (chapter) return { grade, subject, chapter };
+  for (const year of [...YEARS].reverse()) {
+    for (const [grade, subjects] of Object.entries(PROGRAMMES_BY_YEAR[year])) {
+      for (const subject of subjects) {
+        const chapter = subject.chapters.find((c) => c.id === chapterId);
+        if (chapter) return { grade, subject, chapter };
+      }
     }
   }
   return null;

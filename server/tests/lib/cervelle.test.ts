@@ -125,7 +125,7 @@ describe("cleanQuestion", () => {
   });
 });
 
-import { PROGRAMMES, chapterById, programmeKey } from "../../src/lib/cervelle/programme";
+import { PROGRAMMES, PROGRAMMES_BY_YEAR, chapterById, programmeFor, programmeKey, schoolYearOn } from "../../src/lib/cervelle/programme";
 
 describe("programme", () => {
   it("recognises how families write the class", () => {
@@ -161,5 +161,34 @@ describe("programme", () => {
     expect(PROGRAMMES["4e"].find((s) => s.subject === "Mathématiques")?.source).toContain("2020");
     expect(PROGRAMMES["3e"].find((s) => s.subject === "Français")?.source).toContain("2020");
     expect(PROGRAMMES["6e"].find((s) => s.subject === "Français")?.source).toContain("2025");
+  });
+  it("switches school year on 1 August, within the years it knows", () => {
+    expect(schoolYearOn(new Date("2026-11-27T10:00:00Z"))).toBe("2026-2027");
+    expect(schoolYearOn(new Date("2027-07-31T12:00:00Z"))).toBe("2026-2027");
+    expect(schoolYearOn(new Date("2027-08-01T00:00:00Z"))).toBe("2027-2028");
+    expect(schoolYearOn(new Date("2025-03-01T00:00:00Z"))).toBe("2026-2027");
+    expect(schoolYearOn(new Date("2031-10-01T00:00:00Z"))).toBe("2027-2028");
+  });
+  it("keeps the 2026-2027 programmes until the 2027 rentrée", () => {
+    const before = new Date("2027-06-15T00:00:00Z");
+    expect(programmeFor("CM2", before)).toBe(PROGRAMMES.CM2);
+    expect(programmeFor("6e", before)).toBe(PROGRAMMES["6e"]);
+  });
+  it("gives each chapter id one class, in every year", () => {
+    const owner = new Map<string, string>();
+    for (const [year, programmes] of Object.entries(PROGRAMMES_BY_YEAR)) {
+      const ids = Object.values(programmes).flatMap((subjects) => subjects.flatMap((s) => s.chapters.map((c) => c.id)));
+      expect(new Set(ids).size, year).toBe(ids.length);
+      expect(Object.keys(programmes).sort(), year).toEqual(["3e", "4e", "5e", "6e", "CM2"]);
+      for (const [grade, subjects] of Object.entries(programmes)) {
+        for (const s of subjects) {
+          expect(s.verifie, `${year} ${grade} ${s.subject}`).toBe(true);
+          for (const c of s.chapters) {
+            expect(owner.get(c.id) ?? grade, c.id).toBe(grade);
+            owner.set(c.id, grade);
+          }
+        }
+      }
+    }
   });
 });
