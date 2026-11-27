@@ -35,7 +35,7 @@ authRouter.post("/signup", accountLimiter, async (req, res) => {
   const { email, password, name, familyCode, age15 } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) return res.status(409).json({ error: "Un compte existe déjà avec cet email" });
+  if (existing) return res.status(409).json({ error: "Cette adresse a déjà un compte. Connecte-toi, ou touche « Mot de passe oublié »." });
 
   if (age15 !== true) return res.status(400).json({ error: "Pour créer un compte, il faut avoir 15 ans ou plus." });
 
@@ -72,12 +72,12 @@ const loginSchema = z.object({ email: z.string().email(), password: z.string() }
 
 authRouter.post("/login", loginLimiter, async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Requête invalide" });
+  if (!parsed.success) return res.status(400).json({ error: "Une information n'est pas valable. Vérifie ce que tu as saisi et réessaie." });
   const { email, password } = parsed.data;
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-    return res.status(401).json({ error: "Email ou mot de passe incorrect" });
+    return res.status(401).json({ error: "E-mail ou mot de passe incorrect. Vérifie-les, ou touche « Mot de passe oublié »." });
   }
   const tokens = await issueTokens(user.id, user.email);
   res.json({ user: publicUser(user), ...tokens });
@@ -153,7 +153,7 @@ authRouter.post("/reset-password", loginLimiter, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Requête invalide" });
   const { email, code, password } = parsed.data;
 
-  const invalid = () => res.status(400).json({ error: "Code invalide ou expiré" });
+  const invalid = () => res.status(400).json({ error: "Ce code ne marche pas ou a expiré. Demande un nouveau code." });
 
   const user = await findUserByEmail(email);
   if (!user) return invalid();
@@ -263,19 +263,19 @@ async function checkEmailCode(email: string, code: string): Promise<boolean> {
 
 authRouter.post("/refresh", async (req, res) => {
   const refreshToken = req.body?.refreshToken as string | undefined;
-  if (!refreshToken) return res.status(400).json({ error: "Missing refreshToken" });
+  if (!refreshToken) return res.status(400).json({ error: "Ta session a expiré. Reconnecte-toi." });
 
   const hash = hashRefreshToken(refreshToken);
   const stored = await prisma.refreshToken.findUnique({ where: { tokenHash: hash } });
-  if (!stored || stored.expiresAt < new Date()) return res.status(401).json({ error: "Invalid refresh token" });
+  if (!stored || stored.expiresAt < new Date()) return res.status(401).json({ error: "Ta session a expiré. Reconnecte-toi." });
 
   const user = await prisma.user.findUnique({ where: { id: stored.userId } });
-  if (!user) return res.status(401).json({ error: "Invalid refresh token" });
+  if (!user) return res.status(401).json({ error: "Ta session a expiré. Reconnecte-toi." });
 
   // Deux renouvellements simultanés (appli + widget) : un seul gagne, l'autre
   // reçoit un refus normal plutôt qu'une erreur serveur.
   const { count } = await prisma.refreshToken.deleteMany({ where: { id: stored.id } });
-  if (count === 0) return res.status(401).json({ error: "Invalid refresh token" });
+  if (count === 0) return res.status(401).json({ error: "Ta session a expiré. Reconnecte-toi." });
   const tokens = await issueTokens(user.id, user.email);
   res.json({ user: publicUser(user), ...tokens });
 });
@@ -295,7 +295,7 @@ authRouter.post("/logout", async (req, res) => {
 
 authRouter.get("/me", requireAuth, async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.accountId } });
-  if (!user) return res.status(404).json({ error: "Not found" });
+  if (!user) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   res.json({ user: publicUser(user) });
 });
 
@@ -324,7 +324,7 @@ authRouter.delete("/me", requireAuth, loginLimiter, async (req, res) => {
     .safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const user = await prisma.user.findUnique({ where: { id: req.accountId } });
-  if (!user) return res.status(404).json({ error: "Not found" });
+  if (!user) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   if (parsed.data.emailCode) {
     if (!(await checkEmailCode(user.email.toLowerCase(), parsed.data.emailCode))) return res.status(401).json({ error: "Ce code ne marche pas ou a expiré. Demande un nouveau code." });
   } else if (!(await bcrypt.compare(parsed.data.password!, user.passwordHash))) {

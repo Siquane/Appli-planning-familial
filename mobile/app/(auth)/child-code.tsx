@@ -50,7 +50,7 @@ export default function ChildCodeScreen() {
             {error}
           </Text>
         )}
-        <Button label="Entrer" variant="primary" block onPress={onSubmit} loading={loading} disabled={code.replace(/[^A-Za-z0-9]/g, "").length < 8} />
+        <Button label="Me connecter" variant="primary" block onPress={onSubmit} loading={loading} disabled={code.replace(/[^A-Za-z0-9]/g, "").length < 8} />
         {slow && (
           <Text tone="muted" size={13} center>
             Passerelle se réveille, ça peut prendre jusqu'à une minute…

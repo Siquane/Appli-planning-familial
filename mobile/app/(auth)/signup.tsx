@@ -42,7 +42,7 @@ export default function SignupScreen() {
 
   // Dit ce qui manque plutôt qu'un bouton simplement grisé.
   const missing: string[] = [];
-  if (!name.trim()) missing.push("ton nom");
+  if (!name.trim()) missing.push("ton prénom");
   if (!email.trim()) missing.push("ton adresse e-mail");
   if (password.length < 8) missing.push("un mot de passe de 8 caractères minimum");
   if (!age15) missing.push("la case « J'ai 15 ans ou plus »");
@@ -60,7 +60,7 @@ export default function SignupScreen() {
       </View>
 
       <View style={{ gap: space.sm }}>
-        <TextField label="Nom" value={name} onChangeText={setName} placeholder="Claire Dubois" />
+        <TextField label="Prénom" value={name} onChangeText={setName} placeholder="Ex. Claire" autoCapitalize="words" />
         <TextField label="Adresse e-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="toi@exemple.fr" />
         <TextField label="Mot de passe" value={password} onChangeText={setPassword} secureTextEntry placeholder="8 caractères minimum" />
         <Pressable
@@ -88,6 +88,11 @@ export default function SignupScreen() {
             J'ai 15 ans ou plus
           </Text>
         </Pressable>
+        {!age15 && (
+          <Text size={12} tone="faint">
+            Moins de 15 ans ? Un parent te crée un accès enfant depuis sa fiche Famille, puis touche « J'ai un code enfant » à la connexion.
+          </Text>
+        )}
         {hasCode ? (
           <View style={{ gap: space.sm }}>
             <TextField label="Code famille" value={code} onChangeText={(v) => setCode(v.toUpperCase())} autoCapitalize="characters" autoCorrect={false} placeholder="K7F2-9QXA" maxLength={12} />

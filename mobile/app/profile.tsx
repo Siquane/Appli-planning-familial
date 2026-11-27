@@ -24,9 +24,9 @@ import type { Scheme } from "../src/theme/tokens";
 import { Platform } from "react-native";
 
 const PROVIDERS: { key: "google" | "outlook" | "apple"; label: string }[] = [
-  { key: "google", label: "Google Calendar" },
+  { key: "google", label: "Google Agenda" },
   { key: "outlook", label: "Outlook" },
-  { key: "apple", label: "Apple Calendar" },
+  { key: "apple", label: Platform.OS === "ios" ? "Apple Calendar" : "Calendrier du téléphone" },
 ];
 
 export default function ProfileScreen() {
@@ -85,7 +85,7 @@ export default function ProfileScreen() {
 
   async function onConnect(provider: "google" | "outlook" | "apple") {
     if (isUnavailable(provider)) {
-      const name = provider === "google" ? "Google Calendar" : "Outlook";
+      const name = provider === "google" ? "Google Agenda" : "Outlook";
       useToastStore.getState().show(`La synchronisation avec ${name} arrive bientôt.`);
       return;
     }
@@ -93,17 +93,17 @@ export default function ProfileScreen() {
     try {
       if (provider === "apple") {
         if (Platform.OS === "web") {
-          useToastStore.getState().show("Apple Calendar n'est disponible que dans l'appli mobile.");
+          useToastStore.getState().show("Le calendrier du téléphone n'est disponible que dans l'appli mobile.");
         } else {
           const res = await connectAppleCalendar();
-          useToastStore.getState().show(res.ok ? "Apple Calendar connecté." : (res.reason ?? "Impossible de connecter Apple Calendar. Autorise l'accès au calendrier dans les réglages du téléphone, puis réessaie."));
+          useToastStore.getState().show(res.ok ? "Calendrier du téléphone connecté." : (res.reason ?? "Impossible de connecter le calendrier du téléphone. Autorise l'accès au calendrier dans les réglages du téléphone, puis réessaie."));
           refetch();
         }
       } else {
         // The server's OAuth route segment is "microsoft"; the stored/display
         // provider key is "outlook" (see app/server/src/routes/calendar.ts).
         const res = await startOAuthConnect(provider === "outlook" ? "microsoft" : "google");
-        if (res.ok) useToastStore.getState().show(`${provider === "google" ? "Google Calendar" : "Outlook"} connecté.`);
+        if (res.ok) useToastStore.getState().show(`${provider === "google" ? "Google Agenda" : "Outlook"} connecté.`);
         refetch();
       }
     } finally {

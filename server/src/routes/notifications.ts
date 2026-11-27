@@ -27,7 +27,7 @@ notificationsRouter.get("/", async (req, res) => {
 
 notificationsRouter.post("/:id/read", async (req, res) => {
   const existing = await prisma.notification.findFirst({ where: { id: req.params.id, userId: req.userId } });
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   await prisma.notification.update({ where: { id: existing.id }, data: { unread: false } });
   res.status(204).end();
 });
@@ -42,7 +42,7 @@ const pushTokenSchema = z.object({ token: z.string().regex(/^Expo(nent)?PushToke
 
 notificationsRouter.put("/push-token", async (req, res) => {
   const parsed = pushTokenSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Jeton de notification invalide" });
+  if (!parsed.success) return res.status(400).json({ error: "Les notifications de ce téléphone n'ont pas pu être activées. Réessaie." });
   // Un téléphone passé à un autre compte change de propriétaire.
   await prisma.pushToken.upsert({
     where: { token: parsed.data.token },

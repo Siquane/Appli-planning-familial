@@ -2,7 +2,7 @@ import { useChildSpaceStore } from "../state/childSpaceStore";
 import { Platform } from "react-native";
 import { useAuthStore, UnreachableError } from "../state/authStore";
 import { useNetworkStore } from "../state/networkStore";
-import { OFFLINE_MESSAGE, statusMessage } from "../lib/errors";
+import { OFFLINE_MESSAGE, isTechnical, statusMessage } from "../lib/errors";
 
 // EXPO_PUBLIC_API_URL lets a real device/dev-build point at a LAN IP; the
 // Android emulator can't reach the host via "localhost" so it gets the
@@ -83,7 +83,11 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
   if (res.status === 204) return undefined as T;
 
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, body.error ?? statusMessage(res.status), typeof body.code === "string" ? body.code : undefined, body);
+  if (!res.ok) {
+    // Un message technique ou en anglais laisse la place au message habituel.
+    const message = typeof body.error === "string" && !isTechnical(body.error) ? body.error : statusMessage(res.status);
+    throw new ApiError(res.status, message, typeof body.code === "string" ? body.code : undefined, body);
+  }
   return body as T;
 }
 

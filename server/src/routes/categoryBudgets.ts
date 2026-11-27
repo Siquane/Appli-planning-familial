@@ -21,7 +21,7 @@ categoryBudgetsRouter.put("/", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const userId = req.userId!;
   const { category, limitCents } = parsed.data;
-  if (!(await isValidCategory(userId, category))) return res.status(400).json({ error: "Catégorie inconnue" });
+  if (!(await isValidCategory(userId, category))) return res.status(400).json({ error: "Cette catégorie n'existe plus. Choisis-en une autre." });
 
   if (limitCents === null) {
     await prisma.categoryBudget.deleteMany({ where: { userId, category } });

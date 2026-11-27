@@ -79,7 +79,7 @@ recipesRouter.patch("/:id", async (req, res) => {
   const parsed = patchSchema(recipeSchema).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await loadOwnedRecipe(req.userId!, req.params.id);
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
 
   const { memberIds, ...rest } = parsed.data;
   const recipe = await prisma.recipe.update({
@@ -95,7 +95,7 @@ recipesRouter.patch("/:id", async (req, res) => {
 
 recipesRouter.delete("/:id", async (req, res) => {
   const existing = await loadOwnedRecipe(req.userId!, req.params.id);
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   // Attachment rows cascade with the recipe; their files must go too.
   const attachments = await prisma.document.findMany({ where: { recipeId: existing.id }, select: { fileKey: true } });
   await removeObjects(attachments.map((a) => a.fileKey));

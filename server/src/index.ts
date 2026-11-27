@@ -1,4 +1,5 @@
 import express from "express";
+import { z } from "zod";
 import cors from "cors";
 import compression from "compression";
 import { env } from "./env";
@@ -32,6 +33,9 @@ import { billingRouter } from "./routes/billing";
 import { cervelleRouter } from "./routes/cervelle";
 import { cervelleBody } from "./middleware/cervelleBody";
 import { grantLifetimePremium } from "./lib/lifetimePremium";
+
+// Messages de vérification en français quand une route n'en donne pas.
+z.config(z.locales.fr());
 
 export const app = express();
 // Render terminates HTTPS in front of the app: trust that one hop so
@@ -75,15 +79,15 @@ app.use("/notes", notesRouter);
 app.use("/plan", planRouter);
 app.use("/billing", billingRouter);
 
-app.use((req, res) => res.status(404).json({ error: `No route for ${req.method} ${req.path}` }));
+app.use((req, res) => res.status(404).json({ error: "Cette fonction n'est pas disponible. Mets l'appli à jour." }));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   // Erreurs de lecture du corps (trop gros, JSON illisible) : la faute de la demande, pas du serveur.
   const status = typeof (err as { status?: unknown })?.status === "number" ? (err as { status: number }).status : 500;
   if (status === 413) return res.status(413).json({ error: "Envoi trop volumineux." });
-  if (status >= 400 && status < 500) return res.status(status).json({ error: "Requête invalide" });
+  if (status >= 400 && status < 500) return res.status(status).json({ error: "Une information n'est pas valable. Vérifie ce que tu as saisi et réessaie." });
   console.error(err);
-  res.status(500).json({ error: "Erreur serveur" });
+  res.status(500).json({ error: "Le serveur rencontre un souci. Réessaie dans un instant." });
 });
 
 if (require.main === module) {

@@ -38,7 +38,7 @@ export default function LoginScreen() {
           Passerelle
         </Text>
         <Text tone="muted" size={15}>
-          Le planning de la famille, sans friction.
+          Toute la famille organisée au même endroit.
         </Text>
       </View>
 

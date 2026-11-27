@@ -59,7 +59,7 @@ mealsRouter.post("/", async (req, res) => {
 
   if (d.recipeId) {
     const recipe = await prisma.recipe.findFirst({ where: { id: d.recipeId, userId: req.userId } });
-    if (!recipe) return res.status(400).json({ error: "Recette introuvable" });
+    if (!recipe) return res.status(400).json({ error: "Cette recette n'existe plus. Elle a peut-être été supprimée." });
   }
 
   // Without a new list, ingredients follow the dish: kept while its title is
@@ -79,7 +79,7 @@ mealsRouter.post("/", async (req, res) => {
 
 mealsRouter.delete("/:id", async (req, res) => {
   const existing = await prisma.meal.findFirst({ where: { id: req.params.id, userId: req.userId } });
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   await prisma.meal.delete({ where: { id: existing.id } });
   res.status(204).end();
 });
@@ -119,7 +119,7 @@ mealsRouter.post("/generate", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const { slots, preferences, exclude, kind } = parsed.data;
   const week = parsed.data.week ?? currentWeek();
-  if (kind === "reroll" && slots.length !== 1) return res.status(400).json({ error: "« Autre idée » porte sur un seul repas" });
+  if (kind === "reroll" && slots.length !== 1) return res.status(400).json({ error: "« Autre idée » change un seul repas à la fois." });
 
   const quota = await getMealQuota(req.userId!);
   const problem = quotaProblem(quota, kind);
@@ -173,7 +173,7 @@ mealsRouter.post("/bulk", async (req, res) => {
   const recipeIds = [...new Set(items.map((m) => m.recipeId).filter((id): id is string => !!id))];
   if (recipeIds.length) {
     const owned = await prisma.recipe.count({ where: { id: { in: recipeIds }, userId: req.userId } });
-    if (owned !== recipeIds.length) return res.status(400).json({ error: "Recette introuvable" });
+    if (owned !== recipeIds.length) return res.status(400).json({ error: "Cette recette n'existe plus. Elle a peut-être été supprimée." });
   }
 
   const saved = await prisma.$transaction(

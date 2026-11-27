@@ -283,7 +283,7 @@ expensesRouter.patch("/:id", async (req, res) => {
   const parsed = patchSchema(expenseSchema).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await loadOwnedExpense(req.userId!, req.params.id);
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   const problem = await checkCategoryAndMember(req.userId!, parsed.data);
   if (problem) return res.status(400).json({ error: problem });
 
@@ -302,7 +302,7 @@ expensesRouter.patch("/:id", async (req, res) => {
 // RecurringRun row stays, so it isn't generated again).
 expensesRouter.delete("/:id", async (req, res) => {
   const existing = await loadOwnedExpense(req.userId!, req.params.id);
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   await prisma.expense.delete({ where: { id: existing.id } });
   res.status(204).end();
 });

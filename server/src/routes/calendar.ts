@@ -48,7 +48,7 @@ async function starter(query: Record<string, unknown>): Promise<string | null> {
 }
 
 calendarRouter.post("/:provider/ticket", requireAuth, async (req, res) => {
-  if (req.params.provider !== "google" && req.params.provider !== "microsoft") return res.status(404).json({ error: "Agenda inconnu" });
+  if (req.params.provider !== "google" && req.params.provider !== "microsoft") return res.status(404).json({ error: "Cet agenda n'est pas proposé." });
   // The agenda connection belongs to the family, not to the one account that started it.
   res.json({ ticket: await issue("ticket", req.userId!, TICKET_TTL_MS) });
 });
@@ -82,12 +82,12 @@ calendarRouter.post("/apple/connect", requireAuth, async (req, res) => {
 
 function requireProviderConfigured(configured: boolean, name: string) {
   return (req: any, res: any, next: any) => {
-    if (!configured) return res.status(503).json({ error: `${name} n'est pas configuré côté serveur (variables d'environnement manquantes).` });
+    if (!configured) return res.status(503).json({ error: `La connexion à ${name} n'est pas encore disponible.` });
     next();
   };
 }
 
-calendarRouter.get("/google/start", requireProviderConfigured(isGoogleConfigured(), "Google Calendar"), async (req, res) => {
+calendarRouter.get("/google/start", requireProviderConfigured(isGoogleConfigured(), "Google Agenda"), async (req, res) => {
   const userId = await starter(req.query);
   if (!userId) return res.status(401).send("Lien expiré. Recommence depuis l'appli.");
   res.redirect(getGoogleAuthUrl(await issue("state", userId, STATE_TTL_MS)));

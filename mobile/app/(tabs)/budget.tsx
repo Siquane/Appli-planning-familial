@@ -61,7 +61,7 @@ export default function BudgetScreen() {
       {kids.length > 0 && <AdvancesCard kids={kids} />}
 
       {!isLoading && groups.length === 0 ? (
-        <EmptyState title="Partage tes dépenses" detail="Crée un groupe (les enfants avec l'autre parent, des vacances entre amis…), note qui a payé quoi : Passerelle calcule qui doit combien à qui." />
+        <EmptyState title="Qui doit combien à qui ?" detail="Crée un groupe (les frais des enfants avec l'autre parent, des vacances entre amis…). Note qui a payé quoi, Passerelle fait les comptes." />
       ) : null}
 
       <View style={{ gap: space.sm }}>

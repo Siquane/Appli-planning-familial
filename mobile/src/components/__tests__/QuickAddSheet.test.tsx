@@ -19,9 +19,12 @@ describe("QuickAddSheet", () => {
     act(() => {
       tree = renderer.create(<QuickAddSheet visible onClose={onClose} />);
     });
-    act(() => byLabel(tree, "Ajouter : Dépense").props.onPress());
+    act(() => byLabel(tree, "Ajouter : Dépense partagée").props.onPress());
     expect(onClose).toHaveBeenCalled();
     expect(router.push).toHaveBeenCalledWith("/comptes/expense");
+
+    act(() => byLabel(tree, "Ajouter : Dépense du mois").props.onPress());
+    expect(router.push).toHaveBeenLastCalledWith("/expense/new");
 
     act(() => byLabel(tree, "Ajouter : Tâche").props.onPress());
     expect(router.push).toHaveBeenLastCalledWith("/task/new");

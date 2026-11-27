@@ -32,7 +32,7 @@ expenseCategoriesRouter.get("/", async (req, res) => {
 expenseCategoriesRouter.post("/", async (req, res) => {
   const parsed = nameSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
-  if (await nameTaken(req.userId!, parsed.data.name)) return res.status(400).json({ error: "Cette catégorie existe déjà" });
+  if (await nameTaken(req.userId!, parsed.data.name)) return res.status(400).json({ error: "Cette catégorie existe déjà." });
   const category = await prisma.expenseCategory.create({ data: { userId: req.userId!, name: parsed.data.name } });
   res.status(201).json({ category: serialize(category) });
 });
@@ -41,8 +41,8 @@ expenseCategoriesRouter.patch("/:id", async (req, res) => {
   const parsed = nameSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await prisma.expenseCategory.findFirst({ where: { id: req.params.id, userId: req.userId } });
-  if (!existing) return res.status(404).json({ error: "Not found" });
-  if (await nameTaken(req.userId!, parsed.data.name, existing.id)) return res.status(400).json({ error: "Cette catégorie existe déjà" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
+  if (await nameTaken(req.userId!, parsed.data.name, existing.id)) return res.status(400).json({ error: "Cette catégorie existe déjà." });
   const category = await prisma.expenseCategory.update({ where: { id: existing.id }, data: { name: parsed.data.name } });
   res.json({ category: serialize(category) });
 });
@@ -51,7 +51,7 @@ expenseCategoriesRouter.patch("/:id", async (req, res) => {
 expenseCategoriesRouter.delete("/:id", async (req, res) => {
   const userId = req.userId!;
   const existing = await prisma.expenseCategory.findFirst({ where: { id: req.params.id, userId } });
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   await prisma.$transaction([
     prisma.expense.updateMany({ where: { userId, category: existing.id }, data: { category: FALLBACK_CATEGORY } }),
     prisma.recurringExpense.updateMany({ where: { userId, category: existing.id }, data: { category: FALLBACK_CATEGORY } }),

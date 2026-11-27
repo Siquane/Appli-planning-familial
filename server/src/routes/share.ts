@@ -28,7 +28,7 @@ shareRouter.post("/people", requireAuth, async (req, res) => {
 
 shareRouter.delete("/people/:id", requireAuth, async (req, res) => {
   const existing = await prisma.sharedPerson.findFirst({ where: { id: String(req.params.id), userId: req.userId } });
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   await prisma.sharedPerson.delete({ where: { id: existing.id } });
   res.status(204).end();
 });
@@ -48,7 +48,7 @@ shareRouter.get("/members", requireAuth, async (req, res) => {
 // Nouveau lien : l'ancien cesse de fonctionner.
 shareRouter.post("/members/:id/reset", requireAuth, async (req, res) => {
   const member = await prisma.familyMember.findFirst({ where: { id: String(req.params.id), userId: req.userId! } });
-  if (!member) return res.status(404).json({ error: "Not found" });
+  if (!member) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   const updated = await prisma.familyMember.update({ where: { id: member.id }, data: { shareToken: nanoid(16) } });
   res.json({ memberId: updated.id, name: updated.name, token: updated.shareToken });
 });

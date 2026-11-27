@@ -29,7 +29,7 @@ declare global {
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Missing bearer token" });
+    return res.status(401).json({ error: "Connecte-toi pour continuer." });
   }
   let accountId: string;
   try {
@@ -37,10 +37,10 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     accountId = payload.sub;
     req.userEmail = payload.email;
   } catch {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    return res.status(401).json({ error: "Ta session a expiré. Reconnecte-toi." });
   }
   const space = await resolveSpace(accountId);
-  if (!space) return res.status(401).json({ error: "Invalid or expired token" });
+  if (!space) return res.status(401).json({ error: "Ta session a expiré. Reconnecte-toi." });
   req.accountId = space.accountId;
   req.familyId = space.familyId;
   req.privateId = space.privateId;

@@ -118,8 +118,8 @@ documentsRouter.post("/", async (req, res) => {
   const d = parsed.data;
   const userId = scopeOf(req, d.recipeId);
 
-  if (d.memberId && !(await ownsMember(req.familyId!, d.memberId))) return res.status(400).json({ error: "Membre inconnu" });
-  if (d.recipeId && !(await ownsRecipe(req.familyId!, d.recipeId))) return res.status(400).json({ error: "Recette inconnue" });
+  if (d.memberId && !(await ownsMember(req.familyId!, d.memberId))) return res.status(400).json({ error: "Ce membre n'est plus dans la famille. Actualise l'écran." });
+  if (d.recipeId && !(await ownsRecipe(req.familyId!, d.recipeId))) return res.status(400).json({ error: "Cette recette n'existe plus. Elle a peut-être été supprimée." });
 
   const storage = storageOr503(res);
   if (!storage) return;
@@ -172,7 +172,7 @@ async function loadOwnedDocument(req: import("express").Request, id: string) {
 
 documentsRouter.post("/:id/confirm", async (req, res) => {
   const existing = await loadOwnedDocument(req, req.params.id);
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   const storage = storageOr503(res);
   if (!storage) return;
 
@@ -200,8 +200,8 @@ documentsRouter.patch("/:id", async (req, res) => {
   const parsed = patchSchema(updateSchema).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await loadOwnedDocument(req, req.params.id);
-  if (!existing) return res.status(404).json({ error: "Not found" });
-  if (parsed.data.memberId && !(await ownsMember(req.familyId!, parsed.data.memberId))) return res.status(400).json({ error: "Membre inconnu" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
+  if (parsed.data.memberId && !(await ownsMember(req.familyId!, parsed.data.memberId))) return res.status(400).json({ error: "Ce membre n'est plus dans la famille. Actualise l'écran." });
 
   const document = await prisma.document.update({ where: { id: existing.id }, data: parsed.data });
   res.json({ document: await serializeDocument(document, getStorage()) });
@@ -209,7 +209,7 @@ documentsRouter.patch("/:id", async (req, res) => {
 
 documentsRouter.delete("/:id", async (req, res) => {
   const existing = await loadOwnedDocument(req, req.params.id);
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   await removeObjects([existing.fileKey]);
   await prisma.document.delete({ where: { id: existing.id } });
   res.status(204).end();

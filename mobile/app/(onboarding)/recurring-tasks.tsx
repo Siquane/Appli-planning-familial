@@ -111,7 +111,7 @@ export default function RecurringTasksOnboardingScreen() {
       <View style={{ gap: space.lg }}>
         <View style={{ gap: space.xs }}>
           <Text heading weight="semibold" size={22}>
-            Tes tâches récurrentes
+            Ce qui revient chaque semaine
           </Text>
           <Text tone="muted" size={15}>
             Elles reviennent toutes seules chaque semaine dans le planning.

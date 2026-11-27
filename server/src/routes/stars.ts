@@ -31,7 +31,7 @@ async function balances(familyId: string) {
 
 starsRouter.get("/", async (req, res) => {
   const parsed = week.safeParse(req.query.week);
-  if (!parsed.success) return res.status(400).json({ error: "Semaine invalide" });
+  if (!parsed.success) return res.status(400).json({ error: "Cette semaine n'est pas valable." });
   const familyId = req.userId!;
   const [members, completions, rewards, history, totals, requests] = await Promise.all([
     prisma.familyMember.findMany({ where: { userId: familyId }, orderBy: { order: "asc" } }),
@@ -88,10 +88,10 @@ starsRouter.post("/complete", async (req, res) => {
   const d = parsed.data;
   const familyId = req.userId!;
   const task = await prisma.task.findFirst({ where: { id: d.taskId, userId: familyId }, include: { members: true } });
-  if (!task) return res.status(404).json({ error: "Tâche introuvable" });
-  if (!task.members.some((m) => m.memberId === d.memberId)) return res.status(400).json({ error: "Cette tâche n'est pas assignée à ce membre" });
-  if (!(await childOf(familyId, d.memberId))) return res.status(400).json({ error: "Les étoiles sont pour les enfants de moins de 15 ans" });
-  if (task.stars === 0) return res.status(400).json({ error: "Cette tâche ne rapporte pas d'étoile" });
+  if (!task) return res.status(404).json({ error: "Cette tâche n'existe plus. Elle a peut-être été supprimée." });
+  if (!task.members.some((m) => m.memberId === d.memberId)) return res.status(400).json({ error: "Cette tâche n'est pas assignée à ce membre." });
+  if (!(await childOf(familyId, d.memberId))) return res.status(400).json({ error: "Les étoiles sont pour les enfants de moins de 15 ans." });
+  if (task.stars === 0) return res.status(400).json({ error: "Cette tâche ne rapporte pas d'étoile." });
 
   const completion = await prisma.starCompletion.upsert({
     where: { taskId_memberId_week: { taskId: task.id, memberId: d.memberId, week: d.week } },
@@ -116,7 +116,7 @@ starsRouter.post("/rewards", async (req, res) => {
   const parsed = rewardSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const count = await prisma.reward.count({ where: { userId: req.userId } });
-  if (count >= 30) return res.status(400).json({ error: "30 récompenses au plus" });
+  if (count >= 30) return res.status(400).json({ error: "30 récompenses au plus. Supprimes-en une d'abord." });
   const reward = await prisma.reward.create({ data: { userId: req.userId!, ...parsed.data } });
   res.status(201).json({ reward: { id: reward.id, title: reward.title, cost: reward.cost } });
 });
@@ -125,7 +125,7 @@ starsRouter.patch("/rewards/:id", async (req, res) => {
   const parsed = rewardSchema.partial().safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const existing = await prisma.reward.findFirst({ where: { id: req.params.id, userId: req.userId } });
-  if (!existing) return res.status(404).json({ error: "Not found" });
+  if (!existing) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
   const reward = await prisma.reward.update({ where: { id: existing.id }, data: parsed.data });
   res.json({ reward: { id: reward.id, title: reward.title, cost: reward.cost } });
 });
@@ -140,8 +140,8 @@ starsRouter.post("/rewards/:id/redeem", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const familyId = req.userId!;
   const reward = await prisma.reward.findFirst({ where: { id: req.params.id, userId: familyId } });
-  if (!reward) return res.status(404).json({ error: "Not found" });
-  if (!(await childOf(familyId, parsed.data.memberId))) return res.status(400).json({ error: "Les étoiles sont pour les enfants de moins de 15 ans" });
+  if (!reward) return res.status(404).json({ error: "Introuvable : ça a peut-être été supprimé entre-temps. Actualise l'écran." });
+  if (!(await childOf(familyId, parsed.data.memberId))) return res.status(400).json({ error: "Les étoiles sont pour les enfants de moins de 15 ans." });
   const t = (await balances(familyId)).get(parsed.data.memberId) ?? { earned: 0, spent: 0 };
   const balance = t.earned - t.spent;
   if (balance < reward.cost) return res.status(409).json({ error: `Il manque ${reward.cost - balance} étoile${reward.cost - balance > 1 ? "s" : ""}.`, code: "not_enough_stars" });
@@ -182,7 +182,7 @@ starsRouter.post("/rewards/:id/request", async (req, res) => {
   const reward = await prisma.reward.findFirst({ where: { id: req.params.id, userId: familyId } });
   if (!reward) return res.status(404).json({ error: "Cette récompense n'existe plus." });
   const member = await childOf(familyId, memberId);
-  if (!member) return res.status(400).json({ error: "Les étoiles sont pour les enfants de moins de 15 ans" });
+  if (!member) return res.status(400).json({ error: "Les étoiles sont pour les enfants de moins de 15 ans." });
   const t = (await balances(familyId)).get(memberId) ?? { earned: 0, spent: 0 };
   const balance = t.earned - t.spent;
   if (balance < reward.cost) {

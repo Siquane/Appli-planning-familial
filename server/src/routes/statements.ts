@@ -133,9 +133,9 @@ statementsRouter.post("/import", budgetGate, async (req, res) => {
   const { rows } = parsed.data;
 
   for (const category of new Set(rows.map((r) => r.category))) {
-    if (!(await isValidCategory(userId, category))) return res.status(400).json({ error: "Catégorie inconnue" });
+    if (!(await isValidCategory(userId, category))) return res.status(400).json({ error: "Cette catégorie n'existe plus. Choisis-en une autre." });
   }
-  if (rows.some((r) => Number.isNaN(Date.parse(`${r.date}T00:00:00Z`)))) return res.status(400).json({ error: "Date invalide" });
+  if (rows.some((r) => Number.isNaN(Date.parse(`${r.date}T00:00:00Z`)))) return res.status(400).json({ error: "Cette date n'est pas valable. Choisis-en une autre." });
 
   const existingRecurring = new Set((await prisma.recurringExpense.findMany({ where: { userId }, select: { label: true } })).map((r) => labelKey(r.label)));
 

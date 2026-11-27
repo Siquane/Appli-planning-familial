@@ -19,7 +19,7 @@ export default function WelcomeScreen() {
           Bienvenue sur Passerelle
         </Text>
         <Text tone="muted" size={15} center style={{ maxWidth: 280 }}>
-          Organise le planning de toute la famille en quelques minutes. On commence par les membres, les horaires à protéger et les tâches qui reviennent chaque semaine.
+          Organise le planning de toute la famille en quelques minutes. On commence par les membres, les moments à garder libres et les tâches qui reviennent chaque semaine.
         </Text>
       </View>
       <View style={{ gap: space.md, alignItems: "center" }}>
