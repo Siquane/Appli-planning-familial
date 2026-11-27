@@ -191,4 +191,22 @@ describe("programme", () => {
       }
     }
   });
+  it("uses the 2026 programmes for CM2 and 6e from the 2027 rentrée, keeping the others", () => {
+    const after = new Date("2027-09-02T00:00:00Z");
+    const cm2 = programmeFor("CM2", after)!;
+    for (const subject of ["Histoire", "Géographie", "Sciences et technologie", "Anglais", "EPS"]) {
+      expect(cm2.find((s) => s.subject === subject)?.source, subject).toContain("2026");
+    }
+    expect(cm2.find((s) => s.subject === "Français")).toBe(PROGRAMMES.CM2.find((s) => s.subject === "Français"));
+    const sixieme = programmeFor("6e", after)!;
+    for (const subject of ["Histoire", "Géographie", "Sciences et technologie", "EPS"]) {
+      expect(sixieme.find((s) => s.subject === subject)?.source, subject).toContain("BO n° 2");
+    }
+    // Les langues de 6e ne changent pas (le texte de 2026 ne vise que l'école).
+    expect(sixieme.find((s) => s.subject === "Anglais")).toBe(PROGRAMMES["6e"].find((s) => s.subject === "Anglais"));
+    expect(programmeFor("5e", after)).toEqual(PROGRAMMES["5e"]);
+    // Une révision rangée sous l'ancien programme retrouve son chapitre.
+    expect(chapterById("cm2-hi-republique")?.grade).toBe("CM2");
+    expect(chapterById("27-6e-hi-grece")?.grade).toBe("6e");
+  });
 });
