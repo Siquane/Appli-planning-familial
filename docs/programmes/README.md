@@ -36,6 +36,20 @@ liste des chapitres de `server/src/lib/cervelle/programme.ts`.
 | Vie affective | BO n° 6 du 6 février 2025 (élémentaire) | BO n° 6 du 6 février 2025 (collège) | idem | idem | idem |
 | Arts, musique, EPS | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 | BO n° 31 du 30 juillet 2020 |
 
+## Changements à la rentrée 2027 (année 2027-2028)
+
+Dates lues dans l'article 3 de chaque arrêté. Dans `programme.ts`, ces
+matières sont remplacées dans `CHANGES_2027` ; l'année bascule le 1er août
+2027 (`schoolYearOn`), et jusque-là les programmes 2026-2027 restent actifs.
+
+| Texte | CM2 | 6e |
+|---|---|---|
+| Sciences et technologie, cycles 2 et 3 (BO n° 24 du 11 juin 2026, arrêté du 5-6-2026) | rentrée 2027 | rentrée 2027 |
+| EPS et histoire-géographie, cycles 2 et 3 (BO n° 22 du 28 mai 2026, arrêté du 22-4-2026) | rentrée 2027 | rentrée 2027 |
+| Langues vivantes, école élémentaire (BO n° 12 du 19 mars 2026, arrêté du 26-2-2026) | rentrée 2027 | non concernée |
+
+(Le CM1 et le CP appliquent ces trois textes dès la rentrée 2026.)
+
 Remarques pour `programme.ts` :
 - Les maths et le français 2020 (4e, 3e), les SVT, la physique-chimie et les
   langues vivantes 2020 n'ont pas de découpage par année : chapitres marqués

@@ -51,7 +51,7 @@ import {
   bossReady,
 } from "../lib/cervelle/game";
 import { LEVELS, REVISION_ICONS, type Level } from "../lib/cervelle/icons";
-import { SCHOOL_YEAR, chapterById, findChapter, programmeFor, programmeForPrompt } from "../lib/cervelle/programme";
+import { chapterById, findChapter, programmeFor, programmeForPrompt, schoolYearOn } from "../lib/cervelle/programme";
 import { notifyRevisionReady } from "../lib/cervelle/push";
 import * as ai from "../services/cervelleAi";
 
@@ -478,12 +478,12 @@ cervelleRouter.get("/learners/:learnerId/programme", async (req, res) => {
   const learner = await loadLearner(req, res);
   if (!learner) return;
   const subjects = SCHOOL_LEVELS.has(learner.level) ? programmeFor(learner.grade) : null;
-  if (!subjects) return res.json({ available: false, grade: learner.grade, schoolYear: SCHOOL_YEAR, subjects: [] });
+  if (!subjects) return res.json({ available: false, grade: learner.grade, schoolYear: schoolYearOn(), subjects: [] });
   const cards = (await revisionCards(learner.id)).filter((r) => r.status === "ready" && r.programmeChapterId);
   res.json({
     available: true,
     grade: learner.grade,
-    schoolYear: SCHOOL_YEAR,
+    schoolYear: schoolYearOn(),
     subjects: subjects.map((s) => ({
       subject: s.subject,
       source: s.source,
