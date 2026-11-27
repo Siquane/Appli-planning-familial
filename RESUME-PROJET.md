@@ -492,3 +492,10 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 - Accueil (`src/lib/today.ts`) : les plafonds ne comparent que les catégories plafonnées (« N plafond(s) dépassé(s) » / « Reste … ») ; le soir, « Plus rien de prévu · N à cocher » tant que tout n'est pas coché.
 - Serveur : avances d'argent de poche réservées au propriétaire / accès complet ; lien public d'un groupe archivé en lecture seule ; remboursement d'avance sous verrou (cagnotte jamais négative) ; photo de ticket `photoPending` (montrée une fois arrivée dans le stockage, oubliée après 1 h, migration `20261126090000_split_photo_pending`) ; agenda illisible (secret changé) → connexion retirée.
 - Appli : carte de tâche avec action TalkBack « Marquer comme faite », durée sur une ligne, avatars moins serrés, jours annoncés comme onglets, « Petit-déjeuner », « Ajouter les ingrédients du menu … ». Version web : widgets et notification d'ouverture seulement sur Android (sert aux captures).
+
+## Fiche Play Store (27/11/2026)
+
+- Textes, catégorie, sécurité des données, classification : `docs/play-store/fiche.md` et https://claude.ai/artifact/3jxzD5tbXzps7nUK6gHhUK ; visuels dans `docs/play-store/`.
+- Politique de confidentialité : « Sorties & idées » (Claude, Open-Meteo) et section « Supprimer mon compte » (`#suppression`, lien web exigé par Google) ; republiée.
+- Compte de démo pour les testeurs de Google créé sur le serveur de production : testeur.google@passerelle-demo.fr (mot de passe transmis à l'utilisatrice, pas dans le dépôt).
+- L'environnement Claude « Passerelle et Cervelle » autorise appli-planning-familial-0lyd.onrender.com (Node : `NODE_USE_ENV_PROXY=1`).
