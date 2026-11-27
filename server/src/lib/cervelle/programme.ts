@@ -23,11 +23,15 @@
 // matières dont le programme change (CHANGES_2027). L'année bascule le
 // 1er août (schoolYearOn) : avant, Cervelle garde les programmes en vigueur.
 
+import { COMPETENCES } from "./competences";
+
 export interface Chapter {
   id: string;
   title: string;
   /** Ce que le programme attend dans ce chapitre, en quelques mots. */
   notions: string[];
+  /** Ce que l'élève doit savoir faire à la fin du chapitre (competences.ts). Vide si non listé. */
+  competences?: string[];
 }
 
 export interface SubjectProgramme {
@@ -132,7 +136,16 @@ function langue2020(prefix: string, subject: "Anglais" | "Italien", aire: string
   };
 }
 
-export const PROGRAMMES: Record<string, SubjectProgramme[]> = {
+/** Rattache à chaque chapitre ses compétences officielles (competences.ts). */
+function withCompetences(programmes: Record<string, SubjectProgramme[]>): Record<string, SubjectProgramme[]> {
+  const out: Record<string, SubjectProgramme[]> = {};
+  for (const [grade, subjects] of Object.entries(programmes)) {
+    out[grade] = subjects.map((s) => ({ ...s, chapters: s.chapters.map((c) => (COMPETENCES[c.id] ? { ...c, competences: COMPETENCES[c.id] } : c)) }));
+  }
+  return out;
+}
+
+export const PROGRAMMES: Record<string, SubjectProgramme[]> = withCompetences({
   CM2: [
     {
       subject: "Français",
@@ -616,7 +629,7 @@ export const PROGRAMMES: Record<string, SubjectProgramme[]> = {
     langue2020("3e", "Anglais", "anglophones", "an"),
     langue2020("3e", "Italien", "italophones", "it"),
   ],
-};
+});
 
 // ---------------------------------------------------------------------------
 // 2027-2028 : nouveaux programmes au CM2 et en 6e (article 3 de chaque arrêté) :
@@ -693,7 +706,7 @@ export function programmeForPrompt(grade: string, date: Date = new Date()): stri
   const subjects = programmeFor(grade, date);
   if (!subjects) return null;
   return subjects
-    .map((s) => `## ${s.subject}\n${s.chapters.map((c) => `- [${c.id}] ${c.title} : ${c.notions.join(" ; ")}`).join("\n")}`)
+    .map((s) => `## ${s.subject}\n${s.chapters.map((c) => `- [${c.id}] ${c.title} : ${c.notions.join(" ; ")}${c.competences?.length ? `\n  Savoir-faire attendus : ${c.competences.join(" ; ")}` : ""}`).join("\n")}`)
     .join("\n\n");
 }
 

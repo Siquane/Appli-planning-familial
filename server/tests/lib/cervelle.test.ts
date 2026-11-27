@@ -125,7 +125,8 @@ describe("cleanQuestion", () => {
   });
 });
 
-import { PROGRAMMES, PROGRAMMES_BY_YEAR, chapterById, programmeFor, programmeKey, schoolYearOn } from "../../src/lib/cervelle/programme";
+import { PROGRAMMES, PROGRAMMES_BY_YEAR, chapterById, programmeFor, programmeForPrompt, programmeKey, schoolYearOn } from "../../src/lib/cervelle/programme";
+import { COMPETENCES } from "../../src/lib/cervelle/competences";
 
 describe("programme", () => {
   it("recognises how families write the class", () => {
@@ -161,6 +162,17 @@ describe("programme", () => {
     expect(PROGRAMMES["4e"].find((s) => s.subject === "Mathématiques")?.source).toContain("2020");
     expect(PROGRAMMES["3e"].find((s) => s.subject === "Français")?.source).toContain("2020");
     expect(PROGRAMMES["6e"].find((s) => s.subject === "Français")?.source).toContain("2025");
+  });
+  it("gives every CM2 and 5e chapter its official competences, and nothing for unknown ids", () => {
+    const ids = new Set(Object.values(PROGRAMMES).flatMap((subjects) => subjects.flatMap((s) => s.chapters.map((c) => c.id))));
+    for (const id of Object.keys(COMPETENCES)) expect(ids.has(id), id).toBe(true);
+    for (const grade of ["CM2", "5e"]) {
+      for (const s of PROGRAMMES[grade]) {
+        for (const c of s.chapters) expect(c.competences?.length ?? 0, c.id).toBeGreaterThan(0);
+      }
+    }
+    expect(chapterById("cm2-ma-fractions")?.chapter.competences).toContain("Comparer, additionner et soustraire des fractions");
+    expect(programmeForPrompt("5e")).toContain("Savoir-faire attendus : Connaître et utiliser les priorités opératoires");
   });
   it("switches school year on 1 August, within the years it knows", () => {
     expect(schoolYearOn(new Date("2026-11-27T10:00:00Z"))).toBe("2026-2027");
