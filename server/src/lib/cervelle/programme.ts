@@ -625,7 +625,141 @@ export const PROGRAMMES: Record<string, SubjectProgramme[]> = {
 //   - langues vivantes de l'école élémentaire, BO n° 12 du 19 mars 2026 (CM2).
 // Chaque entrée remplace la matière du même nom (ou s'ajoute) pour la classe.
 // Ids nouveaux, préfixés « 27- » : les révisions déjà rangées gardent les leurs.
-export const CHANGES_2027: Record<string, SubjectProgramme[]> = {};
+const HG_SRC = "Programme d'histoire-géographie du cycle 3, BO n° 22 du 28 mai 2026 (en vigueur au CM2 et en 6e à la rentrée 2027)";
+const EPS_SRC = "Programme d'éducation physique et sportive du cycle 3, BO n° 22 du 28 mai 2026 (en vigueur au CM2 et en 6e à la rentrée 2027)";
+
+const HISTOIRE_CM2_2027: SubjectProgramme = {
+  subject: "Histoire",
+  source: `${HG_SRC} — Cours moyen deuxième année`,
+  verifie: true,
+  chapters: [
+    { id: "27-cm2-hi-republique-empire", title: "De la République à l'Empire (1792-1815)", notions: ["La chute du roi et la naissance de la République en pleine guerre (septembre 1792)", "Mars 1792 : la pétition de 319 femmes (Pauline Léon) ; avril 1792 : La Marseillaise", "1794 : première abolition de l'esclavage ; 1802 : son rétablissement", "Comment Bonaparte devient empereur : sacre de Napoléon Ier le 2 décembre 1804", "Les réformes de Napoléon : Code civil, lycées, préfets"] },
+    { id: "27-cm2-hi-france-republicaine", title: "Vers une France républicaine (1848-1914)", notions: ["1848 : suffrage universel masculin et abolition définitive de l'esclavage", "1882-1886 : lois Ferry sur l'École ; 9 décembre 1905 : séparation des Églises et de l'État (laïcité)", "Les symboles de la République : drapeau tricolore, 14 juillet, Marianne, La Marseillaise, la devise", "La liberté de la presse", "L'empire colonial français au début du XXe siècle, sur un planisphère"] },
+    { id: "27-cm2-hi-industriel", title: "L'âge industriel en France au XIXe siècle", notions: ["Les progrès techniques : nouvelles énergies, chemin de fer (locomotive de Stephenson), usines", "Les progrès de la médecine : le vaccin contre la rage de Pasteur", "La vie des ouvriers (mine, atelier, usine) et celle des bourgeois", "Grèves et syndicats : droit de grève et liberté syndicale", "Une société encore très rurale, des villes qui grandissent (urbanisation)"] },
+    { id: "27-cm2-hi-premiere-guerre", title: "La France dans la Première Guerre mondiale (1914-1918)", notions: ["Les combats du front occidental, au nord et à l'est de la France", "La vie des poilus : guerre de mouvement, puis guerre de position", "Toute la population mobilisée, le rôle des femmes, l'aide des colonies", "11 novembre 1918 : l'armistice", "Le bilan : 10 millions de morts au combat, dont 1,4 million de Français"] },
+    { id: "27-cm2-hi-seconde-guerre", title: "La France pendant la Seconde Guerre mondiale (1939-1945)", notions: ["Les étapes : « drôle de guerre », défaite de juin 1940, Occupation et collaboration, Libération", "18 juin 1940 : l'appel du général de Gaulle ; Jean Moulin et la Résistance", "La vie difficile sous l'Occupation", "Le régime de Vichy (Philippe Pétain), l'antisémitisme, la rafle du Vel d'Hiv' (1942), les Justes parmi les Nations", "6 juin 1944 : débarquement en Normandie ; 8 mai 1945 : capitulation de l'Allemagne nazie", "Le bilan : 60 à 70 millions de morts, dont 6 millions de Juifs"] },
+    { id: "27-cm2-hi-depuis-1945", title: "La France depuis 1945 : 80 ans de transformations", notions: ["1944 : droit de vote des femmes ; 1965 : les femmes peuvent travailler et ouvrir un compte sans l'accord de leur mari", "Une République démocratique et sociale : la Sécurité sociale", "1958 : la Ve République, avec le général de Gaulle", "Une société transformée : transports, loisirs, société de consommation", "La construction européenne : traité de Rome (1957), l'euro remplace le franc (2000)"] },
+  ],
+};
+
+const GEOGRAPHIE_CM2_2027: SubjectProgramme = {
+  subject: "Géographie",
+  source: `${HG_SRC} — Cours moyen deuxième année : la France, l'Union européenne`,
+  verifie: true,
+  chapters: [
+    { id: "27-cm2-ge-territoire", title: "L'organisation du territoire français", notions: ["Les cinq principales agglomérations françaises", "Les grands axes autoroutiers et ferroviaires (TGV)", "Commune, département, région : les 18 Régions et leur capitale", "Ta région et ton département"] },
+    { id: "27-cm2-ge-eau", title: "Les usages de l'eau douce en France", notions: ["L'eau douce, une ressource limitée ; la nappe phréatique", "Les différents usages de l'eau et les conflits d'usages", "Les grands fleuves : Garonne, Loire, Maroni, Rhin, Rhône, Seine", "Les massifs : Alpes, Corse, Jura, Massif central, Pyrénées, Vosges ; deux grands lacs"] },
+    { id: "27-cm2-ge-union-europeenne", title: "L'Union européenne", notions: ["La différence entre l'Europe (un continent) et l'Union européenne (une construction politique)", "Dix pays de l'Union européenne, dont les six pays fondateurs", "1957 : traité de Rome ; 1992 : traité de Maastricht", "Un aménagement aidé par l'Union européenne près de chez toi"] },
+  ],
+};
+
+const HISTOIRE_6E_2027: SubjectProgramme = {
+  subject: "Histoire",
+  source: `${HG_SRC} — Sixième : premiers humains, premières sociétés et premiers États`,
+  verifie: true,
+  chapters: [
+    { id: "27-6e-hi-temps", title: "Se repérer dans le temps", notions: ["Écrire les siècles en chiffres romains", "Les grandes périodes sur une frise : Antiquité, Moyen Âge, Temps modernes, époque contemporaine", "Le découpage du temps est une convention"] },
+    { id: "27-6e-hi-neolithique", title: "Du Paléolithique au Néolithique", notions: ["Les premiers humains en Afrique, Néandertal et Homo sapiens, les premières migrations", "Les chasseurs-cueilleurs du Paléolithique ; vers 400 000 av. J.-C. : domestication du feu", "Le Néolithique (vers 10 000 av. J.-C. au Proche-Orient) : agriculture, élevage, premiers villages", "Vers 4000 av. J.-C. : invention de la roue ; Lascaux et Chauvet"] },
+    { id: "27-6e-hi-orient-egypte", title: "Des sociétés, des États, des dieux : Proche-Orient et Égypte", notions: ["Vers 3000 av. J.-C. : écriture cunéiforme et premières cités-États en Mésopotamie (Ur, Uruk)", "L'Égypte unifiée autour du Nil, le pharaon (Ramsès II), les hiéroglyphes", "Le roi conquérant et bâtisseur (Nabuchodonosor II), le rôle des temples", "Naissance du judaïsme, premier monothéisme ; la Bible hébraïque"] },
+    { id: "27-6e-hi-grece", title: "Le monde grec, des cités aux conquêtes d'Alexandre", notions: ["Des cités-États en guerre mais une culture commune (L'Iliade et L'Odyssée, Jeux olympiques)", "Athènes au Ve siècle av. J.-C. (Périclès) : citoyens, démocratie et ses limites", "Les femmes et les esclaves, exclus de la citoyenneté", "Les conquêtes d'Alexandre le Grand (336-323 av. J.-C.)"] },
+    { id: "27-6e-hi-celtes", title: "Les mondes celtes et la Méditerranée", notions: ["Les Celtes, des peuples de l'Europe tempérée ; les Gaulois", "Oppidum, artisanat, agriculture, druides ; Bibracte, La Tène", "600 av. J.-C. : les Grecs fondent Massalia (Marseille)", "52 av. J.-C. : Jules César bat Vercingétorix, fin de la guerre des Gaules"] },
+  ],
+};
+
+const GEOGRAPHIE_6E_2027: SubjectProgramme = {
+  subject: "Géographie",
+  source: `${HG_SRC} — Sixième : habiter le monde`,
+  verifie: true,
+  chapters: [
+    { id: "27-6e-ge-reperes", title: "Je me repère à la surface de la Terre", notions: ["Représenter la Terre déforme toujours : projections Mercator, Peters, Lambert, Equal Earth", "Équateur, tropiques, cercles polaires, méridien de Greenwich", "Continents et océans sur un planisphère"] },
+    { id: "27-6e-ge-peuplement", title: "Le peuplement de la Terre", notions: ["Les grands foyers de peuplement et les principaux flux migratoires", "Taux de natalité, taux de mortalité, solde naturel, solde migratoire", "Espérance de vie, croissance démographique, vieillissement"] },
+    { id: "27-6e-ge-metropole", title: "Habiter une métropole", notions: ["Qu'est-ce qu'une métropole ? Ses fonctions politiques, économiques, culturelles", "Une métropole d'un pays développé et une d'un pays émergent", "Quartier d'affaires, habitat informel, centre historique", "Les cinq premières métropoles mondiales"] },
+    { id: "27-6e-ge-contraintes", title: "Habiter un espace soumis à des contraintes naturelles", notions: ["Qu'est-ce qu'une contrainte naturelle ?", "Déserts chauds et froids, forêts tropicales, haute montagne", "S'adapter : haute montagne ou littoral menacé de submersion marine", "Adaptation et atténuation face au dérèglement climatique"] },
+    { id: "27-6e-ge-risques", title: "Habiter un espace exposé aux risques", notions: ["Aléa, risque, vulnérabilité", "Risques naturels et risques causés par l'humain", "Les aires sismiques et cycloniques (typhon, ouragan)", "Prévenir et gérer : tous les pays ne sont pas égaux face au risque"] },
+  ],
+};
+
+const EPS_CM2_2027: SubjectProgramme = {
+  subject: "EPS",
+  source: `${EPS_SRC} — Cours moyen`,
+  verifie: true,
+  chapters: [
+    { id: "27-cm2-eps-deplacer", title: "Se déplacer pour agir dans l'espace et sur une durée", notions: ["Courir vite jusqu'à l'arrivée, se relayer, franchir des obstacles sans ralentir", "Courir longtemps à l'aide de repères", "Course d'élan et pied d'appel pour sauter loin ou haut, lancer loin", "S'orienter avec des repères simples", "Mesurer une performance sans juger"] },
+    { id: "27-cm2-eps-equilibres", title: "Construire des équilibres dans des milieux inhabituels", notions: ["Rouler vers l'arrière, se renverser, se suspendre, grimper sur un mur", "Circuler ou glisser avec un vélo, des rollers… seul et en groupe : le savoir rouler à vélo", "Se déplacer dans l'eau : le savoir nager", "Agir en sécurité pour soi et pour les autres"] },
+    { id: "27-cm2-eps-exprimer", title: "S'exprimer avec son corps", notions: ["Créer et mémoriser un enchaînement artistique (danse, acrobatie)", "Se présenter en artiste devant les autres", "Apprécier une prestation et donner des conseils précis"] },
+    { id: "27-cm2-eps-jouer", title: "Coopérer et s'opposer en respectant les règles", notions: ["Jeux collectifs et jeux d'opposition : viser la cible, enchaîner des actions", "Mener un projet d'action seul ou en équipe", "Être joueur, arbitre ou organisateur", "Faire respecter les règles du jeu"] },
+  ],
+};
+
+const EPS_6E_2027: SubjectProgramme = {
+  subject: "EPS",
+  source: `${EPS_SRC} — Sixième`,
+  verifie: true,
+  chapters: [
+    { id: "27-6e-eps-performance", title: "Produire une performance optimale mesurable", notions: ["Des appuis efficaces et des alignements du corps pour être plus performant", "Les principes et les phases d'un échauffement", "Adapter son effort, connaître ses performances", "Règles de pratique, d'hygiène et de sécurité"] },
+    { id: "27-6e-eps-environnement", title: "S'engager en sécurité dans un environnement inhabituel", notions: ["Prévoir et réaliser un itinéraire (course d'orientation, escalade…)", "Reconnaître et réguler ses émotions", "Évoluer en groupe en sécurité, limiter son impact sur la nature", "Fin de 6e : l'attestation du savoir nager en sécurité (ASNS)"] },
+    { id: "27-6e-eps-prestation", title: "Composer une prestation corporelle jugée ou appréciée", notions: ["Construire des formes corporelles et des figures acrobatiques", "Composer un enchaînement artistique et acrobatique", "Aider ses camarades, être juge ou spectateur", "Découvrir des courants artistiques et des performances gymniques"] },
+    { id: "27-6e-eps-confrontation", title: "Conduire une confrontation collective ou à deux", notions: ["Lire la trajectoire et le déplacement de l'adversaire", "Se placer pour agir, enchaîner des actions tactiques", "Trouver son point fort et le point faible de l'adversaire", "Connaître et faire respecter les règles, être arbitre, coopérer en équipe"] },
+  ],
+};
+
+const ST_SRC = "Programme de sciences et technologie du cycle 3, BO n° 24 du 11 juin 2026 (en vigueur au CM2 et en 6e à la rentrée 2027)";
+
+const SCIENCES_CM2_2027: SubjectProgramme = {
+  subject: "Sciences et technologie",
+  source: `${ST_SRC} — Cours moyen deuxième année`,
+  verifie: true,
+  chapters: [
+    { id: "27-cm2-st-matiere", title: "États et constitution de la matière", notions: ["Masse : convertir tonne, kilogramme, gramme, milligramme", "Mesurer le volume d'un liquide, et d'un solide par déplacement de liquide", "La masse se conserve quand on mélange un solide dans un liquide, pas forcément le volume", "Récupérer un solide dissous par évaporation (surface, vent, température)", "États solide, liquide, gazeux ; changements d'état réversibles et leurs noms ; l'eau dans la nature"] },
+    { id: "27-cm2-st-mouvement", title: "Différents types de mouvement", notions: ["Mouvement rectiligne ou circulaire, selon l'observateur", "Le mouvement de la Terre autour du Soleil, la Terre dans le système solaire", "Convertir des unités de distance et de temps"] },
+    { id: "27-cm2-st-electricite", title: "Signaux : l'électricité", notions: ["Circuit à une boucle : générateur, interrupteur, un ou deux récepteurs", "Matériaux conducteurs et isolants", "Règles de sécurité électrique"] },
+    { id: "27-cm2-st-biodiversite", title: "Unité et diversité du vivant : biodiversité actuelle et passée", notions: ["Échelle des temps géologiques et échelle de l'histoire humaine", "Les fossiles racontent les changements de biodiversité", "Placer des espèces actuelles et fossiles sur une frise", "Une extinction massive : la crise Crétacé-Tertiaire (fin des dinosaures)"] },
+    { id: "27-cm2-st-ecosystemes", title: "Les écosystèmes et les actions humaines", notions: ["Agir pour le développement durable : climat, biodiversité, ressources, déchets", "Agir seul et ensemble pour la nature", "Chercher des informations et vérifier ses sources"] },
+    { id: "27-cm2-st-terre", title: "La Terre, une planète active", notions: ["Manifestations de l'activité interne et externe de la Terre", "Risque naturel : prévention et protection", "Le climat local : la météo sur plusieurs années", "Conséquences du changement climatique près de chez soi ; s'adapter et atténuer"] },
+    { id: "27-cm2-st-alimentation", title: "Alimentation humaine", notions: ["Les besoins alimentaires changent avec la croissance et l'activité physique", "Organes du système digestif et leur fonction ; aliments transformés en nutriments", "Le sang apporte les nutriments aux organes", "Pendant un effort, le cœur bat plus vite pour les muscles"] },
+    { id: "27-cm2-st-puberte", title: "Puberté et reproduction humaine", notions: ["Organes reproducteurs et leur fonction", "Les règles, une étape normale de la puberté", "Trajet de l'ovule et des spermatozoïdes, rencontre, implantation et gestation de l'embryon"] },
+    { id: "27-cm2-st-conception", title: "Concevoir et réaliser un objet technique", notions: ["Chercher des solutions avec des croquis", "Choisir un matériau selon une contrainte : étanchéité, résistance, isolation, durée de vie", "Concevoir et fabriquer une maquette", "Comparer des solutions : efficacité, durée de vie, esthétique, développement durable"] },
+    { id: "27-cm2-st-programmation", title: "Programmation d'objets techniques", notions: ["Comprendre un algorithme qui commande un objet", "Modifier, tester et valider un programme"] },
+  ],
+};
+
+const SCIENCES_6E_2027: SubjectProgramme = {
+  subject: "Sciences et technologie",
+  source: `${ST_SRC} — Sixième`,
+  verifie: true,
+  chapters: [
+    { id: "27-6e-st-matiere", title: "États et constitution de la matière", notions: ["Températures de changement d'état, paliers de température", "Mesurer le volume d'un gaz ; convertir masses et volumes", "Masse et volume : la proportionnalité dépend du matériau ; liquides non miscibles superposés", "Séparer des liquides non miscibles ; saturation d'un solide dans l'eau", "Composition de l'air, gaz à effet de serre"] },
+    { id: "27-6e-st-mouvement", title: "Différents types de mouvement", notions: ["Distance, durée et vitesse (sans formule) ; vitesse constante ou variable", "Le jour et la nuit, les saisons et l'inclinaison du Soleil", "Une année = une révolution de la Terre autour du Soleil ; un jour = une rotation"] },
+    { id: "27-6e-st-electricite", title: "Signaux : l'électricité", notions: ["Dans un circuit à une boucle, l'ordre des composants ne change rien", "Circuits avec moteur, cellule photovoltaïque ou capteur", "Schéma normalisé d'un circuit", "Règles de sécurité électrique"] },
+    { id: "27-6e-st-vivant", title: "Unité et diversité du vivant", notions: ["La cellule, unité commune à tous les êtres vivants ; observer au microscope", "Classer les êtres vivants, lire un arbre de parenté", "Qu'est-ce qu'une espèce ? Diversité des individus et variations héréditaires"] },
+    { id: "27-6e-st-reproduction", title: "Reproduction, croissance et développement", notions: ["La pollinisation : la fleur devient fruit, les ovules deviennent graines", "La coopération entre plantes et pollinisateurs", "Moins de pollinisateurs (insecticides) : conséquences pour les cultures"] },
+    { id: "27-6e-st-ecosystemes", title: "Les écosystèmes", notions: ["Décrire un paysage : composantes biologiques, géologiques, humaines", "Un milieu et son peuplement, au fil des saisons ; passer la mauvaise saison", "Les végétaux à la base des réseaux alimentaires", "La décomposition de la matière organique par les microorganismes (le sol)", "Agir pour le développement durable"] },
+    { id: "27-6e-st-alimentation", title: "Alimentation humaine", notions: ["Une alimentation favorable à la santé, diversité des traditions culinaires", "Conserver les aliments pour limiter les risques", "Fermentation : des microorganismes transforment les aliments"] },
+    { id: "27-6e-st-puberte", title: "Puberté et reproduction humaine", notions: ["Les changements de la puberté rendent capable de se reproduire", "Caractères sexuels primaires et secondaires"] },
+  ],
+};
+
+const LV_SRC = "Programme de langues vivantes étrangères et régionales pour le cours moyen, BO n° 12 du 19 mars 2026 (en vigueur au CM2 à la rentrée 2027 ; objectif fin de CM2 : niveau A1 consolidé)";
+
+const ANGLAIS_CM2_2027: SubjectProgramme = {
+  subject: "Anglais",
+  source: LV_SRC,
+  verifie: true,
+  chapters: [
+    { id: "27-cm2-an-ecouter", title: "Écouter et comprendre", notions: ["Suivre le fil d'une histoire simple", "Comprendre un message court sur un sujet familier, toutes les consignes de la classe", "Comprendre et agir : impératif, autorisation, obligation, interdiction", "Reconnaître une question, une affirmation, une exclamation à l'intonation"] },
+    { id: "27-cm2-an-parler", title: "Parler en continu", notions: ["Prononcer correctement les mots appris, lire à voix haute un texte préparé", "Se présenter, présenter les autres, dire ses goûts", "Raconter une courte histoire avec des images", "Décrire son quotidien : école, famille, loisirs ; nombres au-delà de 100"] },
+    { id: "27-cm2-an-dialoguer", title: "Réagir et dialoguer", notions: ["Saluer, se présenter, remercier, s'excuser, accepter, refuser, prendre congé", "Poser des questions simples et répondre brièvement", "Dire ses émotions, son accord ou son désaccord", "Épeler, demander de répéter, dire qu'on ne comprend pas"] },
+    { id: "27-cm2-an-lire", title: "Lire et comprendre", notions: ["Comprendre des textes courts : carte postale, courriel, affiche, menu, BD", "Repérer la trame d'un récit illustré", "Suivre une recette ou un mode d'emploi simple"] },
+    { id: "27-cm2-an-ecrire", title: "Écrire", notions: ["Copier et écrire sous la dictée des mots connus", "Écrire des phrases courtes sur soi, avec des mots de liaison simples", "Remplir une fiche de renseignements, répondre à un message, donner son avis"] },
+    { id: "27-cm2-an-mediation", title: "Médiation et repères culturels", notions: ["Transmettre une information simple (nom, nombre, prix, horaire) d'une langue à l'autre", "Repérer des ressemblances et des différences culturelles", "Aider un camarade, demander de l'aide, coopérer"] },
+    { id: "27-cm2-an-langue", title: "Grammaire et prononciation", notions: ["Le présent des verbes courants ; pour aller plus loin : l'action en cours, le passé, le futur", "Articles, démonstratifs, pronoms personnels, adjectifs possessifs", "Phrases affirmatives, négatives, interrogatives, exclamatives ; and, or", "Comparatifs et superlatifs ; verbes modaux (pouvoir, devoir)", "L'alphabet, l'intonation et le rythme"] },
+  ],
+};
+
+export const CHANGES_2027: Record<string, SubjectProgramme[]> = {
+  CM2: [HISTOIRE_CM2_2027, GEOGRAPHIE_CM2_2027, SCIENCES_CM2_2027, ANGLAIS_CM2_2027, EPS_CM2_2027],
+  "6e": [HISTOIRE_6E_2027, GEOGRAPHIE_6E_2027, SCIENCES_6E_2027, EPS_6E_2027],
+};
 
 /** Une année = l'année d'avant, avec les matières remplacées ou ajoutées. */
 function nextYear(base: Record<string, SubjectProgramme[]>, changes: Record<string, SubjectProgramme[]>): Record<string, SubjectProgramme[]> {

@@ -50,6 +50,19 @@ matières sont remplacées dans `CHANGES_2027` ; l'année bascule le 1er août
 
 (Le CM1 et le CP appliquent ces trois textes dès la rentrée 2026.)
 
+Annexes lues (27/11/2026, texte complet) pour remplir `CHANGES_2027` :
+- annexe 2 du BO n° 24 : programme de sciences et technologie du cycle 3
+  (education.gouv.fr, `annexe-2-programme-de-sciences-et-technologie-du-cycle-3-519023.pdf`) ;
+- annexe 4 du BO n° 22 : programme d'histoire-géographie du cycle 3
+  (education.gouv.fr, `annexe-4-programme-d-histoire-geographie-cycle-3-516779.pdf`) ;
+- annexe 2 du BO n° 22 : programme d'EPS du cycle 3 (copie de l'académie de
+  Bordeaux ; les attendus de fin de collège de 6e n'y figurent pas) ;
+- annexe 2 du BO n° 12 : langues vivantes, cours moyen (education.gouv.fr,
+  `Annexe 2 – Programme de langues vivantes … cours moyen (cycle 3)-481190.pdf`).
+Sciences en 6e : le texte ne donne pas d'objectifs annuels pour la partie
+« objets techniques », donc pas de chapitre technologie en 6e pour 2027-2028.
+L'EPS apparaît comme matière à partir de 2027-2028.
+
 Remarques pour `programme.ts` :
 - Les maths et le français 2020 (4e, 3e), les SVT, la physique-chimie et les
   langues vivantes 2020 n'ont pas de découpage par année : chapitres marqués
