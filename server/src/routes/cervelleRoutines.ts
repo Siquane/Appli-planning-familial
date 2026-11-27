@@ -78,7 +78,7 @@ export function mountRoutines(router: Router, d: { loadLearner: (req: Request, r
     const learner = await d.loadLearner(req, res);
     if (!learner) return;
     const kind = String(req.params.kind) as Kind;
-    if (!ROUTINE_KINDS.includes(kind)) return res.status(404).json({ error: "Cette routine n'existe pas." });
+    if (!ROUTINE_KINDS.includes(kind)) return res.status(404).json({ error: "Cette routine n'existe plus." });
     const parsed = stepsSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: `${MAX_STEPS} étapes au plus, chacune avec un nom.` });
     const steps: Step[] = parsed.data.steps.map((s) => ({ id: s.id && /^[A-Za-z0-9_-]+$/.test(s.id) ? s.id : crypto.randomUUID().slice(0, 8), emoji: s.emoji, label: s.label }));
@@ -90,7 +90,7 @@ export function mountRoutines(router: Router, d: { loadLearner: (req: Request, r
     const learner = await d.loadLearner(req, res);
     if (!learner) return;
     const kind = String(req.params.kind) as Kind;
-    if (!ROUTINE_KINDS.includes(kind)) return res.status(404).json({ error: "Cette routine n'existe pas." });
+    if (!ROUTINE_KINDS.includes(kind)) return res.status(404).json({ error: "Cette routine n'existe plus." });
     const parsed = z.object({ stepId: z.string().max(40), on: z.boolean() }).safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "Ça n'a pas marché. Réessaie dans un instant." });
     const routine = await prisma.routine.findUnique({ where: { learnerId_kind: { learnerId: learner.id, kind } } });

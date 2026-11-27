@@ -127,7 +127,7 @@ splitsRouter.post("/", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const familyId = req.familyId!;
   if ((await prisma.splitGroup.count({ where: { userId: familyId } })) >= MAX_GROUPS) return res.status(400).json({ error: "Trop de groupes : archive ou supprime-en un." });
-  if (!(await checkMembers(familyId, parsed.data.participants.map((p) => p.memberId)))) return res.status(400).json({ error: "Membre inconnu" });
+  if (!(await checkMembers(familyId, parsed.data.participants.map((p) => p.memberId)))) return res.status(400).json({ error: "Cette personne n'est plus dans le groupe." });
   const g = await prisma.splitGroup.create({
     data: {
       userId: familyId,
@@ -142,7 +142,7 @@ splitsRouter.post("/", async (req, res) => {
 
 splitsRouter.get("/:id", async (req, res) => {
   const g = await loadGroup(req.familyId!, req.params.id);
-  if (!g) return res.status(404).json({ error: "Groupe introuvable" });
+  if (!g) return res.status(404).json({ error: "Ce groupe n'existe plus. Il a peut-être été supprimé." });
   res.json({ group: await serializeGroup(g, true) });
 });
 
@@ -159,7 +159,7 @@ splitsRouter.patch("/:id", async (req, res) => {
   const parsed = groupPatch.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const g = await loadGroup(req.familyId!, req.params.id);
-  if (!g) return res.status(404).json({ error: "Groupe introuvable" });
+  if (!g) return res.status(404).json({ error: "Ce groupe n'existe plus. Il a peut-être été supprimé." });
   const { archived, defaultSplit, ...rest } = parsed.data;
   await prisma.splitGroup.update({
     where: { id: g.id },
@@ -174,7 +174,7 @@ splitsRouter.patch("/:id", async (req, res) => {
 
 splitsRouter.delete("/:id", async (req, res) => {
   const g = await loadGroup(req.familyId!, req.params.id);
-  if (!g) return res.status(404).json({ error: "Groupe introuvable" });
+  if (!g) return res.status(404).json({ error: "Ce groupe n'existe plus. Il a peut-être été supprimé." });
   const keys = g.expenses.map((e) => e.photoKey).filter((k): k is string => !!k);
   await prisma.splitGroup.delete({ where: { id: g.id } });
   if (keys.length) await removeObjects(keys).catch(() => undefined);
@@ -187,9 +187,9 @@ splitsRouter.post("/:id/participants", async (req, res) => {
   const parsed = participantInput.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const g = await loadGroup(req.familyId!, req.params.id);
-  if (!g) return res.status(404).json({ error: "Groupe introuvable" });
+  if (!g) return res.status(404).json({ error: "Ce groupe n'existe plus. Il a peut-être été supprimé." });
   if (g.participants.length >= MAX_PARTICIPANTS) return res.status(400).json({ error: "Ce groupe est complet." });
-  if (!(await checkMembers(req.familyId!, [parsed.data.memberId]))) return res.status(400).json({ error: "Membre inconnu" });
+  if (!(await checkMembers(req.familyId!, [parsed.data.memberId]))) return res.status(400).json({ error: "Cette personne n'est plus dans le groupe." });
   await prisma.splitParticipant.create({ data: { groupId: g.id, name: parsed.data.name, memberId: parsed.data.memberId ?? null, order: g.participants.length } });
   res.status(201).json({ group: await serializeGroup((await loadGroup(req.familyId!, g.id))!, true) });
 });
@@ -199,7 +199,7 @@ splitsRouter.patch("/:id/participants/:pid", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const g = await loadGroup(req.familyId!, req.params.id);
   const p = g?.participants.find((x) => x.id === req.params.pid);
-  if (!g || !p) return res.status(404).json({ error: "Introuvable" });
+  if (!g || !p) return res.status(404).json({ error: "Cette personne n'est plus dans le groupe." });
   await prisma.splitParticipant.update({ where: { id: p.id }, data: { name: parsed.data.name } });
   res.json({ group: await serializeGroup((await loadGroup(req.familyId!, g.id))!, true) });
 });
@@ -207,7 +207,7 @@ splitsRouter.patch("/:id/participants/:pid", async (req, res) => {
 splitsRouter.delete("/:id/participants/:pid", async (req, res) => {
   const g = await loadGroup(req.familyId!, req.params.id);
   const p = g?.participants.find((x) => x.id === req.params.pid);
-  if (!g || !p) return res.status(404).json({ error: "Introuvable" });
+  if (!g || !p) return res.status(404).json({ error: "Cette personne n'est plus dans le groupe." });
   const used = g.expenses.some((e) => e.paidById === p.id || e.shares.some((s) => s.participantId === p.id));
   if (used) return res.status(409).json({ error: `${p.name} apparaît dans des dépenses : retire-le d'abord de ces dépenses.` });
   if (g.participants.length <= 2) return res.status(400).json({ error: "Il faut au moins deux personnes." });
@@ -221,7 +221,7 @@ splitsRouter.delete("/:id/participants/:pid", async (req, res) => {
 splitsRouter.post("/:id/participants/:pid/link", async (req, res) => {
   const g = await loadGroup(req.familyId!, req.params.id);
   const p = g?.participants.find((x) => x.id === req.params.pid);
-  if (!g || !p) return res.status(404).json({ error: "Introuvable" });
+  if (!g || !p) return res.status(404).json({ error: "Cette personne n'est plus dans le groupe." });
   await prisma.splitParticipant.update({ where: { id: p.id }, data: { linkToken: nanoid(24) } });
   res.json({ group: await serializeGroup((await loadGroup(req.familyId!, g.id))!, true) });
 });
@@ -229,7 +229,7 @@ splitsRouter.post("/:id/participants/:pid/link", async (req, res) => {
 splitsRouter.delete("/:id/participants/:pid/link", async (req, res) => {
   const g = await loadGroup(req.familyId!, req.params.id);
   const p = g?.participants.find((x) => x.id === req.params.pid);
-  if (!g || !p) return res.status(404).json({ error: "Introuvable" });
+  if (!g || !p) return res.status(404).json({ error: "Cette personne n'est plus dans le groupe." });
   await prisma.splitParticipant.update({ where: { id: p.id }, data: { linkToken: null } });
   res.json({ group: await serializeGroup((await loadGroup(req.familyId!, g.id))!, true) });
 });
@@ -252,7 +252,7 @@ export const expenseSchema = z.object({
 export function prepare(res: Response, g: FullGroup, d: z.infer<typeof expenseSchema>) {
   const ids = new Set(g.participants.map((p) => p.id));
   if (!ids.has(d.paidById) || d.shares.some((s) => !ids.has(s.participantId))) {
-    res.status(400).json({ error: "Personne inconnue dans ce groupe" });
+    res.status(400).json({ error: "Cette personne n'est plus dans le groupe." });
     return null;
   }
   try {
@@ -267,7 +267,7 @@ export async function photoUpload(res: Response, familyId: string, photo: z.infe
   if (!photo) return { key: null, mime: null, upload: null };
   const storage = getStorage();
   if (!storage) {
-    res.status(503).json({ error: "Le stockage des photos n'est pas configuré sur le serveur." });
+    res.status(503).json({ error: "Les photos ne sont pas disponibles pour le moment. Enregistre la dépense sans photo." });
     return null;
   }
   if (photo.size > MAX_FILE_SIZE) {
@@ -282,7 +282,7 @@ splitsRouter.post("/:id/expenses", async (req, res) => {
   const parsed = expenseSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const g = await loadGroup(req.familyId!, req.params.id);
-  if (!g) return res.status(404).json({ error: "Groupe introuvable" });
+  if (!g) return res.status(404).json({ error: "Ce groupe n'existe plus. Il a peut-être été supprimé." });
   const d = parsed.data;
   const shares = prepare(res, g, d);
   if (!shares) return;
@@ -314,7 +314,7 @@ splitsRouter.put("/:id/expenses/:eid", async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const g = await loadGroup(req.familyId!, req.params.id);
   const existing = g?.expenses.find((x) => x.id === req.params.eid);
-  if (!g || !existing) return res.status(404).json({ error: "Dépense introuvable" });
+  if (!g || !existing) return res.status(404).json({ error: "Cette dépense n'existe plus. Elle a peut-être été supprimée." });
   const d = parsed.data;
   const shares = prepare(res, g, d);
   if (!shares) return;
@@ -335,7 +335,7 @@ splitsRouter.put("/:id/expenses/:eid", async (req, res) => {
 splitsRouter.delete("/:id/expenses/:eid/photo", async (req, res) => {
   const g = await loadGroup(req.familyId!, req.params.id);
   const existing = g?.expenses.find((x) => x.id === req.params.eid);
-  if (!g || !existing) return res.status(404).json({ error: "Dépense introuvable" });
+  if (!g || !existing) return res.status(404).json({ error: "Cette dépense n'existe plus. Elle a peut-être été supprimée." });
   if (existing.photoKey) {
     await prisma.splitExpense.update({ where: { id: existing.id }, data: { photoKey: null, photoMime: null, photoPending: false } });
     await removeObjects([existing.photoKey]).catch(() => undefined);
@@ -346,7 +346,7 @@ splitsRouter.delete("/:id/expenses/:eid/photo", async (req, res) => {
 splitsRouter.delete("/:id/expenses/:eid", async (req, res) => {
   const g = await loadGroup(req.familyId!, req.params.id);
   const existing = g?.expenses.find((x) => x.id === req.params.eid);
-  if (!g || !existing) return res.status(404).json({ error: "Dépense introuvable" });
+  if (!g || !existing) return res.status(404).json({ error: "Cette dépense n'existe plus. Elle a peut-être été supprimée." });
   await prisma.splitExpense.delete({ where: { id: existing.id } });
   if (existing.photoKey) await removeObjects([existing.photoKey]).catch(() => undefined);
   res.json({ group: await serializeGroup((await loadGroup(req.familyId!, g.id))!, true) });
@@ -361,11 +361,11 @@ splitsRouter.post("/:id/settle", async (req, res) => {
   const parsed = settleSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
   const g = await loadGroup(req.familyId!, req.params.id);
-  if (!g) return res.status(404).json({ error: "Groupe introuvable" });
+  if (!g) return res.status(404).json({ error: "Ce groupe n'existe plus. Il a peut-être été supprimé." });
   const { fromId, toId, amountCents } = parsed.data;
   const from = g.participants.find((p) => p.id === fromId);
   const to = g.participants.find((p) => p.id === toId);
-  if (!from || !to || fromId === toId) return res.status(400).json({ error: "Personne inconnue dans ce groupe" });
+  if (!from || !to || fromId === toId) return res.status(400).json({ error: "Cette personne n'est plus dans le groupe." });
   await prisma.splitExpense.create({
     data: {
       groupId: g.id,

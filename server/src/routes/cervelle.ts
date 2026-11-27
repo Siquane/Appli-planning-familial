@@ -113,10 +113,10 @@ async function cervelleAuth(req: Request, res: Response, next: NextFunction) {
   try {
     accountId = verifyAccessToken(token).sub;
   } catch {
-    return res.status(401).json({ error: "Tu as été déconnecté. Reconnecte-toi pour continuer." });
+    return res.status(401).json({ error: "Ta connexion a expiré. Reconnecte-toi pour continuer." });
   }
   const space = await resolveSpace(accountId);
-  if (!space) return res.status(401).json({ error: "Tu as été déconnecté. Reconnecte-toi pour continuer." });
+  if (!space) return res.status(401).json({ error: "Ta connexion a expiré. Reconnecte-toi pour continuer." });
   req.cervelle = { kind: "parent", familyId: space.familyId, accountId };
   next();
 }
@@ -161,7 +161,7 @@ async function usedToday(familyId: string, kind: keyof typeof DAILY_LIMITS) {
 
 export async function underDailyLimit(familyId: string, kind: keyof typeof DAILY_LIMITS, res: Response) {
   if ((await usedToday(familyId, kind)) >= DAILY_LIMITS[kind]) {
-    res.status(429).json({ error: "Limite du jour atteinte pour la famille. Réessaie demain.", code: "daily_limit" });
+    res.status(429).json({ error: "Cervelle a beaucoup travaillé pour ta famille aujourd'hui. Réessaie demain !", code: "daily_limit" });
     return false;
   }
   return true;
