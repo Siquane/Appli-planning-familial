@@ -638,6 +638,9 @@ model Learner {
   studyProfile Json?
   // Code another child types to ask to be friends (6 characters), made on first use.
   friendCode   String?       @unique
+  /// Calcul mental : niveau en cours (null = d'après la classe) et tables visées par un parent.
+  mentalLevel  Int?
+  mentalTables Int[]         @default([])
   createdAt    DateTime      @default(now())
 
   codes          LearnerCode[]
@@ -667,6 +670,9 @@ model Learner {
   goals          LearnerGoal[]
   duelsOut       QuizDuel[]      @relation("DuelFrom")
   duelsIn        QuizDuel[]      @relation("DuelTo")
+  dictations     Dictation[]
+  mentalRuns     MentalRun[]
+  prideShares    PrideShare[]
 
   @@index([userId])
 }
@@ -734,6 +740,8 @@ model Revision {
   photoKeys          String[]  @default([])
   photoCount         Int       @default(0)
   sheetsReadAt       DateTime?
+  /// Carte mentale faite par l'IA à la première demande (lib/cervelle/mindmap.ts).
+  mindMap            Json?
   // Chapter of the official programme (lib/cervelle/programme.ts), when the class has one.
   programmeChapterId String?
   // Best scores in percent.
@@ -1382,4 +1390,48 @@ model OAuthTicket {
   createdAt DateTime @default(now())
 
   @@index([expiresAt])
+}
+
+/// Dictée : les mots de la semaine (photographiés ou tapés) et les phrases
+/// écrites par l'IA. sentences : [{ text, typed, missed[] }] (lib/cervelle/dictation.ts).
+model Dictation {
+  id         String    @id @default(cuid())
+  learnerId  String
+  learner    Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  words      String[]
+  sentences  Json
+  finishedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([learnerId, createdAt])
+}
+
+/// Une série de calcul mental (lib/cervelle/mental.ts).
+model MentalRun {
+  id        String   @id @default(cuid())
+  learnerId String
+  learner   Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  day       String
+  level     Int
+  correct   Int
+  total     Int
+  seconds   Int
+  createdAt DateTime @default(now())
+
+  @@index([learnerId, level])
+}
+
+/// « Journal de fierté » d'une semaine, envoyé aux parents ; token = lien
+/// public de la page à partager (grands-parents…).
+model PrideShare {
+  id        String    @id @default(cuid())
+  learnerId String
+  learner   Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  week      String
+  message   String    @default("")
+  token     String    @unique
+  sentAt    DateTime  @default(now())
+  seenAt    DateTime?
+
+  @@unique([learnerId, week])
 }

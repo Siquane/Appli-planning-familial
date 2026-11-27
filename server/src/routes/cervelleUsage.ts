@@ -6,7 +6,7 @@ import { prisma } from "../db";
 // meter existed count as calls with no known cost.
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
-export const USAGE_KINDS = ["revision", "exam", "assistant", "grading", "timetable", "homework", "brevet"] as const;
+export const USAGE_KINDS = ["revision", "exam", "assistant", "grading", "timetable", "homework", "brevet", "dictation", "mindmap"] as const;
 
 function monthBounds(month: string) {
   const [y, m] = month.split("-").map(Number);
