@@ -10,7 +10,24 @@ import { addDays, parseDay } from "../lib/appointments";
 
 // `today` : null quand la semaine affichée n'est pas la semaine en cours.
 // `week` (lundi « AAAA-MM-JJ ») : affiche le numéro du jour sous son nom.
-export function WeekStrip({ selected, onSelect, today, week }: { selected: Weekday; onSelect: (w: Weekday) => void; today: Weekday | null; week?: string }) {
+// `marks` : un petit point sous les jours qui ont déjà quelque chose (le dîner, dans Repas) ;
+// `tint` : couleur du jour choisi (celle de l'onglet).
+export function WeekStrip({
+  selected,
+  onSelect,
+  today,
+  week,
+  marks,
+  tint,
+}: {
+  selected: Weekday;
+  onSelect: (w: Weekday) => void;
+  today: Weekday | null;
+  week?: string;
+  marks?: boolean[];
+  tint?: string;
+}) {
+  const pill = tint ? tint + "38" : color.accent800;
   // La pastille du jour choisi glisse d'un jour à l'autre.
   const [width, setWidth] = useState(0);
   const pos = useRef(new Animated.Value(selected)).current;
@@ -25,7 +42,7 @@ export function WeekStrip({ selected, onSelect, today, week }: { selected: Weekd
       {itemW > 0 ? (
         <Animated.View
           pointerEvents="none"
-          style={{ position: "absolute", top: 0, bottom: 0, width: itemW, borderRadius: radius.md, backgroundColor: color.accent800, left: pos.interpolate({ inputRange: [0, 6], outputRange: [0, 6 * (itemW + GAP)] }) }}
+          style={{ position: "absolute", top: 0, bottom: 0, width: itemW, borderRadius: radius.md, backgroundColor: pill, ...(tint ? { borderWidth: 1, borderColor: tint } : null), left: pos.interpolate({ inputRange: [0, 6], outputRange: [0, 6 * (itemW + GAP)] }) }}
         />
       ) : null}
       {WEEKDAYS_SHORT.map((label, i) => {
@@ -51,7 +68,7 @@ export function WeekStrip({ selected, onSelect, today, week }: { selected: Weekd
               alignItems: "center",
               gap: space.xs,
               // Le jour choisi est la pastille qui glisse (dessinée derrière).
-              backgroundColor: isSelected ? (itemW > 0 ? "transparent" : color.accent800) : color.surface,
+              backgroundColor: isSelected ? (itemW > 0 ? "transparent" : pill) : color.surface,
             }}
           >
             <Text size={11} weight="medium" numberOfLines={1} adjustsFontSizeToFit style={{ color: isSelected ? color.accent100 : color.neutral500 }}>
@@ -62,7 +79,11 @@ export function WeekStrip({ selected, onSelect, today, week }: { selected: Weekd
                 {parseDay(addDays(week, w)).getDate()}
               </Text>
             )}
-            {w === today && <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: isSelected ? color.accent100 : color.accent }} />}
+            {w === today ? (
+              <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: isSelected ? color.accent100 : color.accent }} />
+            ) : marks?.[w] ? (
+              <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: tint ?? color.accent }} accessibilityLabel="déjà prévu" />
+            ) : null}
           </Pressable>
         );
       })}
