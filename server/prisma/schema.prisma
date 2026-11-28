@@ -38,6 +38,8 @@ model User {
   // famille : connexion par code, pas d'e-mail ni de mot de passe utilisables.
   /// « Sorties & idées » : la ville pour la météo (compte de la famille).
   outingCity           String?
+  /// Rappel des anniversaires : combien de jours avant (0 = le jour J seulement).
+  birthdayRemindDays   Int                  @default(7)
   childMemberId        String?              @unique
   childMember          FamilyMember?        @relation("ChildAccount", fields: [childMemberId], references: [id], onDelete: Cascade)
   childLoginCodes      ChildLoginCode[]
@@ -84,6 +86,10 @@ model User {
   rewards             Reward[]
   rewardRedemptions   RewardRedemption[]
   rewardRequests      RewardRequest[]
+  starClaims          StarClaim[]
+  familyGoal          FamilyGoal?
+  birthdayContacts    BirthdayContact[]
+  giftIdeas           GiftIdea[]
   learners            Learner[]
   aiUsages            AiUsage[]
   splitGroups         SplitGroup[]
@@ -162,6 +168,8 @@ model FamilyMember {
   starCompletions   StarCompletion[]
   rewardRedemptions RewardRedemption[]
   rewardRequests    RewardRequest[]
+  starClaims        StarClaim[]
+  giftIdeas         GiftIdea[]
   learners          Learner[]
   splitParticipants SplitParticipant[]
 
@@ -206,6 +214,7 @@ model Task {
 
   members         TaskMember[]
   starCompletions StarCompletion[]
+  starClaims      StarClaim[]
   doneDays        TaskDone[]
 
   @@index([userId, seriesId])
@@ -552,6 +561,8 @@ model StarCompletion {
   week      String
   title     String
   stars     Int
+  /// Bonus de série (lib/starSeries.ts) : « membre:série:semaine:jours ». null = une tâche faite.
+  bonusKey  String?      @unique
   createdAt DateTime     @default(now())
 
   @@unique([taskId, memberId, week])
@@ -638,6 +649,9 @@ model Learner {
   studyProfile Json?
   // Code another child types to ask to be friends (6 characters), made on first use.
   friendCode   String?       @unique
+  /// Calcul mental : niveau en cours (null = d'après la classe) et tables visées par un parent.
+  mentalLevel  Int?
+  mentalTables Int[]         @default([])
   createdAt    DateTime      @default(now())
 
   codes          LearnerCode[]
@@ -667,6 +681,9 @@ model Learner {
   goals          LearnerGoal[]
   duelsOut       QuizDuel[]      @relation("DuelFrom")
   duelsIn        QuizDuel[]      @relation("DuelTo")
+  dictations     Dictation[]
+  mentalRuns     MentalRun[]
+  prideShares    PrideShare[]
 
   @@index([userId])
 }
@@ -734,6 +751,8 @@ model Revision {
   photoKeys          String[]  @default([])
   photoCount         Int       @default(0)
   sheetsReadAt       DateTime?
+  /// Carte mentale faite par l'IA à la première demande (lib/cervelle/mindmap.ts).
+  mindMap            Json?
   // Chapter of the official programme (lib/cervelle/programme.ts), when the class has one.
   programmeChapterId String?
   // Best scores in percent.
@@ -1382,4 +1401,115 @@ model OAuthTicket {
   createdAt DateTime @default(now())
 
   @@index([expiresAt])
+}
+
+/// Dictée : les mots de la semaine (photographiés ou tapés) et les phrases
+/// écrites par l'IA. sentences : [{ text, typed, missed[] }] (lib/cervelle/dictation.ts).
+model Dictation {
+  id         String    @id @default(cuid())
+  learnerId  String
+  learner    Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  words      String[]
+  sentences  Json
+  finishedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([learnerId, createdAt])
+}
+
+/// Une série de calcul mental (lib/cervelle/mental.ts).
+model MentalRun {
+  id        String   @id @default(cuid())
+  learnerId String
+  learner   Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  day       String
+  level     Int
+  correct   Int
+  total     Int
+  seconds   Int
+  createdAt DateTime @default(now())
+
+  @@index([learnerId, level])
+}
+
+/// « Journal de fierté » d'une semaine, envoyé aux parents ; token = lien
+/// public de la page à partager (grands-parents…).
+model PrideShare {
+  id        String    @id @default(cuid())
+  learnerId String
+  learner   Learner   @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  week      String
+  message   String    @default("")
+  token     String    @unique
+  sentAt    DateTime  @default(now())
+  seenAt    DateTime?
+
+  @@unique([learnerId, week])
+}
+
+/// Un ado (compte enfant) dit « J'ai fini » sur une tâche ; un adulte valide
+/// (les étoiles sont alors comptées) ou refuse.
+model StarClaim {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId    String
+  task      Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  week      String
+  // "pending" | "accepted" | "declined"
+  status    String       @default("pending")
+  note      String       @default("")
+  createdAt DateTime     @default(now())
+  decidedAt DateTime?
+
+  @@unique([taskId, memberId, week])
+  @@index([userId, status])
+}
+
+/// Objectif commun de la famille : les étoiles de la semaine de tous les
+/// enfants remplissent une jauge (ex. « Soirée pizza », 30 étoiles).
+model FamilyGoal {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  target      Int
+  /// Semaine (lundi) où l'objectif a été atteint, pour ne prévenir qu'une fois.
+  reachedWeek String?
+  updatedAt   DateTime @updatedAt
+}
+
+/// Anniversaire d'un proche hors de la famille (grands-parents, amis…).
+model BirthdayContact {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  /// Jour et mois ; l'année seulement si on la connaît (sinon 2000).
+  birthday  DateTime
+  yearKnown Boolean    @default(false)
+  relation  String     @default("")
+  createdAt DateTime   @default(now())
+  gifts     GiftIdea[]
+
+  @@index([userId])
+}
+
+/// Idée de cadeau pour un membre de la famille ou un proche ; cochée quand
+/// elle est achetée. Jamais montrée aux comptes enfants.
+model GiftIdea {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memberId  String?
+  member    FamilyMember?    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  contactId String?
+  contact   BirthdayContact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  title     String
+  bought    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
 }

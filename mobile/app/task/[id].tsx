@@ -11,7 +11,7 @@ import { shortDate } from "../../src/lib/appointments";
 import { Button } from "../../src/components/Button";
 import { isChild, starsLabel, weekKey } from "../../src/lib/stars";
 import { errorText } from "../../src/lib/errors";
-import { useDeleteTask, useMembers, useStars, useTasks, useToggleStar } from "../../src/hooks/useApi";
+import { useClaimStar, useDeleteTask, useMembers, useStars, useTasks, useToggleStar } from "../../src/hooks/useApi";
 import { useToastStore } from "../../src/state/toastStore";
 import { useAuthStore } from "../../src/state/authStore";
 import { color, space, gutter } from "../../src/theme/tokens";
@@ -30,6 +30,7 @@ export default function TaskDetailScreen() {
   const toggleStar = useToggleStar();
   const user = useAuthStore((s) => s.user);
   const viewerIsChild = user?.familyRole === "child";
+  const claimStar = useClaimStar();
 
   if (!task) {
     return (
@@ -141,9 +142,14 @@ export default function TaskDetailScreen() {
                 return (
                   <Card key={m.id} row style={{ alignItems: "center", gap: space.sm }}>
                     <StarIcon size={18} color={done ? color.pillar3 : color.neutral600} />
-                    <Text size={15} style={{ flex: 1 }}>
-                      {m.name}
-                    </Text>
+                    <View style={{ flex: 1 }}>
+                      <Text size={15}>{m.name}</Text>
+                      {!done && starsState?.claims?.some((c) => c.taskId === task.id && c.memberId === m.id && c.status === "pending") ? (
+                        <Text size={12} tone="accent">
+                          {m.name} dit l'avoir fini
+                        </Text>
+                      ) : null}
+                    </View>
                     <Button
                       label={done ? "Fait ✓" : "C'est fait"}
                       variant={done ? "secondary" : "primary"}
@@ -164,6 +170,50 @@ export default function TaskDetailScreen() {
               })}
           </View>
         )}
+
+        {(task.stars ?? 1) > 0 && viewerIsChild && assigned.some((m) => m.id === user?.childMemberId && isChild(m)) && (() => {
+          const done = !!starsState?.completions.some((c) => c.taskId === task.id && c.memberId === user?.childMemberId);
+          const claim = starsState?.claims?.find((c) => c.taskId === task.id && c.memberId === user?.childMemberId && c.week === week);
+          return (
+            <Card style={{ gap: space.sm }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: space.sm }}>
+                <StarIcon size={18} color={done ? color.pillar3 : color.neutral600} />
+                <Text size={15} weight="medium" style={{ flex: 1 }}>
+                  {done ? `Validé : +${starsLabel(task.stars ?? 1)} cette semaine` : `${starsLabel(task.stars ?? 1)} à gagner`}
+                </Text>
+              </View>
+              {done ? null : claim?.status === "pending" ? (
+                <Text size={13} tone="muted">
+                  C'est envoyé : ton parent va valider.
+                </Text>
+              ) : (
+                <>
+                  {claim?.status === "declined" ? (
+                    <Text size={13} tone="muted">
+                      Pas encore validé{claim.note ? ` : ${claim.note}` : "."}
+                    </Text>
+                  ) : null}
+                  <Button
+                    label="J'ai fini !"
+                    variant="primary"
+                    block
+                    needsNetwork
+                    loading={claimStar.isPending}
+                    onPress={() =>
+                      claimStar.mutate(
+                        { taskId: task.id, week },
+                        {
+                          onSuccess: () => useToastStore.getState().show("C'est envoyé ! Ton parent va valider."),
+                          onError: (e) => useToastStore.getState().show(errorText(e, "envoyer")),
+                        },
+                      )
+                    }
+                  />
+                </>
+              )}
+            </Card>
+          );
+        })()}
 
         {task.notes ? (
           <View style={{ gap: space.sm }}>

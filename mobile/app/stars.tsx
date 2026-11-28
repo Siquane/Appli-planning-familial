@@ -12,6 +12,7 @@ import { TextField } from "../src/components/TextField";
 import { Button } from "../src/components/Button";
 import { TopBar } from "../src/components/TopBar";
 import { GiftIcon, StarIcon, TrashIcon } from "../src/components/icons";
+import { ClaimsToValidate, FamilyGoalCard } from "../src/components/StarsExtras";
 import { useAcceptRewardRequest, useAddReward, useDeclineRewardRequest, useMembers, useRedeemReward, useRemoveReward, useRemoveStarHistory, useRequestReward, useStars } from "../src/hooks/useApi";
 import { isChild, starsLabel, weekKey } from "../src/lib/stars";
 import { errorText } from "../src/lib/errors";
@@ -138,7 +139,7 @@ export default function StarsScreen() {
       <TopBar title="Étoiles et récompenses" onBack={() => router.back()} />
       <KeyboardScrollView contentContainerStyle={{ padding: gutter, gap: space.md }} showsVerticalScrollIndicator={false}>
         <Text size={13} tone="faint">
-          Les enfants de moins de 15 ans gagnent des étoiles quand un adulte coche « C'est fait » sur la fiche d'une tâche qui leur est assignée. Les étoiles s'échangent contre les récompenses que tu choisis.
+          Les enfants de moins de 15 ans gagnent des étoiles quand un adulte coche « C'est fait » sur la fiche d'une tâche qui leur est assignée (un ado avec son compte peut dire « J'ai fini ! », un adulte valide). Une tâche répétée faite 3 jours de suite rapporte 1 étoile en plus, 5 jours de suite 2 de plus. Les étoiles s'échangent contre les récompenses que tu choisis.
         </Text>
 
         {!isLoading && children.length === 0 && (
@@ -149,6 +150,10 @@ export default function StarsScreen() {
             </Text>
           </Card>
         )}
+
+        {children.length > 0 && <FamilyGoalCard goal={state?.goal ?? null} canEdit={!viewerIsChild} />}
+
+        {!viewerIsChild && <ClaimsToValidate claims={(state?.claims ?? []).filter((c) => c.status === "pending")} nameOf={nameOf} />}
 
         {!viewerIsChild && pending.length > 0 && (
           <View style={{ gap: space.sm }}>

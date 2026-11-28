@@ -1,5 +1,8 @@
 import { api } from "./client";
 import type {
+  Birthdays,
+  BirthdayContact,
+  GiftIdea,
   FamilyAdvances,
   PocketMoneyAdvance,
   SplitExpenseInput,
@@ -216,6 +219,23 @@ export const starsApi = {
   requestReward: (id: string) => api.post<{ request: { id: string; status: string } }>(`/stars/rewards/${id}/request`, {}),
   acceptRequest: (id: string) => api.post<{ balance: number }>(`/stars/requests/${id}/accept`, {}),
   declineRequest: (id: string, note: string) => api.post<void>(`/stars/requests/${id}/decline`, { note }),
+  /** Ado : « J'ai fini ! ». Adulte : valider ou refuser. */
+  claim: (taskId: string, week: string) => api.post<{ claim: { id: string; status: string } }>("/stars/claims", { taskId, week }),
+  acceptClaim: (id: string) => api.post<void>(`/stars/claims/${id}/accept`, {}),
+  declineClaim: (id: string, note: string) => api.post<void>(`/stars/claims/${id}/decline`, { note }),
+  setGoal: (data: { title: string; target: number }) => api.put<void>("/stars/goal", data),
+  removeGoal: () => api.delete<void>("/stars/goal"),
+};
+
+export const birthdaysApi = {
+  get: () => api.get<Birthdays>("/birthdays"),
+  addContact: (data: { name: string; birthday: string; yearKnown: boolean; relation: string }) => api.post<{ contact: BirthdayContact }>("/birthdays/contacts", data),
+  updateContact: (id: string, data: Partial<{ name: string; birthday: string; yearKnown: boolean; relation: string }>) => api.patch<{ contact: BirthdayContact }>(`/birthdays/contacts/${id}`, data),
+  removeContact: (id: string) => api.delete<void>(`/birthdays/contacts/${id}`),
+  addGift: (data: { title: string; memberId?: string; contactId?: string }) => api.post<{ gift: GiftIdea }>("/birthdays/gifts", data),
+  updateGift: (id: string, data: { title?: string; bought?: boolean }) => api.patch<{ gift: GiftIdea }>(`/birthdays/gifts/${id}`, data),
+  removeGift: (id: string) => api.delete<void>(`/birthdays/gifts/${id}`),
+  setRemindDays: (remindDays: number) => api.put<{ remindDays: number }>("/birthdays/settings", { remindDays }),
 };
 
 export const pocketMoneyApi = {

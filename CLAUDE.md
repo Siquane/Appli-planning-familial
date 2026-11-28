@@ -42,9 +42,10 @@
 ## Vérifications avant de pousser
 
 - Serveur (dans `server/`) : `service postgresql start`, puis
-  `npx prisma generate`, `npm run typecheck` et `npx vitest run`. Les tests
-  remettent eux-mêmes à zéro la base locale `passerelle_test`
-  (utilisateur et mot de passe : `passerelle`).
+  `export DATABASE_URL=postgresql://passerelle:passerelle@localhost:5432/passerelle_test`,
+  `npx prisma migrate deploy`, `npx prisma generate`, `npm run typecheck` et
+  `npx vitest run -c vitest.claude.config.ts`. (Prisma refuse la remise à zéro
+  de la base lancée par Claude : cette config s'en passe.)
 - Migrations : avec `DATABASE_URL` sur cette base, `npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script`.
   Garder seulement les lignes de ton changement.
 - Appli : dans `mobile/`, lancer `npx tsc --noEmit` puis `npx jest`.
