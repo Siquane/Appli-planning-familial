@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { RefreshControl, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { Chip } from "../../src/components/Chip";
+import { Segmented } from "../../src/components/Segmented";
 import { MonthlyBudgetBody } from "../../src/screens/MonthlyBudgetBody";
 import { Screen } from "../../src/components/Screen";
 import { Pressable } from "../../src/components/Touchable";
@@ -46,14 +46,19 @@ export default function BudgetScreen() {
       <PocketMoneyCard />
 
       {!isChild && (
-        <View style={{ flexDirection: "row", gap: space.xs }}>
-          <Chip label="Mon budget" selected={part === "budget"} onPress={() => setPart("budget")} fill />
-          <Chip label="Partagés" selected={part === "partages"} onPress={() => setPart("partages")} fill />
-        </View>
+        <Segmented
+          tint={color.pillar3}
+          value={part}
+          onChange={setPart}
+          items={[
+            { key: "budget", label: "Mon budget" },
+            { key: "partages", label: "Partagés" },
+          ]}
+        />
       )}
 
       {isChild || part === "budget" ? (
-        <MonthlyBudgetBody />
+        <MonthlyBudgetBody onOpenShared={isChild ? undefined : () => setPart("partages")} />
       ) : (
         <>
       <Button label="Nouveau groupe" variant="primary" block icon={<PlusIcon size={16} color={color.bg} />} onPress={() => router.push("/comptes/new")} />

@@ -116,3 +116,14 @@ describe("budgetToCsv", () => {
     ]);
   });
 });
+
+describe("monthRing", () => {
+  const { monthRing } = require("../money");
+  it("montre la part des plafonds utilisée", () => {
+    expect(monthRing("2026-11", 100000, 77000)).toMatchObject({ percent: 77, caption: "des plafonds" });
+  });
+  it("sans plafond, montre l'avancée du mois", () => {
+    expect(monthRing("2026-11", 0, 0, new Date(2026, 10, 15))).toMatchObject({ done: 15, total: 30, percent: 50, caption: "du mois" });
+    expect(monthRing("2026-10", 0, 0, new Date(2026, 10, 15))).toMatchObject({ done: 31, total: 31, percent: 100 });
+  });
+});

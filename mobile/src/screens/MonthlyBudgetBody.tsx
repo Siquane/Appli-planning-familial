@@ -7,8 +7,12 @@ import { router } from "expo-router";
 import { Text } from "../components/Text";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
-import { CalendarIcon, ChartIcon, ChevronLeftIcon, DocumentIcon, ChevronRightIcon, PlusIcon, RecurringIcon, SparkleIcon, TargetIcon, WarningIcon } from "../components/icons";
-import { useDrifts, useExpenseCategories, useForecast, useMembers, useMonthlyBudget, usePlan } from "../hooks/useApi";
+import { CalendarIcon, ChartIcon, ChevronLeftIcon, DocumentIcon, ChevronRightIcon, PlusIcon, ProfileIcon, RecurringIcon, SparkleIcon, TargetIcon, WarningIcon } from "../components/icons";
+import { useDrifts, useExpenseCategories, useForecast, useMembers, useMonthlyBudget, usePlan, useSavingsGoals, useSplitGroups } from "../hooks/useApi";
+import { ProgressRing } from "../components/PlanningParts";
+import { useAuthStore } from "../state/authStore";
+import { mySide } from "../lib/splits";
+import { monthRing } from "../lib/money";
 import { budgetToCsv, categoryLabel, currentMonth, formatEuros, monthLabel, shiftMonth, shortDay } from "../lib/money";
 import { color, radius, space } from "../theme/tokens";
 import { budgetTrial, hasBudgetPack, trialNotice } from "../lib/premium";
@@ -17,7 +21,7 @@ import { EmptyState } from "../components/Playful";
 
 // « Mon budget » (onglet Budget) : les dépenses du mois, les plafonds par
 // catégorie et les outils Budget+ (bilan, épargne, prélèvements, relevés).
-export function MonthlyBudgetBody() {
+export function MonthlyBudgetBody({ onOpenShared }: { onOpenShared?: () => void } = {}) {
   const [month, setMonth] = useState(currentMonth());
   const { data, isLoading } = useMonthlyBudget(month);
   const { options } = useExpenseCategories();
@@ -37,6 +41,19 @@ export function MonthlyBudgetBody() {
   const biggest = Math.max(0, ...byCategory.map((c) => c.totalCents));
   const isCurrent = month === currentMonth();
   const overCount = byCategory.filter((c) => c.limitCents !== null && c.totalCents > c.limitCents).length;
+  // L'anneau : la part des plafonds utilisée ; sans plafond, l'avancée du mois.
+  const capped = byCategory.filter((c) => c.limitCents !== null);
+  const capTotal = capped.reduce((n, c) => n + (c.limitCents ?? 0), 0);
+  const cappedSpent = capped.reduce((n, c) => n + c.totalCents, 0);
+  const ring = monthRing(month, capTotal, cappedSpent);
+  const { data: goals = [] } = useSavingsGoals(premium);
+  const goal = goals.find((g) => g.savedCents < g.targetCents) ?? null;
+  const user = useAuthStore((s) => s.user);
+  const { data: groups = [] } = useSplitGroups();
+  const shared = groups
+    .filter((g) => !g.archived)
+    .map((g) => ({ group: g.name, ...mySide(g, user ? { name: user.name, memberId: user.childMemberId } : null) }))
+    .find((x) => x.tone !== "even") ?? null;
 
   return (
       <View style={{ gap: space.md }}>
@@ -74,22 +91,89 @@ export function MonthlyBudgetBody() {
           </Pressable>
         )}
 
-        <Card style={{ alignItems: "center", paddingVertical: space.lg }}>
-          <Text size={13} tone="muted">
-            Total du mois
-          </Text>
-          <Text heading weight="semibold" size={28}>
-            {formatEuros(data?.totalCents ?? 0)}
-          </Text>
-          <Text size={12} tone="faint">
-            {expenses.length} dépense{expenses.length !== 1 ? "s" : ""}
-          </Text>
-          {overCount > 0 && (
-            <Text size={13} tone="danger" style={{ marginTop: space.sm }}>
-              {overCount === 1 ? "1 plafond dépassé" : `${overCount} plafonds dépassés`}
+        <Card style={{ flexDirection: "row", alignItems: "center", gap: space.lg, padding: space.md, borderWidth: 1, borderColor: color.pillar3 + "40" }}>
+          <ProgressRing done={ring.done} total={ring.total} size={76} stroke={7} tint={overCount > 0 ? color.danger : color.pillar3}>
+            <Text heading weight="semibold" size={14}>
+              {ring.percent} %
             </Text>
-          )}
+            <Text size={9} tone="faint">
+              {ring.caption}
+            </Text>
+          </ProgressRing>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text size={12} tone="faint">
+              Total du mois · {expenses.length} dépense{expenses.length !== 1 ? "s" : ""}
+            </Text>
+            <Text heading weight="semibold" size={26} style={{ fontVariant: ["tabular-nums"] }}>
+              {formatEuros(data?.totalCents ?? 0)}
+            </Text>
+            {overCount > 0 ? (
+              <Text size={13} tone="danger">
+                {overCount === 1 ? "1 plafond dépassé" : `${overCount} plafonds dépassés`}
+              </Text>
+            ) : capTotal > 0 ? (
+              <Text size={13} tone="muted">
+                Il reste {formatEuros(Math.max(0, capTotal - cappedSpent))} dans tes plafonds
+              </Text>
+            ) : null}
+          </View>
         </Card>
+
+        <View style={{ flexDirection: "row", gap: space.sm }}>
+          <Button
+            label="Ajouter une dépense"
+            icon={<PlusIcon size={18} color={color.text} />}
+            variant="secondary"
+            style={{ flex: 1 }}
+            onPress={() => router.push(`/expense/new?month=${month}`)}
+          />
+          <Button label="Réglages" variant="ghost" onPress={() => router.push("/budget-settings")} />
+        </View>
+        {byCategory.length > 0 && (
+          <View style={{ gap: space.sm }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" }}>
+              <Text heading weight="semibold" size={16}>
+                Par catégorie
+              </Text>
+              <Text size={12} tone="faint">
+                Plafonds
+              </Text>
+            </View>
+            <Card style={{ gap: space.md }}>
+              {byCategory.map((c) => {
+                const over = c.limitCents !== null && c.totalCents > c.limitCents;
+                // With a cap the bar shows how much of it is used; without, it's relative to the biggest category.
+                const ratio = c.limitCents !== null ? c.totalCents / c.limitCents : biggest ? c.totalCents / biggest : 0;
+                return (
+                  <View key={c.category} style={{ gap: space.xs }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                      <Text size={13}>{categoryLabel(options, c.category)}</Text>
+                      <Text size={13} weight="medium" tone={over ? "danger" : "text"}>
+                        {formatEuros(c.totalCents)}
+                        {c.limitCents !== null && <Text size={13} tone="faint">{` / ${formatEuros(c.limitCents)}`}</Text>}
+                      </Text>
+                    </View>
+                    <View style={{ height: 6, borderRadius: radius.sm, backgroundColor: color.neutral800, overflow: "hidden" }}>
+                      <View
+                        style={{
+                          height: 6,
+                          borderRadius: radius.sm,
+                          backgroundColor: over ? color.danger : color.pillar3,
+                          width: `${c.totalCents > 0 ? Math.max(2, Math.min(1, ratio) * 100) : 0}%`,
+                        }}
+                      />
+                    </View>
+                    {over && (
+                      <Text size={12} tone="danger">
+                        Dépassé de {formatEuros(c.totalCents - c.limitCents!)}
+                      </Text>
+                    )}
+                  </View>
+                );
+              })}
+            </Card>
+          </View>
+        )}
 
         {premium && isCurrent && forecast && (
           <Card style={{ gap: space.xs }}>
@@ -133,16 +217,48 @@ export function MonthlyBudgetBody() {
           </Card>
         )}
 
-        <View style={{ flexDirection: "row", gap: space.sm }}>
-          <Button
-            label="Ajouter une dépense"
-            icon={<PlusIcon size={18} color={color.text} />}
-            variant="secondary"
-            style={{ flex: 1 }}
-            onPress={() => router.push(`/expense/new?month=${month}`)}
-          />
-          <Button label="Réglages" variant="ghost" onPress={() => router.push("/budget-settings")} />
-        </View>
+        {(goal || shared) && (
+          <View style={{ gap: space.sm }}>
+            {goal && (
+              <Pressable onPress={() => router.push("/savings")} accessibilityRole="button" accessibilityLabel={`${goal.name} : ${formatEuros(goal.savedCents)} sur ${formatEuros(goal.targetCents)}`}>
+                <Card row style={{ alignItems: "center", gap: space.md, padding: space.md }}>
+                  <TargetIcon size={20} color={color.amber} />
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text size={14} weight="medium" numberOfLines={1}>
+                      {goal.name}
+                    </Text>
+                    <Text size={12} tone="faint">
+                      {formatEuros(goal.savedCents)} sur {formatEuros(goal.targetCents)}
+                    </Text>
+                    <View style={{ height: 6, borderRadius: radius.sm, backgroundColor: color.neutral800, overflow: "hidden" }}>
+                      <View style={{ height: 6, borderRadius: radius.sm, backgroundColor: color.pillar3, width: `${Math.min(100, Math.round((goal.savedCents / Math.max(1, goal.targetCents)) * 100))}%` }} />
+                    </View>
+                  </View>
+                  <ChevronRightIcon size={14} color={color.neutral500} />
+                </Card>
+              </Pressable>
+            )}
+            {shared && onOpenShared && (
+              <Pressable onPress={onOpenShared} accessibilityRole="button" accessibilityLabel={`${shared.text}, groupe ${shared.group}. Voir les dépenses partagées`}>
+                <Card row style={{ alignItems: "center", gap: space.md, padding: space.md }}>
+                  <ProfileIcon size={20} color={color.pillar3} />
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text size={14} weight="medium" numberOfLines={1} style={{ color: shared.tone === "plus" ? color.success : shared.tone === "minus" ? color.danger : color.text }}>
+                      {shared.text}
+                    </Text>
+                    <Text size={12} tone="faint" numberOfLines={1}>
+                      Groupe « {shared.group} »
+                    </Text>
+                  </View>
+                  <Text size={12} weight="semibold" style={{ color: color.pillar3 }}>
+                    Partagés ›
+                  </Text>
+                </Card>
+              </Pressable>
+            )}
+          </View>
+        )}
+
         <View style={{ flexDirection: "row", gap: space.sm }}>
           <Button
             label="Bilan & export"
@@ -193,47 +309,6 @@ export function MonthlyBudgetBody() {
               Share.share({ title: `Budget ${monthLabel(month)}`, message: csv }).catch(() => {});
             }}
           />
-        )}
-
-        {byCategory.length > 0 && (
-          <View style={{ gap: space.sm }}>
-            <Text weight="medium" size={13} tone="muted">
-              Par catégorie
-            </Text>
-            <Card style={{ gap: space.md }}>
-              {byCategory.map((c) => {
-                const over = c.limitCents !== null && c.totalCents > c.limitCents;
-                // With a cap the bar shows how much of it is used; without, it's relative to the biggest category.
-                const ratio = c.limitCents !== null ? c.totalCents / c.limitCents : biggest ? c.totalCents / biggest : 0;
-                return (
-                  <View key={c.category} style={{ gap: space.xs }}>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                      <Text size={13}>{categoryLabel(options, c.category)}</Text>
-                      <Text size={13} weight="medium" tone={over ? "danger" : "text"}>
-                        {formatEuros(c.totalCents)}
-                        {c.limitCents !== null && <Text size={13} tone="faint">{` / ${formatEuros(c.limitCents)}`}</Text>}
-                      </Text>
-                    </View>
-                    <View style={{ height: 6, borderRadius: radius.sm, backgroundColor: color.neutral800, overflow: "hidden" }}>
-                      <View
-                        style={{
-                          height: 6,
-                          borderRadius: radius.sm,
-                          backgroundColor: over ? color.danger : color.accent400,
-                          width: `${c.totalCents > 0 ? Math.max(2, Math.min(1, ratio) * 100) : 0}%`,
-                        }}
-                      />
-                    </View>
-                    {over && (
-                      <Text size={12} tone="danger">
-                        Dépassé de {formatEuros(c.totalCents - c.limitCents!)}
-                      </Text>
-                    )}
-                  </View>
-                );
-              })}
-            </Card>
-          </View>
         )}
 
         {!isLoading && expenses.length === 0 && (
