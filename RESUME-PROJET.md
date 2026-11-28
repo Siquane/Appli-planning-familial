@@ -521,3 +521,18 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
   https://claude.ai/artifact/DLvdYQ9xHJ1svkmCypVKDe ; visuels portfolio et
   Play Store : https://claude.ai/artifact/C5quc5fEM63BALGeTxeDLg. Pas encore
   programmés dans l'appli.
+
+## Nouveaux écrans (28/11/2026)
+
+Programmés d'après les maquettes validées, une demande de fusion par écran :
+- Planning (#135) : carte résumé (avancement, dîner, budget ; encouragement et
+  étoiles quand on regarde une personne), bulles des membres avec leur
+  anneau, heure à gauche des tâches, École/Travail en pointillés, trait de
+  l'heure actuelle, prochaine tâche qui brille (`PlanningParts.tsx`,
+  `lib/planningView.ts`). Couleur d'un membre = `memberColor(index)`.
+- Repas (#136) : dîner du jour en haut, point sous les jours prévus, cantine,
+  courses visibles ; sous-onglets `Segmented`.
+- Budget (#137) : anneau (`monthRing`) et total du mois, catégories d'abord,
+  épargne et « qui doit » visibles.
+- Famille : prochain anniversaire en haut, membres à leur couleur (rôle,
+  connecté, étoiles), rubriques en tuiles.
