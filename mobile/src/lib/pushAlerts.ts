@@ -13,7 +13,7 @@ import { getPushToken, setPushToken } from "./pushToken";
 export const FAMILY_CHANNEL = "family";
 
 // Seuls ces écrans peuvent être ouverts depuis une notification.
-const ALLOWED = /^\/((home|budget|repas)(\?tab=(menu|courses|recettes))?|comptes\/[A-Za-z0-9_-]{1,40}|cervelle-quiz\/[A-Za-z0-9_-]{1,40})$/;
+const ALLOWED = /^\/((home|budget|repas)(\?tab=(menu|courses|recettes))?|comptes\/[A-Za-z0-9_-]{1,40}|cervelle-quiz\/[A-Za-z0-9_-]{1,40}|stars|birthdays|cervelle-fierte\/[A-Za-z0-9_-]{1,40}(\?week=\d{4}-\d{2}-\d{2})?)$/;
 
 export function alertRoute(data: unknown): string | null {
   const url = (data as { url?: unknown } | null | undefined)?.url;

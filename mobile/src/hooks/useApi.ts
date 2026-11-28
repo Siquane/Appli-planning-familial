@@ -1,6 +1,6 @@
 import { weekKey } from "../lib/stars";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, tasksApi, notesApi, pocketMoneyApi, splitsApi } from "../api/resources";
+import { planApi, familyApi, statementsApi, savingsGoalsApi, shoppingApi, calendarApi, categoryBudgetsApi, constraintsApi, documentsApi, expenseCategoriesApi, expensesApi, recurringExpensesApi, mealsApi, membersApi, notificationsApi, recipesApi, shareApi, starsApi, birthdaysApi, tasksApi, notesApi, pocketMoneyApi, splitsApi } from "../api/resources";
 import type { NoteInput, MemberInput, ShoppingItem, DocumentInput, ExpenseInput, RecurringExpenseInput, MealInput, StatementImportRow, Priority, RecipeInput, TaskDoneMark, TaskInput, Tint, Weekday } from "../api/types";
 import { useChildSpaceStore } from "../state/childSpaceStore";
 import { useAuthStore, useIsChildAccount } from "../state/authStore";
@@ -626,6 +626,20 @@ export const useRemoveStarHistory = () => useStarsMutation((id: string) => stars
 export const useRequestReward = () => useStarsMutation((rewardId: string) => starsApi.requestReward(rewardId));
 export const useAcceptRewardRequest = () => useStarsMutation((id: string) => starsApi.acceptRequest(id));
 export const useDeclineRewardRequest = () => useStarsMutation((d: { id: string; note: string }) => starsApi.declineRequest(d.id, d.note));
+export const useClaimStar = () => useStarsMutation((d: { taskId: string; week: string }) => starsApi.claim(d.taskId, d.week));
+export const useAcceptClaim = () => useStarsMutation((id: string) => starsApi.acceptClaim(id));
+export const useDeclineClaim = () => useStarsMutation((d: { id: string; note: string }) => starsApi.declineClaim(d.id, d.note));
+export const useSetStarGoal = () => useStarsMutation((d: { title: string; target: number } | null) => (d ? starsApi.setGoal(d) : starsApi.removeGoal()));
+
+// Anniversaires des proches, idées de cadeaux, délai du rappel.
+export function useBirthdays() {
+  const enabled = useEnabled();
+  return useQuery({ queryKey: ["birthdays"], queryFn: () => birthdaysApi.get(), enabled });
+}
+export function useBirthdaysMutation<T>(fn: (input: T) => Promise<unknown>) {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: fn, onSettled: () => qc.invalidateQueries({ queryKey: ["birthdays"] }) });
+}
 
 // Notes (Famille + Perso), partagées entre les comptes : rafraîchies comme les autres listes partagées.
 export function useNotes() {

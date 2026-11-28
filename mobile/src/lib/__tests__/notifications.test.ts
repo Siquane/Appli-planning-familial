@@ -1,7 +1,7 @@
 // Only the pure date helpers are tested here; the native module is stubbed.
 jest.mock("expo-notifications", () => ({ setNotificationHandler: jest.fn() }));
 
-import { appointmentNotifications, daysUntilBirthday, digestTasks, nextBirthdayOccurrence, pocketMoneyMoments, reminderMoment, toExpoWeekday } from "../notifications";
+import { advanceReminderDate, advanceReminderText, appointmentNotifications, daysUntilBirthday, digestTasks, nextBirthdayOccurrence, pocketMoneyMoments, reminderMoment, toExpoWeekday } from "../notifications";
 import type { Task } from "../../api/types";
 
 describe("toExpoWeekday", () => {
@@ -78,5 +78,16 @@ describe("pocketMoneyMoments", () => {
     expect(pocketMoneyMoments({ frequency: "weekly", day: 5, nextDay: "2026-11-21" }, 2)).toEqual([new Date(2026, 10, 21, 9), new Date(2026, 10, 28, 9)]);
     expect(pocketMoneyMoments({ frequency: "monthly", day: 1, nextDay: "2026-12-01" }, 2)).toEqual([new Date(2026, 11, 1, 9), new Date(2027, 0, 1, 9)]);
     expect(pocketMoneyMoments(null)).toEqual([]);
+  });
+});
+
+describe("advance birthday reminder", () => {
+  it("is N days before the next birthday, at 9 h, unless already past", () => {
+    const from = new Date(2026, 10, 27, 10, 0);
+    expect(advanceReminderDate("2000-12-10T12:00:00", 7, from)).toEqual(new Date(2026, 11, 3, 9, 0));
+    expect(advanceReminderDate("2000-11-30T12:00:00", 7, from)).toBeNull();
+    expect(advanceReminderDate("2000-12-10T12:00:00", 0, from)).toBeNull();
+    expect(advanceReminderText({ id: "a", name: "Mamie", birthday: "", giftsLeft: 2 }, 7)).toBe("Dans 7 jours : l'anniversaire de Mamie. Tu as 2 idées de cadeau.");
+    expect(advanceReminderText({ id: "a", name: "Inès", birthday: "" }, 1)).toBe("Demain : l'anniversaire d'Inès. Pense au cadeau !");
   });
 });

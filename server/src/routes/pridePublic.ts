@@ -50,7 +50,7 @@ h2{font-size:18px;margin:0 0 8px}ul{margin:0;padding-left:20px}li{margin:4px 0}.
 ${p.message ? `<div class="card msg">« ${esc(p.message)} »</div>` : ""}
 ${p.notions.length ? `<div class="card"><h2>Ce que ${first} a appris</h2><ul>${p.notions.map((n) => `<li>${esc(n)}</li>`).join("")}</ul></div>` : ""}
 ${p.learned.length ? `<div class="card"><h2>Dans son journal : « j'ai appris… »</h2>${list(p.learned)}</div>` : ""}
-${p.proud.length ? `<div class="card"><h2>Ce dont ${first} est fier</h2>${list(p.proud)}</div>` : ""}
+${p.proud.length ? `<div class="card"><h2>Les fiertés de ${first}</h2>${list(p.proud)}</div>` : ""}
 ${p.badges.length ? `<div class="card"><h2>Badges gagnés</h2><ul>${p.badges.map((b) => `<li>${esc(b)}</li>`).join("")}</ul></div>` : ""}
 <p class="foot">Fait avec Cervelle, l'appli de révision.</p>
 </main></body></html>`;
