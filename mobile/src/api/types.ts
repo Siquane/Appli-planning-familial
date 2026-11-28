@@ -502,6 +502,48 @@ export interface StarsState {
   history: { id: string; kind: "earned" | "spent"; memberId: string; title: string; stars: number; createdAt: string }[];
   /** Demandes d'échange des enfants : en attente, puis les dernières réponses. */
   requests?: RewardRequest[];
+  /** « J'ai fini ! » des ados : en attente, et ceux de la semaine. */
+  claims?: StarClaim[];
+  /** Objectif commun de la famille (étoiles de la semaine de tous les enfants). */
+  goal?: { title: string; target: number; progress: number; reached: boolean } | null;
+  /** Bonus de série : jours de suite → étoiles en plus. */
+  seriesLevels?: { days: number; stars: number }[];
+}
+
+export interface StarClaim {
+  id: string;
+  taskId: string;
+  memberId: string;
+  week: string;
+  title: string;
+  stars: number;
+  status: "pending" | "accepted" | "declined";
+  note: string;
+  createdAt: string;
+}
+
+/** Anniversaire d'un proche hors de la famille. */
+export interface BirthdayContact {
+  id: string;
+  name: string;
+  /** « AAAA-MM-JJ » (année 2000 quand on ne la connaît pas). */
+  birthday: string;
+  yearKnown: boolean;
+  relation: string;
+}
+
+export interface GiftIdea {
+  id: string;
+  memberId: string | null;
+  contactId: string | null;
+  title: string;
+  bought: boolean;
+}
+
+export interface Birthdays {
+  remindDays: number;
+  contacts: BirthdayContact[];
+  gifts: GiftIdea[];
 }
 
 export interface RewardRequest {

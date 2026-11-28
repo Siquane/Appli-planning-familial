@@ -125,15 +125,44 @@ export async function syncTaskReminders(tasks: Task[]): Promise<void> {
   );
 }
 
-// Reconciles scheduled birthday reminders against members that have a
-// birthday set. Identifiers are prefixed to avoid colliding with task
-// reminder ids (both use the same notification store).
-export async function syncBirthdayReminders(members: Member[]): Promise<void> {
+/** Someone whose birthday gets reminders: a family member or a friend (Anniversaires). */
+export interface BirthdayPerson {
+  id: string;
+  name: string;
+  /** ISO date or « AAAA-MM-JJ ». */
+  birthday: string;
+  /** Gift ideas not bought yet. */
+  giftsLeft?: number;
+}
+
+/** The reminder `days` before the next birthday (null when it's already past, or `days` is 0). */
+export function advanceReminderDate(birthday: string, days: number, from: Date = new Date()): Date | null {
+  if (days <= 0) return null;
+  const next = nextBirthdayOccurrence(birthday, from);
+  const at = new Date(next.getFullYear(), next.getMonth(), next.getDate() - days, BIRTHDAY_NOTIFICATION_HOUR, 0, 0, 0);
+  return at > from ? at : null;
+}
+
+export function advanceReminderText(person: BirthdayPerson, days: number): string {
+  const when = days === 1 ? "Demain" : `Dans ${days} jours`;
+  const gifts = person.giftsLeft ? ` Tu as ${person.giftsLeft} idée${person.giftsLeft > 1 ? "s" : ""} de cadeau.` : " Pense au cadeau !";
+  return `${when} : l'anniversaire ${de(person.name)}.${gifts}`;
+}
+
+// Reconciles scheduled birthday reminders (the day itself, and `remindDays`
+// before) against everyone with a birthday. Identifiers start with
+// « birthday: » so they never collide with task reminder ids.
+export async function syncBirthdayReminders(people: BirthdayPerson[], remindDays = 0): Promise<void> {
   if (Platform.OS === "web") return;
   if (!(await hasNotificationPermission())) return;
 
-  const withBirthday = members.filter((m): m is Member & { birthday: string } => !!m.birthday);
-  const desiredIds = new Set(withBirthday.map((m) => `${BIRTHDAY_ID_PREFIX}${m.id}`));
+  const plans = people.flatMap((p) => {
+    const out = [{ identifier: `${BIRTHDAY_ID_PREFIX}${p.id}`, date: nextBirthdayOccurrence(p.birthday), title: "Anniversaire", body: `C'est l'anniversaire ${de(p.name)} aujourd'hui !` }];
+    const soon = advanceReminderDate(p.birthday, remindDays);
+    if (soon) out.push({ identifier: `${BIRTHDAY_ID_PREFIX}soon:${p.id}`, date: soon, title: "Anniversaire bientôt", body: advanceReminderText(p, remindDays) });
+    return out;
+  });
+  const desiredIds = new Set(plans.map((p) => p.identifier));
 
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
   await Promise.all(
@@ -143,14 +172,12 @@ export async function syncBirthdayReminders(members: Member[]): Promise<void> {
   );
 
   await Promise.all(
-    withBirthday.map(async (member) => {
-      const identifier = `${BIRTHDAY_ID_PREFIX}${member.id}`;
-      const date = nextBirthdayOccurrence(member.birthday);
-      await Notifications.cancelScheduledNotificationAsync(identifier).catch(() => {});
+    plans.map(async (p) => {
+      await Notifications.cancelScheduledNotificationAsync(p.identifier).catch(() => {});
       await Notifications.scheduleNotificationAsync({
-        identifier,
-        content: { title: "Anniversaire", body: `C'est l'anniversaire ${de(member.name)} aujourd'hui !` },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
+        identifier: p.identifier,
+        content: { title: p.title, body: p.body, data: { url: "/birthdays" } },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: p.date },
       });
     })
   );

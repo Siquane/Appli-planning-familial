@@ -21,3 +21,30 @@ export function isMondayKey(week: string): boolean {
   const d = new Date(`${week}T12:00:00Z`);
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === week && d.getUTCDay() === 1;
 }
+
+/**
+ * Bonus de série : une tâche répétée plusieurs jours (même série) faite des
+ * jours qui se suivent dans la semaine rapporte des étoiles en plus.
+ */
+export const SERIES_LEVELS = [
+  { days: 3, stars: 1 },
+  { days: 5, stars: 2 },
+] as const;
+
+/** Le plus grand nombre de jours qui se suivent parmi `weekdays` (0 à 6). */
+export function longestRun(weekdays: number[]): number {
+  const days = [...new Set(weekdays)].sort((a, b) => a - b);
+  let best = 0;
+  let run = 0;
+  for (let i = 0; i < days.length; i++) {
+    run = i > 0 && days[i] === days[i - 1] + 1 ? run + 1 : 1;
+    best = Math.max(best, run);
+  }
+  return best;
+}
+
+/** Les paliers atteints pour une série faite `weekdays`. */
+export function seriesBonuses(weekdays: number[]) {
+  const run = longestRun(weekdays);
+  return SERIES_LEVELS.filter((l) => run >= l.days);
+}

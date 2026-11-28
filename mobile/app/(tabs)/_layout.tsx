@@ -4,7 +4,7 @@ import { AppState } from "react-native";
 import { router, Tabs } from "expo-router";
 import { useIsChildAccount } from "../../src/state/authStore";
 import { CustomTabBar } from "../../src/components/CustomTabBar";
-import { useMembers, useTasks, usePocketMoney } from "../../src/hooks/useApi";
+import { useBirthdays, useMembers, useTasks, usePocketMoney } from "../../src/hooks/useApi";
 import { syncBirthdayReminders, syncEveningDigest, syncMorningDigest, syncTaskReminders, syncAppointmentNotifications, syncPocketMoneyNotifications } from "../../src/lib/notifications";
 import { useSettingsStore } from "../../src/state/settingsStore";
 import { useWidgetSync } from "../../src/widgets/sync";
@@ -67,9 +67,17 @@ export default function TabsLayout() {
     if (tasks) syncTaskReminders(tasks);
   }, [tasks]);
 
+  const { data: birthdays } = useBirthdays();
   useEffect(() => {
-    if (members) syncBirthdayReminders(members);
-  }, [members]);
+    if (!members) return;
+    const left = (g: { memberId: string | null; contactId: string | null }, id: string) => g.memberId === id || g.contactId === id;
+    const gifts = birthdays?.gifts.filter((g) => !g.bought) ?? [];
+    const people = [
+      ...members.filter((m) => !!m.birthday).map((m) => ({ id: m.id, name: m.name, birthday: m.birthday!, giftsLeft: gifts.filter((g) => left(g, m.id)).length })),
+      ...(birthdays?.contacts ?? []).map((c) => ({ id: c.id, name: c.name, birthday: `${c.birthday}T12:00:00`, giftsLeft: gifts.filter((g) => left(g, c.id)).length })),
+    ];
+    syncBirthdayReminders(people, birthdays?.remindDays ?? 0);
+  }, [members, birthdays]);
 
   const digestHydrated = useSettingsStore((s) => s.hydrated);
   const eveningDigest = useSettingsStore((s) => s.eveningDigest);
