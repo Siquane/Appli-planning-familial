@@ -161,3 +161,15 @@ export function monthsLeft(deadline: string | null, now = new Date()): number | 
   const [y, m] = deadline.split("-").map(Number);
   return Math.max(1, (y - now.getFullYear()) * 12 + (m - 1 - now.getMonth()));
 }
+
+/**
+ * Anneau du budget : la part des plafonds déjà utilisée ; sans plafond, la
+ * part du mois écoulée (le mois en cours) ou tout le mois (un mois passé).
+ */
+export function monthRing(month: string, capCents: number, cappedSpentCents: number, now: Date = new Date()): { done: number; total: number; percent: number; caption: string } {
+  if (capCents > 0) return { done: cappedSpentCents, total: capCents, percent: Math.round((cappedSpentCents / capCents) * 100), caption: "des plafonds" };
+  const [y, m] = month.split("-").map(Number);
+  const days = new Date(y, m, 0).getDate();
+  const day = month === currentMonth(now) ? now.getDate() : month < currentMonth(now) ? days : 0;
+  return { done: day, total: days, percent: Math.round((day / days) * 100), caption: "du mois" };
+}

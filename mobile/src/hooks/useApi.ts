@@ -137,8 +137,8 @@ export function useStartBudgetTrial() {
   return useMutation({ mutationFn: () => planApi.startBudgetTrial(), onSuccess: (plan) => qc.setQueryData(["plan"], plan) });
 }
 
-export function useSavingsGoals() {
-  const enabled = useEnabled();
+export function useSavingsGoals(active = true) {
+  const enabled = useEnabled() && active;
   return useQuery({ queryKey: ["savings-goals"], queryFn: () => savingsGoalsApi.list().then((r) => r.goals), enabled });
 }
 
