@@ -506,3 +506,18 @@ Encore à faire : synchronisation Google Agenda, statistiques du budget sur 12 m
 - Premiers pas : accroche « Toute la famille organisée au même endroit », champ « Prénom », aide « Moins de 15 ans ? », « Me connecter » (code enfant), « Activer les notifications » / « Plus tard ». Le « + » propose « Dépense du mois » et « Dépense partagée ». « Google Agenda », « Calendrier du téléphone » sur Android.
 - `mobile/app.json` : autorisations en tutoiement, micro bloqué (`microphonePermission: false`, `blockedPermissions` RECORD_AUDIO), **runtimeVersion 9** → nouvel APK nécessaire (les APK en runtime 8 ne reçoivent plus les mises à jour).
 - CLAUDE.md complété (onglets, serveur, publication Expo depuis une session, Play Store, règles de textes) ; environnement Claude « Passerelle et Cervelle » : description à jour, script d'installation existant vérifié.
+
+## Nouveau logo (28/11/2026)
+
+- Arche plus haute (traits verticaux plus longs), anneaux aux couleurs des
+  onglets : Planning #22E5FF, Repas #45A0FF, Budget #737CFF, Famille #AD5CFF.
+- Refait partout : icône de l'appli (et icône adaptative Android, version
+  monochrome), écran de démarrage, favicon, logo dessiné dans les en-têtes
+  (`Brand.tsx`), `assets/brand/logo-passerelle.png`.
+- Nouvelle icône de notification : un anneau plein cadre, teinté #45A0FF
+  (`mobile/assets/notification-icon.png`, réglée dans `app.json`).
+- `runtimeVersion` passé à 10 : il faut un nouvel APK.
+- Maquettes des nouveaux écrans (Planning, Repas, Budget, Famille) :
+  https://claude.ai/artifact/DLvdYQ9xHJ1svkmCypVKDe ; visuels portfolio et
+  Play Store : https://claude.ai/artifact/C5quc5fEM63BALGeTxeDLg. Pas encore
+  programmés dans l'appli.

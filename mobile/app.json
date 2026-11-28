@@ -48,7 +48,13 @@
           "imageWidth": 220
         }
       ],
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#45A0FF"
+        }
+      ],
       "@react-native-community/datetimepicker",
       [
         "expo-image-picker",
@@ -141,7 +147,7 @@
     "experiments": {
       "typedRoutes": true
     },
-    "runtimeVersion": "9",
+    "runtimeVersion": "10",
     "updates": {
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0
