@@ -493,7 +493,7 @@ cervelleRouter.get("/learners/:learnerId/programme", async (req, res) => {
       chapters: s.chapters.map((c) => {
         const revisions = cards.filter((r) => r.programmeChapterId === c.id).map((r) => ({ id: r.id, title: r.title, progress: r.progress }));
         const best = Math.max(-1, ...revisions.map((r) => r.progress));
-        return { id: c.id, title: c.title, notions: c.notions, revisions, status: best < 0 ? "todo" : best >= 80 ? "mastered" : "started" };
+        return { id: c.id, title: c.title, notions: c.notions, competences: c.competences ?? [], revisions, status: best < 0 ? "todo" : best >= 80 ? "mastered" : "started" };
       }),
     })),
   });
