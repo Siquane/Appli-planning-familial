@@ -13,13 +13,17 @@ import { WeekStrip } from "../../src/components/WeekStrip";
 import { WeekNav } from "../../src/components/WeekNav";
 import { TaskCard } from "../../src/components/TaskCard";
 import { TabHeader } from "../../src/components/PageHeader";
-import { TodayCard } from "../../src/components/TodayCard";
+import { MemberBubbles, NowLine, PlanningHero, starsLine } from "../../src/components/PlanningParts";
 import { CervelleQuizCard } from "../../src/components/CervelleQuizCard";
 import { Cascade, SlideIn, useDirection } from "../../src/components/motion";
-import { ChevronRightIcon, RecurringIcon, ReshuffleIcon, GiftIcon, PartyIcon, WaveIcon } from "../../src/components/icons";
+import { ChevronRightIcon, RecurringIcon, ReshuffleIcon, GiftIcon, PartyIcon } from "../../src/components/icons";
 import { shiftWeek, shortDate, tasksOn } from "../../src/lib/appointments";
-import { useMembers, useTaskDone, useTasks, useToggleTaskDone } from "../../src/hooks/useApi";
-import { DayRing, EmptyState } from "../../src/components/Playful";
+import { useMeals, useMembers, useMonthlyBudget, useRecipes, useTaskDone, useTasks, useToggleTaskDone } from "../../src/hooks/useApi";
+import { cheerLine, memberColor, memberProgress, nextTask, nowLineIndex, starsToWin, untilLabel } from "../../src/lib/planningView";
+import { nowTime, todayLines, todaySummary } from "../../src/lib/today";
+import { currentMonth } from "../../src/lib/money";
+import { dayKey } from "../../src/lib/appointments";
+import { EmptyState } from "../../src/components/Playful";
 import { useToastStore } from "../../src/state/toastStore";
 import { errorText } from "../../src/lib/errors";
 import { weekKey } from "../../src/lib/stars";
@@ -60,10 +64,14 @@ export default function HomeScreen() {
     hydrateFilter();
   }, [hydrateFilter]);
   const memberIdsAll = useMemo(() => members.map((m) => m.id), [members]);
-  const activeFilter = filterIds.filter((id) => memberIdsAll.includes(id));
+  // Une personne à la fois : sa bulle montre son planning, « Tous » celui de la famille.
+  const selectedMemberId = filterIds.find((id) => memberIdsAll.includes(id)) ?? null;
+  const selectedIndex = members.findIndex((m) => m.id === selectedMemberId);
+  const selectedMember = selectedIndex >= 0 ? members[selectedIndex] : null;
+  const categoryTasks = useMemo(() => filterByCategories(tasksOn(tasks, selected, week), filterCategories), [tasks, selected, week, filterCategories]);
   const dayTasks = useMemo(
-    () => filterByCategories(filterByMembers(tasksOn(tasks, selected, week), filterIds, memberIdsAll), filterCategories),
-    [tasks, selected, week, filterIds, memberIdsAll, filterCategories]
+    () => filterByMembers(categoryTasks, selectedMemberId ? [selectedMemberId] : [], memberIdsAll),
+    [categoryTasks, selectedMemberId, memberIdsAll]
   );
 
   function goToWeek(offset: number) {
@@ -80,6 +88,46 @@ export default function HomeScreen() {
   const checkable = useMemo(() => dayTasks.filter(isCheckable), [dayTasks]);
   const doneCount = checkable.filter((t) => doneIds.has(t.id)).length;
   const progress = progressLine(doneCount, checkable.length);
+  const familyCheckable = categoryTasks.filter(isCheckable);
+  const familyDone = familyCheckable.filter((t) => doneIds.has(t.id)).length;
+
+  // L'heure avance toute seule : trait « maintenant » et prochaine tâche.
+  const [now, setNow] = useState(nowTime());
+  useEffect(() => {
+    const id = setInterval(() => setNow(nowTime()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  const isToday = isCurrentWeek && selected === today;
+  const next = isToday ? nextTask(dayTasks, doneIds, now) : null;
+  const nowAt = isToday ? nowLineIndex(dayTasks, now) : -1;
+
+  // Carte du haut : repas du soir et budget pour la famille ; encouragement et étoiles pour une personne.
+  const { data: meals = [] } = useMeals();
+  const { data: recipes = [] } = useRecipes();
+  const { data: budget } = useMonthlyBudget(currentMonth());
+  const lines = todayLines(todaySummary(today, now, tasks, meals, recipes, budget, dayKey(new Date())));
+  const firstName = user?.name?.trim().split(" ")[0];
+  const lowerFirst = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
+  const hero = selectedMember
+    ? {
+        done: doneCount,
+        total: checkable.length,
+        tint: memberColor(selectedIndex),
+        title: cheerLine(selectedMember.name, doneCount, checkable.length),
+        lines: checkable.some((t) => t.stars > 0)
+          ? [{ kind: "stars" as const, text: starsLine(starsToWin(checkable, doneIds), isToday) }]
+          : [{ kind: "plain" as const, text: progress.detail }],
+      }
+    : {
+        done: familyDone,
+        total: familyCheckable.length,
+        tint: undefined,
+        title: `${firstName ? `Salut ${firstName}` : "Salut"}, ${lowerFirst(progressLine(familyDone, familyCheckable.length).title)}`,
+        lines: [
+          { kind: "meal" as const, text: lines.dinner, onPress: () => router.push("/repas") },
+          { kind: "budget" as const, text: lines.budget, danger: lines.overBudget, onPress: () => router.push("/budget?tab=budget") },
+        ],
+      };
 
   function onToggle(taskId: string) {
     const done = !doneIds.has(taskId);
@@ -101,27 +149,36 @@ export default function HomeScreen() {
 
   return (
     <Screen techGrid edges={["top"]} style={{ gap: space.xl }} refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={color.accent} />}>
-      <TabHeader
-        title="Planning"
-        subtitle={user?.name?.trim() ? `Salut, ${user.name.trim().split(" ")[0]}` : "Salut"}
-        subtitleIcon={<WaveIcon size={20} color={color.accent400} />}
-      />
+      <TabHeader title="Planning" />
 
-      <TodayCard />
+      <PlanningHero {...hero} />
+
+      {members.length > 1 && (
+        <MemberBubbles
+          all={{ done: familyDone, total: familyCheckable.length }}
+          bubbles={members.map((m, i) => ({ id: m.id, label: m.name, initial: m.name.trim().charAt(0).toUpperCase(), tint: memberColor(i), ...memberProgress(categoryTasks, m.id, doneIds) }))}
+          selectedId={selectedMemberId}
+          onSelect={(id) => setFilterIds(id ? [id] : [])}
+        />
+      )}
+
+      {upcomingBirthday && (
+        <Card row style={{ alignItems: "center", backgroundColor: color.accent900 }}>
+          {upcomingBirthday.days === 0 ? <PartyIcon size={18} color={color.accent200} /> : <GiftIcon size={16} color={color.accent200} />}
+          <Text size={13} style={{ flex: 1, marginLeft: space.sm }}>
+            {upcomingBirthday.days === 0
+              ? `C'est l'anniversaire ${de(upcomingBirthday.member.name)} aujourd'hui !`
+              : `Anniversaire ${de(upcomingBirthday.member.name)} dans ${upcomingBirthday.days} jour${upcomingBirthday.days > 1 ? "s" : ""}`}
+          </Text>
+          <Button label="Voir" variant="ghost" onPress={() => router.push("/birthdays")} />
+        </Card>
+      )}
 
       <CervelleQuizCard />
 
       <View style={{ gap: space.sm }}>
         <WeekNav week={week} current={currentWeek} onPrev={() => goToWeek(weekOffset - 1)} onNext={() => goToWeek(weekOffset + 1)} />
         <WeekStrip selected={selected} onSelect={setSelected} today={isCurrentWeek ? today : null} week={week} />
-        {members.length > 1 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.xs }}>
-            <Chip label="Tous" selected={activeFilter.length === 0} onPress={() => setFilterIds([])} size="sm" />
-            {members.map((m) => (
-              <Chip key={m.id} label={m.name} selected={activeFilter.includes(m.id)} onPress={() => setFilterIds(toggleMember(activeFilter, m.id, memberIdsAll))} size="sm" />
-            ))}
-          </ScrollView>
-        )}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.xs }}>
           <Chip label="Toutes" selected={activeCategories.length === 0} onPress={() => setFilterCategories([])} size="sm" />
           {TASK_CATEGORIES.map((c) => (
@@ -136,6 +193,38 @@ export default function HomeScreen() {
           </Pressable>
         )}
       </View>
+
+      <SlideIn k={`${week}-${selected}`} direction={dayDir} style={{ gap: space.sm }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+          <Text heading weight="semibold" size={16}>
+            {selectedMember && !isChild ? `${WEEKDAYS_FULL[selected]} ${de(selectedMember.name)}` : `${WEEKDAYS_FULL[selected]} ${shortDate(day)}`}
+          </Text>
+          {dayTasks.length > 0 && (
+            <Text size={12} tone="faint">
+              {dayTasks.length} tâche{dayTasks.length > 1 ? "s" : ""}
+            </Text>
+          )}
+        </View>
+        {!isLoading && dayTasks.length === 0 && (
+          <Card>
+            <EmptyState title="Journée libre" detail="Rien de prévu ce jour-là. Profites-en, ou ajoute une tâche avec le « + »." />
+          </Card>
+        )}
+        {dayTasks.map((task, i) => (
+          <Cascade key={task.id} index={i} style={{ gap: space.sm }}>
+            {i === nowAt && <NowLine time={now} />}
+            <TaskCard
+              task={task}
+              members={members}
+              done={doneIds.has(task.id)}
+              onToggleDone={() => onToggle(task.id)}
+              soon={next?.id === task.id ? untilLabel(task.time, now) : undefined}
+              showStars={!!selectedMember}
+            />
+          </Cascade>
+        ))}
+        {nowAt === dayTasks.length && dayTasks.length > 0 && <NowLine time={now} />}
+      </SlideIn>
 
       <Pressable onPress={() => router.push("/tasks")} accessibilityRole="button">
         <Card row style={{ alignItems: "center" }}>
@@ -164,39 +253,6 @@ export default function HomeScreen() {
           </Card>
         </Pressable>
       ) : null}
-
-      {upcomingBirthday && (
-        <Card row style={{ alignItems: "center", backgroundColor: color.accent900 }}>
-          {upcomingBirthday.days === 0 ? <PartyIcon size={18} color={color.accent200} /> : <GiftIcon size={16} color={color.accent200} />}
-          <Text size={13} style={{ flex: 1, marginLeft: space.sm }}>
-            {upcomingBirthday.days === 0
-              ? `C'est l'anniversaire ${de(upcomingBirthday.member.name)} aujourd'hui !`
-              : `Anniversaire ${de(upcomingBirthday.member.name)} dans ${upcomingBirthday.days} jour${upcomingBirthday.days > 1 ? "s" : ""}`}
-          </Text>
-          <Button label="Voir" variant="ghost" onPress={() => router.push("/birthdays")} />
-        </Card>
-      )}
-
-      <SlideIn k={`${week}-${selected}`} direction={dayDir} style={{ gap: space.sm }}>
-        <Text weight="medium" size={15} tone="muted">
-          {WEEKDAYS_FULL[selected]} {shortDate(day)}
-        </Text>
-        {!isLoading && dayTasks.length === 0 && (
-          <Card>
-            <EmptyState title="Journée libre" detail="Rien de prévu ce jour-là. Profites-en, ou ajoute une tâche avec le « + »." />
-          </Card>
-        )}
-        {checkable.length > 0 && (
-          <Card>
-            <DayRing done={doneCount} total={checkable.length} title={progress.title} detail={progress.detail} />
-          </Card>
-        )}
-        {dayTasks.map((task, i) => (
-          <Cascade key={task.id} index={i}>
-            <TaskCard task={task} members={members} done={doneIds.has(task.id)} onToggleDone={() => onToggle(task.id)} />
-          </Cascade>
-        ))}
-      </SlideIn>
 
       {/* Discret, sous la liste : un simple lien vers « Replanifier ». */}
       {flexibleCount > 0 && user?.familyRole !== "child" && (
